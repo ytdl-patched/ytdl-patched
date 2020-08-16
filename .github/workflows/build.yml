@@ -54,7 +54,7 @@ jobs:
       run: |
         git config --global user.name nao20010128nao
         git config --global user.email nao20010128@gmail.com
-        git clone https://nao20010128nao:${{ secrets.GITHUB_TOKEN }}@github.com/nao20010128nao/homebrew-my.git
+        git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
         cd homebrew-my
         export FILEHASH_TAR="$(sha256sum ../artifacts/youtube-dl.tar.gz | awk '{print $1}')"
         export VERSION="$(date --date="$(cat ../artifacts/LATEST_VERSION)" +'%s')"
