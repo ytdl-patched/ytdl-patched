@@ -63,12 +63,12 @@ class FC2IE(InfoExtractor):
             'https://secure.id.fc2.com/index.php?mode=login&switch_language=en', login_data)
 
         login_results = self._download_webpage(request, None, note='Logging in', errnote='Unable to log in')
-        if 'mode=redirect&login=done' not in login_results:
+        if 'login=done' not in login_results:
             self.report_warning('unable to log in: bad username or password')
             return False
 
         # this is also needed
-        login_redir = sanitized_Request('http://id.fc2.com/?mode=redirect&login=done')
+        login_redir = sanitized_Request('http://secure.id.fc2.com/?login=done')
         self._download_webpage(
             login_redir, None, note='Login redirect', errnote='Login redirect failed')
 
@@ -86,7 +86,8 @@ class FC2IE(InfoExtractor):
         title = 'FC2 video %s' % video_id
         thumbnail = None
         if webpage is not None:
-            title = self._og_search_title(webpage)
+            title = self._og_search_title(webpage, fatal=False) or self._search_regex(
+                r'<h2\s+(?:[a-zA-Z_-]+="[^"]+"\s+)*class="videoCnt_title"(?:[a-zA-Z_-]+="[^"]+"\s+)*>([^<]+)</h2>', webpage, 'Extracting title', video_id)
             thumbnail = self._og_search_thumbnail(webpage)
         refer = url.replace('/content/', '/a/content/') if '/a/content/' not in url else url
 

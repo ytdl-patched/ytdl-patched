@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 from __future__ import absolute_import, unicode_literals
@@ -562,7 +562,8 @@ class YoutubeDL(object):
     def __exit__(self, *args):
         self.restore_console_title()
 
-        if self.params.get('cookiefile') is not None:
+        opts_cookiefile = self.params.get('cookiefile')
+        if opts_cookiefile is not None and os.path.exists(opts_cookiefile):
             self.cookiejar.save(ignore_discard=True, ignore_expires=True)
 
     def trouble(self, message=None, tb=None):
@@ -848,7 +849,7 @@ class YoutubeDL(object):
         """
         result_type = ie_result.get('_type', 'video')
 
-        if result_type in ('url', 'url_transparent'):
+        if result_type in ('url', 'url_transparent', 'url_transparent_id'):
             ie_result['url'] = sanitize_url(ie_result['url'])
             extract_flat = self.params.get('extract_flat', False)
             if ((extract_flat == 'in_playlist' and 'playlist' in extra_info)
@@ -868,7 +869,7 @@ class YoutubeDL(object):
                                      download,
                                      ie_key=ie_result.get('ie_key'),
                                      extra_info=extra_info)
-        elif result_type == 'url_transparent':
+        elif result_type in ('url_transparent', 'url_transparent_id'):
             # Use the information from the embedding page
             info = self.extract_info(
                 ie_result['url'], ie_key=ie_result.get('ie_key'),
@@ -882,7 +883,11 @@ class YoutubeDL(object):
 
             force_properties = dict(
                 (k, v) for k, v in ie_result.items() if v is not None)
-            for f in ('_type', 'url', 'id', 'extractor', 'extractor_key', 'ie_key'):
+            if result_type == 'url_transparent':
+                rmprops = ('_type', 'url', 'id', 'extractor', 'extractor_key', 'ie_key')
+            else:
+                rmprops = ('_type', 'url', 'extractor', 'extractor_key', 'ie_key')
+            for f in rmprops:
                 if f in force_properties:
                     del force_properties[f]
             new_result = info.copy()
@@ -1882,8 +1887,7 @@ class YoutubeDL(object):
                         video_ext, audio_ext = video.get('ext'), audio.get('ext')
                         if video_ext and audio_ext:
                             COMPATIBLE_EXTS = (
-                                ('mp3', 'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'ismv', 'isma'),
-                                ('webm')
+                                ('mp3', 'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'ismv', 'isma')
                             )
                             for exts in COMPATIBLE_EXTS:
                                 if video_ext in exts and audio_ext in exts:
@@ -2325,8 +2329,11 @@ class YoutubeDL(object):
         else:
             opts_cookiefile = expand_path(opts_cookiefile)
             self.cookiejar = YoutubeDLCookieJar(opts_cookiefile)
-            if os.access(opts_cookiefile, os.R_OK):
-                self.cookiejar.load(ignore_discard=True, ignore_expires=True)
+            if os.access(opts_cookiefile, os.R_OK) or os.path.exists(opts_cookiefile):
+                try:
+                    self.cookiejar.load(ignore_discard=True, ignore_expires=True)
+                except:
+                    pass
 
         cookie_processor = YoutubeDLCookieProcessor(self.cookiejar)
         if opts_proxy is not None:

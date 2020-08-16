@@ -2280,6 +2280,14 @@ class GenericIE(InfoExtractor):
                     default_search += ':'
                 return self.url_result(default_search + url)
 
+        host = parsed_url.netloc
+        if ':' in host:
+            host = host[:host.index(':')]
+        if host[:4] == 'www.':
+            host = host[4:]
+        if host == 'pinktower.com' or host == 'jump.5ch.net':
+            return self.url_result(parsed_url.query)
+
         url, smuggled_data = unsmuggle_url(url)
         force_videoid = None
         is_intentional = smuggled_data and smuggled_data.get('to_generic')

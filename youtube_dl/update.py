@@ -7,6 +7,7 @@ import hashlib
 import os
 import subprocess
 import sys
+import time
 from zipimport import zipimporter
 
 from .compat import compat_realpath
@@ -32,10 +33,9 @@ def rsa_verify(message, signature, key):
 def update_self(to_screen, verbose, opener):
     """Update the program file with the latest version from the repository"""
 
-    UPDATE_URL = 'https://yt-dl.org/update/'
+    UPDATE_URL = 'https://nao20010128nao.github.io/ytdl-patched/'
     VERSION_URL = UPDATE_URL + 'LATEST_VERSION'
     JSON_URL = UPDATE_URL + 'versions.json'
-    UPDATES_RSA_KEY = (0x9d60ee4d8f805312fdb15a62f87b95bd66177b91df176765d13514a0f1754bcd2057295c5b6f1d35daa6742c3ffc9a82d3e118861c207995a8031e151d863c9927e304576bc80692bc8e094896fcf11b66f3e29e04e3a71e9a11558558acea1840aec37fc396fb6b65dc81a1c4144e03bd1c011de62e3f1357b327d08426fe93, 65537)
 
     if not isinstance(globals().get('__loader__'), zipimporter) and not hasattr(sys, 'frozen'):
         to_screen('It looks like you installed youtube-dl with a package manager, pip, setup.py or a tarball. Please use that to update.')
@@ -62,19 +62,14 @@ def update_self(to_screen, verbose, opener):
             to_screen(encode_compat_str(traceback.format_exc()))
         to_screen('ERROR: can\'t obtain versions info. Please try again later.')
         return
-    if 'signature' not in versions_info:
-        to_screen('ERROR: the versions file is not signed or corrupted. Aborting.')
-        return
-    signature = versions_info['signature']
-    del versions_info['signature']
-    if not rsa_verify(json.dumps(versions_info, sort_keys=True).encode('utf-8'), signature, UPDATES_RSA_KEY):
-        to_screen('ERROR: the versions file signature is invalid. Aborting.')
-        return
+
+    # Don't test signatures for now
 
     version_id = versions_info['latest']
 
     def version_tuple(version_str):
-        return tuple(map(int, version_str.split('.')))
+        # This assumes timestamp is in UTC
+        return time.strptime(version_str, '%a %b %d %H:%M:%S UTC %Y')
     if version_tuple(__version__) >= version_tuple(version_id):
         to_screen('youtube-dl is up to date (%s)' % __version__)
         return

@@ -332,6 +332,7 @@ from .expotv import ExpoTVIE
 from .expressen import ExpressenIE
 from .extremetube import ExtremeTubeIE
 from .eyedotv import EyedoTVIE
+from .eyny import EynyIE
 from .facebook import (
     FacebookIE,
     FacebookPluginsVideoIE,
@@ -1159,6 +1160,13 @@ from .tnaflix import (
     MovieFapIE,
 )
 from .toggle import ToggleIE
+from .tokyomotion import (
+    TokyoMotionIE,
+    TokyoMotionUserIE,
+    TokyoMotionUserFavsIE,
+    TokyoMotionSearchesIE,
+    TokyoMotionScannerIE,
+)
 from .tonline import TOnlineIE
 from .toongoggles import ToonGogglesIE
 from .toutv import TouTvIE
@@ -1301,6 +1309,7 @@ from .vice import (
 from .vidbit import VidbitIE
 from .viddler import ViddlerIE
 from .videa import VideaIE
+from .videobin import VideobinIE
 from .videodetective import VideoDetectiveIE
 from .videofyme import VideofyMeIE
 from .videomore import (
@@ -1322,6 +1331,7 @@ from .viewlift import (
     ViewLiftIE,
     ViewLiftEmbedIE,
 )
+from .viewsource import ViewSourceIE
 from .viidea import ViideaIE
 from .vimeo import (
     VimeoIE,
@@ -1411,6 +1421,7 @@ from .weibo import (
 )
 from .weiqitv import WeiqiTVIE
 from .wistia import WistiaIE
+from .wix import WixIE
 from .worldstarhiphop import WorldStarHipHopIE
 from .wsj import (
     WSJIE,

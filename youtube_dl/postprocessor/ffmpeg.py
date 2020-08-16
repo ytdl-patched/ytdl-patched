@@ -220,7 +220,7 @@ class FFmpegPostProcessor(PostProcessor):
         cmd = [encodeFilename(self.executable, True), encodeArgument('-y')]
         # avconv does not have repeat option
         if self.basename == 'ffmpeg':
-            cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info')]
+            cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info'), encodeArgument('-hide_banner')]
         cmd += (files_cmd
                 + [encodeArgument(o) for o in opts]
                 + [encodeFilename(self._ffmpeg_filename_argument(out_path), True)])
@@ -362,6 +362,8 @@ class FFmpegVideoConvertorPP(FFmpegPostProcessor):
         options = []
         if self._preferedformat == 'avi':
             options.extend(['-c:v', 'libxvid', '-vtag', 'XVID'])
+        if self._preferedformat == 'mkv':
+            options.extend(['-c:v', 'copy', '-c:a', 'copy'])
         prefix, sep, ext = path.rpartition('.')
         outpath = prefix + sep + self._preferedformat
         self._downloader.to_screen('[' + 'ffmpeg' + '] Converting video from %s to %s, Destination: ' % (information['ext'], self._preferedformat) + outpath)

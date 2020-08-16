@@ -266,4 +266,5 @@ class FragmentFD(FileDownloader):
             'filename': ctx['filename'],
             'status': 'finished',
             'elapsed': elapsed,
+            'fragment_count': ctx['total_frags'],
         })

@@ -426,6 +426,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             youtu\.be|                                        # just youtu.be/xxxx
                             vid\.plus|                                        # or vid.plus/xxxx
                             zwearz\.com/watch|                                # or zwearz.com/watch/xxxx
+                            i\.ytimg\.com/vi|                                   # or i.ytimg.com/vi/xxx
                          )/
                          |(?:www\.)?cleanvideosearch\.com/media/action/yt/watch\?videoId=
                          )
@@ -1825,7 +1826,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # Get video info
         video_info = {}
         embed_webpage = None
-        if re.search(r'player-age-gate-content">', video_webpage) is not None:
+        if re.search(r'player-age-gate-content">|"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"', video_webpage) is not None:
             age_gate = True
             # We simulate the access to the video from www.youtube.com/v/{video_id}
             # this can be viewed without login into Youtube
@@ -2493,6 +2494,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 raise ExtractorError(
                     'YouTube said: %s' % reason,
                     expected=True, video_id=video_id)
+            self.to_screen(player_response['streamingData']['licenseInfos'])
             if video_info.get('license_info') or try_get(player_response, lambda x: x['streamingData']['licenseInfos']):
                 raise ExtractorError('This video is DRM protected.', expected=True)
 

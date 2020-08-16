@@ -963,6 +963,9 @@ class InfoExtractor(object):
     @staticmethod
     def playlist_result(entries, playlist_id=None, playlist_title=None, playlist_description=None):
         """Returns a playlist"""
+        if isinstance(entries, list) and len(entries) == 1:
+            return entries[0]
+
         video_info = {'_type': 'playlist',
                       'entries': entries}
         if playlist_id:
@@ -1401,6 +1404,24 @@ class InfoExtractor(object):
                     ext_preference = -1
                 audio_ext_preference = 0
 
+            fmt_id = f.get('format_id') or 'none'
+            if fmt_id.startswith('hls-'):
+                _fmt_id = fmt_id.split('-')[1]
+                try:
+                    hls_preference = int(_fmt_id)
+                except:
+                    if _fmt_id[-1:] == 'p':
+                        hls_preference = int(_fmt_id[:-1])
+                    else:
+                        hls_preference = 0
+            else:
+                hls_preference = -100
+
+            if fmt_id.upper() == 'HD':
+                id_preference = 1
+            else:
+                id_preference = 0
+
             return (
                 preference,
                 f.get('language_preference') if f.get('language_preference') is not None else -1,
@@ -1417,7 +1438,9 @@ class InfoExtractor(object):
                 f.get('fps') if f.get('fps') is not None else -1,
                 f.get('filesize_approx') if f.get('filesize_approx') is not None else -1,
                 f.get('source_preference') if f.get('source_preference') is not None else -1,
-                f.get('format_id') if f.get('format_id') is not None else '',
+                hls_preference,
+                id_preference,
+                fmt_id,
             )
         formats.sort(key=_formats_key)
 
