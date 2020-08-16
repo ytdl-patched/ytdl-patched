@@ -14,7 +14,7 @@ from ..compat import (
 
 class ViewSourceIE(InfoExtractor):
     IE_DESC = False  # Do not list
-    IE_NAME = 'tokyomotion:scanner'
+    IE_NAME = 'view-source'
     _VALID_URL = r'view-source:.*'
     _TEST = {}
     def _real_extract(self, url):
