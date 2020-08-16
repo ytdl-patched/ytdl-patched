@@ -1,0 +1,59 @@
+name: Patched YTDL
+
+on: 
+ push:
+   branches:
+     - master
+ schedule:
+   - cron:  "0 */12 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install deps
+      run: |
+        sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+        sudo apt update
+        sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk jq pandoc python python3 tzdata
+    - name: Build patched YTDL
+      run: |
+        echo "from __future__ import unicode_literals
+        __version__ = '${LATEST_VERSION}'
+        " > youtube_dl/version.py
+
+        make youtube-dl youtube-dl.tar.gz
+
+        mv youtube-dl artifacts
+        mv youtube-dl.tar.gz artifacts
+
+        FILEHASH_BIN="$(sha256sum artifacts/youtube-dl | awk '{print $1}')"
+        FILEHASH_TAR="$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
+
+        echo '{"versions":{}}' | jq ".latest=\"${LATEST_VERSION}\"" \
+          | jq ".versions[\"${LATEST_VERSION}\"].bin=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl\",\"${FILEHASH_BIN}\"]" \
+          | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
+          | tee artifacts/versions.json
+    - name: Deploy to gh-pages
+      uses: JamesIves/github-pages-deploy-action@3.5.7
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: artifacts
+    - name: Upload to my homebrew repository
+      run: |
+        git clone https://nao20010128nao:${{ secrets.GITHUB_TOKEN }}@github.com/nao20010128nao/homebrew-my.git
+        cd homebrew-my
+        export FILEHASH_TAR="$(sha256sum ../artifacts/youtube-dl.tar.gz | awk '{print $1}')"
+        export VERSION="$(date --date="$(cat ../artifacts/LATEST_VERSION)" +'%s')"
+        echo $FILEHASH_TAR $VERSION
+        sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
+        sed -E -i "s/version \".+\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
+        git add .
+        git commit -m "ytdl-patched: $VERSION"
+        git push
