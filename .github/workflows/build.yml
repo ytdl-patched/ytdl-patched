@@ -23,6 +23,8 @@ jobs:
         sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk jq pandoc python python3 tzdata
     - name: Build patched YTDL
       run: |
+        mkdir artifacts
+
         export LATEST_VERSION="$(date)"
         echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
 
@@ -31,8 +33,6 @@ jobs:
         " > youtube_dl/version.py
 
         make youtube-dl youtube-dl.tar.gz
-
-        mkdir artifacts
 
         mv youtube-dl artifacts
         mv youtube-dl.tar.gz artifacts
