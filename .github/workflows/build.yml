@@ -29,6 +29,8 @@ jobs:
 
         make youtube-dl youtube-dl.tar.gz
 
+        mkdir artifacts
+
         mv youtube-dl artifacts
         mv youtube-dl.tar.gz artifacts
 
