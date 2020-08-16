@@ -58,13 +58,13 @@ class TwitCastingIE(InfoExtractor):
         def download_pages():
             actual_url = 'https://twitcasting.tv/%s/movie/%s' % (uploader_id, video_id)
             for lang in (
-                ('JPN1', 'ja-JP,ja;q=0.8,en-US;q=0.5,en;q=0.3'),
-                ('JPN2', 'ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7'),
-                ('ENG1', 'en-US,en;q=0.5'),):
+                    ('JPN1', 'ja-JP,ja;q=0.8,en-US;q=0.5,en;q=0.3'),
+                    ('JPN2', 'ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7'),
+                    ('ENG1', 'en-US,en;q=0.5'),):
                 for ua in (
-                    ('default', random_user_agent()),
-                    ('mobile chrome', 'Mozilla/5.0 (Linux; Android 5.1; N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.136 Mobile Safari/537.36'),
-                    ('mobile firefox', 'Mozilla/5.0 (Android 5.1; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0'),):
+                        ('default', random_user_agent()),
+                        ('mobile chrome', 'Mozilla/5.0 (Linux; Android 5.1; N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.136 Mobile Safari/537.36'),
+                        ('mobile firefox', 'Mozilla/5.0 (Android 5.1; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0'),):
                     headers = {
                         'Accept-Language': lang[1],
                         'User-Agent': ua[1]
@@ -73,7 +73,7 @@ class TwitCastingIE(InfoExtractor):
                         actual_url, video_id, data=request_data, headers=headers,
                         note='Downloading page: %s %s' % (lang[0], ua[0]))
 
-        title, m3u8_url, thumbnail, description = [None]*4
+        title, m3u8_url, thumbnail, description = [None] * 4
 
         for webpage in download_pages():
             title = title or self._html_search_regex(
@@ -104,10 +104,10 @@ class TwitCastingIE(InfoExtractor):
         if not m3u8_url:
             raise ExtractorError('Failed to extract m3u8 url', expected=False)
 
-        m3u8_url = m3u8_url.replace('\/', '/')
+        m3u8_url = m3u8_url.replace(r'\/', '/')
         formats = self._extract_m3u8_formats(
-             m3u8_url, video_id, ext='mp4', entry_protocol='m3u8_native',
-             m3u8_id='hls')
+            m3u8_url, video_id, ext='mp4', entry_protocol='m3u8_native',
+            m3u8_id='hls')
         self._sort_formats(formats)
 
         return {

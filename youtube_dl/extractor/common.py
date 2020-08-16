@@ -1409,7 +1409,7 @@ class InfoExtractor(object):
                 _fmt_id = fmt_id.split('-')[1]
                 try:
                     hls_preference = int(_fmt_id)
-                except:
+                except ValueError:
                     if _fmt_id[-1:] == 'p':
                         hls_preference = int(_fmt_id[:-1])
                     else:

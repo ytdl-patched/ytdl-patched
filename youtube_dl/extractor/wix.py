@@ -4,9 +4,7 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
-    ExtractorError,
     int_or_none,
-    float_or_none,
     unescapeHTML,
 )
 
@@ -50,7 +48,6 @@ class WixIE(InfoExtractor):
                     'ext': videoFormat,
                     'format_id': fmt_name,
                     'filesize': int_or_none(quality.get('size')),
-                    'height': int_or_none(quality.get('quality')[:-1]),
                     'height': height or 0,
                     'width': width or 0,
                 })

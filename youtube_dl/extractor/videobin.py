@@ -5,21 +5,14 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
-    sanitized_Request,
     ExtractorError,
     determine_ext,
 )
-from ..compat import (
-    compat_str,
-)
 
-try:
-    from urllib import quote
-except ImportError:
-    from urllib.parse import quote
 
 class VideobinBaseIE(InfoExtractor):
     IE_DESC = False  # Do not list
+
 
 class VideobinIE(VideobinBaseIE):
     IE_NAME = 'videobin'

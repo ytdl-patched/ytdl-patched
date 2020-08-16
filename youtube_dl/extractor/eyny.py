@@ -5,20 +5,13 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
-    sanitized_Request,
     ExtractorError,
 )
-from ..compat import (
-    compat_str,
-)
 
-try:
-    from urllib import quote
-except ImportError:
-    from urllib.parse import quote
 
 class EynyBaseIE(InfoExtractor):
     IE_DESC = False  # Do not list
+
 
 class EynyIE(EynyBaseIE):
     IE_NAME = 'eyny'

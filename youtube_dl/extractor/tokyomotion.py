@@ -17,8 +17,10 @@ try:
 except ImportError:
     from urllib.parse import quote
 
+
 class TokyoMotionBaseIE(InfoExtractor):
     IE_DESC = False  # Do not list
+
     def _download_page(self, url, video_id, note=None):
         # This fails
         # return self._download_webpage(url, video_id)
@@ -36,7 +38,7 @@ class TokyoMotionBaseIE(InfoExtractor):
 
     def _extract_video_urls(self, variant, webpage):
         return ('https://www.%smotion.net%s' % (variant, quote(frg.group()))
-            for frg in re.finditer(r'/video/(?P<id>\d+)/[^#?&"\']+', webpage))
+                for frg in re.finditer(r'/video/(?P<id>\d+)/[^#?&"\']+', webpage))
 
     def _do_paging(self, template, variant, user_id):
         index = 1
@@ -50,13 +52,16 @@ class TokyoMotionBaseIE(InfoExtractor):
                 break
         return (self.url_result(url) for url in sorted(set(all_matches), key=self._int_id))
 
+
 class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
     IE_DESC = False  # Do not list
+
     def _real_extract(self, url):
         user_id = self._match_id(url)
         variant = self._VALID_URL_RE.match(url).group('variant')
         matches = self._do_paging(self.USER_VIDEOS_FULL_URL, variant, user_id)
         return self.playlist_result(matches, user_id, self.TITLE % user_id)
+
 
 class TokyoMotionIE(TokyoMotionBaseIE):
     IE_NAME = 'tokyomotion'
@@ -92,14 +97,15 @@ class TokyoMotionIE(TokyoMotionBaseIE):
         })
         return entry
 
-#class TokyoMotionCorruptedUrlIE(TokyoMotionBaseIE):
-#    IE_NAME = 'tokyomotion:corrupted'
-#    _VALID_URL = r'https?://(?:www\.)?(?:tokyo|osaka)motion\.net/video/(?P<id>\d+)/?(?:#.*)?'
-#    def _real_extract(self, url):
-#        video_id = self._match_id(url)
-#        self.to_screen('Given URL looks corrupted, trying to repair')
-#        repaired = url.split('#')[0] + 'a'
-#        return self.url_result(repaired)
+# class TokyoMotionCorruptedUrlIE(TokyoMotionBaseIE):
+#     IE_NAME = 'tokyomotion:corrupted'
+#     _VALID_URL = r'https?://(?:www\.)?(?:tokyo|osaka)motion\.net/video/(?P<id>\d+)/?(?:#.*)?'
+#     def _real_extract(self, url):
+#         video_id = self._match_id(url)
+#         self.to_screen('Given URL looks corrupted, trying to repair')
+#         repaired = url.split('#')[0] + 'a'
+#         return self.url_result(repaired)
+
 
 class TokyoMotionUserIE(TokyoMotionPlaylistBaseIE):
     IE_NAME = 'tokyomotion:user'
@@ -108,12 +114,14 @@ class TokyoMotionUserIE(TokyoMotionPlaylistBaseIE):
     USER_VIDEOS_FULL_URL = 'https://www.%smotion.net/user/%s/videos?page=%d'
     TITLE = 'Uploads from %s'
 
+
 class TokyoMotionUserFavsIE(TokyoMotionPlaylistBaseIE):
     IE_NAME = 'tokyomotion:user:favs'
     _VALID_URL = r'https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/user/(?P<id>[^/]+)/favorite/videos'
     _TEST = {}
     USER_VIDEOS_FULL_URL = 'https://www.%smotion.net/user/%s/favorite/videos?page=%d'
     TITLE = 'Favorites from %s'
+
 
 class TokyoMotionSearchesIE(TokyoMotionPlaylistBaseIE):
     IE_NAME = 'tokyomotion:searches'
@@ -122,11 +130,13 @@ class TokyoMotionSearchesIE(TokyoMotionPlaylistBaseIE):
     USER_VIDEOS_FULL_URL = 'https://www.%smotion.net/search?search_query=%s&search_type=videos&page=%d'
     TITLE = 'Search results for %s'
 
+
 class TokyoMotionScannerIE(TokyoMotionBaseIE):
     IE_DESC = False  # Do not list
     IE_NAME = 'tokyomotion:scanner'
     _VALID_URL = r'tmscan:https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/(?P<id>.*)'
     _TEST = {}
+
     def _real_extract(self, url):
         user_id = self._match_id(url) or ''
         variant = self._VALID_URL_RE.match(url).group('variant')

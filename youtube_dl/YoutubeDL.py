@@ -2332,7 +2332,7 @@ class YoutubeDL(object):
             if os.access(opts_cookiefile, os.R_OK) or os.path.exists(opts_cookiefile):
                 try:
                     self.cookiejar.load(ignore_discard=True, ignore_expires=True)
-                except:
+                except IOError:
                     pass
 
         cookie_processor = YoutubeDLCookieProcessor(self.cookiejar)

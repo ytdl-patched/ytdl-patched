@@ -88,9 +88,9 @@ compiled_regex_type = type(re.compile(''))
 def random_user_agent():
     _USER_AGENT_TPL = 'Mozilla/5.0 (Windows NT %s; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s Safari/537.36'
     _WINDOWS_VERSIONS = (
-        '6.1', # 7
-        '6.2', # 8
-        '6.3', # 8.1
+        '6.1',  # 7
+        '6.2',  # 8
+        '6.3',  # 8.1
         '10.0',
     )
     _CHROME_VERSIONS = (
