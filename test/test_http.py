@@ -79,7 +79,7 @@ class TestHTTP(unittest.TestCase):
 
         ydl = YoutubeDL({'logger': FakeLogger()})
         r = ydl.extract_info('http://127.0.0.1:%d/302' % self.port)
-        self.assertEqual(r['entries'][0]['url'], 'http://127.0.0.1:%d/vid.mp4' % self.port)
+        self.assertEqual(r['url'], 'http://127.0.0.1:%d/vid.mp4' % self.port)
 
 
 class TestHTTPS(unittest.TestCase):
@@ -103,7 +103,7 @@ class TestHTTPS(unittest.TestCase):
 
         ydl = YoutubeDL({'logger': FakeLogger(), 'nocheckcertificate': True})
         r = ydl.extract_info('https://127.0.0.1:%d/video.html' % self.port)
-        self.assertEqual(r['entries'][0]['url'], 'https://127.0.0.1:%d/vid.mp4' % self.port)
+        self.assertEqual(r['url'], 'https://127.0.0.1:%d/vid.mp4' % self.port)
 
 
 def _build_proxy_handler(name):
