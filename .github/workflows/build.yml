@@ -23,6 +23,9 @@ jobs:
         sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk jq pandoc python python3 tzdata
     - name: Build patched YTDL
       run: |
+        export LATEST_VERSION="$(date)"
+        echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
+
         echo "from __future__ import unicode_literals
         __version__ = '${LATEST_VERSION}'
         " > youtube_dl/version.py
@@ -49,6 +52,8 @@ jobs:
         FOLDER: artifacts
     - name: Upload to my homebrew repository
       run: |
+        git config --global user.name nao20010128nao
+        git config --global user.email nao20010128@gmail.com
         git clone https://nao20010128nao:${{ secrets.GITHUB_TOKEN }}@github.com/nao20010128nao/homebrew-my.git
         cd homebrew-my
         export FILEHASH_TAR="$(sha256sum ../artifacts/youtube-dl.tar.gz | awk '{print $1}')"
