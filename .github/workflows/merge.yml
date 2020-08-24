@@ -1,0 +1,22 @@
+name: Merge upstream
+
+on:
+ schedule:
+   - cron:  "0 */12 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Configure git
+      run: |
+        git config --global core.editor true
+        git config --global user.name nao20010128nao
+        git config --global user.email nao20010128@gmail.com
+    - name: Pull from ytdl-org/youtube-dl
+      run: |
+        git pull https://github.com/ytdl-org/youtube-dl.git
+    - name: Push to here
+      run: |
+        git push
