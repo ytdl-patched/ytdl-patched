@@ -1,9 +1,6 @@
 name: Merge upstream
 
-on: 
-  push:
-    branches:
-      - master
+on:
   schedule:
     - cron: "0 */12 * * *"
 
