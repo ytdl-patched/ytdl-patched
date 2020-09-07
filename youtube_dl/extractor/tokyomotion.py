@@ -65,7 +65,7 @@ class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
 
 class TokyoMotionIE(TokyoMotionBaseIE):
     IE_NAME = 'tokyomotion'
-    _VALID_URL = r'(?P<url>https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/video/(?P<id>\d+)/[^#?&]*)(?:#.*)?'
+    _VALID_URL = r'(?P<url>https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/video/(?P<id>\d+)/[^#?&]+)(?:#.*)?'
     _TEST = {
         'url': 'https://www.tokyomotion.net/video/915034/%E9%80%86%E3%81%95',
         'info_dict': {
@@ -97,14 +97,14 @@ class TokyoMotionIE(TokyoMotionBaseIE):
         })
         return entry
 
-# class TokyoMotionCorruptedUrlIE(TokyoMotionBaseIE):
-#     IE_NAME = 'tokyomotion:corrupted'
-#     _VALID_URL = r'https?://(?:www\.)?(?:tokyo|osaka)motion\.net/video/(?P<id>\d+)/?(?:#.*)?'
-#     def _real_extract(self, url):
-#         video_id = self._match_id(url)
-#         self.to_screen('Given URL looks corrupted, trying to repair')
-#         repaired = url.split('#')[0] + 'a'
-#         return self.url_result(repaired)
+class TokyoMotionCorruptedUrlIE(TokyoMotionBaseIE):
+    IE_NAME = 'tokyomotion:corrupted'
+    _VALID_URL = r'https?://(?:www\.)?(?:tokyo|osaka)motion\.net/video/(?P<id>\d+)/?'
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        self.to_screen('Given URL looks corrupted, trying to repair')
+        repaired = url.split('#')[0] + 'a'
+        return self.url_result(repaired)
 
 
 class TokyoMotionUserIE(TokyoMotionPlaylistBaseIE):
