@@ -724,6 +724,9 @@ class YoutubeDL(object):
     def _match_entry(self, info_dict, incomplete):
         """ Returns None iff the file should be downloaded """
 
+        if type(info_dict) is not dict:
+            return None
+
         video_title = info_dict.get('title', info_dict.get('id', 'video'))
         if 'title' in info_dict:
             # This can happen when we're just evaluating the playlist
@@ -941,7 +944,7 @@ class YoutubeDL(object):
             def report_download(num_entries):
                 self.to_screen(
                     '[%s] playlist %s: Downloading %d videos' %
-                    (ie_result['extractor'], playlist, num_entries))
+                    (ie_result.get('extractor', 'generic'), playlist, num_entries))
 
             if isinstance(ie_entries, list):
                 n_all_entries = len(ie_entries)
@@ -952,7 +955,7 @@ class YoutubeDL(object):
                 n_entries = len(entries)
                 self.to_screen(
                     '[%s] playlist %s: Collected %d video ids (downloading %d of them)' %
-                    (ie_result['extractor'], playlist, n_all_entries, n_entries))
+                    (ie_result.get('extractor', 'generic'), playlist, n_all_entries, n_entries))
             elif isinstance(ie_entries, PagedList):
                 if playlistitems:
                     entries = []
@@ -997,10 +1000,10 @@ class YoutubeDL(object):
                     'playlist_uploader': ie_result.get('uploader'),
                     'playlist_uploader_id': ie_result.get('uploader_id'),
                     'playlist_index': playlistitems[i - 1] if playlistitems else i + playliststart,
-                    'extractor': ie_result['extractor'],
-                    'webpage_url': ie_result['webpage_url'],
-                    'webpage_url_basename': url_basename(ie_result['webpage_url']),
-                    'extractor_key': ie_result['extractor_key'],
+                    'extractor': ie_result.get('extractor', 'generic'),
+                    'webpage_url': ie_result.get('webpage_url'),
+                    'webpage_url_basename': url_basename(ie_result.get('webpage_url', '')),
+                    'extractor_key': ie_result.get('extractor_key'),
                 }
 
                 reason = self._match_entry(entry, incomplete=True)
@@ -1018,13 +1021,13 @@ class YoutubeDL(object):
         elif result_type == 'compat_list':
             self.report_warning(
                 'Extractor %s returned a compat_list result. '
-                'It needs to be updated.' % ie_result.get('extractor'))
+                'It needs to be updated.' % ie_result.get('extractor', 'generic'))
 
             def _fixup(r):
                 self.add_extra_info(
                     r,
                     {
-                        'extractor': ie_result['extractor'],
+                        'extractor': ie_result.get('extractor', 'generic'),
                         'webpage_url': ie_result['webpage_url'],
                         'webpage_url_basename': url_basename(ie_result['webpage_url']),
                         'extractor_key': ie_result['extractor_key'],
