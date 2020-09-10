@@ -3251,7 +3251,7 @@ class GenericIE(InfoExtractor):
             except ExtractorError:
                 # See https://github.com/ytdl-org/youtube-dl/pull/16735
                 pass
-        
+
         if waitlist:
             return self.playlist_result(waitlist, video_id, video_id)
 
