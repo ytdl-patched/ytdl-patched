@@ -104,7 +104,8 @@ class TokyoMotionCorruptedUrlIE(TokyoMotionBaseIE):
 
     def _real_extract(self, url):
         self.to_screen('Given URL looks corrupted, trying to repair')
-        repaired = url.split('#')[0] + 'a'
+        without_hash = url.split('#')[0]
+        repaired = without_hash + 'a' if without_hash.endswith('/') else '/a'
         return self.url_result(repaired)
 
 
