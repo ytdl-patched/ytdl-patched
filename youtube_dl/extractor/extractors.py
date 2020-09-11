@@ -1421,6 +1421,7 @@ from .weibo import (
     WeiboMobileIE
 )
 from .weiqitv import WeiqiTVIE
+from .whowatch import WhoWatchIE
 from .wistia import WistiaIE
 from .wix import WixIE
 from .worldstarhiphop import WorldStarHipHopIE
