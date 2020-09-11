@@ -5,17 +5,8 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
-    sanitized_Request,
     ExtractorError,
 )
-from ..compat import (
-    compat_str,
-)
-
-try:
-    from urllib import quote
-except ImportError:
-    from urllib.parse import quote
 
 
 class AskMonaIE(InfoExtractor):
@@ -29,7 +20,7 @@ class AskMonaIE(InfoExtractor):
         webpage = self._download_webpage(self.ALL_POSTS_URL % video_id, video_id)
 
         youtube_results = [self.url_result('https://youtu.be/%s' % frg.group(1))
-                for frg in re.finditer(self.YOUTUBE_RE, webpage)]
+                        for frg in re.finditer(self.YOUTUBE_RE, webpage)]
         if not youtube_results:
             raise ExtractorError('No videos found', expected=True)
         return self.playlist_result(youtube_results, video_id)
