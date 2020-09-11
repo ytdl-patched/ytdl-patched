@@ -66,6 +66,10 @@ from .asiancrush import (
     AsianCrushIE,
     AsianCrushPlaylistIE,
 )
+from .askmona import (
+    AskMonaIE,
+    AskMona3IE,
+)
 from .atresplayer import AtresPlayerIE
 from .atttechchannel import ATTTechChannelIE
 from .atvat import ATVAtIE
