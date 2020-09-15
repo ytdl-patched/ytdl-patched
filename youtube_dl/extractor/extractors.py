@@ -1375,6 +1375,7 @@ from .vodlocker import VodlockerIE
 from .vodpl import VODPlIE
 from .vodplatform import VODPlatformIE
 from .voicerepublic import VoiceRepublicIE
+from .voicy import VoicyIE
 from .voot import VootIE
 from .voxmedia import (
     VoxMediaVolumeIE,
