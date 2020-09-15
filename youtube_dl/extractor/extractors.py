@@ -428,6 +428,7 @@ from .groupon import GrouponIE
 from .hbo import HBOIE
 from .hearthisat import HearThisAtIE
 from .heise import HeiseIE
+from .hellonewdream import HelloNewDreamIE
 from .hellporno import HellPornoIE
 from .helsinki import HelsinkiIE
 from .hentaistigma import HentaiStigmaIE
