@@ -42,6 +42,7 @@ class VoicyBaseIE(InfoExtractor):
             'formats': formats,
         }
 
+
 class VoicyIE(VoicyBaseIE):
     IE_NAME = 'voicy'
     _VALID_URL = r'https?://voicy\.jp/channel/(?P<channel_id>\d+)/(?P<id>\d+)/?'
@@ -60,6 +61,7 @@ class VoicyIE(VoicyBaseIE):
 
         value = article_list['Value']
         return self._extract_from_playlist_data(value)
+
 
 class VoicyChannelIE(VoicyBaseIE):
     IE_NAME = 'voicy:channel'
