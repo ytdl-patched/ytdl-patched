@@ -427,6 +427,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             vid\.plus|                                        # or vid.plus/xxxx
                             zwearz\.com/watch|                                # or zwearz.com/watch/xxxx
                             i\.ytimg\.com/vi|                                   # or i.ytimg.com/vi/xxx
+                            y2u\.be|                                          # y2u.be
                          )/
                          |(?:www\.)?cleanvideosearch\.com/media/action/yt/watch\?videoId=
                          )
