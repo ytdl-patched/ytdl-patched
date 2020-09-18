@@ -48,14 +48,14 @@ jobs:
         python-version: 3.8
     - name: Install deps
       run: |
-        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64
-        wine cmd /c cd "C:\\"
         mkdir -p wine-root/drive_c/py/ wine-root/drive_c/dist/
+        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64
         sudo dpkg --add-architecture i386
         wget -O- https://dl.winehq.org/wine-builds/winehq.key | sudo apt-key add -
         sudo add-apt-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ focal main'
         sudo apt update
         sudo apt install --no-install-recommends -y winehq-stable
+        wine cmd /c cd "C:\\"
         wget https://www.python.org/ftp/python/3.8.5/python-3.8.5-embed-amd64.zip
         unzip -d wine-root/drive_c/py/ python-3.8.5-embed-amd64.zip
         wine "C:\\py\\python.exe" -m pip install pyinstaller
