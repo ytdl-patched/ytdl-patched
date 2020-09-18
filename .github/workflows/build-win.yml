@@ -28,6 +28,7 @@ jobs:
       run: |
         python -m PyInstaller --distpath . -n youtube-dl -c youtube_dl/__main__.py
         ls ./youtube-dl
+        where python
         ./youtube-dl/youtube-dl --simulate https://youtu.be/0d4-azwtoHc
     - name: Test WSL
       continue-on-error: true
