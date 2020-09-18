@@ -27,4 +27,5 @@ jobs:
       continue-on-error: true
       run: |
         python -m PyInstaller --distpath . -n youtube-dl -c youtube_dl/__main__.py
-        ls
+        ls ./youtube-dl
+        ./youtube-dl/youtube-dl --simulate https://youtu.be/0d4-azwtoHc
