@@ -54,11 +54,10 @@ jobs:
         wget -O- https://dl.winehq.org/wine-builds/winehq.key | sudo apt-key add -
         sudo add-apt-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ focal main'
         sudo apt update
-        sudo apt install --no-install-recommends -y winehq-stable
-        winecfg
+        sudo apt install --no-install-recommends -y wine64
         wget https://www.python.org/ftp/python/3.8.5/python-3.8.5-embed-amd64.zip
         unzip -d wine-root/drive_c/py/ python-3.8.5-embed-amd64.zip
-        wine "C:\\py\\python.exe" -m pip install pyinstaller
-        wine "C:\\py\\python.exe" -m PyInstaller --distpath "C:\\dist\\" -n youtube-dl -c youtube_dl/__main__.py
+        wine64 "C:\\py\\python.exe" -m pip install pyinstaller
+        wine64 "C:\\py\\python.exe" -m PyInstaller --distpath "C:\\dist\\" -n youtube-dl -c youtube_dl/__main__.py
         ls "$WINEPREFIX/drive_c/dist/youtube-dl"
         file "$WINEPREFIX/drive_c/dist/youtube-dl"
