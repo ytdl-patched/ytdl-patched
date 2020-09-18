@@ -16,7 +16,7 @@ jobs:
         python-version: 3.7
     - name: Install deps
       run: |
-        python -m install py2exe pyinstaller
+        python -m pip install py2exe pyinstaller
     - name: Build using py2exe
       run: |
         python -m py2exe setup.py
