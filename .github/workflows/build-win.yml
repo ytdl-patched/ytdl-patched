@@ -26,5 +26,5 @@ jobs:
     - name: Build using pyinstaller
       continue-on-error: true
       run: |
-        python -m PyInstaller youtube_dl/__main__.py
-        ls dist
+        python -m PyInstaller -d . -n youtube-dl -c youtube_dl/__main__.py
+        ls
