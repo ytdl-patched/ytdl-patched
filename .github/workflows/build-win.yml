@@ -49,7 +49,7 @@ jobs:
     - name: Install deps
       run: |
         mkdir -p wine-root/drive_c/py/ wine-root/drive_c/dist/
-        export WINEPREFIX="$(realpath wine-root/)"
+        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64
         sudo dpkg --add-architecture i386
         wget -O- https://dl.winehq.org/wine-builds/winehq.key | sudo apt-key add -
         sudo add-apt-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ focal main'
