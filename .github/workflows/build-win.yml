@@ -38,7 +38,7 @@ jobs:
         bash apt install wget
         bash wget -qO- checkip.amazonaws.com
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     continue-on-error: true
     steps:
     - uses: actions/checkout@v1
