@@ -54,7 +54,9 @@ jobs:
         wget -O- https://dl.winehq.org/wine-builds/winehq.key | sudo apt-key add -
         sudo add-apt-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ focal main'
         sudo apt update
-        sudo apt install --install-recommends winehq-stable
+        sudo apt install --install-recommends -y winehq-stable || true
+        sudo apt update
+        sudo apt install --install-recommends -y winehq-stable
         wget https://www.python.org/ftp/python/3.8.5/python-3.8.5-embed-amd64.zip
         unzip -d wine-root/drive_c/py/ python-3.8.5-embed-amd64.zip
         wine "C:\\py\\python.exe" -m pip install pyinstaller
