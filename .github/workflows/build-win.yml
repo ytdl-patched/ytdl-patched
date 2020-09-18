@@ -22,7 +22,9 @@ jobs:
       continue-on-error: true
       run: |
         python -m py2exe setup.py
+        ls
     - name: Build using pyinstaller
       continue-on-error: true
       run: |
-        python -m pyinstaller __main__.py
+        python -m PyInstaller __main__.py
+        ls dist
