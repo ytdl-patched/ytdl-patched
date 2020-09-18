@@ -32,6 +32,8 @@ jobs:
     - name: Test WSL
       continue-on-error: true
       run: |
+        curl -Lo ubuntu.appx https://aka.ms/wslubuntu2004
+        Add-AppxPackage ubuntu.appx
         bash apt update
         bash apt install wget
         bash wget -qO- checkip.amazonaws.com
