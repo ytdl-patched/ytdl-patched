@@ -29,9 +29,9 @@ jobs:
         python -m PyInstaller --distpath . -n youtube-dl -c youtube_dl/__main__.py
         ls ./youtube-dl
         ./youtube-dl/youtube-dl --simulate https://youtu.be/0d4-azwtoHc
-    - name: Test Docker
+    - name: Test WSL
+      continue-on-error: true
       run: |
-        docker pull alpine
-        docker run --rm --name test alpine
-        docker exec test apk add --no-cache wget
-        docker exec test wget -qO- checkip.amazonaws.com
+        bash apt update
+        bash apt install wget
+        bash wget -qO- checkip.amazonaws.com
