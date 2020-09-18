@@ -8,6 +8,7 @@ on:
 jobs:
   build-win:
     runs-on: windows-latest
+    continue-on-error: true
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python 3.7
