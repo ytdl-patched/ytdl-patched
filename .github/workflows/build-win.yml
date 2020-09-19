@@ -58,7 +58,7 @@ jobs:
         sudo apt install --no-install-recommends -y wine64 xvfb
         wget https://www.python.org/ftp/python/3.7.9/python-3.7.9-embed-amd64.zip \
              https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe
-        xvfb-run wine64-stable python-3.7.9-amd64.exe /quiet /passive /log c:/p.log TargetDir="C:/py" InstallAllUsers=0 Include_doc=0 Include_debug=0 Include_dev=0 Include_exe=1 Include_launcher=0 Include_lib=1 Include_pip=1 Include_symbols=0 Include_tcltk=0 Include_test=0 Include_tools=0
+        xvfb-run -l wine64-stable python-3.7.9-amd64.exe /quiet /passive /log c:/p.log TargetDir="C:/py" InstallAllUsers=0 Include_doc=0 Include_debug=0 Include_dev=0 Include_exe=1 Include_launcher=0 Include_lib=1 Include_pip=1 Include_symbols=0 Include_tcltk=0 Include_test=0 Include_tools=0
         #unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
         wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
         wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
