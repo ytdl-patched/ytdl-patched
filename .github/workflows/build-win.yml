@@ -59,18 +59,6 @@ jobs:
              https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe \
              https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64-webinstall.exe \
              https://github.com/python/cpython/archive/v3.7.9.zip
-    - name: Install deps 2
-      uses: GabrielBB/xvfb-action@v1
-      continue-on-error: true
-      with:
-        run: |
-          true wine64-stable python-3.7.9-amd64.exe \
-              /quiet /passive /log "c:\\p.log" TargetDir="C:\\py" \
-              InstallAllUsers=0 Include_doc=0 Include_debug=0 Include_dev=0 \
-              Include_exe=1 Include_launcher=0 Include_lib=1 Include_pip=1 \
-              Include_symbols=0 Include_tcltk=0 Include_test=0 Include_tools=0
-    - name: Install deps 3
-      run: |
         export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
         unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
         mkdir -p wine-root/drive_c/py/Lib/
