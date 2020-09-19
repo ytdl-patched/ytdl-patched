@@ -62,6 +62,7 @@ jobs:
         wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
         #sed -i 's/#import site/import site/' wine-root/drive_c/py/python38._pth
         rm wine-root/drive_c/py/python37._pth
+        mkdir wine-root/drive_c/py/PYTHON37.ZIP/
         wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
         wine64-stable "C:\\py\\python.exe" -m PyInstaller --distpath "C:\\dist\\" -n youtube-dl -c youtube_dl/__main__.py
         ls "$WINEPREFIX/drive_c/dist/youtube-dl"
