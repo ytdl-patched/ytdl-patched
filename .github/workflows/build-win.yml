@@ -84,4 +84,4 @@ jobs:
         wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
         wine64-stable "C:\\py\\python.exe" -m PyInstaller --distpath "C:\\dist\\" -n youtube-dl -c youtube_dl/__main__.py
         ls "$WINEPREFIX/drive_c/dist/youtube-dl"
-        file "$WINEPREFIX/drive_c/dist/youtube-dl"
+        file "$WINEPREFIX/drive_c/dist/youtube-dl/youtube-dl.exe"
