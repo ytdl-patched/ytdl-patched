@@ -68,6 +68,7 @@ from ..utils import (
     sanitized_Request,
     sanitize_filename,
     str_or_none,
+    str_to_int,
     strip_or_none,
     unescapeHTML,
     unified_strdate,
@@ -1251,7 +1252,10 @@ class InfoExtractor(object):
                 interaction_type = is_e.get('interactionType')
                 if not isinstance(interaction_type, compat_str):
                     continue
-                interaction_count = int_or_none(is_e.get('userInteractionCount'))
+                # For interaction count some sites provide string instead of
+                # an integer (as per spec) with non digit characters (e.g. ",")
+                # so extracting count with more relaxed str_to_int
+                interaction_count = str_to_int(is_e.get('userInteractionCount'))
                 if interaction_count is None:
                     continue
                 count_kind = INTERACTION_TYPE_MAP.get(interaction_type.split('/')[-1])
@@ -1271,6 +1275,7 @@ class InfoExtractor(object):
                 'thumbnail': url_or_none(e.get('thumbnailUrl') or e.get('thumbnailURL')),
                 'duration': parse_duration(e.get('duration')),
                 'timestamp': unified_timestamp(e.get('uploadDate')),
+                'uploader': str_or_none(e.get('author')),
                 'filesize': float_or_none(e.get('contentSize')),
                 'tbr': int_or_none(e.get('bitrate')),
                 'width': int_or_none(e.get('width')),
