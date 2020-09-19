@@ -56,7 +56,8 @@ jobs:
         sudo apt update
         sudo apt install --no-install-recommends -y wine64
         wget https://www.python.org/ftp/python/3.7.9/python-3.7.9-embed-amd64.zip \
-             https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe
+             https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe \
+             https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64-webinstall.exe
     - name: Install deps 2
       uses: GabrielBB/xvfb-action@v1
       continue-on-error: true
@@ -69,12 +70,19 @@ jobs:
               Include_symbols=0 Include_tcltk=0 Include_test=0 Include_tools=0
     - name: Install deps 3
       run: |
-        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
-        unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
-        mkdir -p wine-root/drive_c/py/Lib/
-        unzip -d wine-root/drive_c/py/Lib/ wine-root/drive_c/py/python37.zip
-        wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
-        wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
+        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=
+        wine64-stable python-3.7.9-amd64.exe /quiet /layout python-msi
+        wine64-stable msiexec /i python-msi/core.msi targetdir='c:\python'
+        wine64-stable msiexec /i python-msi/dev.msi targetdir='c:\python'
+        wine64-stable msiexec /i python-msi/exe.msi targetdir='c:\python'
+        wine64-stable msiexec /i python-msi/lib.msi targetdir='c:\python'
+        wine64-stable msiexec /i python-msi/tools.msi targetdir='c:\python'
+        wine64-stable msiexec /i python-msi/pip.msi targetdir='c:\python'
+        #unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
+        #mkdir -p wine-root/drive_c/py/Lib/
+        #unzip -d wine-root/drive_c/py/Lib/ wine-root/drive_c/py/python37.zip
+        #wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
+        #wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
         #sed -i 's/#import site/import site/' wine-root/drive_c/py/python38._pth
         rm wine-root/drive_c/py/python37._pth wine-root/drive_c/py/python37.zip
         wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
