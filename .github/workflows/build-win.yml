@@ -71,7 +71,7 @@ jobs:
               Include_symbols=0 Include_tcltk=0 Include_test=0 Include_tools=0
     - name: Install deps 3
       run: |
-        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=
+        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
         unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
         mkdir -p wine-root/drive_c/py/Lib/
         unzip -d wine-root/drive_c/py/Lib/ wine-root/drive_c/py/python37.zip
