@@ -64,6 +64,9 @@ jobs:
         wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
         wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
         wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
+    - name: Build EXE version of YTDL
+      run: |
+        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
         wine64-stable "C:\\py\\python.exe" -m PyInstaller --distpath "C:\\dist\\" -n youtube-dl -c youtube_dl/__main__.py
         ls "$WINEPREFIX/drive_c/dist/youtube-dl"
         file "$WINEPREFIX/drive_c/dist/youtube-dl/youtube-dl.exe"
