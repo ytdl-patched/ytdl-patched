@@ -50,8 +50,8 @@ jobs:
     - name: Build patched YTDL for Windows
       run: |
         export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
-        wine64-stable "C:\\py\\python.exe" -m PyInstaller --distpath "C:\\dist\\" -n youtube-dl -c youtube_dl/__main__.py
-        #ls "$WINEPREFIX/drive_c/dist/youtube-dl"
+        wine64-stable "C:\\py\\python.exe" -m PyInstaller --onefile --distpath "C:\\dist\\" -n youtube-dl -c youtube_dl/__main__.py
+        ls "$WINEPREFIX/drive_c/dist/youtube-dl"
         #file "$WINEPREFIX/drive_c/dist/youtube-dl/youtube-dl.exe"
     - name: Prepare artifacts
       run: |
