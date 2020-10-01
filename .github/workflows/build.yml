@@ -30,10 +30,12 @@ jobs:
              https://github.com/python/cpython/archive/v3.7.9.zip
         mkdir -p wine-root/drive_c/py/Lib/
         unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
-        unzip -d wine-root/drive_c/py/Lib/ wine-root/drive_c/py/python37.zip
+        #unzip -d wine-root/drive_c/py/Lib/ wine-root/drive_c/py/python37.zip
         unzip v3.7.9.zip
         rm wine-root/drive_c/py/python37._pth wine-root/drive_c/py/python37.zip
+        rm -rf wine-root/drive_c/py/Lib/
         mv cpython-3.7.9/Include/ wine-root/drive_c/py/include/
+        mv cpython-3.7.9/Lib/ wine-root/drive_c/py/Lib/
         mv cpython-3.7.9/PC/pyconfig.h wine-root/drive_c/py/include/pyconfig.h
         wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
         wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
