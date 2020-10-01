@@ -30,7 +30,6 @@ jobs:
              https://github.com/python/cpython/archive/v3.7.9.zip
         mkdir -p wine-root/drive_c/py/Lib/
         unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
-        #unzip -d wine-root/drive_c/py/Lib/ wine-root/drive_c/py/python37.zip
         unzip v3.7.9.zip
         rm wine-root/drive_c/py/python37._pth wine-root/drive_c/py/python37.zip
         rm -rf wine-root/drive_c/py/Lib/
@@ -58,7 +57,6 @@ jobs:
             --onefile --console --distpath "C:\\dist\\" \
              --hidden-import codecs \
             -n youtube-dl youtube_dl/__main__.py
-        #ls "$WINEPREFIX/drive_c/dist/youtube-dl.exe"
         file "$WINEPREFIX/drive_c/dist/youtube-dl.exe"
     - name: Prepare artifacts
       run: |
