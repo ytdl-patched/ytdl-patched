@@ -73,12 +73,33 @@ jobs:
             | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
             | jq ".versions[\"${LATEST_VERSION}\"].exe=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
             | tee artifacts/versions.json
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-artifacts
+          path: artifacts/
+  upload-gh-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@3.5.7
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: artifacts
+  upload-homebrew:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
       - name: Upload to my homebrew repository
         run: |
           git config --global user.name nao20010128nao
@@ -93,11 +114,6 @@ jobs:
           git add .
           git commit -m "ytdl-patched: $VERSION"
           git push
-      - name: Upload artifacts for the next test
-        uses: actions/upload-artifact@v2
-        with:
-          name: ytdl-artifacts
-          path: artifacts/
   windows-test:
     needs: build
     runs-on: ${{ matrix.windows }}
@@ -111,6 +127,7 @@ jobs:
           name: ytdl-artifacts
       - name: youtube-dl --help and --version
         run: |
+          ls
           .\artifacts\youtube-dl.exe --help
           .\artifacts\youtube-dl.exe --version
       - name: Download some videos
