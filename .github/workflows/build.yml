@@ -99,6 +99,7 @@ jobs:
           name: ytdl-artifacts
           path: artifacts/
   windows-test:
+    needs: build
     runs-on: ${{ matrix.windows }}
     strategy:
       matrix:
