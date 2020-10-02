@@ -7,15 +7,18 @@ on:
     workflow_dispatch:
       inputs: {}
 
+env:
+  python_version: 3.8.5
+
 jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: ${{ env.python_version }}
       - name: Install deps
         run: |
           sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
@@ -26,16 +29,16 @@ jobs:
           export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
           sudo apt update
           sudo apt install --no-install-recommends -y wine64
-          wget https://www.python.org/ftp/python/3.7.9/python-3.7.9-embed-amd64.zip \
-              https://github.com/python/cpython/archive/v3.7.9.zip
+          wget https://www.python.org/ftp/python/${{ env.python_version }}/python-${{ env.python_version }}-embed-amd64.zip \
+              https://github.com/python/cpython/archive/v${{ env.python_version }}.zip
           mkdir -p wine-root/drive_c/py/Lib/
-          unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
-          unzip v3.7.9.zip
-          rm wine-root/drive_c/py/python37._pth wine-root/drive_c/py/python37.zip
+          unzip -d wine-root/drive_c/py/ python-${{ env.python_version }}-embed-amd64.zip
+          unzip v${{ env.python_version }}.zip
+          rm wine-root/drive_c/py/python*._pth wine-root/drive_c/py/python*.zip
           rm -rf wine-root/drive_c/py/Lib/
-          mv cpython-3.7.9/Include/ wine-root/drive_c/py/include/
-          mv cpython-3.7.9/Lib/ wine-root/drive_c/py/Lib/
-          mv cpython-3.7.9/PC/pyconfig.h wine-root/drive_c/py/include/pyconfig.h
+          mv cpython-${{ env.python_version }}/Include/ wine-root/drive_c/py/include/
+          mv cpython-${{ env.python_version }}/Lib/ wine-root/drive_c/py/Lib/
+          mv cpython-${{ env.python_version }}/PC/pyconfig.h wine-root/drive_c/py/include/pyconfig.h
           wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
           wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
           wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
@@ -121,10 +124,10 @@ jobs:
           git push
   windows-test:
     needs: build
-    runs-on: ${{ matrix.windows }}
+    runs-on: windows-${{ matrix.windows }}
     strategy:
       matrix:
-        windows: [windows-2016, windows-2019]
+        windows: [2016, 2019]
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
