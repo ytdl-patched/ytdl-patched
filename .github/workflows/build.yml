@@ -11,85 +11,109 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.8
-    - name: Install deps
-      run: |
-        sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
-        sudo apt update
-        sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk jq pandoc python python3 tzdata
-    - name: Install Wine and PyInstaller via Wine
-      run: |
-        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
-        sudo apt update
-        sudo apt install --no-install-recommends -y wine64
-        wget https://www.python.org/ftp/python/3.7.9/python-3.7.9-embed-amd64.zip \
-             https://github.com/python/cpython/archive/v3.7.9.zip
-        mkdir -p wine-root/drive_c/py/Lib/
-        unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
-        unzip v3.7.9.zip
-        rm wine-root/drive_c/py/python37._pth wine-root/drive_c/py/python37.zip
-        rm -rf wine-root/drive_c/py/Lib/
-        mv cpython-3.7.9/Include/ wine-root/drive_c/py/include/
-        mv cpython-3.7.9/Lib/ wine-root/drive_c/py/Lib/
-        mv cpython-3.7.9/PC/pyconfig.h wine-root/drive_c/py/include/pyconfig.h
-        wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
-        wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
-        wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
-    - name: Build patched YTDL for Linux
-      run: |
-        mkdir artifacts
-        export LATEST_VERSION="$(date)"
-        echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install deps
+        run: |
+          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+          sudo apt update
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk jq pandoc python python3 tzdata
+      - name: Install Wine and PyInstaller via Wine
+        run: |
+          export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
+          sudo apt update
+          sudo apt install --no-install-recommends -y wine64
+          wget https://www.python.org/ftp/python/3.7.9/python-3.7.9-embed-amd64.zip \
+              https://github.com/python/cpython/archive/v3.7.9.zip
+          mkdir -p wine-root/drive_c/py/Lib/
+          unzip -d wine-root/drive_c/py/ python-3.7.9-embed-amd64.zip
+          unzip v3.7.9.zip
+          rm wine-root/drive_c/py/python37._pth wine-root/drive_c/py/python37.zip
+          rm -rf wine-root/drive_c/py/Lib/
+          mv cpython-3.7.9/Include/ wine-root/drive_c/py/include/
+          mv cpython-3.7.9/Lib/ wine-root/drive_c/py/Lib/
+          mv cpython-3.7.9/PC/pyconfig.h wine-root/drive_c/py/include/pyconfig.h
+          wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
+          wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
+          wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
+      - name: Build patched YTDL for Linux
+        run: |
+          mkdir artifacts
+          export LATEST_VERSION="$(date)"
+          echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
 
-        echo "from __future__ import unicode_literals
-        __version__ = '${LATEST_VERSION}'
-        " > youtube_dl/version.py
+          echo "from __future__ import unicode_literals
+          __version__ = '${LATEST_VERSION}'
+          " > youtube_dl/version.py
 
-        make youtube-dl youtube-dl.tar.gz
-    - name: Build patched YTDL for Windows
-      run: |
-        export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
-        env PYTHONPATH="C:\\py\\" wine64-stable "C:\\py\\python.exe" -m PyInstaller \
-            --onefile --console --distpath "C:\\dist\\" \
-             --hidden-import codecs \
-            -n youtube-dl youtube_dl/__main__.py
-        file "$WINEPREFIX/drive_c/dist/youtube-dl.exe"
-    - name: Prepare artifacts
-      run: |
-        export LATEST_VERSION="$(cat artifacts/LATEST_VERSION)"
-        mv youtube-dl artifacts/
-        mv youtube-dl.tar.gz artifacts/
-        mv wine-root/drive_c/dist/youtube-dl.exe artifacts/
+          make youtube-dl youtube-dl.tar.gz
+      - name: Build patched YTDL for Windows
+        run: |
+          export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
+          env PYTHONPATH="C:\\py\\" wine64-stable "C:\\py\\python.exe" -m PyInstaller \
+              --onefile --console --distpath "C:\\dist\\" \
+              --hidden-import codecs \
+              -n youtube-dl youtube_dl/__main__.py
+          file "$WINEPREFIX/drive_c/dist/youtube-dl.exe"
+      - name: Prepare artifacts
+        run: |
+          export LATEST_VERSION="$(cat artifacts/LATEST_VERSION)"
+          mv youtube-dl artifacts/
+          mv youtube-dl.tar.gz artifacts/
+          mv wine-root/drive_c/dist/youtube-dl.exe artifacts/
 
-        FILEHASH_BIN="$(sha256sum artifacts/youtube-dl | awk '{print $1}')"
-        FILEHASH_TAR="$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
-        FILEHASH_EXE="$(sha256sum artifacts/youtube-dl.exe | awk '{print $1}')"
-        echo '{"versions":{}}' | jq ".latest=\"${LATEST_VERSION}\"" \
-          | jq ".versions[\"${LATEST_VERSION}\"].bin=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl\",\"${FILEHASH_BIN}\"]" \
-          | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
-          | jq ".versions[\"${LATEST_VERSION}\"].exe=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
-          | tee artifacts/versions.json
-    - name: Deploy to gh-pages
-      uses: JamesIves/github-pages-deploy-action@3.5.7
-      with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: artifacts
-    - name: Upload to my homebrew repository
-      run: |
-        git config --global user.name nao20010128nao
-        git config --global user.email nao20010128@gmail.com
-        git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
-        cd homebrew-my
-        export FILEHASH_TAR="$(sha256sum ../artifacts/youtube-dl.tar.gz | awk '{print $1}')"
-        export VERSION="$(date --date="$(cat ../artifacts/LATEST_VERSION)" +'%s')"
-        echo $FILEHASH_TAR $VERSION
-        sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
-        sed -E -i "s/version \".+\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
-        git add .
-        git commit -m "ytdl-patched: $VERSION"
-        git push
+          FILEHASH_BIN="$(sha256sum artifacts/youtube-dl | awk '{print $1}')"
+          FILEHASH_TAR="$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
+          FILEHASH_EXE="$(sha256sum artifacts/youtube-dl.exe | awk '{print $1}')"
+          echo '{"versions":{}}' | jq ".latest=\"${LATEST_VERSION}\"" \
+            | jq ".versions[\"${LATEST_VERSION}\"].bin=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl\",\"${FILEHASH_BIN}\"]" \
+            | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
+            | jq ".versions[\"${LATEST_VERSION}\"].exe=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
+            | tee artifacts/versions.json
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@3.5.7
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: artifacts
+      - name: Upload to my homebrew repository
+        run: |
+          git config --global user.name nao20010128nao
+          git config --global user.email nao20010128@gmail.com
+          git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
+          cd homebrew-my
+          export FILEHASH_TAR="$(sha256sum ../artifacts/youtube-dl.tar.gz | awk '{print $1}')"
+          export VERSION="$(date --date="$(cat ../artifacts/LATEST_VERSION)" +'%s')"
+          echo $FILEHASH_TAR $VERSION
+          sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
+          sed -E -i "s/version \".+\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
+          git add .
+          git commit -m "ytdl-patched: $VERSION"
+          git push
+      - name: Upload artifacts for the next test
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-artifacts
+          path: artifacts/
+  windows-test:
+    runs-on: ${{ matrix.windows }}
+    strategy:
+    matrix:
+      windows: [windows-2016, windows-2019]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
+      - name: youtube-dl --help and --version
+        run: |
+          .\artifacts\youtube-dl.exe --help
+          .\artifacts\youtube-dl.exe --version
+      - name: Download some videos
+        run: |
+          .\artifacts\youtube-dl.exe \
+              https://www.youtube.com/watch?v=XEY7UQJxw-o \
+              https://twitter.com/twetchapp/status/1311686520793829376?s=20
