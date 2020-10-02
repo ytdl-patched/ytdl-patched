@@ -101,8 +101,8 @@ jobs:
   windows-test:
     runs-on: ${{ matrix.windows }}
     strategy:
-    matrix:
-      windows: [windows-2016, windows-2019]
+      matrix:
+        windows: [windows-2016, windows-2019]
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
