@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
@@ -86,6 +86,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
@@ -131,11 +132,10 @@ jobs:
           name: ytdl-artifacts
       - name: youtube-dl --help and --version
         run: |
-          ls
           .\artifacts\youtube-dl.exe --help
           .\artifacts\youtube-dl.exe --version
       - name: Download some videos
         run: |
-          .\artifacts\youtube-dl.exe \
-              https://www.youtube.com/watch?v=XEY7UQJxw-o \
+          .\artifacts\youtube-dl.exe `
+              https://www.youtube.com/watch?v=XEY7UQJxw-o `
               https://twitter.com/twetchapp/status/1311686520793829376
