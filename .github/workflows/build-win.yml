@@ -139,7 +139,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-artifacts
+          name: ytdl-windows
       - name: youtube-dl --help and --version
         run: |
           .\artifacts\youtube-dl.exe --help
@@ -148,4 +148,25 @@ jobs:
         run: |
           .\artifacts\youtube-dl.exe `
               https://www.youtube.com/watch?v=XEY7UQJxw-o `
+              https://twitter.com/twetchapp/status/1311686520793829376
+  linux-test:
+    needs: build-linux
+    runs-on: ubuntu-${{ matrix.windows }}
+    strategy:
+      matrix:
+        ubuntu: ["20.04", "18.04", "16.04"]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-linux
+      - name: youtube-dl --help and --version
+        run: |
+          chmod a+x ./artifacts/youtube-dl
+          ./artifacts/youtube-dl --help
+          ./artifacts/youtube-dl --version
+      - name: Download some videos
+        run: |
+          ./artifacts/youtube-dl \
+              https://www.youtube.com/watch?v=XEY7UQJxw-o \
               https://twitter.com/twetchapp/status/1311686520793829376
