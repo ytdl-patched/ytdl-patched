@@ -186,6 +186,7 @@ jobs:
   windows-test:
     needs: build-windows
     runs-on: windows-${{ matrix.windows }}
+    continue-on-error: true
     strategy:
       matrix:
         windows: [2016, 2019]
@@ -203,17 +204,28 @@ jobs:
           .\artifacts\youtube-dl.exe `
               https://www.youtube.com/watch?v=XEY7UQJxw-o `
               https://twitter.com/twetchapp/status/1311686520793829376
-  ubuntu-test:
+  ubuntu-mac-test:
     needs: build-linux
-    runs-on: ubuntu-${{ matrix.ubuntu }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       matrix:
-        ubuntu: ["20.04", "18.04", "16.04"]
+        os: [
+          "ubuntu-20.04", "ubuntu-18.04", "ubuntu-16.04",
+          "macos-latest"
+        ]
+        python_version: [
+          "3.8.5", "3.7.9", "3.6.12", "3.5.10"
+        ]
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
           name: ytdl-linux
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python_version }}
       - name: youtube-dl --help and --version
         run: |
           chmod a+x ./artifacts/youtube-dl
