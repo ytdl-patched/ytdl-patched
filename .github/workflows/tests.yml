@@ -11,11 +11,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.ytdl_test_set == 'download' }}
+    continue-on-error: ${{ matrix.ytdl_test_set == 'download' || matrix.python_version < 3 || matrix.python_version == 'pypy2' }}
     strategy:
       matrix:
         python_version: [
-          "3.8", "3.7", "3.6", "3.5"
+          "2.7", "2.6",
+          "3.8", "3.7", "3.6", "3.5",
+          pypy3, pypy2
         ]
         ytdl_test_set: [download, core]
     env:
