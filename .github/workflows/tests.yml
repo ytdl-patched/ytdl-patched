@@ -1,0 +1,44 @@
+# copied from .travis.yml with some exclusions (jython, pypy)
+name: Run tests
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.ytdl_test_set == 'download' }}
+    strategy:
+      matrix:
+        python_version: [
+          "3.8", "3.7", "3.6", "3.5"
+        ]
+        ytdl_test_set: [download, core]
+    env:
+      YTDL_TEST_SET: ${{ matrix.ytdl_test_set }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install deps
+        run: pip3 install nose
+      - name: Run test
+        run: ./devscripts/run_tests.sh
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install deps
+        run: pip3 install flake8
+      - name: Run flake8 .
+        run: flake8 .
