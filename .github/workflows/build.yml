@@ -11,10 +11,44 @@ env:
   python_version: 3.8.5
 
 jobs:
-  build:
-    runs-on: ubuntu-20.04
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      latest_version: ${{ steps.prepare.outputs.latest_version }}
     steps:
       - uses: actions/checkout@v2
+      - name: Install deps
+        run: |
+          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+          sudo apt update
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y tzdata
+      - name: Prepare files
+        id: prepare
+        run: |
+          mkdir artifacts
+          export LATEST_VERSION="$(date)"
+          echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
+          echo "::set-output name=latest_version::${LATEST_VERSION}"
+
+          echo "from __future__ import unicode_literals
+          __version__ = '${LATEST_VERSION}'
+          " > youtube_dl/version.py
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-base
+          path: |
+            youtube_dl/version.py
+            artifacts/
+  build-linux:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download base
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-base
       - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v1
         with:
@@ -23,54 +57,84 @@ jobs:
         run: |
           sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
           sudo apt update
-          sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk jq pandoc python python3 tzdata
-      - name: Install Wine and PyInstaller via Wine
-        run: |
-          export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
-          sudo apt update
-          sudo apt install --no-install-recommends -y wine64
-          wget https://www.python.org/ftp/python/${{ env.python_version }}/python-${{ env.python_version }}-embed-amd64.zip \
-              https://github.com/python/cpython/archive/v${{ env.python_version }}.zip
-          mkdir -p wine-root/drive_c/py/Lib/
-          unzip -d wine-root/drive_c/py/ python-${{ env.python_version }}-embed-amd64.zip
-          unzip v${{ env.python_version }}.zip
-          rm wine-root/drive_c/py/python*._pth wine-root/drive_c/py/python*.zip
-          rm -rf wine-root/drive_c/py/Lib/
-          mv cpython-${{ env.python_version }}/Include/ wine-root/drive_c/py/include/
-          mv cpython-${{ env.python_version }}/Lib/ wine-root/drive_c/py/Lib/
-          mv cpython-${{ env.python_version }}/PC/pyconfig.h wine-root/drive_c/py/include/pyconfig.h
-          wget https://bootstrap.pypa.io/get-pip.py -O wine-root/drive_c/py/get-pip.py
-          wine64-stable "C:\\py\\python.exe" "C:\\py\\get-pip.py"
-          wine64-stable "C:\\py\\python.exe" -m pip install pyinstaller
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk pandoc tzdata
       - name: Build patched YTDL for Linux
         run: |
-          mkdir artifacts
-          export LATEST_VERSION="$(date)"
-          echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
-
-          echo "from __future__ import unicode_literals
-          __version__ = '${LATEST_VERSION}'
-          " > youtube_dl/version.py
-
           make youtube-dl youtube-dl.tar.gz
-      - name: Build patched YTDL for Windows
-        run: |
-          export WINEPREFIX="$(realpath wine-root/)" WINEARCH=win64 WINEDEBUG=-all
-          env PYTHONPATH="C:\\py\\" wine64-stable "C:\\py\\python.exe" -m PyInstaller \
-              --onefile --console --distpath "C:\\dist\\" \
-              --hidden-import codecs \
-              -n youtube-dl youtube_dl/__main__.py
-          file "$WINEPREFIX/drive_c/dist/youtube-dl.exe"
-      - name: Prepare artifacts
-        run: |
-          export LATEST_VERSION="$(cat artifacts/LATEST_VERSION)"
           mv youtube-dl artifacts/
           mv youtube-dl.tar.gz artifacts/
-          mv wine-root/drive_c/dist/youtube-dl.exe artifacts/
-
-          FILEHASH_BIN="$(sha256sum artifacts/youtube-dl | awk '{print $1}')"
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-linux
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            artifacts/
+            README.md
+  build-windows:
+    runs-on: windows-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download base
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-base
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Install deps
+        run: |
+          pip install --upgrade pyinstaller
+      - name: Build patched YTDL for Windows
+        run: |
+          python -m PyInstaller `
+              --onefile --console --distpath . `
+              --hidden-import codecs `
+              -n youtube-dl youtube_dl\__main__.py
+          Move-Item youtube-dl.exe artifacts/
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-windows
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            artifacts/
+            README.md
+  prepare-artifacts:
+    runs-on: ubuntu-latest
+    needs: [prepare, build-linux, build-windows]
+    env:
+      LATEST_VERSION: ${{ needs.prepare.outputs.latest_version }}
+    outputs:
+      filehash_bin: ${{ steps.hash-and-versions.outputs.filehash_bin }}
+      filehash_exe: ${{ steps.hash-and-versions.outputs.filehash_exe }}
+      filehash_tar: ${{ steps.hash-and-versions.outputs.filehash_tar }}
+    steps:
+      - name: Download builds for Linux
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-linux
+      - name: Download builds for Windows
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y jq
+      - name: Prepare artifacts
+        id: hash-and-versions
+        run: |
+          FILEHASH_BIN="$(sha256sum artifacts/youtube-dl        | awk '{print $1}')"
           FILEHASH_TAR="$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
-          FILEHASH_EXE="$(sha256sum artifacts/youtube-dl.exe | awk '{print $1}')"
+          FILEHASH_EXE="$(sha256sum artifacts/youtube-dl.exe    | awk '{print $1}')"
+          echo "::set-output name=filehash_bin::${FILEHASH_BIN}"
+          echo "::set-output name=filehash_tar::${FILEHASH_TAR}"
+          echo "::set-output name=filehash_exe::${FILEHASH_EXE}"
           echo '{"versions":{}}' | jq ".latest=\"${LATEST_VERSION}\"" \
             | jq ".versions[\"${LATEST_VERSION}\"].bin=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl\",\"${FILEHASH_BIN}\"]" \
             | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
@@ -86,7 +150,7 @@ jobs:
             artifacts/
             README.md
   upload-gh-pages:
-    needs: build
+    needs: prepare-artifacts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -101,21 +165,18 @@ jobs:
           BRANCH: gh-pages
           FOLDER: artifacts
   upload-homebrew:
-    needs: build
+    needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
+    env:
+      FILEHASH_TAR: ${{ needs.prepare.outputs.filehash_tar }}
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-artifacts
       - name: Upload to my homebrew repository
         run: |
           git config --global user.name nao20010128nao
           git config --global user.email nao20010128@gmail.com
           git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
           cd homebrew-my
-          export FILEHASH_TAR="$(sha256sum ../artifacts/youtube-dl.tar.gz | awk '{print $1}')"
-          export VERSION="$(date --date="$(cat ../artifacts/LATEST_VERSION)" +'%s')"
+          export VERSION="$(date --date="${{ needs.prepare.outputs.latest_version }}" +'%s')"
           echo $FILEHASH_TAR $VERSION
           sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
           sed -E -i "s/version \".*\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
@@ -123,7 +184,7 @@ jobs:
           git commit -m "ytdl-patched: $VERSION"
           git push
   windows-test:
-    needs: build
+    needs: build-windows
     runs-on: windows-${{ matrix.windows }}
     strategy:
       matrix:
@@ -132,7 +193,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-artifacts
+          name: ytdl-windows
       - name: youtube-dl --help and --version
         run: |
           .\artifacts\youtube-dl.exe --help
@@ -141,4 +202,25 @@ jobs:
         run: |
           .\artifacts\youtube-dl.exe `
               https://www.youtube.com/watch?v=XEY7UQJxw-o `
+              https://twitter.com/twetchapp/status/1311686520793829376
+  ubuntu-test:
+    needs: build-linux
+    runs-on: ubuntu-${{ matrix.ubuntu }}
+    strategy:
+      matrix:
+        ubuntu: ["20.04", "18.04", "16.04"]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-linux
+      - name: youtube-dl --help and --version
+        run: |
+          chmod a+x ./artifacts/youtube-dl
+          ./artifacts/youtube-dl --help
+          ./artifacts/youtube-dl --version
+      - name: Download some videos
+        run: |
+          ./artifacts/youtube-dl \
+              https://www.youtube.com/watch?v=XEY7UQJxw-o \
               https://twitter.com/twetchapp/status/1311686520793829376
