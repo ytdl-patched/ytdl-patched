@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
       - name: Install deps (Python 3)
-        if: ${{ matrix.python_version >= 3 && matrix.python_version != 'pypy2' }}
+        if: ${{ matrix.python_version >= 3 || matrix.python_version == 'pypy3' }}
         run: pip3 install nose
       - name: Install deps (Python 2)
         if: ${{ matrix.python_version <  3 || matrix.python_version == 'pypy2' }}
