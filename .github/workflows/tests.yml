@@ -11,13 +11,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.ytdl_test_set == 'download' || matrix.python_version < 3 || matrix.python_version == 'pypy2' }}
+    continue-on-error: ${{ matrix.ytdl_test_set == 'download' || matrix.python_version < 3 || matrix.python_version == 'pypy2' || matrix.python_version == 'jython' }}
     strategy:
       matrix:
         python_version: [
           "2.7",
           "3.8", "3.7", "3.6", "3.5",
-          pypy3, pypy2
+          pypy3, pypy2,
+          jython
         ]
         ytdl_test_set: [download, core]
     env:
@@ -25,14 +26,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
+        if: ${{ matrix.python_version != 'jython' }}
         with:
           python-version: ${{ matrix.python_version }}
+      - name: Install Jython
+        if: ${{ matrix.python_version == 'jython' }}
+        run: |
+          ./devscripts/install_jython.sh
+          echo "$HOME/jython/bin" >> $GITHUB_PATH
       - name: Install deps (Python 3)
-        if: ${{ matrix.python_version >= 3 || matrix.python_version == 'pypy3' }}
+        if: ${{ matrix.python_version >= 3 || matrix.python_version == 'pypy3' && matrix.python_version != 'jython' }}
         run: pip3 install nose
       - name: Install deps (Python 2)
-        if: ${{ matrix.python_version <  3 || matrix.python_version == 'pypy2' }}
+        if: ${{ matrix.python_version <  3 || matrix.python_version == 'pypy2' && matrix.python_version != 'jython' }}
         run: pip install nose
       - name: Run test
         run: ./devscripts/run_tests.sh
