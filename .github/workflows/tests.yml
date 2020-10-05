@@ -42,6 +42,7 @@ jobs:
         if: ${{ matrix.python_version <  3 || matrix.python_version == 'pypy2' && matrix.python_version != 'jython' }}
         run: pip install nose
       - name: Run test
+        continue-on-error: ${{ matrix.ytdl_test_set == 'download' || matrix.python_version < 3 || matrix.python_version == 'pypy2' || matrix.python_version == 'jython' }}
         run: ./devscripts/run_tests.sh
   flake8:
     runs-on: ubuntu-latest
