@@ -1,4 +1,4 @@
-name: Windows build trial
+name: Build script staging
 
 on:
   push:
