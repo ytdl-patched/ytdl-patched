@@ -1169,8 +1169,8 @@ from .tnaflix import (
 from .toggle import ToggleIE
 from .tokyomotion import (
     TokyoMotionIE,
-    TokyoMotionUserIE,
     TokyoMotionUserFavsIE,
+    TokyoMotionUserIE,
     TokyoMotionSearchesIE,
     TokyoMotionScannerIE,
 )
