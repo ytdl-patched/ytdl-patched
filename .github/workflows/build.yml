@@ -29,6 +29,7 @@ jobs:
           export LATEST_VERSION="$(date)"
           echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
           echo "::set-output name=latest_version::${LATEST_VERSION}"
+          echo "::set-output name=latest_version_numeric::$(date --date="${LATEST_VERSION}" +'%s')"
 
           echo "from __future__ import unicode_literals
           __version__ = '${LATEST_VERSION}'
@@ -172,6 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILEHASH_TAR: ${{ needs.prepare.outputs.filehash_tar }}
+      VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
     steps:
       - name: Upload to my homebrew repository
         run: |
@@ -179,7 +181,6 @@ jobs:
           git config --global user.email nao20010128@gmail.com
           git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
           cd homebrew-my
-          export VERSION="$(date --date="${{ needs.prepare.outputs.latest_version }}" +'%s')"
           echo $FILEHASH_TAR $VERSION
           sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
           sed -E -i "s/version \".*\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
