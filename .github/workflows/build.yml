@@ -75,6 +75,9 @@ jobs:
   build-windows:
     runs-on: windows-latest
     needs: prepare
+    strategy:
+      matrix:
+        icon: [red, white]
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -93,12 +96,13 @@ jobs:
           python -m PyInstaller `
               --onefile --console --distpath . `
               --hidden-import codecs `
+              --icon icons\youtube_social_squircle_${{ matrix.icon }}.ico `
               -n youtube-dl youtube_dl\__main__.py
           Move-Item youtube-dl.exe artifacts/
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: ytdl-windows
+          name: ytdl-windows-${{ matrix.icon }}
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
@@ -121,7 +125,7 @@ jobs:
       - name: Download builds for Windows
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows
+          name: ytdl-windows-red
       - name: Install deps
         run: |
           sudo apt update
@@ -193,7 +197,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows
+          name: ytdl-windows-white
       - name: youtube-dl --help and --version
         run: |
           .\artifacts\youtube-dl.exe --help
