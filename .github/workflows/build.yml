@@ -9,6 +9,7 @@ on:
 
 env:
   python_version: 3.8
+  windows_icon: red
 
 jobs:
   prepare:
@@ -125,7 +126,7 @@ jobs:
       - name: Download builds for Windows
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-red
+          name: ytdl-windows-${{ env.windows_icon }}
       - name: Install deps
         run: |
           sudo apt update
@@ -224,6 +225,10 @@ jobs:
           asset_path: ./artifacts/youtube-dl.tar.gz
           asset_name: youtube-dl.tar.gz
           asset_content_type: application/gzip
+      - name: Download builds for Windows (red icon)
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-red
       - name: Upload exe
         id: upload-3
         uses: actions/upload-release-asset@v1
@@ -232,7 +237,21 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
-          asset_name: youtube-dl.exe
+          asset_name: youtube-dl-red.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Download builds for Windows (white icon)
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-white
+      - name: Upload exe
+        id: upload-4
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./artifacts/youtube-dl.exe
+          asset_name: youtube-dl-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
   windows-test:
     needs: build-windows
