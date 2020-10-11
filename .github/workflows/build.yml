@@ -191,6 +191,7 @@ jobs:
   upload-releases:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
+    steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
@@ -234,7 +235,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl.exe
-          asset_content_type: application/exe
+          asset_content_type: application/vnd.microsoft.portable-executable
   windows-test:
     needs: build-windows
     runs-on: windows-${{ matrix.windows }}
