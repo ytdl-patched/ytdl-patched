@@ -202,8 +202,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.prepare.latest_version_numeric }}
-          release_name: ${{ needs.prepare.latest_version }}
+          tag_name: ${{ needs.prepare.outputs.latest_version_numeric }}
+          release_name: ${{ needs.prepare.outputs.latest_version }}
           draft: false
           prerelease: false
       - name: Upload bin
