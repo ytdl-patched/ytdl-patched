@@ -113,8 +113,6 @@ jobs:
   prepare-artifacts:
     runs-on: ubuntu-latest
     needs: [prepare, build-linux, build-windows]
-    env:
-      LATEST_VERSION: ${{ needs.prepare.outputs.latest_version }}
     outputs:
       filehash_bin: ${{ steps.hash-and-versions.outputs.filehash_bin }}
       filehash_exe: ${{ steps.hash-and-versions.outputs.filehash_exe }}
@@ -140,10 +138,10 @@ jobs:
           echo "::set-output name=filehash_bin::${FILEHASH_BIN}"
           echo "::set-output name=filehash_tar::${FILEHASH_TAR}"
           echo "::set-output name=filehash_exe::${FILEHASH_EXE}"
-          echo '{"versions":{}}' | jq ".latest=\"${LATEST_VERSION}\"" \
-            | jq ".versions[\"${LATEST_VERSION}\"].bin=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl\",\"${FILEHASH_BIN}\"]" \
-            | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
-            | jq ".versions[\"${LATEST_VERSION}\"].exe=[\"https://nao20010128nao.github.io/ytdl-patched/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
+          echo '{"versions":{}}' | jq ".latest=\"${{ needs.prepare.outputs.latest_version }}\"" \
+            | jq ".versions[\"${LATEST_VERSION}\"].bin=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl\",\"${FILEHASH_BIN}\"]" \
+            | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
+            | jq ".versions[\"${LATEST_VERSION}\"].exe=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
             | tee artifacts/versions.json
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
@@ -216,7 +214,7 @@ jobs:
           asset_path: ./artifacts/youtube-dl
           asset_name: youtube-dl
           asset_content_type: application/zip
-      - name: Upload tar.gz
+      - name: Upload tar
         id: upload-2
         uses: actions/upload-release-asset@v1
         env:
