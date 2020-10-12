@@ -114,13 +114,14 @@ jobs:
   build-windows-py2exe:
     runs-on: windows-latest
     needs: prepare
+    continue-on-error: true
     strategy:
       matrix:
         python:
           - version: 3.8
             package: git+https://github.com/albertosottile/py2exe
             name: new
-          - version: 2.7
+          - version: 3.3
             package: py2exe
             name: old
     steps:
