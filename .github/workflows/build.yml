@@ -172,7 +172,7 @@ jobs:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
     env:
-      FILEHASH_TAR: ${{ needs.prepare.outputs.filehash_tar }}
+      FILEHASH_TAR: ${{ needs.prepare-artifacts.outputs.filehash_tar }}
       VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
     steps:
       - name: Upload to my homebrew repository
