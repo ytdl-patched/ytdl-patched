@@ -111,46 +111,6 @@ jobs:
           path: |
             artifacts/
             README.md
-  build-windows-py2exe:
-    runs-on: windows-latest
-    needs: prepare
-    continue-on-error: true
-    strategy:
-      matrix:
-        python:
-          - version: 3.8
-            package: git+https://github.com/albertosottile/py2exe
-            name: new
-          - version: 3.3
-            package: py2exe
-            name: old
-    steps:
-      - uses: actions/checkout@v2
-      - name: Download base
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-base
-      - name: Set up Python ${{ matrix.python.version }}
-        uses: actions/setup-python@v1
-        with:
-          python-version: ${{ matrix.python.version }}
-      - name: Install deps
-        run: |
-          pip install --upgrade ${{ matrix.python.package }}
-      - name: Build patched YTDL for Windows
-        run: |
-          python setup.py py2exe
-          ls
-      - name: Upload artifacts for the next steps
-        uses: actions/upload-artifact@v2
-        if: ${{ false }}
-        with:
-          name: ytdl-windows-py2exe-${{ matrix.python.name }}
-          # README.md (or any other files in the repo) is required
-          # to prevent upload-artifacts to find LCA
-          path: |
-            artifacts/
-            README.md
   prepare-artifacts:
     runs-on: ubuntu-latest
     needs: [prepare, build-linux, build-windows]
@@ -172,6 +132,7 @@ jobs:
           sudo apt update
           sudo env DEBIAN_FRONTEND=noninteractive apt install -y jq
       - name: Prepare artifacts
+        id: hash-and-versions
         run: |
           FILEHASH_BIN="$(sha256sum artifacts/youtube-dl        | awk '{print $1}')"
           FILEHASH_TAR="$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
