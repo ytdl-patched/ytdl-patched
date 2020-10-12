@@ -51,3 +51,6 @@ venv/
 
 # VS Code related files
 .vscode
+
+# Added by GH Codespaces
+pythonenv3.8/
