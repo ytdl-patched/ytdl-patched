@@ -140,9 +140,9 @@ jobs:
           echo "::set-output name=filehash_tar::${FILEHASH_TAR}"
           echo "::set-output name=filehash_exe::${FILEHASH_EXE}"
           echo '{"versions":{}}' | jq ".latest=\"${{ needs.prepare.outputs.latest_version }}\"" \
-            | jq ".versions[\"${LATEST_VERSION}\"].bin=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl\",\"${FILEHASH_BIN}\"]" \
-            | jq ".versions[\"${LATEST_VERSION}\"].tar=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
-            | jq ".versions[\"${LATEST_VERSION}\"].exe=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].bin=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl\",\"${FILEHASH_BIN}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].tar=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].exe=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
             | tee artifacts/versions.json
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
