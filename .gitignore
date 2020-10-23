@@ -20,6 +20,7 @@ youtube-dl.tar.gz
 .coverage
 cover/
 updates_key.pem
+.jython_cache/
 *.egg-info
 *.srt
 *.ttml
