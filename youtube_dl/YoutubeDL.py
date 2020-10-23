@@ -1867,6 +1867,7 @@ class YoutubeDL(object):
         if not self.params.get('skip_download', False):
             try:
                 self.lock_file(info_dict)
+                
                 def dl(name, info):
                     fd = get_suitable_downloader(info, self.params)(self, self.params)
                     for ph in self._progress_hooks:
@@ -2124,14 +2125,14 @@ class YoutubeDL(object):
                 raise
         return False
 
-    def unlock_file(self, info_dict):
-        vid_id = self._make_archive_id(info_dict)
-        if not vid_id:
+    def record_download_archive(self, info_dict):
+        fn = self.params.get('download_archive')
+        if fn is None:
             return
-        vid_id = re.sub(r'[/\\: ]', '_', vid_id) + '.lock'
-        if self.params.get('verbose'):
-            self.to_screen('[debug] unlocking %s' % vid_id)
-        os.remove(vid_id)
+        vid_id = self._make_archive_id(info_dict)
+        assert vid_id
+        with locked_file(fn, 'a', encoding='utf-8') as archive_file:
+            archive_file.write(vid_id + '\n')
 
     def lock_file(self, info_dict):
         vid_id = self._make_archive_id(info_dict)
@@ -2143,10 +2144,20 @@ class YoutubeDL(object):
         try:
             with locked_file(vid_id, 'w', encoding='utf-8') as w:
                 w.write(vid_id)
-        except IOError as ioe:
-            if ioe.errno != errno.ENOENT:
-                raise
-        return
+        except IOError:
+            pass
+
+    def unlock_file(self, info_dict):
+        vid_id = self._make_archive_id(info_dict)
+        if not vid_id:
+            return
+        vid_id = re.sub(r'[/\\: ]', '_', vid_id) + '.lock'
+        if self.params.get('verbose'):
+            self.to_screen('[debug] unlocking %s' % vid_id)
+        try:
+            os.remove(vid_id)
+        except IOError:
+            pass
 
     def has_locked(self, info_dict):
         vid_id = self._make_archive_id(info_dict)
@@ -2157,15 +2168,6 @@ class YoutubeDL(object):
             return os.path.exists(vid_id)
         except IOError:
             return False
-
-    def record_download_archive(self, info_dict):
-        fn = self.params.get('download_archive')
-        if fn is None:
-            return
-        vid_id = self._make_archive_id(info_dict)
-        assert vid_id
-        with locked_file(fn, 'a', encoding='utf-8') as archive_file:
-            archive_file.write(vid_id + '\n')
 
     @staticmethod
     def format_resolution(format, default='unknown'):
