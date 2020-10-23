@@ -42,6 +42,7 @@ jobs:
         run: |
           ./devscripts/install_jython.sh
           echo "$HOME/jython/bin" >> $GITHUB_PATH
+          ln -s "$HOME/jython/bin/jython" "$HOME/jython/bin/python"
       - name: Install deps (Python 3)
         if: ${{ matrix.python.major == 3 && !matrix.python.jython }}
         run: pip3 install nose
