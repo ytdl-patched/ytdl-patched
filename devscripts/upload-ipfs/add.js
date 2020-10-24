@@ -4,7 +4,7 @@ const ipfsHttp = require("ipfs-http-client");
 const { globSource } = ipfsHttp;
 
 const clients = [
-  ipfsHttp("http://127.0.0.1:5001"),
+  ipfsHttp("http://127.0.0.1:51234"),
   ipfsHttp("https://ipfs.infura.io:5001"),
 ];
 
