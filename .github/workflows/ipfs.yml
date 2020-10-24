@@ -20,13 +20,10 @@ jobs:
         with:
           node-version: 14
       - name: Install IPFS
+        continue-on-error: true
         run: |
           sudo snap install ipfs
           ipfs init
-          ipfs config Addresses.API /ip4/127.0.0.1/tcp/51234
-          ipfs shutdown || true
-          killall ipfs  || true
-          rm $HOME/snap/ipfs/common/repo.lock || true
           ipfs daemon &
           ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
       - name: Install deps
