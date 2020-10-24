@@ -10,6 +10,8 @@ on:
 jobs:
   upload:
     runs-on: ubuntu-latest
+    outputs:
+      ipfs-hash: ${{ steps.upload-ipfs.outputs.ipfs-hash }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -40,18 +42,27 @@ jobs:
           IPFS_HASH="$(tail -n1 upload.log)"
           echo $IPFS_HASH
           echo "::set-output name=ipfs-hash::${IPFS_HASH}"
+  clone_test:
+    runs-on: ubuntu-latest
+    needs: upload
+    strategy:
+      matrix:
+        gateway: [
+          gateway.ipfs.io,
+          ipfs.io,
+          10.via0.com,
+          cloudflare-ipfs.com,
+          cf-ipfs.com,
+          ipfs.smartsignature.io
+        ]
+    steps:
       - name: git clone trial 1
         continue-on-error: true
         run: |
-          git clone https://gateway.ipfs.io/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test1
+          git clone https://${{ matrix.gateway }}/ipfs/${{ needs.upload.outputs.ipfs-hash }}/ test1
           git -C test1 log -n5
       - name: git clone trial 2
         continue-on-error: true
         run: |
-          git clone https://cloudflare-ipfs.com/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test2
+          git clone https://${{ matrix.gateway }}/ipfs/${{ needs.upload.outputs.ipfs-hash }}/ytdl-patched/ test2
           git -C test2 log -n5
-      - name: git clone trial 3
-        continue-on-error: true
-        run: |
-          git clone https://ipfs.io/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test3
-          git -C test3 log -n5
