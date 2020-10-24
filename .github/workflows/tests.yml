@@ -1,4 +1,4 @@
-# copied from .travis.yml with some exclusions (jython, pypy)
+# copied from .travis.yml
 name: Run tests
 
 on:
