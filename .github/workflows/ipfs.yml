@@ -41,14 +41,17 @@ jobs:
           echo $IPFS_HASH
           echo "::set-output name=ipfs-hash::${IPFS_HASH}"
       - name: git clone trial 1
+        continue-on-error: true
         run: |
           git clone https://gateway.ipfs.io/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test1
           git -C test1 log -n5
       - name: git clone trial 2
+        continue-on-error: true
         run: |
           git clone https://cloudflare-ipfs.com/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test2
           git -C test2 log -n5
       - name: git clone trial 3
+        continue-on-error: true
         run: |
           git clone https://ipfs.io/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test3
           git -C test3 log -n5
