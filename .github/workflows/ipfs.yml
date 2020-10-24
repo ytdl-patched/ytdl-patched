@@ -15,15 +15,18 @@ jobs:
         with:
           fetch-depth: 0
           ref: master
-      - name: Set up Golang
-        uses: actions/setup-go@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          go-version: 1.15
+          node-version: 14
       - name: Install IPFS
         run: |
           sudo snap install ipfs
           ipfs init
           ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
+      - name: Install deps
+        working-directory: devscripts/upload-ipfs/
+        run:  npm i
       - name: Replicate git repository and unpack objects
         run: |
           git clone file://$PWD/.git/ --bare ytdl-patched
@@ -35,11 +38,7 @@ jobs:
           git count-objects -v
       - name: Upload to IPFS
         id: upload-ipfs
-        run: |
-          ipfs add -r -Q ytdl-patched/ | tee upload.log
-          IPFS_HASH="$(tail -n1 upload.log)"
-          echo $IPFS_HASH
-          echo "::set-output name=ipfs-hash::${IPFS_HASH}"
+        run: node devscripts/upload-ipfs/add.js
       - name: git clone trial 1
         continue-on-error: true
         run: |
