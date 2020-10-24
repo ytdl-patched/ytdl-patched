@@ -33,7 +33,7 @@ jobs:
         run: npm i
       - name: Replicate git repository and unpack objects
         run: |
-          git clone file://$PWD/.git/ --bare ytdl-patched
+          git clone file://$PWD/.git/ --single-branch --bare ytdl-patched
           cd ytdl-patched
           git update-server-info
           mv objects/pack/pack-* .
