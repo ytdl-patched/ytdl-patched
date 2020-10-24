@@ -25,7 +25,7 @@ jobs:
           sudo snap install ipfs
           ipfs init
           ipfs daemon &
-          ipfs cat /ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/quick-start
+          ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
       - name: Replicate git repository and unpack objects
         run: |
           git clone file://$PWD/.git/ --bare ytdl-patched
