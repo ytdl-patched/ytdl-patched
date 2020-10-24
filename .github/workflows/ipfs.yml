@@ -31,6 +31,9 @@ jobs:
           git update-server-info
           mv objects/pack/pack-* .
           find . -name 'pack-*.pack' -type f -exec bash -c 'git unpack-objects < {}' \;
-          rm pack-*
+          rm -rf pack-* objects/pack/
           git count-objects -v
-
+      - name: Upload to IPFS
+        run: |
+          ipfs add -r ytdl-patched/ | tee upload.log
+          tail -n1 upload.log | awk '{ print $2 }'
