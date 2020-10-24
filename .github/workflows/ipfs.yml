@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
           ref: master
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v1
         with:
           node-version: 14
       - name: Install IPFS
@@ -26,7 +26,7 @@ jobs:
           ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
       - name: Install deps
         working-directory: devscripts/upload-ipfs/
-        run:  npm i
+        run: npm i
       - name: Replicate git repository and unpack objects
         run: |
           git clone file://$PWD/.git/ --bare ytdl-patched
