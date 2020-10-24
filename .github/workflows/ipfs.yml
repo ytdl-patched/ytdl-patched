@@ -34,8 +34,21 @@ jobs:
           rm -rf pack-* objects/pack/
           git count-objects -v
       - name: Upload to IPFS
+        id: upload-ipfs
         run: |
           ipfs add -r -Q ytdl-patched/ | tee upload.log
           IPFS_HASH="$(tail -n1 upload.log)"
           echo $IPFS_HASH
           echo "::set-output name=ipfs-hash::${IPFS_HASH}"
+      - name: git clone trial 1
+        run: |
+          git clone https://gateway.ipfs.io/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test1
+          git -C test1 log -n5
+      - name: git clone trial 2
+        run: |
+          git clone https://cloudflare-ipfs.com/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test2
+          git -C test2 log -n5
+      - name: git clone trial 3
+        run: |
+          git clone https://ipfs.io/ipfs/${{ steps.upload-ipfs.outputs.ipfs-hash }}/ytdl-patched test3
+          git -C test3 log -n5
