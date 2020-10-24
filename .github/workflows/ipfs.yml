@@ -21,10 +21,8 @@ jobs:
           go-version: 1.15
       - name: Install IPFS
         run: |
-          sudo apt install -y snapd
           sudo snap install ipfs
           ipfs init
-          ipfs daemon &
           ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
       - name: Replicate git repository and unpack objects
         run: |
