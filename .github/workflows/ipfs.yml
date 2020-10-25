@@ -31,9 +31,9 @@ jobs:
           ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
       - name: Replicate git repository and unpack objects
         run: |
-          git clone file://$PWD/.git/ --single-branch --bare -b master ytdl-patched
+          git clone file://$PWD/.git/ --depth 1 ytdl-patched
           cd ytdl-patched
-          git branch -D gh-pages || true
+          git fetch --unshallow
           git gc
           git update-server-info
           mv objects/pack/pack-* .
