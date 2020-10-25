@@ -19,16 +19,16 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14
+      - name: Install deps
+        working-directory: devscripts/upload-ipfs/
+        run: npm i
       - name: Install IPFS
         continue-on-error: true
         run: |
           sudo snap install ipfs
           ipfs init
-          ipfs daemon &
+          node devscripts/upload-ipfs/start-daemon.js
           ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
-      - name: Install deps
-        working-directory: devscripts/upload-ipfs/
-        run: npm i
       - name: Replicate git repository and unpack objects
         run: |
           git clone file://$PWD/.git/ --single-branch --bare ytdl-patched

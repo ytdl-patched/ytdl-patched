@@ -14,7 +14,7 @@ async function main() {
     await Promise.all(
       clients
         .map((a) => a.add(globSource("./ytdl-patched", { recursive: true })))
-        .map((a) => a.catch(() => false))
+        .map((a) => a.catch(console.error))
     )
   ).filter((a) => a);
   console.log(results);
