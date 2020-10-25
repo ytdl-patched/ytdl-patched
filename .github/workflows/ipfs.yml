@@ -36,7 +36,7 @@ jobs:
           git fetch --unshallow
           git gc
           git update-server-info
-          mv objects/pack/pack-* .
+          mv objects/pack/pack-* . || true
           find . -name 'pack-*.pack' -type f -exec bash -c 'git unpack-objects < {}' \;
           rm -rf pack-* objects/pack/
           git count-objects -v
