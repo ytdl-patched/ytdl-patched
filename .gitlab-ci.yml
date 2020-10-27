@@ -7,7 +7,7 @@ variables:
 test:
   stage: test
   image: python
-  env:
+  variables:
     YTDL_TEST_SET: core
   script:
     - pip3 install nose
