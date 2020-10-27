@@ -1,0 +1,14 @@
+stages:
+  - test
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+test:
+  stage: test
+  image: python
+  env:
+    YTDL_TEST_SET: core
+  script:
+    - pip3 install nose
+    - ./devscripts/run_tests.sh
