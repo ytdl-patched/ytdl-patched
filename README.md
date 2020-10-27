@@ -1,4 +1,17 @@
-[![Build Status](https://travis-ci.org/ytdl-org/youtube-dl.svg?branch=master)](https://travis-ci.org/ytdl-org/youtube-dl)
+## MIRRORS
+- ~~https://github.com/nao20010128nao/ytdl-patched.git~~ **private** (master)
+- ~~https://bitbucket.org/nao20010128nao/ytdl-patched.git~~ **private** (slave)
+- https://forge.tedomum.net/nao20010128nao/ytdl-patched.git (slave)
+- https://gitlab.com/lesmi_the_goodness/ytdl-patched.git (slave)
+- https://git.sr.ht/~nao20010128nao/ytdl-patched (slave)
+  - manually mirrored at every git push
+
+## SEE ORIGINAL CODE?
+Checkout `48c5663c5f7dd9ecc4720f7c1522627665197939` on git repository
+
+TODO: remove these sections after DMCA is lifted
+
+[![Build Status](https://travis-ci.org/nao20010128nao/ytdl-patched.svg?branch=master)](https://travis-ci.org/nao20010128nao/ytdl-patched.svg)
 
 youtube-dl - download videos from youtube.com or other video platforms
 
