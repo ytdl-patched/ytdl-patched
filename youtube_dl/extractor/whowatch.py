@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .common import InfoExtractor
 from ..utils import (
     try_get,
+    ExtractorError,
 )
 from ..compat import (
     compat_str,
@@ -27,8 +28,11 @@ class WhoWatchIE(InfoExtractor):
             lambda x: metadata['live']['title'],
         ), compat_str)
 
+        hls_url = live_data.get('hls_url')
+        if not hls_url:
+            raise ExtractorError('The live is offline.', expected=True)
         formats = self._extract_m3u8_formats(
-            live_data['hls_url'], video_id, ext='mp4', entry_protocol='m3u8_native',
+            hls_url, video_id, ext='mp4', entry_protocol='m3u8_native',
             m3u8_id='hls')
         self._sort_formats(formats)
 
