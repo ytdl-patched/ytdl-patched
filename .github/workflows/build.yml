@@ -2,6 +2,9 @@ name: Patched YTDL
 
 on:
   push:
+    paths:
+      - youtube_dl/**
+      - test/**
     branches:
       - master
     workflow_dispatch:
@@ -256,6 +259,7 @@ jobs:
           asset_content_type: application/vnd.microsoft.portable-executable
   windows-test:
     needs: build-windows
+    if: ${{ !always() }}
     runs-on: windows-${{ matrix.windows }}
     continue-on-error: true
     strategy:
@@ -275,37 +279,4 @@ jobs:
         run: |
           .\artifacts\youtube-dl.exe `
               https://www.youtube.com/watch?v=XEY7UQJxw-o `
-              https://twitter.com/twetchapp/status/1311686520793829376
-  ubuntu-mac-test:
-    needs: build-linux
-    runs-on: ${{ matrix.os }}
-    continue-on-error: true
-    strategy:
-      matrix:
-        os: [
-          "ubuntu-20.04", "ubuntu-18.04", "ubuntu-16.04",
-          "macos-latest"
-        ]
-        python_version: [
-          "3.8", "3.7", "3.6", "3.5"
-        ]
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-linux
-      - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python_version }}
-      - name: youtube-dl --help and --version
-        run: |
-          chmod a+x ./artifacts/youtube-dl
-          ./artifacts/youtube-dl --help
-          ./artifacts/youtube-dl --version
-      - name: Download some videos
-        continue-on-error: true
-        run: |
-          ./artifacts/youtube-dl \
-              https://www.youtube.com/watch?v=XEY7UQJxw-o \
               https://twitter.com/twetchapp/status/1311686520793829376
