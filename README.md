@@ -1,8 +1,9 @@
 ## MIRRORS
-- ~~https://github.com/nao20010128nao/ytdl-patched.git~~ **private** (primary)
-- ~~https://bitbucket.org/nao20010128nao/ytdl-patched.git~~ **private** (secondary)
-- https://forge.tedomum.net/nao20010128nao/ytdl-patched.git (secondary)
-- https://gitlab.com/lesmi_the_goodness/ytdl-patched.git (secondary)
+- ~~https://github.com/nao20010128nao/ytdl-patched~~ **private** (primary)
+- ~~https://bitbucket.org/nao20010128nao/ytdl-patched~~ **private** (secondary)
+- https://forge.tedomum.net/nao20010128nao/ytdl-patched (secondary)
+- https://gitlab.com/lesmi_the_goodness/ytdl-patched (secondary)
+- https://gitea.com/nao20010128nao/ytdl-patched (secondary)
 - https://git.sr.ht/~nao20010128nao/ytdl-patched (secondary)
   - manually mirrored at every git push
 
