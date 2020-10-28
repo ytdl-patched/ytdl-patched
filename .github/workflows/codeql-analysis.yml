@@ -8,6 +8,11 @@ name: "CodeQL"
 on:
   push:
     branches: [master]
+    paths:
+      - youtube_dl/**
+      - test/**
+  workflow_dispatch:
+    inputs: {}
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [master]
