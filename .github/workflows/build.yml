@@ -7,8 +7,8 @@ on:
       - test/**
     branches:
       - master
-    workflow_dispatch:
-      inputs: {}
+  workflow_dispatch:
+    inputs: {}
 
 env:
   python_version: 3.8
