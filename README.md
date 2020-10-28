@@ -1,5 +1,5 @@
 ## MIRRORS
-- ~~https://github.com/nao20010128nao/ytdl-patched~~ **private** (primary)
+- https://github.com/nao20010128nao/ytdl-patched (primary)
 - ~~https://bitbucket.org/nao20010128nao/ytdl-patched~~ **private** (secondary)
 - https://forge.tedomum.net/nao20010128nao/ytdl-patched (secondary)
 - https://gitlab.com/lesmi_the_goodness/ytdl-patched (secondary)
