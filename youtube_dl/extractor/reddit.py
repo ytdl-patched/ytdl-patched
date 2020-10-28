@@ -9,6 +9,9 @@ from ..utils import (
     float_or_none,
     url_or_none,
 )
+from ..compat import (
+    compat_urllib_parse,
+)
 
 
 class RedditIE(InfoExtractor):
@@ -103,9 +106,10 @@ class RedditRIE(InfoExtractor):
             url + '/.json', video_id)[0]['data']['children'][0]['data']
 
         video_url = data['url']
+        parsed_video_url = compat_urllib_parse.urlparse(video_url)
 
         # Avoid recursing into the same reddit URL
-        if 'reddit.com/' in video_url and '/%s/' % video_id in video_url:
+        if parsed_video_url.hostname.endswith('reddit.com') and '/%s/' % video_id in video_url:
             raise ExtractorError('No media found', expected=True)
 
         over_18 = data.get('over_18')

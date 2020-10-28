@@ -10,6 +10,7 @@ import re
 from ..compat import (
     compat_parse_qs,
     compat_str,
+    compat_urllib_parse,
 )
 from ..utils import (
     js_to_json,
@@ -35,8 +36,9 @@ class WeiboIE(InfoExtractor):
         webpage, urlh = self._download_webpage_handle(url, video_id)
 
         visitor_url = urlh.geturl()
+        parsed_visitor_url = compat_urllib_parse.urlparse(visitor_url)
 
-        if 'passport.weibo.com' in visitor_url:
+        if parsed_visitor_url.hostname.startswith('passport.weibo.com'):
             # first visit
             visitor_data = self._download_json(
                 'https://passport.weibo.com/visitor/genvisitor', video_id,

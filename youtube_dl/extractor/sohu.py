@@ -6,7 +6,7 @@ import re
 from .common import InfoExtractor
 from ..compat import (
     compat_str,
-    compat_urllib_parse_urlencode,
+    compat_urllib_parse,
 )
 from ..utils import (
     ExtractorError,
@@ -138,11 +138,12 @@ class SohuIE(InfoExtractor):
                 clips_url = data['clipsURL']
                 su = data['su']
 
-                video_url = 'newflv.sohu.ccgslb.net'
+                video_url = 'http://newflv.sohu.ccgslb.net'
+                parsed_video_url = compat_urllib_parse.urlparse(video_url)
                 cdnId = None
                 retries = 0
 
-                while 'newflv.sohu.ccgslb.net' in video_url:
+                while 'newflv.sohu.ccgslb.net' in parsed_video_url.hostname:
                     params = {
                         'prot': 9,
                         'file': clips_url[i],
@@ -160,10 +161,11 @@ class SohuIE(InfoExtractor):
                     if retries > 0:
                         download_note += ' (retry #%d)' % retries
                     part_info = self._parse_json(self._download_webpage(
-                        'http://%s/?%s' % (allot, compat_urllib_parse_urlencode(params)),
+                        'http://%s/?%s' % (allot, compat_urllib_parse.urlencode(params)),
                         video_id, download_note), video_id)
 
                     video_url = part_info['url']
+                    parsed_video_url = compat_urllib_parse.urlparse(video_url)
                     cdnId = part_info.get('nid')
 
                     retries += 1

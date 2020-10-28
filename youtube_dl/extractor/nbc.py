@@ -7,7 +7,9 @@ import re
 from .common import InfoExtractor
 from .theplatform import ThePlatformIE
 from .adobepass import AdobePassIE
-from ..compat import compat_urllib_parse_unquote
+from ..compat import (
+    compat_urllib_parse,
+)
 from ..utils import (
     int_or_none,
     js_to_json,
@@ -86,7 +88,7 @@ class NBCIE(AdobePassIE):
 
     def _real_extract(self, url):
         permalink, video_id = re.match(self._VALID_URL, url).groups()
-        permalink = 'http' + compat_urllib_parse_unquote(permalink)
+        permalink = 'http' + compat_urllib_parse.unquote(permalink)
         video_data = self._download_json(
             'https://friendship.nbc.co/v2/graphql', video_id, query={
                 'query': '''query bonanzaPage(
@@ -404,9 +406,10 @@ class NBCNewsIE(ThePlatformIE):
         formats = []
         for va in video_data.get('videoAssets', []):
             public_url = va.get('publicUrl')
+            parsed_url = compat_urllib_parse.urlparse(public_url)
             if not public_url:
                 continue
-            if '://link.theplatform.com/' in public_url:
+            if parsed_url.hostname == 'link.theplatform.com':
                 public_url = update_url_query(public_url, {'format': 'redirect'})
             format_id = va.get('format')
             if format_id == 'M3U':

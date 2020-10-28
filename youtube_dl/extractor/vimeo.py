@@ -576,8 +576,9 @@ class VimeoIE(VimeoBaseInfoExtractor):
         # Extract ID from URL
         video_id = self._match_id(url)
         orig_url = url
-        is_pro = 'vimeopro.com/' in url
-        is_player = '://player.vimeo.com/video/' in url
+        parsed_orig_url = compat_urlparse.urlparse(orig_url)
+        is_pro = 'vimeopro.com' in parsed_orig_url.hostname
+        is_player = parsed_orig_url.hostname == 'player.vimeo.com' and parsed_orig_url.path.startswith('/video/')
         if is_pro:
             # some videos require portfolio_id to be present in player url
             # https://github.com/ytdl-org/youtube-dl/issues/20070

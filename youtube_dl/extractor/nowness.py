@@ -6,7 +6,10 @@ from .brightcove import (
     BrightcoveNewIE,
 )
 from .common import InfoExtractor
-from ..compat import compat_str
+from ..compat import (
+    compat_str,
+    compat_urllib_parse,
+)
 from ..utils import (
     ExtractorError,
     sanitized_Request,
@@ -43,10 +46,11 @@ class NownessBaseIE(InfoExtractor):
 
     def _api_request(self, url, request_path):
         display_id = self._match_id(url)
+        parsed_url = compat_urllib_parse.urlparse(url)
         request = sanitized_Request(
             'http://api.nowness.com/api/' + request_path % display_id,
             headers={
-                'X-Nowness-Language': 'zh-cn' if 'cn.nowness.com' in url else 'en-us',
+                'X-Nowness-Language': 'zh-cn' if parsed_url.hostname == 'cn.nowness.com' else 'en-us',
             })
         return display_id, self._download_json(request, display_id)
 

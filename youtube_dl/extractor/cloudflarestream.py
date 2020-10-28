@@ -6,6 +6,10 @@ import re
 
 from .common import InfoExtractor
 
+from ..compat import (
+    compat_urllib_parse_urlparse,
+)
+
 
 class CloudflareStreamIE(InfoExtractor):
     _DOMAIN_RE = r'(?:cloudflarestream\.com|(?:videodelivery|bytehighway)\.net)'
@@ -50,7 +54,8 @@ class CloudflareStreamIE(InfoExtractor):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        domain = 'bytehighway.net' if 'bytehighway.net/' in url else 'videodelivery.net'
+        parsed_url = compat_urllib_parse_urlparse(url)
+        domain = 'bytehighway.net' if parsed_url.hostname.endswith('bytehighway.net') else 'videodelivery.net'
         base_url = 'https://%s/%s/' % (domain, video_id)
         if '.' in video_id:
             video_id = self._parse_json(base64.urlsafe_b64decode(

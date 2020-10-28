@@ -8,6 +8,9 @@ from ..utils import (
     int_or_none,
     ExtractorError,
 )
+from ..compat import (
+    compat_urllib_parse_urlparse,
+)
 
 
 class METAIE(InfoExtractor):
@@ -61,7 +64,8 @@ class METAIE(InfoExtractor):
                 'duration': int_or_none(self._og_search_property(
                     'video:duration', webpage, default=None)),
             }
-            if 'youtube.com/' in video_url:
+            parsed_url = compat_urllib_parse_urlparse(video_url)
+            if parsed_url.hostname.endswith('youtube.com'):
                 info.update({
                     '_type': 'url_transparent',
                     'ie_key': 'Youtube',

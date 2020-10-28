@@ -550,7 +550,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                         'width': int_or_none(xpath_text(metadata, './width')),
                     }
 
-                    if '.fplive.net/' in video_url:
+                    parsed_url = compat_urlparse.urlparse(video_url)
+                    if parsed_url.hostname.endswith('.fplive.net/'):
                         video_url = re.sub(r'^rtmpe?://', 'http://', video_url.strip())
                         parsed_video_url = compat_urlparse.urlparse(video_url)
                         direct_video_url = compat_urlparse.urlunparse(parsed_video_url._replace(
