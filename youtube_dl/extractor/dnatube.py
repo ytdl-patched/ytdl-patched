@@ -1,21 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
-
 from .common import InfoExtractor
-from ..utils import (
-    sanitized_Request,
-    ExtractorError,
-)
-from ..compat import (
-    compat_str,
-)
-
-try:
-    from urllib import quote
-except ImportError:
-    from urllib.parse import quote
 
 
 class DnaTubeBaseIE(InfoExtractor):
