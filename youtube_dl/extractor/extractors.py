@@ -271,6 +271,7 @@ from .democracynow import DemocracynowIE
 from .dfb import DFBIE
 from .dhm import DHMIE
 from .digg import DiggIE
+from .dnatube import DnaTubeIE
 from .dotsub import DotsubIE
 from .douyutv import (
     DouyuShowIE,
