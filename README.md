@@ -13,6 +13,7 @@ Checkout `48c5663c5f7dd9ecc4720f7c1522627665197939` on git repository
 TODO: remove these sections after DMCA is lifted
 
 [![Build Status](https://travis-ci.org/nao20010128nao/ytdl-patched.svg?branch=master)](https://travis-ci.org/nao20010128nao/ytdl-patched.svg)
+![Run tests](https://github.com/nao20010128nao/ytdl-patched/workflows/Run%20tests/badge.svg)
 
 youtube-dl - download videos from youtube.com or other video platforms
 
