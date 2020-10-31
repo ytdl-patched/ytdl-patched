@@ -443,8 +443,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                      $""" % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
     _NEXT_URL_RE = r'[\?&]next_url=([^&]+)'
     _PLAYER_INFO_RE = (
-        r'/(?P<id>[a-zA-Z0-9_-]{8,})/player_ias\.vflset(?:/[a-zA-Z]{2,3}_[a-zA-Z]{2,3})?/base\.(?P<ext>[a-z]+)$',
-        r'\b(?P<id>vfl[a-zA-Z0-9_-]+)\b.*?\.(?P<ext>[a-z]+)$',
+        # /s/player/ec262be6/player_ias.vflset/en_US/base.js
+        r'(?:/s)?(?:/player)?/(?P<id>[a-zA-Z0-9_-]{8,})/player_ias\.vflset(?:/[a-zA-Z]{2,3}_[a-zA-Z]{2,3})?/base\.(?P<ext>[a-z]+)',
+        r'\b(?P<id>vfl[a-zA-Z0-9_-]+)\b.*?\.(?P<ext>[a-z]+)',
     )
     _formats = {
         '5': {'ext': 'flv', 'width': 400, 'height': 240, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
@@ -2088,7 +2089,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
-                        ASSETS_RE = r'"assets":.+?"js":\s*("[^"]+")'
+                        ASSETS_RE = r'"assets":.+?"js(?:Url)?":\s*("[^"]+")'
                         jsplayer_url_json = self._search_regex(
                             ASSETS_RE,
                             embed_webpage if age_gate else video_webpage,
@@ -2100,9 +2101,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                 embed_webpage = self._download_webpage(
                                     embed_url, video_id, 'Downloading embed webpage')
                             jsplayer_url_json = self._search_regex(
-                                ASSETS_RE, embed_webpage, 'JS player URL')
+                                ASSETS_RE, embed_webpage, 'JS player URL', fatal=False)
 
-                        player_url = json.loads(jsplayer_url_json)
+                        player_url = None
+                        if jsplayer_url_json is not None:
+                            player_url = json.loads(jsplayer_url_json)
+                        if player_url is None:
+                            player_url = self._search_regex(
+                                self._PLAYER_INFO_RE,
+                                video_webpage, 'JS player URL (2)', group=0)
                         if player_url is None:
                             player_url_json = self._search_regex(
                                 r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
