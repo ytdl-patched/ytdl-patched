@@ -2089,7 +2089,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
-                        ASSETS_RE = r'"assets":.+?"js(?:Url)?":\s*("[^"]+")'
+                        ASSETS_RE = (
+                            r'"jsUrl":\s*("[^"]+")',
+                            r'"assets":.+?"js":\s*("[^"]+")'
+                        )
                         jsplayer_url_json = self._search_regex(
                             ASSETS_RE,
                             embed_webpage if age_gate else video_webpage,
@@ -2101,7 +2104,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                 embed_webpage = self._download_webpage(
                                     embed_url, video_id, 'Downloading embed webpage')
                             jsplayer_url_json = self._search_regex(
-                                ASSETS_RE, embed_webpage, 'JS player URL', fatal=False)
+                                ASSETS_RE, embed_webpage, 'JS player URL (2)', fatal=False)
 
                         player_url = None
                         if jsplayer_url_json is not None:
@@ -2109,7 +2112,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         if player_url is None:
                             player_url = self._search_regex(
                                 self._PLAYER_INFO_RE,
-                                video_webpage, 'JS player URL (2)', group=0)
+                                video_webpage, 'JS player URL (3)', group=0)
                         if player_url is None:
                             player_url_json = self._search_regex(
                                 r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
