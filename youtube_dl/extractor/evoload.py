@@ -24,8 +24,8 @@ class EvoLoadIE(EvoLoadBaseIE):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        webpage_video = self._download_webpage(self.VIDEO_URL % video_id, video_id, note='video page')
-        webpage_embed = self._download_webpage(self.EMBED_URL % video_id, video_id, note='embed page')
+        webpage_video = self._download_webpage(self.VIDEO_URL % video_id, video_id, note='Downloading video page')
+        webpage_embed = self._download_webpage(self.EMBED_URL % video_id, video_id, note='Downloading embed page')
 
         title = self._search_regex(self.TITLE_RE, webpage_video, 'video title')
 
