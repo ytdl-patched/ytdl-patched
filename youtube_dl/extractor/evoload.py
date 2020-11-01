@@ -4,7 +4,9 @@ from __future__ import unicode_literals
 from .common import InfoExtractor
 from ..utils import (
     try_get,
+    ExtractorError,
 )
+
 
 class EvoLoadBaseIE(InfoExtractor):
     IE_DESC = False  # Do not list
@@ -27,7 +29,12 @@ class EvoLoadIE(EvoLoadBaseIE):
         webpage_video = self._download_webpage(self.VIDEO_URL % video_id, video_id, note='Downloading video page')
         webpage_embed = self._download_webpage(self.EMBED_URL % video_id, video_id, note='Downloading embed page')
 
-        title = self._search_regex(self.TITLE_RE, webpage_video, 'video title')
+        title = try_get(self.TITLE_RE, (
+            lambda x: self._search_regex(x, webpage_video, 'video title'),
+            lambda x: self._search_regex(x, webpage_embed, 'video title'),
+        ), None)
+        if not title:
+            raise ExtractorError('Failed to extract video title')
 
         entry = self._parse_html5_media_entries(url, webpage_embed, video_id, m3u8_id='hls')[0]
         self._sort_formats(entry['formats'])
