@@ -558,9 +558,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     IE_NAME = 'youtube'
     _TESTS = [
-        {
-        #removed because of riaa
-        }
+        # removed because of riaa
     ]
 
     def __init__(self, *args, **kwargs):
