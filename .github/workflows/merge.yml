@@ -22,7 +22,7 @@ jobs:
         git config --global user.email nao20010128@gmail.com
     - name: Pull from ytdl-org/youtube-dl
       run: |
-        git pull https://github.com/ytdl-org/youtube-dl.git
+        git pull https://gitlab.com/dstftw/youtube-dl.git
     - name: Push to here
       run: |
         git push https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git HEAD:master
