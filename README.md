@@ -599,7 +599,7 @@ Available for the media that is a track or a part of a music album:
 
 Each aforementioned sequence when referenced in an output template will be replaced by the actual value corresponding to the sequence name. Note that some of the sequences are not guaranteed to be present since they depend on the metadata obtained by a particular extractor. Such sequences will be replaced with `NA`.
 
-For example for `-o %(title)s-%(id)s.%(ext)s` and an mp4 video with title `youtube-dl test video` and id `BaW_jenozKcj`, this will result in a `youtube-dl test video-BaW_jenozKcj.mp4` file created in the current directory.
+For example for `-o %(title)s-%(id)s.%(ext)s` and an mp4 video with title `youtube-dl test video` and id `Li_hJB_TCqY`, this will result in a `youtube-dl test video-Li_hJB_TCqY.mp4` file created in the current directory.
 
 For numeric sequences you can use numeric related formatting, for example, `%(view_count)05d` will result in a string with view count padded with zeros up to 5 characters, like in `00042`.
 
@@ -620,14 +620,14 @@ If you are using an output template inside a Windows batch file then you must es
 Note that on Windows you may need to use double quotes instead of single.
 
 ```bash
-$ youtube-dl --get-filename -o '%(title)s.%(ext)s' BaW_jenozKc
+$ youtube-dl --get-filename -o '%(title)s.%(ext)s' Li_hJB_TCqY
 youtube-dl test video ''_ä↭𝕐.mp4    # All kinds of weird characters
 
-$ youtube-dl --get-filename -o '%(title)s.%(ext)s' BaW_jenozKc --restrict-filenames
+$ youtube-dl --get-filename -o '%(title)s.%(ext)s' Li_hJB_TCqY --restrict-filenames
 youtube-dl_test_video_.mp4          # A simple file name
 
 # Download YouTube playlist videos in separate directory indexed by video order in a playlist
-$ youtube-dl -o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' https://www.youtube.com/playlist?list=PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re
+$ youtube-dl -o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' https://www.youtube.com/playlist?list=PL129CD8FEF7ED1E38
 
 # Download all playlists of YouTube channel/user keeping each playlist in separate directory:
 $ youtube-dl -o '%(uploader)s/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' https://www.youtube.com/user/TheLinuxFoundation/playlists
@@ -639,7 +639,7 @@ $ youtube-dl -u user -p password -o '~/MyVideos/%(playlist)s/%(chapter_number)s 
 $ youtube-dl -o "C:/MyVideos/%(series)s/%(season_number)s - %(season)s/%(episode_number)s - %(episode)s.%(ext)s" https://videomore.ru/kino_v_detalayah/5_sezon/367617
 
 # Stream the video being downloaded to stdout
-$ youtube-dl -o - BaW_jenozKc
+$ youtube-dl -o - Li_hJB_TCqY
 ```
 
 # FORMAT SELECTION
@@ -832,17 +832,17 @@ YouTube requires an additional signature since September 2012 which is not suppo
 
 That's actually the output from your shell. Since ampersand is one of the special shell characters it's interpreted by the shell preventing you from passing the whole URL to youtube-dl. To disable your shell from interpreting the ampersands (or any other special characters) you have to either put the whole URL in quotes or escape them with a backslash (which approach will work depends on your shell).
 
-For example if your URL is https://www.youtube.com/watch?t=4&v=BaW_jenozKc you should end up with following command:
+For example if your URL is https://www.youtube.com/watch?t=4&v=Li_hJB_TCqY you should end up with following command:
 
-```youtube-dl 'https://www.youtube.com/watch?t=4&v=BaW_jenozKc'```
+```youtube-dl 'https://www.youtube.com/watch?t=4&v=Li_hJB_TCqY'```
 
 or
 
-```youtube-dl https://www.youtube.com/watch?t=4\&v=BaW_jenozKc```
+```youtube-dl https://www.youtube.com/watch?t=4\&v=Li_hJB_TCqY```
 
 For Windows you have to use the double quotes:
 
-```youtube-dl "https://www.youtube.com/watch?t=4&v=BaW_jenozKc"```
+```youtube-dl "https://www.youtube.com/watch?t=4&v=Li_hJB_TCqY"```
 
 ### ExtractorError: Could not find JS function u'OF'
 
@@ -887,8 +887,8 @@ Use the `-o` to specify an [output template](#output-template), for example `-o 
 
 Either prepend `https://www.youtube.com/watch?v=` or separate the ID from the options with `--`:
 
-    youtube-dl -- -wNyEUrxzFU
-    youtube-dl "https://www.youtube.com/watch?v=-wNyEUrxzFU"
+    youtube-dl -- -hXvYeyrj_s
+    youtube-dl "https://www.youtube.com/watch?v=-hXvYeyrj_s"
 
 ### How do I pass cookies to youtube-dl?
 
@@ -904,7 +904,7 @@ Passing cookies to youtube-dl is a good way to workaround login when a particula
 
 You will first need to tell youtube-dl to stream media to stdout with `-o -`, and also tell your media player to read from stdin (it must be capable of this for streaming) and then pipe former to latter. For example, streaming to [vlc](https://www.videolan.org/) can be achieved with:
 
-    youtube-dl -o - "https://www.youtube.com/watch?v=BaW_jenozKcj" | vlc -
+    youtube-dl -o - "https://www.youtube.com/watch?v=Li_hJB_TCqY" | vlc -
 
 ### How do I download only new videos from a playlist?
 
@@ -912,11 +912,11 @@ Use download-archive feature. With this feature you should initially download th
 
 For example, at first,
 
-    youtube-dl --download-archive archive.txt "https://www.youtube.com/playlist?list=PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re"
+    youtube-dl --download-archive archive.txt "https://www.youtube.com/playlist?list=PL129CD8FEF7ED1E38"
 
-will download the complete `PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re` playlist and create a file `archive.txt`. Each subsequent run will only download new videos if any:
+will download the complete `PL129CD8FEF7ED1E38` playlist and create a file `archive.txt`. Each subsequent run will only download new videos if any:
 
-    youtube-dl --download-archive archive.txt "https://www.youtube.com/playlist?list=PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re"
+    youtube-dl --download-archive archive.txt "https://www.youtube.com/playlist?list=PL129CD8FEF7ED1E38"
 
 ### Should I add `--hls-prefer-native` into my config?
 
@@ -1223,14 +1223,14 @@ For example, you should **never** split long string literals like URLs or some o
 Correct:
 
 ```python
-'https://www.youtube.com/watch?v=FqZTN594JQw&list=PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4'
+'https://www.youtube.com/watch?v=aSVvL2rgW8g&list=PL129CD8FEF7ED1E38'
 ```
 
 Incorrect:
 
 ```python
-'https://www.youtube.com/watch?v=FqZTN594JQw&list='
-'PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4'
+'https://www.youtube.com/watch?v=aSVvL2rgW8g&list='
+'PL129CD8FEF7ED1E38'
 ```
 
 ### Inline values
@@ -1338,7 +1338,7 @@ import youtube_dl
 
 ydl_opts = {}
 with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-    ydl.download(['https://www.youtube.com/watch?v=BaW_jenozKc'])
+    ydl.download(['https://www.youtube.com/watch?v=Li_hJB_TCqY'])
 ```
 
 Most likely, you'll want to use various options. For a list of options available, have a look at [`youtube_dl/YoutubeDL.py`](https://github.com/ytdl-org/youtube-dl/blob/3e4cedf9e8cd3157df2457df7274d0c842421945/youtube_dl/YoutubeDL.py#L137-L312). For a start, if you want to intercept youtube-dl's output, set a `logger` object.
@@ -1377,7 +1377,7 @@ ydl_opts = {
     'progress_hooks': [my_hook],
 }
 with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-    ydl.download(['https://www.youtube.com/watch?v=BaW_jenozKc'])
+    ydl.download(['https://www.youtube.com/watch?v=Li_hJB_TCqY'])
 ```
 
 # BUGS
@@ -1389,7 +1389,7 @@ Bugs and suggestions should be reported at: <https://github.com/ytdl-org/youtube
 $ youtube-dl -v <your command line>
 [debug] System config: []
 [debug] User config: []
-[debug] Command-line args: [u'-v', u'https://www.youtube.com/watch?v=BaW_jenozKcj']
+[debug] Command-line args: [u'-v', u'https://www.youtube.com/watch?v=Li_hJB_TCqY']
 [debug] Encodings: locale cp1251, fs mbcs, out cp866, pref cp1251
 [debug] youtube-dl version 2015.12.06
 [debug] Git HEAD: 135392e
@@ -1420,7 +1420,7 @@ For bug reports, this means that your report should contain the *complete* outpu
 
 If your server has multiple IPs or you suspect censorship, adding `--call-home` may be a good idea to get more diagnostics. If the error is `ERROR: Unable to extract ...` and you cannot reproduce it from multiple countries, add `--dump-pages` (warning: this will yield a rather large output, redirect it to the file `log.txt` by adding `>log.txt 2>&1` to your command-line) or upload the `.dump` files you get when you add `--write-pages` [somewhere](https://gist.github.com/).
 
-**Site support requests must contain an example URL**. An example URL is a URL you might want to download, like `https://www.youtube.com/watch?v=BaW_jenozKc`. There should be an obvious video present. Except under very special circumstances, the main page of a video service (e.g. `https://www.youtube.com/`) is *not* an example URL.
+**Site support requests must contain an example URL**. An example URL is a URL you might want to download, like `https://www.youtube.com/watch?v=Li_hJB_TCqY`. There should be an obvious video present. Except under very special circumstances, the main page of a video service (e.g. `https://www.youtube.com/`) is *not* an example URL.
 
 ###  Are you using the latest version?
 
