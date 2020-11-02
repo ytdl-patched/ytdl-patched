@@ -8,7 +8,7 @@
   - manually mirrored at every git push
 
 ## SEE ORIGINAL CODE?
-Checkout `48c5663c5f7dd9ecc4720f7c1522627665197939` on git repository
+Check https://gitlab.com/dstftw/youtube-dl
 
 TODO: remove these sections after DMCA is lifted
 
