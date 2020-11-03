@@ -25,4 +25,11 @@ jobs:
         git pull https://gitlab.com/dstftw/youtube-dl.git
     - name: Push to here
       run: |
-        git push https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git HEAD:master
+        git remote add upstream https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
+        git push upstream HEAD:master
+    - name: Create tag
+      continue-on-error: true
+      run: |
+        git push upstream :refs/tags/youtube-dl
+        git tag -fa youtube-dl
+        git push upstream -f --tags
