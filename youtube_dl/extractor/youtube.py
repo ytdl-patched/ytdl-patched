@@ -39,6 +39,7 @@ from ..utils import (
     mimetype2ext,
     orderedSet,
     parse_codecs,
+    parse_count,
     parse_duration,
     remove_quotes,
     remove_start,
@@ -99,6 +100,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         if username is None:
             if self._LOGIN_REQUIRED and self._downloader.params.get('cookiefile') is None:
                 raise ExtractorError('No login info available, needed for using %s.' % self.IE_NAME, expected=True)
+            if self._downloader.params.get('cookiefile') and False:  # TODO remove 'and False' later - too many people using outdated cookies and open issues, remind them.
+                self.to_screen('[Cookies] Reminder - Make sure to always use up to date cookies!')
             return True
 
         login_page = self._download_webpage(
@@ -275,6 +278,15 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         kwargs['query'] = query
         return super(YoutubeBaseInfoExtractor, self)._download_webpage_handle(
             *args, **compat_kwargs(kwargs))
+
+    def _get_yt_initial_data(self, video_id, webpage):
+        config = self._search_regex(
+            (r'window\["ytInitialData"\]\s*=\s*(.*?)(?<=});',
+             r'var\s+ytInitialData\s*=\s*(.*?)(?<=});'),
+            webpage, 'ytInitialData', default=None)
+        if config:
+            return self._parse_json(
+                uppercase_escape(config), video_id, fatal=False)
 
     def _real_initialize(self):
         if self._downloader is None:
@@ -729,7 +741,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             raise ExtractorError(
                 'Signature extraction failed: ' + tb, cause=e)
 
-    def _get_subtitles(self, video_id, webpage):
+    def _get_subtitles(self, video_id, webpage, has_live_chat_replay):
         try:
             subs_doc = self._download_xml(
                 'https://video.google.com/timedtext?hl=en&type=list&v=%s' % video_id,
@@ -756,6 +768,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     'ext': ext,
                 })
             sub_lang_list[lang] = sub_formats
+        if has_live_chat_replay:
+            sub_lang_list['live_chat'] = [
+                {
+                    'video_id': video_id,
+                    'ext': 'json',
+                    'protocol': 'youtube_live_chat_replay',
+                },
+            ]
         if not sub_lang_list:
             self._downloader.report_warning('video doesn\'t have subtitles')
             return {}
@@ -772,12 +792,51 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             # https://github.com/ytdl-org/youtube-dl/pull/7599)
             r';ytplayer\.config\s*=\s*({.+?});ytplayer',
             r';ytplayer\.config\s*=\s*({.+?});',
+            r'ytInitialPlayerResponse\s*=\s*({.+?});var meta'
         )
         config = self._search_regex(
             patterns, webpage, 'ytplayer.config', default=None)
         if config:
             return self._parse_json(
                 uppercase_escape(config), video_id, fatal=False)
+
+    def _get_music_metadata_from_yt_initial(self, yt_initial):
+        music_metadata = []
+        key_map = {
+            'Album': 'album',
+            'Artist': 'artist',
+            'Song': 'track'
+        }
+        contents = try_get(yt_initial, lambda x: x['contents']['twoColumnWatchNextResults']['results']['results']['contents'])
+        if type(contents) is list:
+            for content in contents:
+                music_track = {}
+                if type(content) is not dict:
+                    continue
+                videoSecondaryInfoRenderer = try_get(content, lambda x: x['videoSecondaryInfoRenderer'])
+                if type(videoSecondaryInfoRenderer) is not dict:
+                    continue
+                rows = try_get(videoSecondaryInfoRenderer, lambda x: x['metadataRowContainer']['metadataRowContainerRenderer']['rows'])
+                if type(rows) is not list:
+                    continue
+                for row in rows:
+                    metadataRowRenderer = try_get(row, lambda x: x['metadataRowRenderer'])
+                    if type(metadataRowRenderer) is not dict:
+                        continue
+                    key = try_get(metadataRowRenderer, lambda x: x['title']['simpleText'])
+                    value = try_get(metadataRowRenderer, lambda x: x['contents'][0]['simpleText']) or \
+                        try_get(metadataRowRenderer, lambda x: x['contents'][0]['runs'][0]['text'])
+                    if type(key) is not str or type(value) is not str:
+                        continue
+                    if key in key_map:
+                        if key_map[key] in music_track:
+                            # we've started on a new track
+                            music_metadata.append(music_track)
+                            music_track = {}
+                        music_track[key_map[key]] = value
+                if len(music_track.keys()):
+                    music_metadata.append(music_track)
+        return music_metadata
 
     def _get_automatic_captions(self, video_id, webpage):
         """We need the webpage for getting the captions url, pass it as an
@@ -789,10 +848,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             self._downloader.report_warning(err_msg)
             return {}
         try:
-            args = player_config['args']
-            caption_url = args.get('ttsurl')
-            if caption_url:
+            if "args" in player_config and "ttsurl" in player_config["args"]:
+                args = player_config['args']
+                caption_url = args['ttsurl']
                 timestamp = args['timestamp']
+
                 # We get the available subtitles
                 list_params = compat_urllib_parse_urlencode({
                     'type': 'list',
@@ -848,13 +908,24 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 return captions
 
             # New captions format as of 22.06.2017
-            player_response = args.get('player_response')
-            if player_response and isinstance(player_response, compat_str):
-                player_response = self._parse_json(
-                    player_response, video_id, fatal=False)
-                if player_response:
-                    renderer = player_response['captions']['playerCaptionsTracklistRenderer']
-                    base_url = renderer['captionTracks'][0]['baseUrl']
+            if "args" in player_config:
+                player_response = player_config["args"].get('player_response')
+            else:
+                # New player system (ytInitialPlayerResponse) as of October 2020
+                player_response = player_config
+
+            if player_response:
+                if isinstance(player_response, compat_str):
+                    player_response = self._parse_json(
+                        player_response, video_id, fatal=False)
+
+                renderer = player_response['captions']['playerCaptionsTracklistRenderer']
+                caption_tracks = renderer['captionTracks']
+                for caption_track in caption_tracks:
+                    if 'kind' not in caption_track:
+                        # not an automatic transcription
+                        continue
+                    base_url = caption_track['baseUrl']
                     sub_lang_list = []
                     for lang in renderer['translationLanguages']:
                         lang_code = lang.get('languageCode')
@@ -862,19 +933,25 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             sub_lang_list.append(lang_code)
                     return make_captions(base_url, sub_lang_list)
 
-            # Some videos don't provide ttsurl but rather caption_tracks and
-            # caption_translation_languages (e.g. 20LmZk1hakA)
-            # Does not used anymore as of 22.06.2017
-            caption_tracks = args['caption_tracks']
-            caption_translation_languages = args['caption_translation_languages']
-            caption_url = compat_parse_qs(caption_tracks.split(',')[0])['u'][0]
-            sub_lang_list = []
-            for lang in caption_translation_languages.split(','):
-                lang_qs = compat_parse_qs(compat_urllib_parse_unquote_plus(lang))
-                sub_lang = lang_qs.get('lc', [None])[0]
-                if sub_lang:
-                    sub_lang_list.append(sub_lang)
-            return make_captions(caption_url, sub_lang_list)
+                self._downloader.report_warning("Couldn't find automatic captions for %s" % video_id)
+                return {}
+
+            if "args" in player_config:
+                args = player_config["args"]
+
+                # Some videos don't provide ttsurl but rather caption_tracks and
+                # caption_translation_languages (e.g. 20LmZk1hakA)
+                # Does not used anymore as of 22.06.2017
+                caption_tracks = args['caption_tracks']
+                caption_translation_languages = args['caption_translation_languages']
+                caption_url = compat_parse_qs(caption_tracks.split(',')[0])['u'][0]
+                sub_lang_list = []
+                for lang in caption_translation_languages.split(','):
+                    lang_qs = compat_parse_qs(compat_urllib_parse_unquote_plus(lang))
+                    sub_lang = lang_qs.get('lc', [None])[0]
+                    if sub_lang:
+                        sub_lang_list.append(sub_lang)
+                return make_captions(caption_url, sub_lang_list)
         # An extractor error can be raise by the download process if there are
         # no automatic captions but there are subtitles
         except (KeyError, IndexError, ExtractorError):
@@ -955,21 +1032,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
     def _extract_chapters_from_json(self, webpage, video_id, duration):
         if not webpage:
             return
-        player = self._parse_json(
+        initial_data = self._parse_json(
             self._search_regex(
-                r'RELATED_PLAYER_ARGS["\']\s*:\s*({.+})\s*,?\s*\n', webpage,
+                r'window\["ytInitialData"\] = (.+);\n', webpage,
                 'player args', default='{}'),
             video_id, fatal=False)
-        if not player or not isinstance(player, dict):
-            return
-        watch_next_response = player.get('watch_next_response')
-        if not isinstance(watch_next_response, compat_str):
-            return
-        response = self._parse_json(watch_next_response, video_id, fatal=False)
-        if not response or not isinstance(response, dict):
+        if not initial_data or not isinstance(initial_data, dict):
             return
         chapters_list = try_get(
-            response,
+            initial_data,
             lambda x: x['playerOverlays']
                        ['playerOverlayRenderer']
                        ['decoratedPlayerBarRenderer']
@@ -1114,6 +1185,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 add_dash_mpd_pr(pl_response)
                 return pl_response
 
+        def extract_embedded_config(embed_webpage, video_id):
+            embedded_config = self._search_regex(
+                r'setConfig\(({.*})\);',
+                embed_webpage, 'ytInitialData', default=None)
+            if embedded_config:
+                return embedded_config
+
         player_response = {}
 
         # Get video info
@@ -1121,37 +1199,83 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         embed_webpage = None
         if (self._og_search_property('restrictions:age', video_webpage, default=None) == '18+'
                 or re.search(r'player-age-gate-content">', video_webpage) is not None):
+            cookie_keys = self._get_cookies('https://www.youtube.com').keys()
             age_gate = True
             # We simulate the access to the video from www.youtube.com/v/{video_id}
             # this can be viewed without login into Youtube
             url = proto + '://www.youtube.com/embed/%s' % video_id
             embed_webpage = self._download_webpage(url, video_id, 'Downloading embed webpage')
-            data = compat_urllib_parse_urlencode({
-                'video_id': video_id,
-                'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-                'sts': self._search_regex(
-                    r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
-            })
-            video_info_url = proto + '://www.youtube.com/get_video_info?' + data
-            try:
-                video_info_webpage = self._download_webpage(
-                    video_info_url, video_id,
-                    note='Refetching age-gated info webpage',
-                    errnote='unable to download video info webpage')
-            except ExtractorError:
-                video_info_webpage = None
-            if video_info_webpage:
-                video_info = compat_parse_qs(video_info_webpage)
-                pl_response = video_info.get('player_response', [None])[0]
-                player_response = extract_player_response(pl_response, video_id)
-                add_dash_mpd(video_info)
-                view_count = extract_view_count(video_info)
+            ext = extract_embedded_config(embed_webpage, video_id)
+            # playabilityStatus = re.search(r'{\\\"status\\\":\\\"(?P<playabilityStatus>[^\"]+)\\\"', ext)
+            playable_in_embed = re.search(r'{\\\"playableInEmbed\\\":(?P<playableinEmbed>[^\,]+)', ext)
+            if not playable_in_embed:
+                self.to_screen('Could not determine whether playabale in embed for video %s' % video_id)
+                playable_in_embed = ''
+            else:
+                playable_in_embed = playable_in_embed.group('playableinEmbed')
+            # check if video is only playable on youtube in other words not playable in embed - if so it requires auth (cookies)
+            # if re.search(r'player-unavailable">', embed_webpage) is not None:
+            if playable_in_embed == 'false':
+                '''
+                # TODO apply this patch when Support for Python 2.6(!) and above drops
+                if ({'VISITOR_INFO1_LIVE', 'HSID', 'SSID', 'SID'} <= cookie_keys
+                        or {'VISITOR_INFO1_LIVE', '__Secure-3PSID', 'LOGIN_INFO'} <= cookie_keys):
+                '''
+                if (set(('VISITOR_INFO1_LIVE', 'HSID', 'SSID', 'SID')) <= set(cookie_keys)
+                        or set(('VISITOR_INFO1_LIVE', '__Secure-3PSID', 'LOGIN_INFO')) <= set(cookie_keys)):
+                    age_gate = False
+                    # Try looking directly into the video webpage
+                    ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
+                    if ytplayer_config:
+                        args = ytplayer_config.get("args")
+                        if args is not None:
+                            if args.get('url_encoded_fmt_stream_map') or args.get('hlsvp'):
+                                # Convert to the same format returned by compat_parse_qs
+                                video_info = dict((k, [v]) for k, v in args.items())
+                                add_dash_mpd(video_info)
+                            # Rental video is not rented but preview is available (e.g.
+                            # https://www.youtube.com/watch?v=yYr8q0y5Jfg,
+                            # https://github.com/ytdl-org/youtube-dl/issues/10532)
+                            if not video_info and args.get('ypc_vid'):
+                                return self.url_result(
+                                    args['ypc_vid'], YoutubeIE.ie_key(), video_id=args['ypc_vid'])
+                            if args.get('livestream') == '1' or args.get('live_playback') == 1:
+                                is_live = True
+                            if not player_response:
+                                player_response = extract_player_response(args.get('player_response'), video_id)
+                        elif not player_response:
+                            player_response = ytplayer_config
+                    if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
+                        add_dash_mpd_pr(player_response)
+                else:
+                    raise ExtractorError('Video is age restricted and only playable on Youtube. Requires cookies!', expected=True)
+            else:
+                data = compat_urllib_parse_urlencode({
+                    'video_id': video_id,
+                    'eurl': 'https://youtube.googleapis.com/v/' + video_id,
+                    'sts': self._search_regex(
+                        r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
+                })
+                video_info_url = proto + '://www.youtube.com/get_video_info?' + data
+                try:
+                    video_info_webpage = self._download_webpage(
+                        video_info_url, video_id,
+                        note='Refetching age-gated info webpage',
+                        errnote='unable to download video info webpage')
+                except ExtractorError:
+                    video_info_webpage = None
+                if video_info_webpage:
+                    video_info = compat_parse_qs(video_info_webpage)
+                    pl_response = video_info.get('player_response', [None])[0]
+                    player_response = extract_player_response(pl_response, video_id)
+                    add_dash_mpd(video_info)
+                    view_count = extract_view_count(video_info)
         else:
             age_gate = False
             # Try looking directly into the video webpage
             ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
-            if ytplayer_config:
-                args = ytplayer_config['args']
+            args = ytplayer_config.get("args")
+            if args is not None:
                 if args.get('url_encoded_fmt_stream_map') or args.get('hlsvp'):
                     # Convert to the same format returned by compat_parse_qs
                     video_info = dict((k, [v]) for k, v in args.items())
@@ -1166,6 +1290,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     is_live = True
                 if not player_response:
                     player_response = extract_player_response(args.get('player_response'), video_id)
+            elif not player_response:
+                player_response = ytplayer_config
             if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
                 add_dash_mpd_pr(player_response)
 
@@ -1280,6 +1406,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         if is_live is None:
             is_live = bool_or_none(video_details.get('isLive'))
+
+        has_live_chat_replay = False
+        if not is_live:
+            yt_initial_data = self._get_yt_initial_data(video_id, video_webpage)
+            try:
+                yt_initial_data['contents']['twoColumnWatchNextResults']['conversationBar']['liveChatRenderer']['continuations'][0]['reloadContinuationData']['continuation']
+                has_live_chat_replay = True
+            except (KeyError, IndexError, TypeError):
+                pass
 
         # Check for "rental" videos
         if 'ypc_video_rental_bar_text' in video_info and 'author' not in video_info:
@@ -1504,7 +1639,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     a_format['player_url'] = player_url
                     # Accept-Encoding header causes failures in live streams on Youtube and Youtube Gaming
                     a_format.setdefault('http_headers', {})['Youtubedl-no-compression'] = 'True'
-                    formats.append(a_format)
+                    if self._downloader.params.get('youtube_include_hls_manifest', True):
+                        formats.append(a_format)
             else:
                 error_message = extract_unavailable_message()
                 if not error_message:
@@ -1649,6 +1785,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 if release_year:
                     release_year = int(release_year)
 
+        yt_initial = self._get_yt_initial_data(video_id, video_webpage)
+        if yt_initial:
+            music_metadata = self._get_music_metadata_from_yt_initial(yt_initial)
+            if len(music_metadata):
+                album = music_metadata[0].get('album')
+                artist = music_metadata[0].get('artist')
+                track = music_metadata[0].get('track')
+
         m_episode = re.search(
             r'<div[^>]+id="watch7-headline"[^>]*>\s*<span[^>]*>.*?>(?P<series>[^<]+)</a></b>\s*S(?P<season>\d+)\s*•\s*E(?P<episode>\d+)</span>',
             video_webpage)
@@ -1680,7 +1824,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         def _extract_count(count_name):
             return str_to_int(self._search_regex(
-                r'-%s-button[^>]+><span[^>]+class="yt-uix-button-content"[^>]*>([\d,]+)</span>'
+                r'"accessibilityData":\{"label":"([\d,\w]+) %ss"\}'
                 % re.escape(count_name),
                 video_webpage, count_name, default=None))
 
@@ -1697,7 +1841,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             or try_get(video_info, lambda x: float_or_none(x['avg_rating'][0])))
 
         # subtitles
-        video_subtitles = self.extract_subtitles(video_id, video_webpage)
+        video_subtitles = self.extract_subtitles(
+            video_id, video_webpage, has_live_chat_replay)
         automatic_captions = self.extract_automatic_captions(video_id, video_webpage)
 
         video_duration = try_get(
@@ -1707,6 +1852,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if not video_duration:
             video_duration = parse_duration(self._html_search_meta(
                 'duration', video_webpage, 'video duration'))
+
+        # Get Subscriber Count of channel
+        subscriber_count = parse_count(self._search_regex(
+            r'"text":"([\d\.]+\w?) subscribers"',
+            video_webpage,
+            'subscriber count',
+            default=None
+        ))
 
         # annotations
         video_annotations = None
@@ -1799,7 +1952,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 raise ExtractorError(
                     'YouTube said: %s' % reason,
                     expected=True, video_id=video_id)
-            self.to_screen(player_response['streamingData']['licenseInfos'])
             if video_info.get('license_info') or try_get(player_response, lambda x: x['streamingData']['licenseInfos']):
                 raise ExtractorError('This video is DRM protected.', expected=True)
 
@@ -1846,6 +1998,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'album': album,
             'release_date': release_date,
             'release_year': release_year,
+            'subscriber_count': subscriber_count,
         }
 
 
@@ -2077,6 +2230,16 @@ class YoutubePlaylistIE(YoutubePlaylistBaseInfoExtractor):
 
         return zip(ids_in_page, titles_in_page)
 
+    def _extract_mix_ids_from_yt_initial(self, yt_initial):
+        ids = []
+        playlist_contents = try_get(yt_initial, lambda x: x['contents']['twoColumnWatchNextResults']['playlist']['playlist']['contents'], list)
+        if playlist_contents:
+            for item in playlist_contents:
+                videoId = try_get(item, lambda x: x['playlistPanelVideoRenderer']['videoId'], compat_str)
+                if videoId:
+                    ids.append(videoId)
+        return ids
+
     def _extract_mix(self, playlist_id):
         # The mixes are generated from a single video
         # the id of the playlist is just 'RD' + video_id
@@ -2090,6 +2253,13 @@ class YoutubePlaylistIE(YoutubePlaylistBaseInfoExtractor):
                 r'''(?xs)data-video-username=".*?".*?
                            href="/watch\?v=([0-9A-Za-z_-]{11})&amp;[^"]*?list=%s''' % re.escape(playlist_id),
                 webpage))
+
+            # if no ids in html of page, try using embedded json
+            if (len(new_ids) == 0):
+                yt_initial = self._get_yt_initial_data(playlist_id, webpage)
+                if yt_initial:
+                    new_ids = self._extract_mix_ids_from_yt_initial(yt_initial)
+
             # Fetch new pages until all the videos are repeated, it seems that
             # there are always 51 unique videos.
             new_ids = [_id for _id in new_ids if _id not in ids]
@@ -2563,6 +2733,7 @@ class YoutubeSearchURLIE(YoutubeSearchBaseInfoExtractor):
     IE_DESC = 'YouTube.com search URLs'
     IE_NAME = 'youtube:search_url'
     _VALID_URL = r'https?://(?:www\.)?youtube\.com/results\?(.*?&)?(?:search_query|q)=(?P<query>[^&]+)(?:[&]|$)'
+    _SEARCH_DATA = r'(?:window\["ytInitialData"\]|ytInitialData)\W?=\W?({.*?});'
     _TESTS = [{
         'url': 'https://www.youtube.com/results?baz=bar&search_query=youtube-dl+test+video&filters=video&lclk=video',
         'playlist_mincount': 5,
@@ -2573,6 +2744,58 @@ class YoutubeSearchURLIE(YoutubeSearchBaseInfoExtractor):
         'url': 'https://www.youtube.com/results?q=test&sp=EgQIBBgB',
         'only_matching': True,
     }]
+
+    def _find_videos_in_json(self, extracted):
+        videos = []
+
+        def _real_find(obj):
+            if obj is None or isinstance(obj, str):
+                return
+
+            if type(obj) is list:
+                for elem in obj:
+                    _real_find(elem)
+
+            if type(obj) is dict:
+                if "videoId" in obj:
+                    videos.append(obj)
+                    return
+
+                for _, o in obj.items():
+                    _real_find(o)
+
+        _real_find(extracted)
+
+        return videos
+
+    def extract_videos_from_page_impl(self, page, ids_in_page, titles_in_page):
+        search_response = self._parse_json(self._search_regex(self._SEARCH_DATA, page, 'ytInitialData'), None)
+
+        result_items = self._find_videos_in_json(search_response)
+
+        for renderer in result_items:
+            video_id = try_get(renderer, lambda x: x['videoId'])
+            video_title = try_get(renderer, lambda x: x['title']['runs'][0]['text']) or try_get(renderer, lambda x: x['title']['simpleText'])
+
+            if video_id is None or video_title is None:
+                # we do not have a videoRenderer or title extraction broke
+                continue
+
+            video_title = video_title.strip()
+
+            try:
+                idx = ids_in_page.index(video_id)
+                if video_title and not titles_in_page[idx]:
+                    titles_in_page[idx] = video_title
+            except ValueError:
+                ids_in_page.append(video_id)
+                titles_in_page.append(video_title)
+
+    def extract_videos_from_page(self, page):
+        ids_in_page = []
+        titles_in_page = []
+        self.extract_videos_from_page_impl(page, ids_in_page, titles_in_page)
+        return zip(ids_in_page, titles_in_page)
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -2606,6 +2829,8 @@ class YoutubeFeedsInfoExtractor(YoutubeBaseInfoExtractor):
     Subclasses must define the _FEED_NAME and _PLAYLIST_TITLE properties.
     """
     _LOGIN_REQUIRED = True
+    _FEED_DATA = r'(?:window\["ytInitialData"\]|ytInitialData)\W?=\W?({.*?});'
+    _YTCFG_DATA = r"ytcfg.set\(({.*?})\)"
 
     @property
     def IE_NAME(self):
@@ -2614,37 +2839,89 @@ class YoutubeFeedsInfoExtractor(YoutubeBaseInfoExtractor):
     def _real_initialize(self):
         self._login()
 
+    def _find_videos_in_json(self, extracted):
+        videos = []
+        c = {}
+
+        def _real_find(obj):
+            if obj is None or isinstance(obj, str):
+                return
+
+            if type(obj) is list:
+                for elem in obj:
+                    _real_find(elem)
+
+            if type(obj) is dict:
+                if "videoId" in obj:
+                    videos.append(obj)
+                    return
+
+                if "nextContinuationData" in obj:
+                    c["continuation"] = obj["nextContinuationData"]
+                    return
+
+                for _, o in obj.items():
+                    _real_find(o)
+
+        _real_find(extracted)
+
+        return videos, try_get(c, lambda x: x["continuation"])
+
     def _entries(self, page):
-        # The extraction process is the same as for playlists, but the regex
-        # for the video ids doesn't contain an index
-        ids = []
-        more_widget_html = content_html = page
+        info = []
+
+        yt_conf = self._parse_json(self._search_regex(self._YTCFG_DATA, page, 'ytcfg.set', default="null"), None, fatal=False)
+
+        search_response = self._parse_json(self._search_regex(self._FEED_DATA, page, 'ytInitialData'), None)
+
         for page_num in itertools.count(1):
-            matches = re.findall(r'href="\s*/watch\?v=([0-9A-Za-z_-]{11})', content_html)
+            video_info, continuation = self._find_videos_in_json(search_response)
 
-            # 'recommended' feed has infinite 'load more' and each new portion spins
-            # the same videos in (sometimes) slightly different order, so we'll check
-            # for unicity and break when portion has no new videos
-            new_ids = list(filter(lambda video_id: video_id not in ids, orderedSet(matches)))
-            if not new_ids:
+            new_info = []
+
+            for v in video_info:
+                v_id = try_get(v, lambda x: x['videoId'])
+                if not v_id:
+                    continue
+
+                have_video = False
+                for old in info:
+                    if old['videoId'] == v_id:
+                        have_video = True
+                        break
+
+                if not have_video:
+                    new_info.append(v)
+
+            if not new_info:
                 break
 
-            ids.extend(new_ids)
+            info.extend(new_info)
 
-            for entry in self._ids_to_results(new_ids):
-                yield entry
+            for video in new_info:
+                yield self.url_result(try_get(video, lambda x: x['videoId']), YoutubeIE.ie_key(), video_title=try_get(video, lambda x: x['title']['runs'][0]['text']) or try_get(video, lambda x: x['title']['simpleText']))
 
-            mobj = re.search(r'data-uix-load-more-href="/?(?P<more>[^"]+)"', more_widget_html)
-            if not mobj:
+            if not continuation or not yt_conf:
                 break
 
-            more = self._download_json(
-                'https://www.youtube.com/%s' % mobj.group('more'), self._PLAYLIST_TITLE,
+            search_response = self._download_json(
+                'https://www.youtube.com/browse_ajax', self._PLAYLIST_TITLE,
                 'Downloading page #%s' % page_num,
                 transform_source=uppercase_escape,
-                headers=self._YOUTUBE_CLIENT_HEADERS)
-            content_html = more['content_html']
-            more_widget_html = more['load_more_widget_html']
+                query={
+                    "ctoken": try_get(continuation, lambda x: x["continuation"]),
+                    "continuation": try_get(continuation, lambda x: x["continuation"]),
+                    "itct": try_get(continuation, lambda x: x["clickTrackingParams"])
+                },
+                headers={
+                    "X-YouTube-Client-Name": try_get(yt_conf, lambda x: x["INNERTUBE_CONTEXT_CLIENT_NAME"]),
+                    "X-YouTube-Client-Version": try_get(yt_conf, lambda x: x["INNERTUBE_CONTEXT_CLIENT_VERSION"]),
+                    "X-Youtube-Identity-Token": try_get(yt_conf, lambda x: x["ID_TOKEN"]),
+                    "X-YouTube-Device": try_get(yt_conf, lambda x: x["DEVICE"]),
+                    "X-YouTube-Page-CL": try_get(yt_conf, lambda x: x["PAGE_CL"]),
+                    "X-YouTube-Page-Label": try_get(yt_conf, lambda x: x["PAGE_BUILD_LABEL"]),
+                    "X-YouTube-Variants-Checksum": try_get(yt_conf, lambda x: x["VARIANTS_CHECKSUM"]),
+                })
 
     def _real_extract(self, url):
         page = self._download_webpage(
