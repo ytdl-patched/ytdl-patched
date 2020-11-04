@@ -30,6 +30,6 @@ jobs:
     - name: Create tag
       continue-on-error: true
       run: |
-        git push upstream :refs/tags/youtube-dl
-        git tag -fa youtube-dl
-        git push upstream -f --tags
+        git push upstream :refs/tags/youtube-dl || true
+        git tag -fa youtube-dl || true
+        git push upstream -f --tags || true
