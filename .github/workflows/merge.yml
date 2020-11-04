@@ -31,5 +31,5 @@ jobs:
       continue-on-error: true
       run: |
         git push upstream :refs/tags/youtube-dl || true
-        git tag -fa youtube-dl || true
+        git tag -f youtube-dl || true
         git push upstream -f --tags || true
