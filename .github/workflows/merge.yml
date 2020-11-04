@@ -20,16 +20,17 @@ jobs:
         git config --global core.editor true
         git config --global user.name nao20010128nao
         git config --global user.email nao20010128@gmail.com
+        git remote add self https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
+        git remote add upstream https://gitlab.com/dstftw/youtube-dl.git
     - name: Pull from ytdl-org/youtube-dl
       run: |
-        git pull https://gitlab.com/dstftw/youtube-dl.git
+        git pull upstream master
     - name: Push to here
       run: |
-        git remote add upstream https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
-        git push upstream HEAD:master
+        git push self HEAD:master
     - name: Create tag
       continue-on-error: true
       run: |
-        git push upstream :refs/tags/youtube-dl || true
-        git tag -f youtube-dl || true
-        git push upstream -f --tags || true
+        git push self :refs/tags/youtube-dl || true
+        git tag -f youtube-dl upstream/master || true
+        git push self -f --tags || true
