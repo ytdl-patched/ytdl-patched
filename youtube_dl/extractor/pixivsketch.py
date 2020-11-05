@@ -18,12 +18,13 @@ class PixivSketchBaseIE(InfoExtractor):
 class PixivSketchIE(PixivSketchBaseIE):
     IE_NAME = 'pixiv:sketch'
     # https://sketch.pixiv.net/@kotaru_taruto/lives/3404565243464976376
-    _VALID_URL = r'https?://sketch\.pixiv\.net/(?P<username>@[a-zA-Z0-9_-]+)/lives/(?P<id>\d+)'
+    _VALID_URL = r'https?://sketch\.pixiv\.net/(?P<uploader_id>@[a-zA-Z0-9_-]+)/lives/(?P<id>\d+)'
     _TEST = {}
     API_JSON_URL = 'https://sketch.pixiv.net/api/lives/%s.json'
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
+        uploader_id_url = compat_str(self._VALID_URL_RE.match(url).group('uploader_id'))
         data = self._download_json(self.API_JSON_URL % video_id, video_id, headers={
             'Referer': url,
             'X-Requested-With': url,
@@ -43,6 +44,10 @@ class PixivSketchIE(PixivSketchBaseIE):
             lambda x: x['owner']['user']['name'],
         ), None)
         uploader_id = try_get(data, (
+            lambda x: x['user']['unique_name'],
+            lambda x: x['owner']['user']['unique_name'],
+        ), uploader_id_url)
+        uploader_id_numeric = try_get(data, (
             lambda x: compat_str(x['user']['id']),
             lambda x: compat_str(x['owner']['user']['id']),
         ), None)
@@ -63,6 +68,7 @@ class PixivSketchIE(PixivSketchBaseIE):
             'title': title,
             'uploader': uploader,
             'uploader_id': uploader_id,
+            'uploader_id_numeric': uploader_id_numeric,
             'uploader_pixiv_id': uploader_pixiv_id,
             'age_limit': age_limit,
             # 'raw': data,
