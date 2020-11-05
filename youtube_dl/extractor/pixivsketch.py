@@ -73,6 +73,7 @@ class PixivSketchIE(PixivSketchBaseIE):
             'uploader_id_numeric': uploader_id_numeric,
             'uploader_pixiv_id': uploader_pixiv_id,
             'age_limit': age_limit,
+            'is_live': True
             # 'raw': data,
         }
 
