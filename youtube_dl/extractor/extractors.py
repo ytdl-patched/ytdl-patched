@@ -850,7 +850,10 @@ from .picarto import (
 )
 from .piksel import PikselIE
 from .pinkbike import PinkbikeIE
-from .pixivsketch import PixivSketchIE
+from .pixivsketch import (
+    PixivSketchIE,
+    PixivSketchUserIE,
+)
 from .pladform import PladformIE
 from .platzi import (
     PlatziIE,
