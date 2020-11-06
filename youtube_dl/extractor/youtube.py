@@ -2383,7 +2383,7 @@ class YoutubePlaylistIE(YoutubePlaylistBaseInfoExtractor):
             if not playlist_id.startswith(self._YTM_PLAYLIST_PREFIX):
                 # Mixes require a custom extraction process,
                 # Youtube Music playlists act like normal playlists (with randomized order)
-            return self._extract_mix(playlist_id)
+                return self._extract_mix(playlist_id)
 
         has_videos, playlist = self._extract_playlist(playlist_id)
         if has_videos or not video_id:
