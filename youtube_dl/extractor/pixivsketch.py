@@ -7,7 +7,7 @@ from ..utils import (
     ExtractorError,
 )
 from ..compat import (
-    compat_str
+    compat_str,
 )
 
 
@@ -30,9 +30,7 @@ class PixivSketchIE(PixivSketchBaseIE):
             'X-Requested-With': url,
         })['data']
 
-        if not data:
-            raise ExtractorError('Empty data received, probably offline', expected=True)
-        if not data['is_broadcasting']:
+        if not data or not data['is_broadcasting']:
             raise ExtractorError('This live is offline. Use https://sketch.pixiv.net/%s for ongoing live.' % uploader_id_url, expected=True)
 
         formats = self._extract_m3u8_formats(
@@ -92,9 +90,22 @@ class PixivSketchUserIE(PixivSketchBaseIE):
         })['data']
 
         if not data:
-            raise ExtractorError('Empty data received, you need to provide cookie.', expected=True)
+            try:
+                self._download_json('https://sketch.pixiv.net/api/users/current.json', video_id, headers={
+                    'Referer': url,
+                    'X-Requested-With': url,
+                }, note='Investigating reason of download failure')['data']
+            except ExtractorError as cause:
+                if cause.cause.code == 401:
+                    # without login, it throws 401
+                    raise ExtractorError('Please log in, or use live URL like https://sketch.pixiv.net/@%s/1234567890' % video_id,
+                                         expected=True, cause=cause.cause)
+                else:
+                    raise
+            else:
+                raise ExtractorError('This user is offline', expected=True)
         if not data['is_broadcasting']:
-            raise ExtractorError('This user is offline.', expected=True)
+            raise ExtractorError('This user is offline', expected=True)
 
         live_id = data['id']
         return self.url_result('https://sketch.pixiv.net/@%s/lives/%s' % (video_id, live_id))
