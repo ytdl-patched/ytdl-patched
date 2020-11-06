@@ -31,7 +31,7 @@ class PixivSketchIE(PixivSketchBaseIE):
         })['data']
 
         if not data:
-            raise ExtractorError('Broken data received')
+            raise ExtractorError('Empty data received, probably offline', expected=True)
         if not data['is_broadcasting']:
             raise ExtractorError('This live is offline. Use https://sketch.pixiv.net/%s for ongoing live.' % uploader_id_url, expected=True)
 
@@ -92,7 +92,7 @@ class PixivSketchUserIE(PixivSketchBaseIE):
         })['data']
 
         if not data:
-            raise ExtractorError('Broken data received')
+            raise ExtractorError('Empty data received, you need to provide cookie.', expected=True)
         if not data['is_broadcasting']:
             raise ExtractorError('This user is offline.', expected=True)
 
