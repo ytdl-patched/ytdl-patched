@@ -792,13 +792,23 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             # https://github.com/ytdl-org/youtube-dl/pull/7599)
             r';ytplayer\.config\s*=\s*({.+?});ytplayer',
             r';ytplayer\.config\s*=\s*({.+?});',
-            r'ytInitialPlayerResponse\s*=\s*({.+?});var meta'
         )
         config = self._search_regex(
             patterns, webpage, 'ytplayer.config', default=None)
         if config:
             return self._parse_json(
                 uppercase_escape(config), video_id, fatal=False)
+        patterns = (
+            r'(?m)window\["ytInitialPlayerResponse"\]\s*=\s*({.+});$',
+            r'ytInitialPlayerResponse\s*=\s*({.+?});var meta'
+        )
+        config = self._search_regex(
+            patterns, webpage, 'ytplayer.config', default=None)
+        if config:
+            args = self._parse_json(
+                uppercase_escape(config), video_id, fatal=False)
+            if args:
+                return {'args': args}
 
     def _get_music_metadata_from_yt_initial(self, yt_initial):
         music_metadata = []
@@ -1274,28 +1284,29 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             age_gate = False
             # Try looking directly into the video webpage
             ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
-            args = ytplayer_config.get("args")
-            if args is not None:
-                if args.get('url_encoded_fmt_stream_map') or args.get('hlsvp'):
-                    # Convert to the same format returned by compat_parse_qs
-                    video_info = dict((k, [v]) for k, v in args.items())
-                    add_dash_mpd(video_info)
-                # Rental video is not rented but preview is available (e.g.
-                # https://www.youtube.com/watch?v=yYr8q0y5Jfg,
-                # https://github.com/ytdl-org/youtube-dl/issues/10532)
-                if not video_info and args.get('ypc_vid'):
-                    return self.url_result(
-                        args['ypc_vid'], YoutubeIE.ie_key(), video_id=args['ypc_vid'])
-                if args.get('livestream') == '1' or args.get('live_playback') == 1:
-                    is_live = True
-                if not player_response:
-                    player_response = extract_player_response(args.get('player_response'), video_id)
-            elif not player_response:
-                player_response = ytplayer_config
-            if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
-                add_dash_mpd_pr(player_response)
+            if ytplayer_config:
+                args = ytplayer_config.get("args")
+                if args is not None:
+                    if args.get('url_encoded_fmt_stream_map') or args.get('hlsvp'):
+                        # Convert to the same format returned by compat_parse_qs
+                        video_info = dict((k, [v]) for k, v in args.items())
+                        add_dash_mpd(video_info)
+                    # Rental video is not rented but preview is available (e.g.
+                    # https://www.youtube.com/watch?v=yYr8q0y5Jfg,
+                    # https://github.com/ytdl-org/youtube-dl/issues/10532)
+                    if not video_info and args.get('ypc_vid'):
+                        return self.url_result(
+                            args['ypc_vid'], YoutubeIE.ie_key(), video_id=args['ypc_vid'])
+                    if args.get('livestream') == '1' or args.get('live_playback') == 1:
+                        is_live = True
+                    if not player_response:
+                        player_response = extract_player_response(args.get('player_response'), video_id)
+                elif not player_response:
+                    player_response = ytplayer_config
+                if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
+                    add_dash_mpd_pr(player_response)
 
-        def extract_unavailable_message():
+        def extract_unavailable_message(ytplayer_config):
             messages = []
             for tag, kind in (('h1', 'message'), ('div', 'submessage')):
                 msg = self._html_search_regex(
@@ -1305,9 +1316,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     messages.append(msg)
             if messages:
                 return '\n'.join(messages)
+            if ytplayer_config:
+                return try_get(ytplayer_config.get('args'),
+                               (lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
+                                lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['reason']['simpleText'],
+                                lambda x: x['playabilityStatus']['reason']), None)
 
         if not video_info and not player_response:
-            unavailable_message = extract_unavailable_message()
+            unavailable_message = extract_unavailable_message(ytplayer_config)
             if not unavailable_message:
                 unavailable_message = 'Unable to extract video data'
             raise ExtractorError(
