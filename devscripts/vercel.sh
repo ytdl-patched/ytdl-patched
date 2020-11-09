@@ -1,5 +1,9 @@
 #!/bin/bash
 set -xe
+yum install -y wget tar gzip
+wget -O a.tgz https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-linux-amd64.tar.gz
+tar -xvzf a.tgz --strip-components 1
+export PANDOC="$PWD/bin/pandoc"
 
 rm -rf vercel/ || true
 git clone --bare https://github.com/nao20010128nao/ytdl-patched.git vercel/ || \
@@ -10,7 +14,7 @@ git clone --bare https://github.com/nao20010128nao/ytdl-patched.git vercel/ || \
   git clone --bare https://git.sr.ht/~nao20010128nao/ytdl-patched vercel/
 
 cd vercel
-pandoc ../README.md -f markdown --metadata title="git clone https://ytdl-patched.vercel.app/" -t html -s -o index.html
+$PANDOC ../README.md -f gfm --metadata title="git clone https://ytdl-patched.vercel.app/" -t html -s -o index.html
 git remote rm origin
 git branch -D gh-pages
 git reflog expire --expire=now --all
