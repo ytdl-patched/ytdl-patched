@@ -10,6 +10,7 @@ git clone --bare https://github.com/nao20010128nao/ytdl-patched.git vercel/ || \
   git clone --bare https://git.sr.ht/~nao20010128nao/ytdl-patched vercel/
 
 cd vercel
+pandoc ../README.md -f markdown --metadata title="git clone https://ytdl-patched.vercel.app/" -t html -s -o index.html
 git remote rm origin
 git branch -D gh-pages
 git reflog expire --expire=now --all
