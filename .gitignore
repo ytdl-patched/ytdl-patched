@@ -43,6 +43,7 @@ test/local_parameters.json
 .tox
 youtube-dl.zsh
 public/
+bin/
 .vercel
 
 # IntelliJ related files

@@ -2,13 +2,9 @@
 SERVICE="$1"
 
 if ! command -v pandoc &> /dev/null ; then
-  sudo apt update && sudo apt install -y pandoc || true
-fi
-
-if ! command -v pandoc &> /dev/null ; then
   wget -O- https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-linux-amd64.tar.gz | \
       tar -xvzf - --strip-components 1
-  export PATH="$PWD/bin/"
+  export PATH="$PWD/bin/:$PATH"
 fi
 
 set -xe
