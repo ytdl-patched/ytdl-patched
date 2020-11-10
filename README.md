@@ -7,6 +7,7 @@
 - https://git.sr.ht/~nao20010128nao/ytdl-patched (secondary)
   - manually mirrored at every git push
 - https://ytdl-patched.vercel.app/ (just for fun)
+- https://ytdl-patched.netlify.app/ (just for fun)
 
 ## SEE ORIGINAL CODE?
 Check https://gitlab.com/dstftw/youtube-dl
