@@ -42,7 +42,8 @@ updates_key.pem
 test/local_parameters.json
 .tox
 youtube-dl.zsh
-vercel/
+public/
+.vercel
 
 # IntelliJ related files
 .idea

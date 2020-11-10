@@ -1,0 +1,23 @@
+name: Deploy repository to CDNs
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs: {}
+
+jobs:
+  netlify:
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Netlify
+        run: sudo npm install netlify-cli -g
+      - name: Build and deploy
+        run: |
+          netlify build
+          netlify deploy --prod

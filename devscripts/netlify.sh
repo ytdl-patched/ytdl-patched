@@ -1,6 +1,5 @@
 #!/bin/bash
 set -xe
-apt-get install -y wget tar gzip || true
 wget -O a.tgz https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-linux-amd64.tar.gz
 tar -xvzf a.tgz --strip-components 1
 export PANDOC="$PWD/bin/pandoc"
