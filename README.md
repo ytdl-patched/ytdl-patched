@@ -1,6 +1,6 @@
 ## MIRRORS
 - https://github.com/nao20010128nao/ytdl-patched (primary)
-- ~~https://bitbucket.org/nao20010128nao/ytdl-patched~~ **private** (secondary)
+- https://bitbucket.org/nao20010128nao/ytdl-patched (secondary)
 - https://forge.tedomum.net/nao20010128nao/ytdl-patched (secondary)
 - https://gitlab.com/lesmi_the_goodness/ytdl-patched (secondary)
 - https://gitea.com/nao20010128nao/ytdl-patched (secondary)
@@ -8,11 +8,6 @@
   - manually mirrored at every git push
 - https://ytdl-patched.vercel.app/ (just for fun)
 - https://ytdl-patched.netlify.app/ (just for fun)
-
-## SEE ORIGINAL CODE?
-Check https://gitlab.com/dstftw/youtube-dl
-
-TODO: remove these sections after DMCA is lifted
 
 [![Build Status](https://travis-ci.org/nao20010128nao/ytdl-patched.svg?branch=master)](https://travis-ci.org/nao20010128nao/ytdl-patched.svg)
 ![Run tests](https://github.com/nao20010128nao/ytdl-patched/workflows/Run%20tests/badge.svg)
