@@ -1016,6 +1016,7 @@ from .shared import (
     SharedIE,
     VivoIE,
 )
+from .sharevideos import ShareVideosIE
 from .showroomlive import ShowRoomLiveIE
 from .sina import SinaIE
 from .sixplay import SixPlayIE
