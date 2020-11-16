@@ -2068,16 +2068,6 @@ class GenericIE(InfoExtractor):
             },
         },
         {
-            'url': 'http://share-videos.se/auto/video/83645793?uid=13',
-            'md5': 'b68d276de422ab07ee1d49388103f457',
-            'info_dict': {
-                'id': '83645793',
-                'title': 'Lock up and get excited',
-                'ext': 'mp4'
-            },
-            'skip': 'TODO: fix nested playlists processing in tests',
-        },
-        {
             # Viqeo embeds
             'url': 'https://viqeo.tv/',
             'info_dict': {
@@ -3200,13 +3190,6 @@ class GenericIE(InfoExtractor):
         if foxnews_urls:
             waitlist.append(self.playlist_from_matches(
                 foxnews_urls, video_id, video_title, ie=FoxNewsIE.ie_key()))
-
-        sharevideos_urls = [sharevideos_mobj.group('url') for sharevideos_mobj in re.finditer(
-            r'<iframe[^>]+?\bsrc\s*=\s*(["\'])(?P<url>(?:https?:)?//embed\.share-videos\.se/auto/embed/\d+\?.*?\buid=\d+.*?)\1',
-            webpage)]
-        if sharevideos_urls:
-            waitlist.append(self.playlist_from_matches(
-                sharevideos_urls, video_id, video_title))
 
         viqeo_urls = ViqeoIE._extract_urls(webpage)
         if viqeo_urls:

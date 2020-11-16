@@ -7,6 +7,16 @@ from .common import InfoExtractor
 class ShareVideosIE(InfoExtractor):
     IE_NAME = 'sharevideos'
     _VALID_URL = r'https?://(?:embed\.)?share-videos\.se/auto/(?:embed|video)/(?P<id>\d+)\?uid=(?P<uid>\d+)'
+    TEST = {
+        'url': 'http://share-videos.se/auto/video/83645793?uid=13',
+        'md5': 'b68d276de422ab07ee1d49388103f457',
+        'info_dict': {
+            'id': '83645793',
+            'title': 'Lock up and get excited',
+            'ext': 'mp4'
+        },
+        'skip': 'TODO: fix nested playlists processing in tests',
+    }
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
