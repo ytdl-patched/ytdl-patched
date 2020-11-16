@@ -11,10 +11,14 @@ class ShareVideosIE(InfoExtractor):
     def _real_extract(self, url):
         video_id = self._match_id(url)
         uid = self._VALID_URL_RE.match(url).group('uid')
-        url = 'https://embed.share-videos.se/auto/embed/%s?uid=%s' % (video_id, uid)
-        webpage = self._download_webpage(url, video_id)
+        webpage = self._download_webpage('https://embed.share-videos.se/auto/embed/%s?uid=%s' % (video_id, uid), video_id)
 
         title = self._og_search_title(webpage, default=None)
+        if not title:
+            video_webpage = self._download_webpage(
+                'https://share-videos.se/auto/video/%s?uid=%s' % (video_id, uid),
+                video_id)
+            title = self._og_search_title(video_webpage, default=None)
         if not title:
             tags = self._download_json(
                 'https://search.share-videos.se/json/movie_tag?svid=%s&site=sv' % video_id,
