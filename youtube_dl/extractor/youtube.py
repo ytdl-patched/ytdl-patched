@@ -1290,6 +1290,17 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if config:
             return self._parse_json(
                 uppercase_escape(config), video_id, fatal=False)
+        # below is to extract error reason
+        patterns = (
+            r'(?m)window\["ytInitialPlayerResponse"\]\s*=\s*({.+});$',
+            r'ytInitialPlayerResponse\s*=\s*({.+?});var meta'
+        )
+        config = self._search_regex(
+            patterns, webpage, 'ytInitialPlayerResponse', default=None)
+        if config:
+            args = self._parse_json(
+                uppercase_escape(config), video_id, fatal=False)
+            return {'args': args}
 
     def _get_automatic_captions(self, video_id, webpage):
         """We need the webpage for getting the captions url, pass it as an
@@ -1692,6 +1703,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 return try_get(ytplayer_config.get('args'),
                                (lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
                                 lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['reason']['simpleText'],
+                                lambda x: x['playabilityStatus']['messages'][0],
                                 lambda x: x['playabilityStatus']['reason']), None)
 
         if not video_info and not player_response:
@@ -2014,11 +2026,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     a_format.setdefault('http_headers', {})['Youtubedl-no-compression'] = 'True'
                     formats.append(a_format)
             else:
-                error_message = extract_unavailable_message()
-                if not error_message:
-                    error_message = clean_html(try_get(
-                        player_response, lambda x: x['playabilityStatus']['reason'],
-                        compat_str))
+                error_message = extract_unavailable_message(ytplayer_config)
                 if not error_message:
                     error_message = clean_html(
                         try_get(video_info, lambda x: x['reason'][0], compat_str))
@@ -2301,9 +2309,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         msg=video_info['reason'][0], countries=countries)
                 reason = video_info['reason'][0]
                 if 'Invalid parameters' in reason:
-                    unavailable_message = extract_unavailable_message()
-                    if unavailable_message:
-                        reason = unavailable_message
+                    reason = extract_unavailable_message(ytplayer_config) or reason
                 raise ExtractorError(
                     'YouTube said: %s' % reason,
                     expected=True, video_id=video_id)
