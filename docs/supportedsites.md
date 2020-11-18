@@ -827,8 +827,6 @@
  - **SpankBangPlaylist**
  - **Spankwire**
  - **Spiegel**
- - **Spiegel:Article**: Articles on spiegel.de
- - **Spiegeltv**
  - **sport.francetvinfo.fr**
  - **Sport5**
  - **SportBox**
