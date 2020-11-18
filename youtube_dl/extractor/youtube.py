@@ -1632,6 +1632,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # Get video info
         video_info = {}
         embed_webpage = None
+        ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
         if (self._og_search_property('restrictions:age', video_webpage, default=None) == '18+'
                 or re.search(r'player-age-gate-content">', video_webpage) is not None):
             age_gate = True
@@ -1662,7 +1663,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         else:
             age_gate = False
             # Try looking directly into the video webpage
-            ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
             if ytplayer_config:
                 args = ytplayer_config['args']
                 if args.get('url_encoded_fmt_stream_map') or args.get('hlsvp'):
@@ -1682,7 +1682,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
                 add_dash_mpd_pr(player_response)
 
-        def extract_unavailable_message(ytplayer_config=None):
+        def extract_unavailable_message():
             messages = []
             for tag, kind in (('h1', 'message'), ('div', 'submessage')):
                 msg = self._html_search_regex(
@@ -1700,7 +1700,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                 lambda x: x['playabilityStatus']['reason']), None)
 
         if not video_info and not player_response:
-            unavailable_message = extract_unavailable_message(ytplayer_config)
+            unavailable_message = extract_unavailable_message()
             if not unavailable_message:
                 unavailable_message = 'Unable to extract video data'
             raise ExtractorError(
@@ -2019,7 +2019,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     a_format.setdefault('http_headers', {})['Youtubedl-no-compression'] = 'True'
                     formats.append(a_format)
             else:
-                error_message = extract_unavailable_message(ytplayer_config)
+                error_message = extract_unavailable_message()
                 if not error_message:
                     error_message = clean_html(
                         try_get(video_info, lambda x: x['reason'][0], compat_str))
@@ -2302,7 +2302,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         msg=video_info['reason'][0], countries=countries)
                 reason = video_info['reason'][0]
                 if 'Invalid parameters' in reason:
-                    reason = extract_unavailable_message(ytplayer_config) or reason
+                    reason = extract_unavailable_message() or reason
                 raise ExtractorError(
                     'YouTube said: %s' % reason,
                     expected=True, video_id=video_id)
