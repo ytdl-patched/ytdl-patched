@@ -1682,13 +1682,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
                 add_dash_mpd_pr(player_response)
 
-        if not video_info and not player_response:
-            player_response = extract_player_response(
-                self._search_regex(
-                    r'ytInitialPlayerResponse\s*=\s*({.+?})\s*;', video_webpage,
-                    'initial player response', default='{}'),
-                video_id)
-
         def extract_unavailable_message(ytplayer_config=None):
             messages = []
             for tag, kind in (('h1', 'message'), ('div', 'submessage')):
