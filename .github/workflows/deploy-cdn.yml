@@ -32,3 +32,4 @@ jobs:
           vercel-args: '--prod'
           vercel-org-id: ${{ secrets.ORG_ID }}
           vercel-project-id: ${{ secrets.PROJECT_ID }}
+          github-comment: false 
