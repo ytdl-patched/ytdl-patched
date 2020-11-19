@@ -130,13 +130,13 @@ class InstagramIE(InfoExtractor):
                               (lambda x: self._parse_json(
                                   self._search_regex(
                                       r'window\.__additionalDataLoaded\(\'/(?:p|tv)/(?:[^/?#&]+)/\',({.+?})\);',
-                                      x, 'additional data', default='{}'),
-                                  video_id, fatal=False),
+                                      x, 'additional data'),
+                                  video_id),
                                lambda x: self._parse_json(
                                   self._search_regex(
                                       r'window\._sharedData\s*=\s*({.+?});',
-                                      x, 'shared data', default='{}'),
-                                  video_id, fatal=False)['entry_data']['PostPage'][0]),
+                                      x, 'shared data'),
+                                  video_id)['entry_data']['PostPage'][0]),
                               None)
         if shared_data:
             media = try_get(
