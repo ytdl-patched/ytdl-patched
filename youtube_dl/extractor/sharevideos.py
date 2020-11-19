@@ -23,12 +23,16 @@ class ShareVideosIE(InfoExtractor):
         uid = self._VALID_URL_RE.match(url).group('uid')
         webpage = self._download_webpage('https://embed.share-videos.se/auto/embed/%s?uid=%s' % (video_id, uid), video_id)
 
-        title = self._og_search_title(webpage, default=None)
+        title = self._html_search_regex(
+            r'(?s)<title>(.*?)</title>', webpage, 'video title',
+            default=None)
         if not title:
             video_webpage = self._download_webpage(
                 'https://share-videos.se/auto/video/%s?uid=%s' % (video_id, uid),
                 video_id)
-            title = self._og_search_title(video_webpage, default=None)
+            title = self._html_search_regex(
+                r'(?s)<title>(.*?)</title>', video_webpage, 'video title',
+                default=None)
         if not title:
             tags = self._download_json(
                 'https://search.share-videos.se/json/movie_tag?svid=%s&site=sv' % video_id,
@@ -36,7 +40,8 @@ class ShareVideosIE(InfoExtractor):
             if tags and isinstance(tags, (list, tuple)):
                 title = ' '.join(tags)
         if not title:
-            self.report_warning('There is no title in this video', video_id)
+            self.report_warning('There is no title candidate for this video', video_id)
+            title = 'untitled'
 
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')
         entry = entries[0]
