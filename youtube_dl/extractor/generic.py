@@ -2437,9 +2437,8 @@ class GenericIE(InfoExtractor):
         #   Video Title - Tagline | Site Name
         # and so on and so forth; it's just not practical
         video_title = self._og_search_title(
-            webpage, default=None) or self._html_search_regex(
-            r'(?s)<title>(.*?)</title>', webpage, 'video title',
-            default='video')
+            webpage, default=None) or self._html_extract_title(
+            webpage, 'video title', default='video')
 
         # Try to detect age limit automatically
         age_limit = self._rta_search(webpage)
