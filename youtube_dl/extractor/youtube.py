@@ -283,6 +283,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         },
     }
 
+    _YT_INITIAL_DATA_RE = r'(?:window\s*\[\s*["\']ytInitialData["\']\s*\]|ytInitialData)\s*=\s*({.+?})\s*;'
+
     def _call_api(self, ep, query, video_id):
         data = self._DEFAULT_API_DATA.copy()
         data.update(query)
@@ -299,8 +301,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     def _extract_yt_initial_data(self, video_id, webpage):
         return self._parse_json(
             self._search_regex(
-                r'(?:window\s*\[\s*["\']ytInitialData["\']\s*\]|ytInitialData)\s*=\s*({.+?})\s*;',
-                webpage, 'yt initial data'),
+                (r'%s\s*\n' % self._YT_INITIAL_DATA_RE,
+                 self._YT_INITIAL_DATA_RE), webpage, 'yt initial data'),
             video_id)
 
 
@@ -1063,6 +1065,22 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'upload_date': '20170613',
                 'uploader_id': 'ElevageOrVert',
                 'uploader': 'ElevageOrVert',
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
+        {
+            # with '};' inside yt initial data (see https://github.com/ytdl-org/youtube-dl/issues/27093)
+            'url': 'https://www.youtube.com/watch?v=CHqg6qOn4no',
+            'info_dict': {
+                'id': 'CHqg6qOn4no',
+                'ext': 'mp4',
+                'title': 'Part 77   Sort a list of simple types in c#',
+                'description': 'md5:b8746fa52e10cdbf47997903f13b20dc',
+                'upload_date': '20130831',
+                'uploader_id': 'kudvenkat',
+                'uploader': 'kudvenkat',
             },
             'params': {
                 'skip_download': True,
@@ -2462,13 +2480,13 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         },
         'playlist_mincount': 138,
     }, {
-        'url': 'https://invidio.us/channel/UC23qupoDRn9YOAVzeoxjOQA',
+        'url': 'https://invidio.us/channel/UCmlqkdCBesrv2Lak1mF_MxA',
         'only_matching': True,
     }, {
-        'url': 'https://www.youtubekids.com/channel/UCyu8StPfZWapR6rfW_JgqcA',
+        'url': 'https://www.youtubekids.com/channel/UCmlqkdCBesrv2Lak1mF_MxA',
         'only_matching': True,
     }, {
-        'url': 'https://music.youtube.com/channel/UCT-K0qO8z6NzWrywqefBPBQ',
+        'url': 'https://music.youtube.com/channel/UCmlqkdCBesrv2Lak1mF_MxA',
         'only_matching': True,
     }, {
         'note': 'Playlist with deleted videos (#651). As a bonus, the video #51 is also twice in this list.',
@@ -2515,7 +2533,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         },
         'playlist_mincount': 11,
     }, {
-        'url': 'https://invidio.us/playlist?list=PLDIoUOhQQPlXr63I_vwF9GD8sAKh77dWU',
+        'url': 'https://invidio.us/playlist?list=PL4lCao7KL_QFVb7Iudeipvc2BCavECqzc',
         'only_matching': True,
     }, {
         # Playlist URL that does not actually serve a playlist
