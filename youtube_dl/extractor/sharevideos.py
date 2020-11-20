@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+from ..utils import KNOWN_EXTENSIONS, determine_ext, mimetype2ext, try_get
 from .common import InfoExtractor
 
 
@@ -39,8 +40,23 @@ class ShareVideosIE(InfoExtractor):
             self.report_warning('There is no title candidate for this video', video_id)
             title = 'untitled'
 
-        entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')
-        entry = entries[0]
+        def extract_mp4_url(x):
+            src = self._search_regex(r'random_file\.push\("(.+)"\);', webpage, 'video url')
+            src_type = self._search_regex(r'player.src\({type: \'(.+);\',', webpage, 'video type', fatal=False, default='video/mp4')
+            ext = determine_ext(src).lower()
+            return {
+                'formats': [
+                    {
+                        'url': src,
+                        'ext': (mimetype2ext(src_type)
+                                or ext if ext in KNOWN_EXTENSIONS else 'mp4'),
+                    }
+                ]
+            }
+        entry = try_get(webpage, (
+            lambda x: self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')[0],
+            extract_mp4_url,
+        ), dict)
         self._sort_formats(entry['formats'])
         entry.update({
             'id': video_id,
