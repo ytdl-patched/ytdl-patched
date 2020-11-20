@@ -41,6 +41,7 @@
  - **AlJazeera**
  - **Allocine**
  - **AlphaPorno**
+ - **Amara**
  - **AMCNetworks**
  - **AmericasTestKitchen**
  - **anderetijden**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
@@ -792,6 +793,7 @@
  - **Shahid**
  - **ShahidShow**
  - **Shared**: shared.sx
+ - **sharevideos**
  - **ShowRoomLive**
  - **Sina**
  - **SkylineWebcams**
@@ -1153,4 +1155,5 @@
  - **ZDF**
  - **ZDFChannel**
  - **zingmp3**: mp3.zing.vn
+ - **zoom**
  - **Zype**
