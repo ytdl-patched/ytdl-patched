@@ -995,12 +995,14 @@ class InfoExtractor(object):
         RegexNotFoundError, depending on fatal, specifying the field name.
         """
         if isinstance(pattern, (str, compat_str, compiled_regex_type)):
-            mobj = re.search(pattern, string, flags)
-        else:
-            for p in pattern:
-                mobj = re.search(p, string, flags)
-                if mobj:
-                    break
+            pattern = [pattern]
+        for p in pattern:
+            if self._downloader.params.get('verbose', False):
+                self.to_screen('trying regex %s' % p)
+            mobj = re.search(p, string, flags)
+            if mobj:
+                self.to_screen('%s found' % p)
+                break
 
         if not self._downloader.params.get('no_color') and compat_os_name != 'nt' and sys.stderr.isatty():
             _name = '\033[0;34m%s\033[0m' % name
