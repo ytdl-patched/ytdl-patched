@@ -1308,14 +1308,12 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # below is to extract error reason
         patterns = (
             r'(?m)window\["ytInitialPlayerResponse"\]\s*=\s*({.+});$',
-            r'ytInitialPlayerResponse\s*=\s*({.+?});var meta'
+            r'ytInitialPlayerResponse\s*=\s*({.+?});var meta',
         )
         config = self._search_regex(
             patterns, webpage, 'ytInitialPlayerResponse', default=None)
         if config:
-            args = self._parse_json(
-                uppercase_escape(config), video_id, fatal=False)
-            return {'args': args}
+            return {'args': {'player_response': config}}
 
     def _get_automatic_captions(self, video_id, webpage):
         """We need the webpage for getting the captions url, pass it as an
