@@ -1,12 +1,14 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+import itertools
+
 from .common import InfoExtractor
-from ..compat import compat_urllib_parse_urlparse
+from ..compat import compat_urllib_parse
 from ..utils import (
     int_or_none,
     mimetype2ext,
-    remove_end,
     url_or_none,
 )
 
@@ -53,7 +55,7 @@ class IwaraIE(InfoExtractor):
 
         webpage, urlh = self._download_webpage_handle(url, video_id)
 
-        hostname = compat_urllib_parse_urlparse(urlh.geturl()).hostname
+        hostname = compat_urllib_parse.urlparse(urlh.geturl()).hostname
         # ecchi is 'sexy' in Japanese
         age_limit = 18 if hostname.split('.')[0] == 'ecchi' else 0
 
@@ -69,8 +71,7 @@ class IwaraIE(InfoExtractor):
                 'age_limit': age_limit,
             }
 
-        title = remove_end(self._html_search_regex(
-            r'<title>([^<]+)</title>', webpage, 'title'), ' | Iwara')
+        title = self._html_search_regex(r'<title>([^<]+) \| Iwara</title>', webpage, 'title')
 
         formats = []
         for a_format in video_data:
@@ -97,3 +98,41 @@ class IwaraIE(InfoExtractor):
             'age_limit': age_limit,
             'formats': formats,
         }
+
+
+class IwaraUserIE(InfoExtractor):
+    # stop id part before / to distinguish all videos url
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
+    # no pages, but has all videos page: https://ecchi.iwara.tv/users/infinityyukarip
+    # no even all videos page: https://ecchi.iwara.tv/users/mmd-quintet
+    # Japanese chars in URL and paging: https://ecchi.iwara.tv/users/ぶた丼
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage(url, video_id)
+        videos_url = self._search_regex(r'<a href="(/users/[^/]+/videos)">', webpage, 'all videos url', default=None)
+
+        if not videos_url:
+            videos_webpage_iter = [webpage]
+        else:
+            videos_base_url = compat_urllib_parse.urljoin(url, videos_url)
+
+            def do_paging():
+                for i in itertools.count():
+                    if i == 0:
+                        videos_page_url = videos_base_url
+                    else:
+                        videos_page_url = compat_urllib_parse.urljoin(videos_base_url, '?page=%d' % i)
+                    videos_webpage = self._download_webpage(videos_page_url, video_id, note='Downloading video list %d' % i)
+                    yield videos_webpage
+                    if not '?page=%d' % (i + 1) in videos_webpage:
+                        break
+
+            videos_webpage_iter = do_paging()
+
+        results = []
+        for page in videos_webpage_iter:
+            results.extend([x.group(1) for x in re.finditer(r'<a href="(/videos/[^"]+)">', page)])
+
+        return self.playlist_result([self.url_result(compat_urllib_parse.urljoin(url, x))
+                                     for x in dict.fromkeys(results)], video_id)
