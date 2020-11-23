@@ -59,6 +59,7 @@
  - **ARD:mediathek**
  - **ARDBetaMediathek**
  - **Arkena**
+ - **arte.sky.it**
  - **ArteTV**
  - **ArteTVEmbed**
  - **ArteTVPlaylist**
@@ -112,6 +113,7 @@
  - **Bloomberg**
  - **BokeCC**
  - **BostonGlobe**
+ - **Box**
  - **Bpb**: Bundeszentrale für politische Bildung
  - **BR**: Bayerischer Rundfunk
  - **BravoTV**
@@ -159,6 +161,7 @@
  - **Chilloutzone**
  - **chirbit**
  - **chirbit:profile**
+ - **cielotv.it**
  - **Cinchcast**
  - **Cinemax**
  - **CiscoLiveSearch**
@@ -611,6 +614,7 @@
  - **Nuvid**
  - **NYTimes**
  - **NYTimesArticle**
+ - **NYTimesCooking**
  - **NZZ**
  - **ocw.mit.edu**
  - **OdaTV**
@@ -663,10 +667,13 @@
  - **PicartoVod**
  - **Piksel**
  - **Pinkbike**
+ - **Pinterest**
+ - **PinterestCollection**
  - **Pladform**
  - **Platzi**
  - **PlatziCourse**
  - **play.fm**
+ - **player.sky.it**
  - **PlayPlusTV**
  - **PlaysTV**
  - **Playtvak**: Playtvak.cz, iDNES.cz and Lidovky.cz
@@ -758,6 +765,7 @@
  - **RTVNH**
  - **RTVS**
  - **RUHD**
+ - **RumbleEmbed**
  - **rutube**: Rutube videos
  - **rutube:channel**: Rutube channels
  - **rutube:embed**: Rutube embedded videos
@@ -796,6 +804,8 @@
  - **sharevideos**
  - **ShowRoomLive**
  - **Sina**
+ - **sky.it**
+ - **skyacademy.it**
  - **SkylineWebcams**
  - **SkyNews**
  - **skynewsarabia:article**
@@ -934,6 +944,7 @@
  - **TV2DKBornholmPlay**
  - **TV4**: tv4.se and tv4play.se
  - **TV5MondePlus**: TV5MONDE+
+ - **tv8.it**
  - **TVA**
  - **TVANouvelles**
  - **TVANouvellesArticle**
@@ -1005,6 +1016,8 @@
  - **Viddler**
  - **Videa**
  - **video.google:search**: Google Video search
+ - **video.sky.it**
+ - **video.sky.it:live**
  - **VideoDetective**
  - **videofy.me**
  - **videomore**
@@ -1138,6 +1151,7 @@
  - **YourPorn**
  - **YourUpload**
  - **youtube**: YouTube.com
+ - **youtube:favorites**: YouTube.com favourite videos, ":ytfav" for short (requires authentication)
  - **youtube:history**: Youtube watch history, ":ythistory" for short (requires authentication)
  - **youtube:playlist**: YouTube.com playlists
  - **youtube:recommended**: YouTube.com recommended videos, ":ytrec" for short (requires authentication)
