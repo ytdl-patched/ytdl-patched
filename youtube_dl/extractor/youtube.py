@@ -1705,8 +1705,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     messages.append(msg)
             if messages:
                 return '\n'.join(messages)
-            if ytplayer_config:
-                return try_get(ytplayer_config.get('args'),
+            if player_response:
+                return try_get(player_response,
                                (lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
                                 lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['reason']['simpleText'],
                                 lambda x: x['playabilityStatus']['messages'][0],
