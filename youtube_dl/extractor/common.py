@@ -1001,7 +1001,8 @@ class InfoExtractor(object):
                 self.to_screen('trying regex %s' % p)
             mobj = re.search(p, string, flags)
             if mobj:
-                self.to_screen('%s found' % p)
+                if self._downloader.params.get('verbose', False):
+                    self.to_screen('%s found' % p)
                 break
 
         if not self._downloader.params.get('no_color') and compat_os_name != 'nt' and sys.stderr.isatty():
