@@ -180,7 +180,8 @@ class IwaraUserIE(InfoExtractor):
 
         results = []
         for page in videos_webpage_iter:
-            results.extend([x.group(1) for x in re.finditer(r'<a href="(/videos/[^"]+)">', page)])
+            for x in re.finditer(r'<a href="(/videos/[^"]+)">', page):
+                results.append(x.group(1))
 
         playlist = self.playlist_result([self.url_result(compat_urllib_parse_urljoin(url, x))
                                          for x in dict.fromkeys(results)], video_id, title)
