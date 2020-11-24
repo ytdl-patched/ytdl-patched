@@ -5,7 +5,10 @@ import re
 import itertools
 
 from .common import InfoExtractor
-from ..compat import compat_urllib_parse
+from ..compat import (
+    compat_urllib_parse_urlparse,
+    compat_urllib_parse_urljoin,
+)
 from ..utils import (
     int_or_none,
     mimetype2ext,
@@ -55,7 +58,7 @@ class IwaraIE(InfoExtractor):
 
         webpage, urlh = self._download_webpage_handle(url, video_id)
 
-        hostname = compat_urllib_parse.urlparse(urlh.geturl()).hostname
+        hostname = compat_urllib_parse_urlparse(urlh.geturl()).hostname
         # ecchi is 'sexy' in Japanese
         age_limit = 18 if hostname.split('.')[0] == 'ecchi' else 0
 
@@ -160,14 +163,14 @@ class IwaraUserIE(InfoExtractor):
         if not videos_url:
             videos_webpage_iter = [webpage]
         else:
-            videos_base_url = compat_urllib_parse.urljoin(url, videos_url)
+            videos_base_url = compat_urllib_parse_urljoin(url, videos_url)
 
             def do_paging():
                 for i in itertools.count():
                     if i == 0:
                         videos_page_url = videos_base_url
                     else:
-                        videos_page_url = compat_urllib_parse.urljoin(videos_base_url, '?page=%d' % i)
+                        videos_page_url = compat_urllib_parse_urljoin(videos_base_url, '?page=%d' % i)
                     videos_webpage = self._download_webpage(videos_page_url, video_id, note='Downloading video list %d' % (i + 1))
                     yield videos_webpage
                     if not '?page=%d' % (i + 1) in videos_webpage:
@@ -179,7 +182,7 @@ class IwaraUserIE(InfoExtractor):
         for page in videos_webpage_iter:
             results.extend([x.group(1) for x in re.finditer(r'<a href="(/videos/[^"]+)">', page)])
 
-        playlist = self.playlist_result([self.url_result(compat_urllib_parse.urljoin(url, x))
+        playlist = self.playlist_result([self.url_result(compat_urllib_parse_urljoin(url, x))
                                          for x in dict.fromkeys(results)], video_id, title)
         playlist.update({
             'uploader': uploader,
