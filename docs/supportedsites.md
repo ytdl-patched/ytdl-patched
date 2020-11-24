@@ -475,6 +475,7 @@
  - **massengeschmack.tv**
  - **MatchTV**
  - **MDR**: MDR.DE and KiKA
+ - **MedalTV**
  - **media.ccc.de**
  - **media.ccc.de:lists**
  - **Medialaan**
