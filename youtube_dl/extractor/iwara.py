@@ -103,14 +103,59 @@ class IwaraIE(InfoExtractor):
 class IwaraUserIE(InfoExtractor):
     # stop id part before / to distinguish all videos url
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
-    # no pages, but has all videos page: https://ecchi.iwara.tv/users/infinityyukarip
-    # no even all videos page: https://ecchi.iwara.tv/users/mmd-quintet
-    # Japanese chars in URL and paging: https://ecchi.iwara.tv/users/ぶた丼
+    _TESTS = [{
+        # cond: videos < 40
+        'note': 'no pages, but has all videos page',
+        'url': 'https://ecchi.iwara.tv/users/infinityyukarip',
+        'info_dict': {
+            'title': 'Uploaded videos from Infinity_YukariP',
+            'id': 'infinityyukarip',
+            'uploader': 'Infinity_YukariP',
+            'uploader_id': 'infinityyukarip',
+        },
+        'playlist_mincount': 39,
+    }, {
+        # cond: videos < 10?
+        'note': 'no even all videos page',
+        'url': 'https://ecchi.iwara.tv/users/mmd-quintet',
+        'info_dict': {
+            'title': 'Uploaded videos from mmd quintet',
+            'id': 'mmd-quintet',
+            'uploader': 'mmd quintet',
+            'uploader_id': 'mmd-quintet',
+        },
+        'playlist_mincount': 6,
+    }, {
+        # cond: videos > 40
+        'note': 'has paging',
+        'url': 'https://ecchi.iwara.tv/users/theblackbirdcalls',
+        'info_dict': {
+            'title': 'Uploaded videos from TheBlackbirdCalls',
+            'id': 'theblackbirdcalls',
+            'uploader': 'TheBlackbirdCalls',
+            'uploader_id': 'theblackbirdcalls',
+        },
+        'playlist_mincount': 420,
+    }, {
+        # cond: Japanese chars in URL
+        'note': 'Japanese chars in URL',
+        'url': 'https://ecchi.iwara.tv/users/ぶた丼',
+        'info_dict': {
+            'title': 'Uploaded videos from ぶた丼',
+            'id': 'ぶた丼',
+            'uploader': 'ぶた丼',
+            'uploader_id': 'ぶた丼',
+        },
+        'playlist_mincount': 170,
+    }]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
         webpage = self._download_webpage(url, video_id)
         videos_url = self._search_regex(r'<a href="(/users/[^/]+/videos)">', webpage, 'all videos url', default=None)
+
+        uploader = self._search_regex(r'<h2>([^<]+?)</h2>', webpage, 'uploader name', default=video_id)
+        title = 'Uploaded videos from %s' % uploader
 
         if not videos_url:
             videos_webpage_iter = [webpage]
@@ -123,7 +168,7 @@ class IwaraUserIE(InfoExtractor):
                         videos_page_url = videos_base_url
                     else:
                         videos_page_url = compat_urllib_parse.urljoin(videos_base_url, '?page=%d' % i)
-                    videos_webpage = self._download_webpage(videos_page_url, video_id, note='Downloading video list %d' % i)
+                    videos_webpage = self._download_webpage(videos_page_url, video_id, note='Downloading video list %d' % (i + 1))
                     yield videos_webpage
                     if not '?page=%d' % (i + 1) in videos_webpage:
                         break
@@ -134,5 +179,10 @@ class IwaraUserIE(InfoExtractor):
         for page in videos_webpage_iter:
             results.extend([x.group(1) for x in re.finditer(r'<a href="(/videos/[^"]+)">', page)])
 
-        return self.playlist_result([self.url_result(compat_urllib_parse.urljoin(url, x))
-                                     for x in dict.fromkeys(results)], video_id)
+        playlist = self.playlist_result([self.url_result(compat_urllib_parse.urljoin(url, x))
+                                         for x in dict.fromkeys(results)], video_id, title)
+        playlist.update({
+            'uploader': uploader,
+            'uploader_id': video_id,
+        })
+        return playlist
