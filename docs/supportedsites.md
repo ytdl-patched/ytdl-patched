@@ -1061,6 +1061,7 @@
  - **vk:wallpost**
  - **vlive**
  - **vlive:channel**
+ - **vlive:post**
  - **Vodlocker**
  - **VODPl**
  - **VODPlatform**
