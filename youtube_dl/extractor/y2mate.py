@@ -4,13 +4,14 @@ from __future__ import unicode_literals
 import re
 
 from ..compat import compat_urllib_parse_urlencode
-from ..utils import ExtractorError
+from ..utils import ExtractorError, int_or_none
 from .common import InfoExtractor
 from .youtube import YoutubeIE
 
 
 class Y2mateIE(InfoExtractor):
     _VALID_URL = r'(?x)^(?:y2(?:mate)?:|https?:\/\/(?:www\.)y2mate\.com\/(?:.+\/)?youtube\/)%s' % re.sub(r'^\(\?x\)\^', '', YoutubeIE._VALID_URL)
+    IE_NAME = 'y2mate'
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -52,6 +53,7 @@ class Y2mateIE(InfoExtractor):
                                            headers={'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
             if url_data.get('status') != 'success':
                 self.report_warning('Server responded with status %s' % url_data.get('status'))
+                continue
             url = self._search_regex(r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
                                      video_id, 'Download url for %s' % format_name, group=1)
             formats.append({
@@ -62,6 +64,7 @@ class Y2mateIE(InfoExtractor):
                 'url': url,
                 'vcodec': 'unknown',
                 'acodec': 'unknown',
+                'preference': int_or_none(self._search_regex(r'(\d+)p?', format_name, 'video size', group=1, default=None)),
             })
 
         for rows in re.finditer(r'''(?x)<tr>\s*
@@ -84,6 +87,7 @@ class Y2mateIE(InfoExtractor):
                                            headers={'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
             if url_data.get('status') != 'success':
                 self.report_warning('Server responded with status %s' % url_data.get('status'))
+                continue
             url = self._search_regex(r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
                                      video_id, 'Download url for %s' % format_name, group=1)
             formats.append({
@@ -94,6 +98,7 @@ class Y2mateIE(InfoExtractor):
                 'url': url,
                 'vcodec': 'none',
                 'acodec': 'unknown',
+                'preference': -1,
             })
 
         self._sort_formats(formats)
