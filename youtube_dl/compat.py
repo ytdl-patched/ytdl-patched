@@ -43,11 +43,6 @@ except ImportError:  # Python 2
     from urlparse import urlparse as compat_urllib_parse_urlparse
 
 try:
-    from urllib.parse import urljoin as compat_urllib_parse_urljoin
-except ImportError:  # Python 2
-    from urlparse import urljoin as compat_urllib_parse_urljoin
-
-try:
     import urllib.parse as compat_urlparse
 except ImportError:  # Python 2
     import urlparse as compat_urlparse
@@ -3042,7 +3037,6 @@ __all__ = [
     'compat_urllib_parse_unquote_plus',
     'compat_urllib_parse_unquote_to_bytes',
     'compat_urllib_parse_urlencode',
-    'compat_urllib_parse_urljoin',
     'compat_urllib_parse_urlparse',
     'compat_urllib_request',
     'compat_urllib_request_DataHandler',

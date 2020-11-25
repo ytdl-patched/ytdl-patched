@@ -7,12 +7,12 @@ import itertools
 from .common import InfoExtractor
 from ..compat import (
     compat_urllib_parse_urlparse,
-    compat_urllib_parse_urljoin,
 )
 from ..utils import (
     int_or_none,
     mimetype2ext,
     url_or_none,
+    urljoin,
 )
 
 
@@ -74,7 +74,7 @@ class IwaraIE(InfoExtractor):
                 'age_limit': age_limit,
             }
 
-        title = self._html_search_regex(r'<title>([^<]+) \| Iwara</title>', webpage, 'title')
+        title = self._html_search_regex(r'<title>(.+?) \| Iwara</title>', webpage, 'title')
 
         formats = []
         for a_format in video_data:
@@ -108,7 +108,7 @@ class IwaraUserIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
     _TESTS = [{
         # cond: videos < 40
-        'note': 'no pages, but has all videos page',
+        'note': 'number of all videos page is just 1 page',
         'url': 'https://ecchi.iwara.tv/users/infinityyukarip',
         'info_dict': {
             'title': 'Uploaded videos from Infinity_YukariP',
@@ -163,14 +163,14 @@ class IwaraUserIE(InfoExtractor):
         if not videos_url:
             videos_webpage_iter = [webpage]
         else:
-            videos_base_url = compat_urllib_parse_urljoin(url, videos_url)
+            videos_base_url = urljoin(url, videos_url)
 
             def do_paging():
                 for i in itertools.count():
                     if i == 0:
                         videos_page_url = videos_base_url
                     else:
-                        videos_page_url = compat_urllib_parse_urljoin(videos_base_url, '?page=%d' % i)
+                        videos_page_url = urljoin(videos_base_url, '?page=%d' % i)
                     videos_webpage = self._download_webpage(videos_page_url, video_id, note='Downloading video list %d' % (i + 1))
                     yield videos_webpage
                     if not '?page=%d' % (i + 1) in videos_webpage:
@@ -183,7 +183,7 @@ class IwaraUserIE(InfoExtractor):
             for x in re.finditer(r'<a href="(/videos/[^"]+)">', page):
                 results.append(x.group(1))
 
-        playlist = self.playlist_result([self.url_result(compat_urllib_parse_urljoin(url, x))
+        playlist = self.playlist_result([self.url_result(urljoin(url, x))
                                          for x in dict.fromkeys(results)], video_id, title)
         playlist.update({
             'uploader': uploader,
