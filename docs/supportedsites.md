@@ -1130,6 +1130,7 @@
  - **Xuite**: 隨意窩Xuite影音
  - **XVideos**
  - **XXXYMovies**
+ - **y2mate**
  - **Yahoo**: Yahoo screen and movies
  - **yahoo:gyao**
  - **yahoo:gyao:player**
