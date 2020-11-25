@@ -26,6 +26,7 @@ jobs:
       run: git pull upstream master
     - name: Regenerate docs/supportedsites.md
       continue-on-error: true
+      if: false
       run: |
         python ./devscripts/make_supportedsites.py ./docs/supportedsites.md 
         git commit -m"[automatic] regenerate docs/supportedsites.md @ $(date +'%Y%m%d')" ./docs/supportedsites.md
