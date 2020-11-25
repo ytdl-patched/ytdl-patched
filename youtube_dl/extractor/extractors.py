@@ -1400,6 +1400,7 @@ from .vk import (
 )
 from .vlive import (
     VLiveIE,
+    VLivePostIE,
     VLiveChannelIE,
 )
 from .vodlocker import VodlockerIE
