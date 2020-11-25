@@ -1430,24 +1430,12 @@ class InfoExtractor(object):
             if fmt_id.startswith('hls-'):
                 _fmt_id = fmt_id[4:]
                 hls_preference = int_or_none(_fmt_id)
-                if not hls_preference:
-                    if _fmt_id[-1:] == 'p':
-                        hls_preference = int_or_none(_fmt_id[:-1])
-                        if not hls_preference:
-                            hls_preference = 0
-                    else:
-                        hls_preference = 0
-                resolution_in_name_preference = hls_preference
+                if not hls_preference and _fmt_id[-1:] == 'p':
+                    hls_preference = int_or_none(_fmt_id[:-1])
             else:
                 hls_preference = -100
-                resolution_in_name_preference = int_or_none(fmt_id)
-                if not resolution_in_name_preference:
-                    if fmt_id[-1:] == 'p':
-                        resolution_in_name_preference = int_or_none(fmt_id[:-1])
-                        if not resolution_in_name_preference:
-                            resolution_in_name_preference = 0
-                    else:
-                        resolution_in_name_preference = 0
+            if not hls_preference:
+                hls_preference = 0
 
             if fmt_id.upper() == 'HD':
                 id_preference = 1
@@ -1471,7 +1459,6 @@ class InfoExtractor(object):
                 f.get('filesize_approx') if f.get('filesize_approx') is not None else -1,
                 f.get('source_preference') if f.get('source_preference') is not None else -1,
                 hls_preference,
-                resolution_in_name_preference,
                 id_preference,
                 fmt_id,
             )
