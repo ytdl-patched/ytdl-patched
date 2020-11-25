@@ -10,7 +10,7 @@ from .youtube import YoutubeIE
 
 
 class Y2mateIE(InfoExtractor):
-    _VALID_URL = r'(?x)^(?:y2(?:mate)?:|https?:\/\/(?:www\.)y2mate\.com\/youtube\/)%s' % re.sub(r'^\(\?x\)\^', '', YoutubeIE._VALID_URL)
+    _VALID_URL = r'(?x)^(?:y2(?:mate)?:|https?:\/\/(?:www\.)y2mate\.com\/(?:.+\/)?youtube\/)%s' % re.sub(r'^\(\?x\)\^', '', YoutubeIE._VALID_URL)
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
