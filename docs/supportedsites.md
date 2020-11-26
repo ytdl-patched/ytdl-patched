@@ -390,8 +390,8 @@
  - **ivi**: ivi.ru
  - **ivi:compilation**: ivi.ru compilations
  - **ivideon**: Ivideon TV
- - **Iwara**
- - **IwaraUser**
+ - **iwara**
+ - **iwara:user**
  - **Izlesene**
  - **Jamendo**
  - **JamendoAlbum**

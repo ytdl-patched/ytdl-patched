@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python.name }}
         uses: actions/setup-python@v2
-        if: ${{ !matrix.python.jython }}
+        if: ${{ !(matrix.python.jython || matrix.python.iron) }}
         with:
           python-version: ${{ matrix.python.name }}
       - name: Install Jython
