@@ -45,16 +45,24 @@ jobs:
         if: ${{ matrix.python.jython }}
         run: |
           ./devscripts/install_jython.sh
-          export PATH="$HOME/jython/bin:$PATH"
+          echo "$HOME/jython/bin" >> $GITHUB_PATH
+      - name: Install .NET
+        uses: actions/setup-dotnet@v1
+        if: ${{ matrix.python.jython }}
+        with:
+          dotnet-version: '3.1.x'
       - name: Install IronPython
         if: ${{ matrix.python.iron }}
         run: |
-          git clone https://github.com/IronLanguages/ironpython2.git
-          cd ironpython2/
-          dotnet restore IronPython.sln --packages ./packages
-          make
-          echo -e "#!/bin/bash\nmono $PWD/bin/Release/net40/ipy.exe \"\$@\"" > /usr/bin/ironpy
-          ironpy -m pip install nose
+          wget https://github.com/IronLanguages/ironpython2/releases/download/ipy-2.7.11/IronPython.2.7.11.zip -O ipy.zip
+          unzip ipy.zip || true
+          echo -e "#!/bin/bash\nmono $PWD/net45/ipy.exe \"\$@\"" > ./bin/ironpy
+          chmod a+x ./bin/ironpy
+          export PATH="$PWD/bin:$PWD/net45:$PATH"
+          ironpy -X:Frames -m ensurepip
+          ironpy -X:Frames ./bin/pip install nose
+          echo "$PWD/bin\n$PWD/net45" >> $GITHUB_PATH
+          sed -i "s%$PWD/net45/ipy.exe%ironpy%" ./bin/*
       - name: Install deps (Python 3)
         if: ${{ matrix.python.major == 3 && !(matrix.python.jython || matrix.python.iron) }}
         run: pip3 install nose
