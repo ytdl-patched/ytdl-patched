@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import re
 
 from ..compat import compat_urllib_parse_urlencode
-from ..utils import ExtractorError, int_or_none
+from ..utils import ExtractorError, int_or_none, parse_filesize
 from .common import InfoExtractor
 from .youtube import YoutubeIE
 
@@ -59,7 +59,7 @@ class Y2mateIE(InfoExtractor):
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
-                'size': estimate_size,
+                'filesize_approx': parse_filesize(estimate_size),
                 'ext': format_ext,
                 'url': url,
                 'vcodec': 'unknown',
@@ -93,7 +93,7 @@ class Y2mateIE(InfoExtractor):
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
-                'size': estimate_size,
+                'filesize_approx': parse_filesize(estimate_size),
                 'ext': format_ext,
                 'url': url,
                 'vcodec': 'none',
