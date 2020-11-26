@@ -62,9 +62,11 @@ jobs:
           export IRONPYTHONPATH="$PWD/lib/python2.7/site-packages/"
           ironpy -X:Frames -m ensurepip
           ironpy -X:Frames -m pip install nose
-          echo "$PWD/bin\n$PWD/net45" >> $GITHUB_PATH
+          echo -e "$PWD/bin\n$PWD/net45" >> $GITHUB_PATH
           echo IRONPYTHONPATH="$PWD/lib/python2.7/site-packages/" >> $GITHUB_ENV
-          sed -i "s%$PWD/net45/ipy.exe%ironpy%" ./bin/*
+          sed -i "s%$PWD/net45/ipy.exe%$( which ironpy )%" ./bin/nosetests
+          chmod a+x ./bin/nosetests
+          which nosetests
       - name: Install deps (Python 3)
         if: ${{ matrix.python.major == 3 && !(matrix.python.jython || matrix.python.iron) }}
         run: pip3 install nose
