@@ -845,6 +845,10 @@
  - **Sport5**
  - **SportBox**
  - **SportDeutschland**
+ - **Spreaker**
+ - **SpreakerPage**
+ - **SpreakerShow**
+ - **SpreakerShowPage**
  - **SpringboardPlatform**
  - **Sprout**
  - **sr:mediathek**: Saarländischer Rundfunk
