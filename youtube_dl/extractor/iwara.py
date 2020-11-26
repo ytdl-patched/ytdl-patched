@@ -17,6 +17,7 @@ from ..utils import (
 
 
 class IwaraIE(InfoExtractor):
+    IE_NAME = 'iwara'
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/videos/(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
         'url': 'http://iwara.tv/videos/amVwUl1EHpAD9RD',
@@ -104,6 +105,7 @@ class IwaraIE(InfoExtractor):
 
 
 class IwaraUserIE(InfoExtractor):
+    IE_NAME = 'iwara:user'
     # stop id part before / to distinguish all videos url
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
     _TESTS = [{
