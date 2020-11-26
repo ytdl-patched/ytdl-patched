@@ -48,7 +48,7 @@ jobs:
           echo "$HOME/jython/bin" >> $GITHUB_PATH
       - name: Install .NET
         uses: actions/setup-dotnet@v1
-        if: ${{ matrix.python.jython }}
+        if: ${{ matrix.python.iron }}
         with:
           dotnet-version: '3.1.x'
       - name: Install IronPython
@@ -59,9 +59,11 @@ jobs:
           echo -e "#!/bin/bash\nmono $PWD/net45/ipy.exe \"\$@\"" > ./bin/ironpy
           chmod a+x ./bin/ironpy
           export PATH="$PWD/bin:$PWD/net45:$PATH"
+          export IRONPYTHONPATH="$PWD/lib/python2.7/site-packages/"
           ironpy -X:Frames -m ensurepip
-          ironpy -X:Frames ./bin/pip install nose
+          ironpy -X:Frames -m pip install nose
           echo "$PWD/bin\n$PWD/net45" >> $GITHUB_PATH
+          echo IRONPYTHONPATH="$PWD/lib/python2.7/site-packages/" >> $GITHUB_ENV
           sed -i "s%$PWD/net45/ipy.exe%ironpy%" ./bin/*
       - name: Install deps (Python 3)
         if: ${{ matrix.python.major == 3 && !(matrix.python.jython || matrix.python.iron) }}
