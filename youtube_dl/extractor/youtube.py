@@ -13,7 +13,6 @@ import traceback
 
 from .common import InfoExtractor, SearchInfoExtractor
 from ..jsinterp import JSInterpreter
-from ..swfinterp import SWFInterpreter
 from ..compat import (
     compat_chr,
     compat_parse_qs,
@@ -1103,10 +1102,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         """Report extracted video URL."""
         self.to_screen('%s: Format %s not available' % (video_id, format))
 
-    def report_rtmp_download(self):
-        """Indicate the download will use the RTMP protocol."""
-        self.to_screen('RTMP download detected')
-
     def _signature_cache_id(self, example_sig):
         """ Return a string representation of a signature """
         return '.'.join(compat_str(len(part)) for part in example_sig.split('.'))
@@ -1144,13 +1139,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 note=download_note,
                 errnote='Download of %s failed' % player_url)
             res = self._parse_sig_js(code)
-        elif player_type == 'swf':
-            urlh = self._request_webpage(
-                player_url, video_id,
-                note=download_note,
-                errnote='Download of %s failed' % player_url)
-            code = urlh.read()
-            res = self._parse_sig_swf(code)
         else:
             assert False, 'Invalid player type %r' % player_type
 
@@ -1219,13 +1207,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         jsi = JSInterpreter(jscode)
         initial_function = jsi.extract_function(funcname)
-        return lambda s: initial_function([s])
-
-    def _parse_sig_swf(self, file_contents):
-        swfi = SWFInterpreter(file_contents)
-        TARGET_CLASSNAME = 'SignatureDecipher'
-        searched_class = swfi.extract_class(TARGET_CLASSNAME)
-        initial_function = swfi.extract_function(searched_class, 'decipher')
         return lambda s: initial_function([s])
 
     def _decrypt_signature(self, s, video_id, player_url, age_gate=False):
@@ -1603,13 +1584,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         qs = compat_parse_qs(compat_urllib_parse_urlparse(urlh.geturl()).query)
         video_id = qs.get('v', [None])[0] or video_id
 
-        # Attempt to extract SWF player URL
-        mobj = re.search(r'swfConfig.*?"(https?:\\/\\/.*?watch.*?-.*?\.swf)"', video_webpage)
-        if mobj is not None:
-            player_url = re.sub(r'\\(.)', r'\1', mobj.group(1))
-        else:
-            player_url = None
-
         dash_mpds = []
 
         def add_dash_mpd(video_info):
@@ -1823,15 +1797,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         streaming_formats = try_get(player_response, lambda x: x['streamingData']['formats'], list) or []
         streaming_formats.extend(try_get(player_response, lambda x: x['streamingData']['adaptiveFormats'], list) or [])
 
-        if 'conn' in video_info and video_info['conn'][0].startswith('rtmp'):
-            self.report_rtmp_download()
-            formats = [{
-                'format_id': '_rtmp',
-                'protocol': 'rtmp',
-                'url': video_info['conn'][0],
-                'player_url': player_url,
-            }]
-        elif not is_live and (streaming_formats or len(video_info.get('url_encoded_fmt_stream_map', [''])[0]) >= 1 or len(video_info.get('adaptive_fmts', [''])[0]) >= 1):
+        if not is_live and (streaming_formats or len(video_info.get('url_encoded_fmt_stream_map', [''])[0]) >= 1 or len(video_info.get('adaptive_fmts', [''])[0]) >= 1):
             encoded_url_map = video_info.get('url_encoded_fmt_stream_map', [''])[0] + ',' + video_info.get('adaptive_fmts', [''])[0]
             if 'rtmpe%3Dyes' in encoded_url_map:
                 raise ExtractorError('rtmpe downloads are not supported, see https://github.com/ytdl-org/youtube-dl/issues/343 for more information.', expected=True)
@@ -1929,7 +1895,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                 player_desc = 'unknown'
                             else:
                                 player_type, player_version = self._extract_player_info(player_url)
-                                player_desc = '%s player %s' % ('flash' if player_type == 'swf' else 'html5', player_version)
+                                player_desc = 'html5 player %s' % player_version
                             parts_sizes = self._signature_cache_id(encrypted_sig)
                             self.to_screen('{%s} signature length %s, %s' %
                                            (format_id, parts_sizes, player_desc))
