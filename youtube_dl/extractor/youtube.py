@@ -1859,6 +1859,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     continue
                 format_id = compat_str(format_id)
 
+                player_url = None
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
                         ASSETS_RE = (
