@@ -1,4 +1,3 @@
-# copied from .travis.yml
 name: Run tests
 
 on:
@@ -8,6 +7,8 @@ on:
     paths:
       - youtube_dl/**
       - test/**
+      - .github/workflows/tests.yml
+      - devscripts/
   workflow_dispatch:
     inputs: {}
 

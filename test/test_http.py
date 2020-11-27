@@ -82,6 +82,7 @@ class TestHTTP(unittest.TestCase):
         self.assertEqual(r['url'], 'http://127.0.0.1:%d/vid.mp4' % self.port)
 
 
+@unittest.skipIf(os.name.startswith('java'), 'unsupported on Jython')
 class TestHTTPS(unittest.TestCase):
     def setUp(self):
         certfn = os.path.join(TEST_DIR, 'testcert.pem')
