@@ -12,7 +12,10 @@ case "$YTDL_TEST_SET" in
     ;;
     download)
         test_set="-I test_(?!$DOWNLOAD_TESTS).+\.py"
-        multiprocess_args="--processes=4 --process-timeout=540"
+        # disable multiprocessing for IronPython tests
+        if [ "x$PYTHON_HAS_MULTIPROCESSING" != "xno" ] ; then
+            multiprocess_args="--processes=4 --process-timeout=540"
+        fi
     ;;
     *)
         break
