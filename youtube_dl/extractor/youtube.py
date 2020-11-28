@@ -282,6 +282,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     }
 
     _YT_INITIAL_DATA_RE = r'(?:window\s*\[\s*["\']ytInitialData["\']\s*\]|ytInitialData)\s*=\s*({.+?})\s*;'
+    _YT_INITIAL_PLAYER_RESPONSE_RE = r'ytInitialPlayerResponse\s*=\s*({.+?})\s*;'
 
     def _call_api(self, ep, query, video_id):
         data = self._DEFAULT_API_DATA.copy()
@@ -1069,7 +1070,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             },
         },
         {
-            # with '};' inside yt initial data (see https://github.com/ytdl-org/youtube-dl/issues/27093)
+            # with '};' inside yt initial data (see [1])
+            # see [2] for an example with '};' inside ytInitialPlayerResponse
+            # 1. https://github.com/ytdl-org/youtube-dl/issues/27093
+            # 2. https://github.com/ytdl-org/youtube-dl/issues/27216
             'url': 'https://www.youtube.com/watch?v=CHqg6qOn4no',
             'info_dict': {
                 'id': 'CHqg6qOn4no',
@@ -1667,6 +1671,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     player_response = extract_player_response(args.get('player_response'), video_id)
             if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
                 add_dash_mpd_pr(player_response)
+
+        if not video_info and not player_response:
+            player_response = extract_player_response(
+                self._search_regex(
+                    (r'%s\s*(?:var\s+meta|</script|\n)' % self._YT_INITIAL_PLAYER_RESPONSE_RE,
+                     self._YT_INITIAL_PLAYER_RESPONSE_RE), video_webpage,
+                    'initial player response', default='{}'),
+                video_id)
 
         def extract_unavailable_message():
             messages = []
