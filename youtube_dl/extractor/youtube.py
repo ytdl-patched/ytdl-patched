@@ -1292,10 +1292,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # below is to extract error reason
         patterns = (
             r'(?m)window\["ytInitialPlayerResponse"\]\s*=\s*({.+});$',
-            r'ytInitialPlayerResponse\s*=\s*({.+?});var meta',
+            r'%s\s*(?:var\s+meta|</script|\n)' % self._YT_INITIAL_PLAYER_RESPONSE_RE,
+            self._YT_INITIAL_PLAYER_RESPONSE_RE
         )
         config = self._search_regex(
-            patterns, webpage, 'ytInitialPlayerResponse', default=None)
+            patterns, webpage, 'initial player response', default=None)
         if config:
             return {'args': {'player_response': config}}
 
@@ -1672,16 +1673,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
                 add_dash_mpd_pr(player_response)
 
-        if not video_info and not player_response:
-            player_response = extract_player_response(
-                self._search_regex(
-                    (r'%s\s*(?:var\s+meta|</script|\n)' % self._YT_INITIAL_PLAYER_RESPONSE_RE,
-                     self._YT_INITIAL_PLAYER_RESPONSE_RE), video_webpage,
-                    'initial player response', default='{}'),
-                video_id)
-
         def extract_unavailable_message():
             messages = []
+            # NOTE: this no longer work
             for tag, kind in (('h1', 'message'), ('div', 'submessage')):
                 msg = self._html_search_regex(
                     r'(?s)<{tag}[^>]+id=["\']unavailable-{kind}["\'][^>]*>(.+?)</{tag}>'.format(tag=tag, kind=kind),
