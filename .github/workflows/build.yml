@@ -259,56 +259,43 @@ jobs:
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
-  windows-test:
-    needs: build-windows
-    runs-on: windows-${{ matrix.windows }}
-    continue-on-error: true
-    strategy:
-      matrix:
-        windows: [2016, 2019]
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-windows-white
-      - name: youtube-dl --help and --version
-        run: |
-          .\artifacts\youtube-dl.exe --help
-          .\artifacts\youtube-dl.exe --version
-      - name: Download some videos
-        continue-on-error: true
-        run: |
-          .\artifacts\youtube-dl.exe `
-              https://www.youtube.com/watch?v=XEY7UQJxw-o `
-              https://twitter.com/twetchapp/status/1311686520793829376
-  ubuntu-mac-test:
-    needs: build-linux
+  binary-test:
+    needs: [build-linux, build-windows]
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     strategy:
       matrix:
         os: [
           "ubuntu-20.04", "ubuntu-18.04", "ubuntu-16.04",
-          "macos-latest"
+          "macos-11.0", "macos-10.15",
+          "windows-2016", "windows-2019"
         ]
         python_version: [
           "3.8", "3.7", "3.6", "3.5"
         ]
     steps:
-      - name: Download artifacts
+      - name: Download artifacts (Linux/macOS)
         uses: actions/download-artifact@v2
+        if: ${{ startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') }}
         with:
           name: ytdl-linux
+      - name: Download artifacts (Windows)
+        uses: actions/download-artifact@v2
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        with:
+          name: ytdl-windows-white
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python_version }}
       - name: youtube-dl --help and --version
+        shell: bash
         run: |
-          chmod a+x ./artifacts/youtube-dl
+          chmod a+x ./artifacts/youtube-dl || true
           ./artifacts/youtube-dl --help
           ./artifacts/youtube-dl --version
       - name: Download some videos
+        shell: bash
         continue-on-error: true
         run: |
           ./artifacts/youtube-dl \
