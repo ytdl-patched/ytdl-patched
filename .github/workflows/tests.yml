@@ -23,8 +23,6 @@ jobs:
           { name: '3.9', may_fail: false, major: 3, special: '' },
           { name: '3.8', may_fail: false, major: 3, special: '' },
           { name: '3.7', may_fail: false, major: 3, special: '' },
-          { name: '3.6', may_fail: false, major: 3, special: '' },
-          { name: '3.5', may_fail: false, major: 3, special: '' },
           { name: 'pypy3', may_fail: false, major: 3, special: '' },
           { name: 'pypy2', may_fail: true, major: 2, special: '' },
           { name: 'jython', may_fail: true, major: 2, special: 'jython' },
