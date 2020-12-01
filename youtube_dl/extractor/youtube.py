@@ -603,7 +603,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'description': 'SUBSCRIBE: http://www.youtube.com/saturninefilms\n\nEven Obama has taken a stand against freedom on this issue: http://www.huffingtonpost.com/2010/09/09/obama-gma-interview-quran_n_710282.html',
             }
         },
-        # Normal age-gate video (No vevo, embed allowed)
+        # Normal age-gate video (No vevo, embed allowed), available via embed page
         {
             'url': 'https://youtube.com/watch?v=HtVdAasjOgU',
             'info_dict': {
@@ -618,6 +618,12 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'upload_date': '20140605',
                 'age_limit': 18,
             },
+        },
+        {
+            # Age-gated video only available with authentication (unavailable
+            # via embed page workaround)
+            'url': 'XgnwCQzjau8',
+            'only_matching': True,
         },
         # video_info is None (https://github.com/ytdl-org/youtube-dl/issues/4421)
         # YouTube Red ad is not captured for creator
@@ -1624,8 +1630,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         video_info = {}
         embed_webpage = None
         ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
-        if (self._og_search_property('restrictions:age', video_webpage, default=None) == '18+'
-                or re.search(r'player-age-gate-content">', video_webpage) is not None):
+
+        if re.search(r'["\']status["\']\s*:\s*["\']LOGIN_REQUIRED', video_webpage) is not None:
             age_gate = True
             # We simulate the access to the video from www.youtube.com/v/{video_id}
             # this can be viewed without login into Youtube
@@ -2747,12 +2753,17 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             # TODO
             pass
 
-    def _shelf_entries(self, shelf_renderer):
+    def _shelf_entries(self, shelf_renderer, skip_channels=False):
         ep = try_get(
             shelf_renderer, lambda x: x['endpoint']['commandMetadata']['webCommandMetadata']['url'],
             compat_str)
         shelf_url = urljoin('https://www.youtube.com', ep)
         if shelf_url:
+            # Skipping links to another channels, note that checking for
+            # endpoint.commandMetadata.webCommandMetadata.webPageTypwebPageType == WEB_PAGE_TYPE_CHANNEL
+            # will not work
+            if skip_channels and '/channels?' in shelf_url:
+                return
             title = try_get(
                 shelf_renderer, lambda x: x['title']['runs'][0]['text'], compat_str)
             yield self.url_result(shelf_url, video_title=title)
@@ -2863,9 +2874,13 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             }
 
     def _entries(self, tab, identity_token):
-        slr_renderer = try_get(tab, lambda x: x['sectionListRenderer'], dict)
+        tab_content = try_get(tab, lambda x: x['content'], dict)
+        if not tab_content:
+            return
+        slr_renderer = try_get(tab_content, lambda x: x['sectionListRenderer'], dict)
         if not slr_renderer:
             return
+        is_channels_tab = tab.get('title') == 'Channels'
         continuation = None
         slr_contents = try_get(slr_renderer, lambda x: x['contents'], list) or []
         for slr_content in slr_contents:
@@ -2892,7 +2907,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                     continue
                 renderer = isr_content.get('shelfRenderer')
                 if renderer:
-                    for entry in self._shelf_entries(renderer):
+                    for entry in self._shelf_entries(renderer, not is_channels_tab):
                         yield entry
                     continue
                 renderer = isr_content.get('backstagePostThreadRenderer')
@@ -3022,7 +3037,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             description = None
             playlist_id = item_id
         playlist = self.playlist_result(
-            self._entries(selected_tab['content'], identity_token),
+            self._entries(selected_tab, identity_token),
             playlist_id=playlist_id, playlist_title=title,
             playlist_description=description)
         playlist.update(self._extract_uploader(data))
