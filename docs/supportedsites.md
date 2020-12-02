@@ -714,6 +714,7 @@
  - **qqmusic:singer**: QQ音乐 - 歌手
  - **qqmusic:toplist**: QQ音乐 - 排行榜
  - **QuantumTV**
+ - **Qub**
  - **Quickline**
  - **QuicklineLive**
  - **R7**
