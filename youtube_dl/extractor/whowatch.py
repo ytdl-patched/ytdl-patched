@@ -31,9 +31,28 @@ class WhoWatchIE(InfoExtractor):
         hls_url = live_data.get('hls_url')
         if not hls_url:
             raise ExtractorError('The live is offline.', expected=True)
-        formats = self._extract_m3u8_formats(
+
+        formats = []
+        streams = live_data.get('streams') or []
+
+        formats.extend(self._extract_m3u8_formats(
             hls_url, video_id, ext='mp4', entry_protocol='m3u8_native',
-            m3u8_id='hls')
+            m3u8_id='root', preference=len(streams) * 2))
+
+        for i, fmt in enumerate(streams):
+            name = fmt.get('name') or 'source-%d' % i
+            rtmp_url = fmt.get('rtmp_url')
+            if not rtmp_url:
+                continue
+            formats.append({
+                'url': rtmp_url,
+                'format_id': '%s-rtmp' % name,
+                'ext': 'mp4',
+                'protocol': 'rtmp',
+                'preference': len(streams) - i,
+                'vcodec': 'none' if fmt.get('audio_only') else None,
+            })
+
         self._sort_formats(formats)
 
         uploader_id = try_get(metadata, lambda x: x['live']['user']['user_path'], compat_str)
