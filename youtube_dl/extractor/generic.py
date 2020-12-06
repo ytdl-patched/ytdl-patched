@@ -31,7 +31,6 @@ from ..utils import (
     sanitized_Request,
     smuggle_url,
     unescapeHTML,
-    unified_strdate,
     unified_timestamp,
     unsmuggle_url,
     UnsupportedError,
@@ -2358,7 +2357,7 @@ class GenericIE(InfoExtractor):
         info_dict = {
             'id': video_id,
             'title': self._generic_title(url),
-            'upload_date': unified_strdate(head_response.headers.get('Last-Modified'))
+            'timestamp': unified_timestamp(head_response.headers.get('Last-Modified'))
         }
 
         # Check for direct link to a video
@@ -2464,7 +2463,9 @@ class GenericIE(InfoExtractor):
         # Sometimes embedded video player is hidden behind percent encoding
         # (e.g. https://github.com/ytdl-org/youtube-dl/issues/2448)
         # Unescaping the whole page allows to handle those cases in a generic way
-        webpage = compat_urllib_parse_unquote(webpage)
+        # FIXME: unescaping the whole page may break URLs, commenting out for now.
+        # There probably should be a second run of generic extractor on unescaped webpage.
+        # webpage = compat_urllib_parse_unquote(webpage)
 
         # Unescape squarespace embeds to be detected by generic extractor,
         # see https://github.com/ytdl-org/youtube-dl/issues/21294
