@@ -1298,7 +1298,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # below is to extract error reason
         patterns = (
             r'(?m)window\["ytInitialPlayerResponse"\]\s*=\s*({.+});$',
-            r'%s\s*(?:var\s+meta|</script|\n)' % self._YT_INITIAL_PLAYER_RESPONSE_RE,
+            r'%s\s*(?:var\s+meta|</script|if\s*\(window\.ytcsi\)|\n)' % self._YT_INITIAL_PLAYER_RESPONSE_RE,
             self._YT_INITIAL_PLAYER_RESPONSE_RE
         )
         config = self._search_regex(
@@ -1692,7 +1692,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 return '\n'.join(messages)
             if player_response:
                 return try_get(player_response,
-                               (lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
+                               (lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['runs'][0]['text'],
+                                lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
                                 lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['reason']['simpleText'],
                                 lambda x: x['playabilityStatus']['messages'][0],
                                 lambda x: x['playabilityStatus']['reason']), None)
