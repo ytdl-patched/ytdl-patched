@@ -21,6 +21,7 @@ youtube-dl.tar.gz
 cover/
 updates_key.pem
 .jython_cache/
+.pytest_cache/
 *.egg-info
 *.srt
 *.ttml
