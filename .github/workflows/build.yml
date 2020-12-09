@@ -94,12 +94,13 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.python_version }}
-      - name: Install deps
-        run: |
-          pip install --upgrade pyinstaller
+      - name: Install PyInstaller
+        run: pip install --upgrade pyinstaller
+      - name: Install UPX
+        run: choco install upx
       - name: Build patched YTDL for Windows
         run: |
-          python -m PyInstaller `
+          python -OO -m PyInstaller `
               --onefile --console --distpath . `
               --hidden-import codecs `
               --icon icons\youtube_social_squircle_${{ matrix.icon }}.ico `
