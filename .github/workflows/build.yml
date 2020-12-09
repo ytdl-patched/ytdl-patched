@@ -97,6 +97,8 @@ jobs:
       - name: Install PyInstaller
         run: pip install --upgrade pyinstaller
       - name: Install UPX
+        # https://github.com/nao20010128nao/actions-test/actions/runs/409610873
+        if: ${{ '' != '' }}
         run: choco install upx
       - name: Build patched YTDL for Windows
         run: |
