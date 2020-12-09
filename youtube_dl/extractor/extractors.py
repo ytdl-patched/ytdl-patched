@@ -903,6 +903,7 @@ from .pornhub import (
     PornHubUserIE,
     PornHubPagedVideoListIE,
     PornHubUserVideosUploadIE,
+    PornHubUserLiveIE,
 )
 from .pornotube import PornotubeIE
 from .pornovoisines import PornoVoisinesIE
