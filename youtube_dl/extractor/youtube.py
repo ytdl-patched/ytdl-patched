@@ -66,11 +66,6 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     _PLAYLIST_ID_RE = r'(?:(?:PL|LL|EC|UU|FL|RD|UL|TL|PU|OLAK5uy_)[0-9A-Za-z-_]{10,}|RDMM)'
 
-    _YOUTUBE_CLIENT_HEADERS = {
-        'x-youtube-client-name': '1',
-        'x-youtube-client-version': '1.20200609.04.02',
-    }
-
     def _set_language(self):
         self._set_cookie(
             '.youtube.com', 'PREF', 'f1=50000000&f6=8&hl=en',
@@ -2651,6 +2646,10 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         # no longer available?
         'url': 'https://www.youtube.com/feed/recommended',
         'only_matching': True,
+    }, {
+        # inline playlist with not always working continuations
+        'url': 'https://www.youtube.com/watch?v=UC6u0Tct-Fo&list=PL36D642111D65BE7C',
+        'only_matching': True,
     }
         # TODO
         # {
@@ -2830,6 +2829,16 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 yield entry
 
     @staticmethod
+    def _build_continuation_query(continuation, ctp=None):
+        query = {
+            'ctoken': continuation,
+            'continuation': continuation,
+        }
+        if ctp:
+            query['itct'] = ctp
+        return query
+
+    @staticmethod
     def _extract_next_continuation_data(renderer):
         next_continuation = try_get(
             renderer, lambda x: x['continuations'][0]['nextContinuationData'], dict)
@@ -2839,11 +2848,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         if not continuation:
             return
         ctp = next_continuation.get('clickTrackingParams')
-        return {
-            'ctoken': continuation,
-            'continuation': continuation,
-            'itct': ctp,
-        }
+        return YoutubeTabIE._build_continuation_query(continuation, ctp)
 
     @classmethod
     def _extract_continuation(cls, renderer):
@@ -2866,13 +2871,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             if not continuation:
                 continue
             ctp = continuation_ep.get('clickTrackingParams')
-            if not ctp:
-                continue
-            return {
-                'ctoken': continuation,
-                'continuation': continuation,
-                'itct': ctp,
-            }
+            return YoutubeTabIE._build_continuation_query(continuation, ctp)
 
     def _entries(self, tab, identity_token):
         tab_content = try_get(tab, lambda x: x['content'], dict)
@@ -3062,13 +3061,36 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         playlist.update(self._extract_uploader(data))
         return playlist
 
-    def _extract_from_playlist(self, item_id, data, playlist):
+    def _extract_from_playlist(self, item_id, url, data, playlist):
         title = playlist.get('title') or try_get(
             data, lambda x: x['titleText']['simpleText'], compat_str)
         playlist_id = playlist.get('playlistId') or item_id
+        # Inline playlist rendition continuation does not always work
+        # at Youtube side, so delegating regular tab-based playlist URL
+        # processing whenever possible.
+        playlist_url = urljoin(url, try_get(
+            playlist, lambda x: x['endpoint']['commandMetadata']['webCommandMetadata']['url'],
+            compat_str))
+        if playlist_url and playlist_url != url:
+            return self.url_result(
+                playlist_url, ie=YoutubeTabIE.ie_key(), video_id=playlist_id,
+                video_title=title)
         return self.playlist_result(
             self._playlist_entries(playlist), playlist_id=playlist_id,
             playlist_title=title)
+
+    def _extract_identity_token(self, webpage, item_id):
+        ytcfg = self._parse_json(
+            self._search_regex(
+                r'ytcfg\.set\s*\(\s*({.+?})\s*\)\s*;', webpage, 'ytcfg',
+                default='{}'), item_id, fatal=False)
+        if ytcfg:
+            token = try_get(ytcfg, lambda x: x['ID_TOKEN'], compat_str)
+            if token:
+                return token
+        return self._search_regex(
+            r'\bID_TOKEN["\']\s*:\s*["\'](.+?)["\']', webpage,
+            'identity token', default=None)
 
     def _real_extract(self, url):
         item_id = self._match_id(url)
@@ -3084,9 +3106,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 return self.url_result(video_id, ie=YoutubeIE.ie_key(), video_id=video_id)
             self.to_screen('Downloading playlist %s - add --no-playlist to just download video %s' % (playlist_id, video_id))
         webpage = self._download_webpage(url, item_id)
-        identity_token = self._search_regex(
-            r'\bID_TOKEN["\']\s*:\s*["\'](.+?)["\']', webpage,
-            'identity token', default=None)
+        identity_token = self._extract_identity_token(webpage, item_id)
         data = self._extract_yt_initial_data(item_id, webpage)
         tabs = try_get(
             data, lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'], list)
@@ -3095,7 +3115,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         playlist = try_get(
             data, lambda x: x['contents']['twoColumnWatchNextResults']['playlist']['playlist'], dict)
         if playlist:
-            return self._extract_from_playlist(item_id, data, playlist)
+            return self._extract_from_playlist(item_id, url, data, playlist)
         # Fallback to video extraction if no playlist alike page is recognized.
         # First check for the current video then try the v attribute of URL query.
         video_id = try_get(
