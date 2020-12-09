@@ -30,7 +30,7 @@ class WhoWatchIE(InfoExtractor):
 
         hls_url = live_data.get('hls_url')
         if not hls_url:
-            raise ExtractorError('The live is offline.', expected=True)
+            raise ExtractorError(live_data.get('error_message') or 'The live is offline.', expected=True)
 
         formats = []
         streams = live_data.get('streams') or []
