@@ -40,6 +40,10 @@ updates_key.pem
 *.part
 *.ytdl
 *.swp
+*.jpg
+*.jpeg
+*.png
+*.gif
 test/local_parameters.json
 .tox
 youtube-dl.zsh
