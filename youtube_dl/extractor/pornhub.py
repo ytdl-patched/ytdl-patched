@@ -655,10 +655,13 @@ class PornHubUserLiveIE(PornHubBaseIE):
         response_formats = live_response.get('formats')
 
         hls_manifest = response_formats.get('mp4-hls', {}).get('manifest')
-        formats = self._extract_m3u8_formats(
-            hls_manifest, user_id,
-            ext='mp4', entry_protocol='m3u8_native',
-            m3u8_id='hls', fatal=False, live=True) or []
+        if hls_manifest:
+            formats = self._extract_m3u8_formats(
+                hls_manifest, user_id,
+                ext='mp4', entry_protocol='m3u8_native',
+                m3u8_id='hls', live=True)
+        else:
+            formats = []
 
         rtmp_section = response_formats.get('mp4-rtmp')
         rtmp_vcodec = rtmp_section.get('videoCodec')
