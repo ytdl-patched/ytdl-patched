@@ -676,6 +676,8 @@
  - **Pinkbike**
  - **Pinterest**
  - **PinterestCollection**
+ - **pixiv:sketch**
+ - **pixiv:sketch:user**
  - **Pladform**
  - **Platzi**
  - **PlatziCourse**
@@ -928,6 +930,10 @@
  - **TNAFlix**
  - **TNAFlixNetworkEmbed**
  - **toggle**
+ - **tokyomotion**
+ - **tokyomotion:searches**
+ - **tokyomotion:user**
+ - **tokyomotion:user:favs**
  - **ToonGoggles**
  - **Tosh**: Tosh.0
  - **tou.tv**
