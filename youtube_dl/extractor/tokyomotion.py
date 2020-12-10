@@ -19,7 +19,6 @@ except ImportError:
 
 
 class TokyoMotionBaseIE(InfoExtractor):
-    IE_DESC = False  # Do not list
 
     def _download_page(self, url, video_id, note=None):
         # This fails
@@ -54,7 +53,6 @@ class TokyoMotionBaseIE(InfoExtractor):
 
 
 class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
-    IE_DESC = False  # Do not list
 
     def _real_extract(self, url):
         user_id = self._match_id(url)

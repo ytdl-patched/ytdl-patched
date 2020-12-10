@@ -12,7 +12,7 @@ from ..compat import (
 
 
 class PixivSketchBaseIE(InfoExtractor):
-    IE_DESC = False  # Do not list
+    pass
 
 
 class PixivSketchIE(PixivSketchBaseIE):
