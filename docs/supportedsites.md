@@ -577,6 +577,7 @@
  - **Nexx**
  - **NexxEmbed**
  - **nfl.com**
+ - **nfl.com:article**
  - **NhkVod**
  - **NhkVodProgram**
  - **nhl.com**
