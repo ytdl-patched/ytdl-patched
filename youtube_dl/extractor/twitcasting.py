@@ -1,14 +1,21 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+
 from .common import InfoExtractor
 from ..utils import (
+    clean_html,
+    float_or_none,
+    get_element_by_class,
+    get_element_by_id,
+    parse_duration,
+    str_to_int,
+    unified_timestamp,
     urlencode_postdata,
-    random_user_agent,
-    ExtractorError,
+    try_get,
 )
-
-import re
+from ..compat import compat_str
 
 
 class TwitCastingIE(InfoExtractor):
@@ -21,8 +28,12 @@ class TwitCastingIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Live #2357609',
             'uploader_id': 'ivetesangalo',
-            'description': "Moi! I'm live on TwitCasting from my iPhone.",
+            'description': 'Twitter Oficial da cantora brasileira Ivete Sangalo.',
             'thumbnail': r're:^https?://.*\.jpg$',
+            'upload_date': '20110822',
+            'timestamp': 1314010824,
+            'duration': 32,
+            'view_count': int,
         },
         'params': {
             'skip_download': True,
@@ -34,8 +45,12 @@ class TwitCastingIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Live playing something #3689740',
             'uploader_id': 'mttbernardini',
-            'description': "I'm live on TwitCasting from my iPad. password: abc (Santa Marinella/Lazio, Italia)",
+            'description': 'Salve, io sono Matto (ma con la e). Questa è la mia presentazione, in quanto sono letteralmente matto (nel senso di strano), con qualcosa in più.',
             'thumbnail': r're:^https?://.*\.jpg$',
+            'upload_date': '20120212',
+            'timestamp': 1329028024,
+            'duration': 681,
+            'view_count': int,
         },
         'params': {
             'skip_download': True,
@@ -44,9 +59,7 @@ class TwitCastingIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        video_id = mobj.group('id')
-        uploader_id = mobj.group('uploader_id')
+        uploader_id, video_id = re.match(self._VALID_URL, url).groups()
 
         video_password = self._downloader.params.get('videopassword')
         request_data = None
@@ -54,68 +67,49 @@ class TwitCastingIE(InfoExtractor):
             request_data = urlencode_postdata({
                 'password': video_password,
             })
+        webpage = self._download_webpage(url, video_id, data=request_data)
 
-        def download_pages():
-            actual_url = 'https://twitcasting.tv/%s/movie/%s' % (uploader_id, video_id)
-            for lang in (
-                    ('JPN1', 'ja-JP,ja;q=0.8,en-US;q=0.5,en;q=0.3'),
-                    ('JPN2', 'ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7'),
-                    ('ENG1', 'en-US,en;q=0.5'),):
-                for ua in (
-                        ('default', random_user_agent()),
-                        ('mobile chrome', 'Mozilla/5.0 (Linux; Android 5.1; N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.136 Mobile Safari/537.36'),
-                        ('mobile firefox', 'Mozilla/5.0 (Android 5.1; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0'),):
-                    headers = {
-                        'Accept-Language': lang[1],
-                        'User-Agent': ua[1]
-                    }
-                    yield self._download_webpage(
-                        actual_url, video_id, data=request_data, headers=headers,
-                        note='Downloading page: %s %s' % (lang[0], ua[0]))
+        title = clean_html(get_element_by_id(
+            'movietitle', webpage)) or self._html_search_meta(
+            ['og:title', 'twitter:title'], webpage, fatal=True)
 
-        title, m3u8_url, thumbnail, description = [None] * 4
+        video_js_data = try_get(webpage,
+                                lambda x: self._parse_json(self._search_regex(
+                                    r"data-movie-playlist='(\[[^']+\])'",
+                                    webpage, 'movie playlist', default=None), video_id)[0], dict) or {}
+        m3u8_url = try_get(webpage,
+                           (lambda x: self._search_regex(
+                               r'data-movie-url=(["\'])(?P<url>(?:(?!\1).)+)\1',
+                               webpage, 'm3u8 url', group='url', default=None),
+                            lambda x: video_js_data['source']['url'],
+                            lambda x: 'https://twitcasting.tv/%s/metastream.m3u8' % uploader_id), compat_str)
 
-        for webpage in download_pages():
-            title = title or self._html_search_regex(
-                (r'(?s)<[^>]+id=["\']movietitle[^>]+>(.+?)</',
-                 r'(?sm)<[^>]+id=["\']movietitle[^>]+>.*<a[^>]+>(.+?)</'),
-                webpage, 'title', default=None) or self._html_search_meta(
-                'twitter:title', webpage)
-
-            m3u8_url = m3u8_url or self._search_regex(
-                (r'data-movie-url=(["\'])(?P<url>(?:(?!\1).)+)\1',
-                 r'(["\'])(?P<url>http.+?\.m3u8.*?)\1',
-                 r'(["\'])(?P<url>/.+?\.m3u8.*?)\1'),
-                webpage, 'm3u8 url', group='url', fatal=False)
-
-            if m3u8_url and m3u8_url[0] == '/':
-                m3u8_url = 'https://twitcasting.tv%s' % m3u8_url
-
-            thumbnail = thumbnail or self._og_search_thumbnail(webpage)
-            description = description or self._og_search_description(
-                webpage, default=None) or self._html_search_meta(
-                'twitter:description', webpage)
-
-            if title and m3u8_url and thumbnail and description:
-                break
-
-        if not title:
-            raise ExtractorError('Failed to extract title', expected=False)
-        if not m3u8_url:
-            raise ExtractorError('Failed to extract m3u8 url', expected=False)
-
-        m3u8_url = m3u8_url.replace(r'\/', '/')
+        # use `m3u8` entry_protocol until EXT-X-MAP is properly supported by `m3u8_native` entry_protocol
         formats = self._extract_m3u8_formats(
-            m3u8_url, video_id, ext='mp4', entry_protocol='m3u8_native',
-            m3u8_id='hls')
-        self._sort_formats(formats)
+            m3u8_url, video_id, 'mp4', m3u8_id='hls')
+
+        thumbnail = video_js_data.get('thumbnailUrl') or self._og_search_thumbnail(webpage)
+        description = clean_html(get_element_by_id(
+            'authorcomment', webpage)) or self._html_search_meta(
+            ['description', 'og:description', 'twitter:description'], webpage)
+        duration = float_or_none(video_js_data.get(
+            'duration'), 1000) or parse_duration(clean_html(
+                get_element_by_class('tw-player-duration-time', webpage)))
+        view_count = str_to_int(self._search_regex(
+            r'Total\s*:\s*([\d,]+)\s*Views', webpage, 'views', None))
+        timestamp = unified_timestamp(self._search_regex(
+            r'data-toggle="true"[^>]+datetime="([^"]+)"',
+            webpage, 'datetime', None))
 
         return {
             'id': video_id,
             'title': title,
             'description': description,
             'thumbnail': thumbnail,
+            'timestamp': timestamp,
             'uploader_id': uploader_id,
+            'duration': duration,
+            'view_count': view_count,
             'formats': formats,
             'is_live': True,
         }

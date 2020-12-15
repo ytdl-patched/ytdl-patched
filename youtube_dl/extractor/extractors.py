@@ -740,7 +740,10 @@ from .nexx import (
     NexxEmbedIE,
 )
 from .nfl import NFLIE
-from .nhk import NhkVodIE
+from .nhk import (
+    NhkVodIE,
+    NhkVodProgramIE,
+)
 from .nhl import NHLIE
 from .nick import (
     NickIE,
@@ -1246,6 +1249,10 @@ from .tv2dk import (
 from .tv2hu import TV2HuIE
 from .tv4 import TV4IE
 from .tv5mondeplus import TV5MondePlusIE
+from .tv5unis import (
+    TV5UnisVideoIE,
+    TV5UnisIE,
+)
 from .tva import (
     TVAIE,
     QubIE,
