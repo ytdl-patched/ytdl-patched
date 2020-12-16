@@ -797,6 +797,7 @@ class InfoExtractor(object):
 
         success = False
         try_count = 0
+        res = False
         while success is False:
             try:
                 res = self._download_webpage_handle(
@@ -996,6 +997,7 @@ class InfoExtractor(object):
         """
         if isinstance(pattern, (str, compat_str, compiled_regex_type)):
             pattern = [pattern]
+        mobj = None
         for p in pattern:
             if self._downloader.params.get('verbose', False):
                 self.to_screen('trying regex %s' % p)
