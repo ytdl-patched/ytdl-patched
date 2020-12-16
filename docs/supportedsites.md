@@ -477,6 +477,7 @@
  - **Markiza**
  - **MarkizaPage**
  - **massengeschmack.tv**
+ - **mastodon**
  - **MatchTV**
  - **MDR**: MDR.DE and KiKA
  - **MedalTV**
