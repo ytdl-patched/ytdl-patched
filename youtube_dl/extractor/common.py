@@ -1099,7 +1099,7 @@ class InfoExtractor(object):
     @staticmethod
     def _meta_regexes(prop):
         content_re = r'content=(?:"([^"]+?)"|\'([^\']+?)\'|\s*([^\s"\'=<>`]+?))'
-        property_re = (r'(?:name|property)=(?:\'%(prop)s\'|"%(prop)s"|\s*%(prop)s\b)'
+        property_re = (r'(?:itemprop|name|property|id|http-equiv)==(?:\'%(prop)s\'|"%(prop)s"|\s*%(prop)s\b)'
                        % {'prop': re.escape(prop)})
         template = r'<meta[^>]+?%s[^>]+?%s'
         return [
@@ -1114,6 +1114,10 @@ class InfoExtractor(object):
             og_regexes.extend(cls._meta_regexes('og:%s' % p))
             og_regexes.extend(cls._meta_regexes('og-%s' % p))
         return og_regexes
+
+    @staticmethod
+    def _meta_regex(prop):
+        return InfoExtractor._meta_regexes(prop)[0]
 
     def _og_search_property(self, prop, html, name=None, **kargs):
         if not isinstance(prop, (list, tuple)):
