@@ -1099,7 +1099,7 @@ class InfoExtractor(object):
     @staticmethod
     def _meta_regexes(prop):
         content_re = r'content=(?:"([^"]+?)"|\'([^\']+?)\'|\s*([^\s"\'=<>`]+?))'
-        property_re = (r'(?:itemprop|name|property|id|http-equiv)==(?:\'%(prop)s\'|"%(prop)s"|\s*%(prop)s\b)'
+        property_re = (r'(?:itemprop|name|property|id|http-equiv)=(?:\'%(prop)s\'|"%(prop)s"|\s*%(prop)s\b)'
                        % {'prop': re.escape(prop)})
         template = r'<meta[^>]+?%s[^>]+?%s'
         return [
