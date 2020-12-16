@@ -3,16 +3,43 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import clean_html
+from ..utils import ExtractorError, clean_html
 
 
 class MastodonBaseIE(InfoExtractor):
 
-    @classmethod
-    def suitable(cls, url):
-        # should be filtered at generic.py and pass to mastodon extractors
-        #   ... or prefix "mastodon:" by hand
-        return (url.startswith('mastodon:') or url.startswith('mstdn:') or url.startswith('mtdn:')) and re.match(cls._VALID_URL, url)
+    def _test_mastodon_instance(self, hostname, video_id):
+        # TODO: make hostname white(allow)llist
+        if hostname in []:
+            return True
+
+        # HELP: more cases needed
+        if hostname in ['medium.com']:
+            return False
+
+        # self.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social or joinmastodon.org.' % hostname)
+
+        try:
+            # try /api/v1/instance
+            api_request_instance = self._download_json(
+                'https://%s/api/v1/instance' % hostname, video_id,
+                note='Testing Mastodon API /api/v1/instance')
+            if api_request_instance.get('uri') != hostname:
+                return False
+            if not api_request_instance.get('title'):
+                return False
+
+            # try /api/v1/directory
+            api_request_directory = self._download_json(
+                'https://%s/api/v1/directory' % hostname, video_id,
+                note='Testing Mastodon API /api/v1/directory')
+            if not isinstance(api_request_directory, (tuple, list)):
+                return False
+        except (IOError, ExtractorError):
+            return False
+
+        # this is probably mastodon instance
+        return True
 
 
 class MastodonIE(MastodonBaseIE):
@@ -25,7 +52,8 @@ class MastodonIE(MastodonBaseIE):
         username = mobj.group('username')
         video_id = mobj.group('id')
 
-        url = 'https://%s/@%s/%s' % (domain, username, video_id)
+        if not self._test_mastodon_instance(domain, video_id):
+            return self.url_result(url, ie='Generic')
 
         api_response = self._download_json('https://%s/api/v1/statuses/%s' % (domain, video_id), video_id)
 
@@ -50,9 +78,9 @@ class MastodonIE(MastodonBaseIE):
             })
             break
 
-        account, uploader, uploader_id = api_response.get('account'), None, None
+        account, uploader_id = api_response.get('account'), None
         if account:
-            uploader, uploader_id = account.get('username'), account.get('id')
+            uploader_id = account.get('id')
 
         return {
             'id': video_id,
@@ -60,7 +88,7 @@ class MastodonIE(MastodonBaseIE):
             'description': description,
             'formats': formats,
             'thumbnail': thumbnail,
-            'uploader': uploader,
+            'uploader': username,
             'uploader_id': uploader_id,
         }
 
