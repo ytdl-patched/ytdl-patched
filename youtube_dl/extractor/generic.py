@@ -124,6 +124,8 @@ from .zype import ZypeIE
 from .odnoklassniki import OdnoklassnikiIE
 from .kinja import KinjaEmbedIE
 
+from .mastodon import MastodonIE
+
 
 class GenericIE(InfoExtractor):
     IE_DESC = 'Generic downloader that works on some sites'
@@ -3330,6 +3332,31 @@ class GenericIE(InfoExtractor):
 
         def filter_video(urls):
             return list(filter(check_video, urls))
+
+        if re.match(MastodonIE._VALID_URL, url):
+            try:
+                # test if given URL is mastodon post or user
+                hostname = compat_urlparse.urlparse(url).hostname
+                # try /api/v1/instance
+                api_request_instance = self._download_json(
+                    'https://%s/api/v1/instance' % hostname, video_id,
+                    note='Testing Mastodon API /api/v1/instance')
+                if api_request_instance.get('uri') != hostname:
+                    raise ExtractorError('uri unmatched')
+                if not api_request_instance.get('title'):
+                    raise ExtractorError('have no title')
+
+                # try /api/v1/directory
+                api_request_directory = self._download_json(
+                    'https://%s/api/v1/directory' % hostname, video_id,
+                    note='Testing Mastodon API /api/v1/directory')
+                if not isinstance(api_request_directory, (tuple, list)):
+                    raise ExtractorError('not an array')
+
+                # this is probably mastodon post
+                return self.url_result('mastodon:%s' % url, ie='Mastodon')
+            except ExtractorError:
+                pass
 
         # Start with something easy: JW Player in SWFObject
         found = filter_video(re.findall(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage))

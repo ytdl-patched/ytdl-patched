@@ -1095,11 +1095,11 @@ class InfoExtractor(object):
 
         return compat_getpass('Type %s and press [Return]: ' % note)
 
-    # Helper functions for extracting OpenGraph info
+    # Helper functions for extracting meta tag
     @staticmethod
-    def _og_regexes(prop):
+    def _meta_regexes(prop):
         content_re = r'content=(?:"([^"]+?)"|\'([^\']+?)\'|\s*([^\s"\'=<>`]+?))'
-        property_re = (r'(?:name|property)=(?:\'og[:-]%(prop)s\'|"og[:-]%(prop)s"|\s*og[:-]%(prop)s\b)'
+        property_re = (r'(?:name|property)=(?:\'%(prop)s\'|"%(prop)s"|\s*%(prop)s\b)'
                        % {'prop': re.escape(prop)})
         template = r'<meta[^>]+?%s[^>]+?%s'
         return [
@@ -1107,11 +1107,13 @@ class InfoExtractor(object):
             template % (content_re, property_re),
         ]
 
-    @staticmethod
-    def _meta_regex(prop):
-        return r'''(?isx)<meta
-                    (?=[^>]+(?:itemprop|name|property|id|http-equiv)=(["\']?)%s\1)
-                    [^>]+?content=(["\'])(?P<content>.*?)\2''' % re.escape(prop)
+    @classmethod
+    def _og_regexes(cls, prop):
+        og_regexes = []
+        for p in prop:
+            og_regexes.extend(cls._meta_regexes('og:%s' % p))
+            og_regexes.extend(cls._meta_regexes('og-%s' % p))
+        return og_regexes
 
     def _og_search_property(self, prop, html, name=None, **kargs):
         if not isinstance(prop, (list, tuple)):
@@ -1120,7 +1122,8 @@ class InfoExtractor(object):
             name = 'OpenGraph %s' % prop[0]
         og_regexes = []
         for p in prop:
-            og_regexes.extend(self._og_regexes(p))
+            og_regexes.extend(self._meta_regexes('og:%s' % p))
+            og_regexes.extend(self._meta_regexes('og-%s' % p))
         escaped = self._search_regex(og_regexes, html, name, flags=re.DOTALL, **kargs)
         if escaped is None:
             return None
@@ -1148,14 +1151,18 @@ class InfoExtractor(object):
         return self._html_search_regex(
             r'(?s)<title>(.*?)</title>', html, name, **kwargs)
 
-    def _html_search_meta(self, name, html, display_name=None, fatal=False, **kwargs):
+    def _html_search_meta(self, name, html, display_name=None, fatal=False, **kargs):
         if not isinstance(name, (list, tuple)):
             name = [name]
         if display_name is None:
-            display_name = name[0]
-        return self._html_search_regex(
-            [self._meta_regex(n) for n in name],
-            html, display_name, fatal=fatal, group='content', **kwargs)
+            display_name = '%s' % name[0]
+        meta_regexes = []
+        for p in name:
+            meta_regexes.extend(self._meta_regexes(p))
+        escaped = self._search_regex(meta_regexes, html, display_name, flags=re.DOTALL, fatal=fatal, **kargs)
+        if escaped is None:
+            return None
+        return unescapeHTML(escaped)
 
     def _dc_search_uploader(self, html):
         return self._html_search_meta('dc.creator', html, 'uploader')
