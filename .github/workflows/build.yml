@@ -5,6 +5,8 @@ on:
     paths:
       - youtube_dl/**
       - test/**
+      - .github/workflows/build.yml
+      - Makefile
     branches:
       - master
   workflow_dispatch:
