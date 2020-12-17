@@ -1568,7 +1568,6 @@ from .youtube import (
     YoutubeWatchLaterIE,
 )
 from .zapiks import ZapiksIE
-from .zaq1 import Zaq1IE
 from .zattoo import (
     BBVTVIE,
     EinsUndEinsTVIE,
