@@ -478,6 +478,7 @@
  - **MarkizaPage**
  - **massengeschmack.tv**
  - **mastodon**
+ - **mastodon:user**
  - **MatchTV**
  - **MDR**: MDR.DE and KiKA
  - **MedalTV**
