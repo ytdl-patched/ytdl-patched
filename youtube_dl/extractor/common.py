@@ -1095,11 +1095,11 @@ class InfoExtractor(object):
 
         return compat_getpass('Type %s and press [Return]: ' % note)
 
-    # Helper functions for extracting meta tag
+    # Helper functions for extracting OpenGraph info
     @staticmethod
-    def _meta_regexes(prop):
+    def _og_regexes(prop):
         content_re = r'content=(?:"([^"]+?)"|\'([^\']+?)\'|\s*([^\s"\'=<>`]+?))'
-        property_re = (r'(?:itemprop|name|property|id|http-equiv)=(?:\'%(prop)s\'|"%(prop)s"|\s*%(prop)s\b)'
+        property_re = (r'(?:name|property)=(?:\'og[:-]%(prop)s\'|"og[:-]%(prop)s"|\s*og[:-]%(prop)s\b)'
                        % {'prop': re.escape(prop)})
         template = r'<meta[^>]+?%s[^>]+?%s'
         return [
@@ -1107,17 +1107,21 @@ class InfoExtractor(object):
             template % (content_re, property_re),
         ]
 
-    @classmethod
-    def _og_regexes(cls, prop):
-        og_regexes = []
-        for p in prop:
-            og_regexes.extend(cls._meta_regexes('og:%s' % p))
-            og_regexes.extend(cls._meta_regexes('og-%s' % p))
-        return og_regexes
-
     @staticmethod
     def _meta_regex(prop):
-        return InfoExtractor._meta_regexes(prop)[0]
+        return r'''(?isx)<meta
+                    (?=[^>]+(?:itemprop|name|property|id|http-equiv)=(["\']?)%s\1)
+                    [^>]+?content=(["\'])(?P<content>.*?)\2''' % re.escape(prop)
+
+    @staticmethod
+    def _meta_regexes(prop):
+        content_re = r'content=(["\'])(?P<content>.*?)'
+        property_re = r'(?=[^>]+(?:itemprop|name|property|id|http-equiv)=(["\']?)%s)' % re.escape(prop)
+        template = r'(?isx)<meta[^>]+?%s\1[^>]+?%s\2'
+        return [
+            template % (property_re, content_re),
+            template % (content_re, property_re),
+        ]
 
     def _og_search_property(self, prop, html, name=None, **kargs):
         if not isinstance(prop, (list, tuple)):
@@ -1126,8 +1130,7 @@ class InfoExtractor(object):
             name = 'OpenGraph %s' % prop[0]
         og_regexes = []
         for p in prop:
-            og_regexes.extend(self._meta_regexes('og:%s' % p))
-            og_regexes.extend(self._meta_regexes('og-%s' % p))
+            og_regexes.extend(self._og_regexes(p))
         escaped = self._search_regex(og_regexes, html, name, flags=re.DOTALL, **kargs)
         if escaped is None:
             return None
@@ -1162,7 +1165,7 @@ class InfoExtractor(object):
             display_name = '%s' % name[0]
         meta_regexes = []
         for p in name:
-            meta_regexes.extend(self._meta_regexes(p))
+            meta_regexes.append(self._meta_regex(p))
         escaped = self._search_regex(meta_regexes, html, display_name, flags=re.DOTALL, fatal=fatal, **kargs)
         if escaped is None:
             return None
