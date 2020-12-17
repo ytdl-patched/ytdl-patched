@@ -4,21 +4,29 @@ import re
 
 from .common import InfoExtractor
 from ..utils import ExtractorError, clean_html
+from ..compat import compat_urllib_parse_urlparse
 
 known_valid_instances = []
 
 
 class MastodonBaseIE(InfoExtractor):
 
-    def _test_mastodon_instance(self, hostname):
+    def suitable(self, url):
+        hostname = compat_urllib_parse_urlparse(url).hostname
+        return self._test_mastodon_instance(hostname, True) and super().suitable(url)
+
+    def _test_mastodon_instance(self, hostname, quick=False):
         # TODO: make hostname white(allow)list
-        if hostname in []:
+        if hostname in ['mstdn.jp', 'pawoo.net']:
             return True
         if hostname in known_valid_instances:
             return True
 
         # HELP: more cases needed
-        if hostname in ['medium.com']:
+        if hostname in ['medium.com', 'lbry.tv']:
+            return False
+
+        if quick:
             return False
 
         # self.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social or joinmastodon.org.' % hostname)
@@ -50,6 +58,15 @@ class MastodonBaseIE(InfoExtractor):
 class MastodonIE(MastodonBaseIE):
     IE_NAME = 'mastodon'
     _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/@(?P<username>[a-zA-Z0-9_-]+)/(?P<id>\d+)'
+    # youtube: https://mstdn.jp/@vaporeon/105389634797745542
+    # radiko: https://mstdn.jp/@vaporeon/105389280534065010
+    _TESTS = [{
+        'url': 'https://mstdn.jp/@vaporeon/105389634797745542',
+        'only_matching': True,
+    }, {
+        'url': 'https://pawoo.net/@iriomote_yamaneko/105370643258491818',
+        'only_matching': True,
+    }]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -101,7 +118,7 @@ class MastodonIE(MastodonBaseIE):
 
 class MastodonUserIE(MastodonBaseIE):
     IE_NAME = 'mastodon:user'
-    _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)/?(?:\?.*)?'
+    _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)/?(?:\?.*)?$'
     _TESTS = [{
         'url': 'https://mstdn.jp/@kris57',
         'info_dict': {

@@ -1115,9 +1115,9 @@ class InfoExtractor(object):
 
     @staticmethod
     def _meta_regexes(prop):
+        property_re = r'(?:itemprop|name|property|id|http-equiv)=(["\']?)%s' % re.escape(prop)
         content_re = r'content=(["\'])(?P<content>.*?)'
-        property_re = r'(?=[^>]+(?:itemprop|name|property|id|http-equiv)=(["\']?)%s)' % re.escape(prop)
-        template = r'(?isx)<meta[^>]+?%s\1[^>]+?%s\2'
+        template = r'(?isx)<meta(?=[^>]+%s)\1[^>]+?%s\2'
         return [
             template % (property_re, content_re),
             template % (content_re, property_re),
@@ -1166,7 +1166,7 @@ class InfoExtractor(object):
         meta_regexes = []
         for p in name:
             meta_regexes.append(self._meta_regex(p))
-        escaped = self._search_regex(meta_regexes, html, display_name, flags=re.DOTALL, fatal=fatal, **kargs)
+        escaped = self._search_regex(meta_regexes, html, display_name, flags=re.DOTALL, fatal=fatal, group='content', **kargs)
         if escaped is None:
             return None
         return unescapeHTML(escaped)
