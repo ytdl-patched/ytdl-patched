@@ -11,13 +11,14 @@ known_valid_instances = []
 
 class MastodonBaseIE(InfoExtractor):
 
-    def suitable(self, url):
+    @classmethod
+    def suitable(cls, url):
         hostname = compat_urllib_parse_urlparse(url).hostname
-        return self._test_mastodon_instance(hostname, True) and super().suitable(url)
+        return super().suitable(url) and cls()._test_mastodon_instance(hostname, True)
 
     def _test_mastodon_instance(self, hostname, quick=False):
         # TODO: make hostname white(allow)list
-        if hostname in ['mstdn.jp', 'pawoo.net']:
+        if hostname in ['mstdn.jp', 'pawoo.net', 'mstdn.kemono-friends.info']:
             return True
         if hostname in known_valid_instances:
             return True
@@ -57,22 +58,60 @@ class MastodonBaseIE(InfoExtractor):
 
 class MastodonIE(MastodonBaseIE):
     IE_NAME = 'mastodon'
-    _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/@(?P<username>[a-zA-Z0-9_-]+)/(?P<id>\d+)'
-    # youtube: https://mstdn.jp/@vaporeon/105389634797745542
-    # radiko: https://mstdn.jp/@vaporeon/105389280534065010
+    _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/(?:@(?P<username>[a-zA-Z0-9_-]+)|web/statuses)/(?P<id>\d+)'
     _TESTS = [{
+        'note': 'embed video without NSFW',
+        'url': 'https://mstdn.jp/@nao20010128nao/105395495018076252',
+        'info_dict': {
+            'id': '105395495018076252',
+            'title': 'てすや\nhttps://www.youtube.com/watch?v=jx0fBBkaF1w',
+            'uploader': 'nao20010128nao',
+            'uploader_id': 'nao20010128nao',
+        },
+    }, {
+        'note': 'embed video with NSFW',
+        'url': 'https://mstdn.jp/@nao20010128nao/105395503690401921',
+        'info_dict': {
+            'id': '105395503690401921',
+            'title': 'Mastodonダウンローダーのテストケース用なので別に注意要素無いよ',
+            'uploader': 'nao20010128nao',
+            'uploader_id': 'nao20010128nao',
+        },
+    }, {
+        'note': 'uploader_id not present in URL',
+        'url': 'https://mstdn.jp/web/statuses/105395503690401921',
+        'info_dict': {
+            'id': '105395503690401921',
+            'title': 'Mastodonダウンローダーのテストケース用なので別に注意要素無いよ',
+            'uploader': 'nao20010128nao',
+            'uploader_id': 'nao20010128nao',
+        },
+    }, {
+        'note': 'has YouTube as card',
         'url': 'https://mstdn.jp/@vaporeon/105389634797745542',
+        'add_ie': ['Youtube'],
+        'info_dict': {},
+    }, {
+        'note': 'has radiko as card',
+        'url': 'https://mstdn.jp/@vaporeon/105389280534065010',
         'only_matching': True,
     }, {
         'url': 'https://pawoo.net/@iriomote_yamaneko/105370643258491818',
         'only_matching': True,
+    }, {
+        'note': 'uploader_id has only one character',
+        'url': 'https://mstdn.kemono-friends.info/@m/103997543924688111',
+        'info_dict': {
+            'id': '103997543924688111',
+            'uploader_id': 'm',
+        },
     }]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
         prefix = mobj.group('prefix')
         domain = mobj.group('domain')
-        username = mobj.group('username')
+        uploader_id = mobj.group('username')
         video_id = mobj.group('id')
 
         if not prefix and not self._test_mastodon_instance(domain):
@@ -101,9 +140,14 @@ class MastodonIE(MastodonBaseIE):
             })
             break
 
-        account, uploader_id = api_response.get('account'), None
+        account, uploader = api_response.get('account'), None
         if account:
-            uploader_id = account.get('id')
+            uploader = account.get('display_name')
+            uploader_id = uploader_id or account.get('username')
+
+        card = api_response.get('card')
+        if not formats and card:
+            return self.url_result(card.get('url'))
 
         return {
             'id': video_id,
@@ -111,7 +155,7 @@ class MastodonIE(MastodonBaseIE):
             'description': description,
             'formats': formats,
             'thumbnail': thumbnail,
-            'uploader': username,
+            'uploader': uploader,
             'uploader_id': uploader_id,
         }
 
@@ -163,4 +207,27 @@ class MastodonUserIE(MastodonBaseIE):
             if not next_url:
                 break
             index += 1
+
         return self.playlist_result(results, user_id, 'Toots from @%s@%s' % (user_id, domain))
+
+
+class MastodonUserNumericIE(MastodonBaseIE):
+    IE_NAME = 'mastodon:user:numeric_id'
+    _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/web/accounts/(?P<id>\d+)/?'
+    _TESTS = [{
+        'url': 'https://mstdn.jp/web/accounts/330076',
+        'only_matching': True,
+    }]
+
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        prefix = mobj.group('prefix')
+        domain = mobj.group('domain')
+        user_id = mobj.group('id')
+
+        if not prefix and not self._test_mastodon_instance(domain):
+            return self.url_result(url, ie='Generic')
+
+        api_response = self._download_json('https://%s/api/v1/accounts/%s' % (domain, user_id), user_id)
+        username = api_response.get('username')
+        return self.url_result('https://%s/@%s' % (domain, username), video_id=username)

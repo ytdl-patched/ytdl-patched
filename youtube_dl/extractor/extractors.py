@@ -620,6 +620,7 @@ from .massengeschmacktv import MassengeschmackTVIE
 from .mastodon import (
     MastodonIE,
     MastodonUserIE,
+    MastodonUserNumericIE,
 )
 from .matchtv import MatchTVIE
 from .mdr import MDRIE
