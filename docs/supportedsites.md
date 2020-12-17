@@ -577,8 +577,8 @@
  - **NextTV**: 壹電視
  - **Nexx**
  - **NexxEmbed**
- - **nfl.com**
- - **nfl.com:article**
+ - **nfl.com** (Currently broken)
+ - **nfl.com:article** (Currently broken)
  - **NhkVod**
  - **NhkVodProgram**
  - **nhl.com**
@@ -1188,7 +1188,6 @@
  - **YoutubeYtBe**
  - **YoutubeYtUser**
  - **Zapiks**
- - **Zaq1**
  - **Zattoo**
  - **ZattooLive**
  - **ZDF**
