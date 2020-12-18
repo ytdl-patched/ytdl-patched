@@ -23,9 +23,8 @@ jobs:
           { name: '3.9', may_fail: false, major: 3, special: '' },
           { name: '3.8', may_fail: false, major: 3, special: '' },
           { name: '3.7', may_fail: false, major: 3, special: '' },
-          # https://github.com/actions/setup-python/issues/171
-          # { name: 'pypy3', may_fail: false, major: 3, special: '' },
-          # { name: 'pypy2', may_fail: true, major: 2, special: '' },
+          { name: 'pypy-3.7', may_fail: false, major: 3, special: '' },
+          { name: 'pypy-2.7', may_fail: true, major: 2, special: '' },
           { name: 'jython', may_fail: true, major: 2, special: 'jython' },
           { name: 'ironpython', may_fail: true, major: 2, special: 'iron' },
         ]
