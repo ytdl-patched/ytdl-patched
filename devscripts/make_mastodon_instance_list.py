@@ -75,7 +75,7 @@ instances = {
 }
 
 __all__ = ['instances']
-''' % '",\n    "'.join(results)
+''' % '",\n    "'.join(sorted(results))
 
 with open('./youtube_dl/extractor/mastodon/instances.py', 'w') as w:
     w.write(pycode)
