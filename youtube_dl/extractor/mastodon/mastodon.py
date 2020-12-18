@@ -21,7 +21,7 @@ class MastodonBaseIE(InfoExtractor):
         if dl:
             params = dl.params
         if params:
-            skip = params.get('check_mastodon_instance', False)
+            skip = not params.get('check_mastodon_instance', False)
         return self._test_mastodon_instance(hostname, skip, prefix)
 
     def _test_mastodon_instance(self, hostname, skip, prefix):
