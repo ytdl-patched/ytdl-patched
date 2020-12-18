@@ -108,6 +108,7 @@ from .postprocessor import (
     get_postprocessor,
 )
 from .version import __version__
+from .build_config import git_commit, git_upstream_commit
 
 if compat_os_name == 'nt':
     import ctypes
@@ -2315,6 +2316,10 @@ class YoutubeDL(object):
         write_string(encoding_str, encoding=None)
 
         self._write_string('[debug] youtube-dl version ' + __version__ + '\n')
+        if git_commit:
+            self._write_string('[debug]        from commit ' + git_commit + '\n')
+        if git_upstream_commit:
+            self._write_string('[debug]           based on ' + git_upstream_commit + '\n')
         if _LAZY_LOADER:
             self._write_string('[debug] Lazy loading extractors enabled' + '\n')
         try:

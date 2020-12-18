@@ -14,6 +14,7 @@ youtube-dl.1
 youtube-dl.bash-completion
 youtube-dl.fish
 youtube_dl/extractor/lazy_extractors.py
+youtube_dl/build_config.py
 youtube-dl
 youtube-dl.exe
 youtube-dl.tar.gz

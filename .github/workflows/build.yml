@@ -24,6 +24,10 @@ jobs:
       latest_version_numeric: ${{ steps.prepare.outputs.latest_version_numeric }}
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
       - name: Install deps
         run: |
           sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
@@ -41,12 +45,14 @@ jobs:
           echo "from __future__ import unicode_literals
           __version__ = '${LATEST_VERSION}'
           " > youtube_dl/version.py
+          python ./devscripts/make_buildconfig.py
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
           name: ytdl-base
           path: |
             youtube_dl/version.py
+            youtube_dl/build_config.py
             artifacts/
   build-linux:
     runs-on: ubuntu-latest
