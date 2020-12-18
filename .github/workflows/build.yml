@@ -24,6 +24,8 @@ jobs:
       latest_version_numeric: ${{ steps.prepare.outputs.latest_version_numeric }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v2
         with:
