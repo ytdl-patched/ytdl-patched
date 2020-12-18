@@ -479,6 +479,7 @@
  - **massengeschmack.tv**
  - **mastodon**
  - **mastodon:user**
+ - **mastodon:user:numeric_id**
  - **MatchTV**
  - **MDR**: MDR.DE and KiKA
  - **MedalTV**
