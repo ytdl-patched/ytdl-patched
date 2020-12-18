@@ -792,6 +792,10 @@ class YoutubeDL(object):
             ies = self._ies
 
         for ie in ies:
+            if ie.suitable.__self__ is None:
+                # suitable() is not @classmethod
+                ie = self.get_info_extractor(ie.ie_key())
+
             if not ie.suitable(url):
                 continue
 

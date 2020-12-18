@@ -198,6 +198,11 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='no_color',
         default=False,
         help='Do not emit color codes in output')
+    general.add_option(
+        '--check-mastodon-instance',
+        action='store_true', dest='check_mastodon_instance',
+        default=False,
+        help='Always perform online checks for Mastodon-like URL')
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(

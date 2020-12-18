@@ -11,15 +11,14 @@ from ...utils import ExtractorError, clean_html
 class MastodonBaseIE(InfoExtractor):
     known_valid_instances = []
 
-    @classmethod
-    def suitable(cls, url):
-        mobj = re.match(cls._VALID_URL, url)
+    def suitable(self, url):
+        mobj = re.match(self._VALID_URL, url)
         if not mobj:
             return False
         prefix = mobj.group('prefix')
         hostname = mobj.group('domain')
-        # TODO: add --check-mastodon-instance option
-        return super().suitable(url) and cls()._test_mastodon_instance(hostname, True, prefix)
+        skip = not self._downloader.params.get('check_mastodon_instance', False)
+        return self._test_mastodon_instance(hostname, skip, prefix)
 
     def _test_mastodon_instance(self, hostname, skip, prefix):
         if hostname in instances:
@@ -33,8 +32,9 @@ class MastodonBaseIE(InfoExtractor):
 
         # continue anyway if "mastodon:" is added to URL
         if prefix:
-            return prefix
-        # for suitable(): skip further instance check
+            return True
+        # without --check-mastodon-instance,
+        #   skip further instance check
         if skip:
             return False
 
@@ -117,13 +117,9 @@ class MastodonIE(MastodonBaseIE):
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        prefix = mobj.group('prefix')
         domain = mobj.group('domain')
         uploader_id = mobj.group('username')
         video_id = mobj.group('id')
-
-        if not prefix and not self._test_mastodon_instance(domain, False, prefix):
-            return self.url_result(url, ie='Generic')
 
         api_response = self._download_json('https://%s/api/v1/statuses/%s' % (domain, video_id), video_id)
 
@@ -189,12 +185,8 @@ class MastodonUserIE(MastodonBaseIE):
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        prefix = mobj.group('prefix')
         domain = mobj.group('domain')
         user_id = mobj.group('id')
-
-        if not prefix and not self._test_mastodon_instance(domain, False, prefix):
-            return self.url_result(url, ie='Generic')
 
         # FIXME: filter toots with video or youtube attached
         # TODO: replace to api calls if possible
