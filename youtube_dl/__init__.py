@@ -183,6 +183,7 @@ def _real_main(argv=None):
                 parsed_retries = int(retries)
             except (TypeError, ValueError):
                 parser.error('invalid retry count specified')
+                parsed_retries = None
         return parsed_retries
     if opts.retries is not None:
         opts.retries = parse_retries(opts.retries)

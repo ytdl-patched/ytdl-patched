@@ -108,7 +108,10 @@ from .postprocessor import (
     get_postprocessor,
 )
 from .version import __version__
-from .build_config import git_commit, git_upstream_commit
+try:
+    from .build_config import git_commit, git_upstream_commit
+except ImportError:
+    git_commit, git_upstream_commit = None, None
 
 if compat_os_name == 'nt':
     import ctypes
