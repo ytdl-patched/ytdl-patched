@@ -14,6 +14,8 @@ class MastodonBaseIE(InfoExtractor):
     @classmethod
     def suitable(cls, url):
         mobj = re.match(cls._VALID_URL, url)
+        if not mobj:
+            return False
         prefix = mobj.group('prefix')
         hostname = mobj.group('domain')
         # TODO: add --check-mastodon-instance option
