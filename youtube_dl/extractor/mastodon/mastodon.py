@@ -1,36 +1,42 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
 import re
 
-from .common import InfoExtractor
-from ..utils import ExtractorError, clean_html
-from ..compat import compat_urllib_parse_urlparse
-
-known_valid_instances = []
+from .instances import instances
+from ..common import InfoExtractor
+from ...utils import ExtractorError, clean_html
 
 
 class MastodonBaseIE(InfoExtractor):
+    known_valid_instances = []
 
     @classmethod
     def suitable(cls, url):
-        hostname = compat_urllib_parse_urlparse(url).hostname
-        return super().suitable(url) and cls()._test_mastodon_instance(hostname, True)
+        mobj = re.match(cls._VALID_URL, url)
+        prefix = mobj.group('prefix')
+        hostname = mobj.group('domain')
+        # TODO: add --check-mastodon-instance option
+        return super().suitable(url) and cls()._test_mastodon_instance(hostname, True, prefix)
 
-    def _test_mastodon_instance(self, hostname, quick=False):
-        # TODO: make hostname white(allow)list
-        if hostname in ['mstdn.jp', 'pawoo.net', 'mstdn.kemono-friends.info']:
+    def _test_mastodon_instance(self, hostname, skip, prefix):
+        if hostname in instances:
             return True
-        if hostname in known_valid_instances:
+        if hostname in self.known_valid_instances:
             return True
 
         # HELP: more cases needed
         if hostname in ['medium.com', 'lbry.tv']:
             return False
 
-        if quick:
+        # continue anyway if "mastodon:" is added to URL
+        if prefix:
+            return prefix
+        # for suitable(): skip further instance check
+        if skip:
             return False
 
-        # self.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social or joinmastodon.org.' % hostname)
+        self.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social or joinmastodon.org.' % hostname)
 
         try:
             # try /api/v1/instance
@@ -52,7 +58,7 @@ class MastodonBaseIE(InfoExtractor):
             return False
 
         # this is probably mastodon instance
-        known_valid_instances.append(hostname)
+        self.known_valid_instances.append(hostname)
         return True
 
 
@@ -114,7 +120,7 @@ class MastodonIE(MastodonBaseIE):
         uploader_id = mobj.group('username')
         video_id = mobj.group('id')
 
-        if not prefix and not self._test_mastodon_instance(domain):
+        if not prefix and not self._test_mastodon_instance(domain, False, prefix):
             return self.url_result(url, ie='Generic')
 
         api_response = self._download_json('https://%s/api/v1/statuses/%s' % (domain, video_id), video_id)
@@ -185,7 +191,7 @@ class MastodonUserIE(MastodonBaseIE):
         domain = mobj.group('domain')
         user_id = mobj.group('id')
 
-        if not prefix and not self._test_mastodon_instance(domain):
+        if not prefix and not self._test_mastodon_instance(domain, False, prefix):
             return self.url_result(url, ie='Generic')
 
         # FIXME: filter toots with video or youtube attached
@@ -195,7 +201,7 @@ class MastodonUserIE(MastodonBaseIE):
         next_url = 'https://%s/@%s' % (domain, user_id)
         while True:
             webpage = self._download_webpage(next_url, user_id, note='Downloading page %d' % index)
-            for matches in re.finditer(r'(?isx)<a class=(["\'])(?:.*?\s+)*status__relative-time(?:\s+.*)*\1\s+(?:rel=(["\'])noopener\2)?\s+href=(["\'])(https://%s/@%s/(\d+))\3>'
+            for matches in re.finditer(r'(?x)<a class=(["\'])(?:.*?\s+)*status__relative-time(?:\s+.*)*\1\s+(?:rel=(["\'])noopener\2)?\s+href=(["\'])(https://%s/@%s/(\d+))\3>'
                                        % (re.escape(domain), re.escape(user_id)), webpage):
                 _, _, _, url, video_id = matches.groups()
                 results.append(self.url_result(url, id=video_id))
