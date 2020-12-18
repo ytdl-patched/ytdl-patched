@@ -17,7 +17,11 @@ class MastodonBaseIE(InfoExtractor):
             return False
         prefix = mobj.group('prefix')
         hostname = mobj.group('domain')
-        skip = not self._downloader.params.get('check_mastodon_instance', False)
+        dl, skip, params = self._downloader, True, None
+        if dl:
+            params = dl.params
+        if params:
+            skip = params.get('check_mastodon_instance', False)
         return self._test_mastodon_instance(hostname, skip, prefix)
 
     def _test_mastodon_instance(self, hostname, skip, prefix):
