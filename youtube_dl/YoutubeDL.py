@@ -41,6 +41,7 @@ from .compat import (
     compat_urllib_error,
     compat_urllib_request,
     compat_urllib_request_DataHandler,
+    compat_is_unbound,
 )
 from .utils import (
     age_restricted,
@@ -795,7 +796,7 @@ class YoutubeDL(object):
             ies = self._ies
 
         for ie in ies:
-            if ie.suitable.__self__ is None:
+            if compat_is_unbound(ie.suitable):
                 # suitable() is not @classmethod
                 ie = self.get_info_extractor(ie.ie_key())
 
