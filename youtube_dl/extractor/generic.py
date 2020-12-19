@@ -2316,7 +2316,7 @@ class GenericIE(InfoExtractor):
             host = host[:host.index(':')]
         if host[:4] == 'www.':
             host = host[4:]
-        if host == 'pinktower.com' or host == 'jump.5ch.net':
+        if host in ('pinktower.com', 'jump.5ch.net', 'jump.megabbs.info'):
             return self.url_result(parsed_url.query)
 
         url, smuggled_data = unsmuggle_url(url)
