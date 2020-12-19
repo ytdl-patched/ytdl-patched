@@ -9,7 +9,7 @@ from ...utils import ExtractorError, clean_html
 
 
 class MastodonBaseIE(InfoExtractor):
-    known_valid_instances = []
+    known_valid_instances = set()
 
     def suitable(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -64,7 +64,7 @@ class MastodonBaseIE(InfoExtractor):
             return False
 
         # this is probably mastodon instance
-        self.known_valid_instances.append(hostname)
+        self.known_valid_instances.add(hostname)
         return True
 
 
@@ -79,6 +79,7 @@ class MastodonIE(MastodonBaseIE):
             'title': 'てすや\nhttps://www.youtube.com/watch?v=jx0fBBkaF1w',
             'uploader': 'nao20010128nao',
             'uploader_id': 'nao20010128nao',
+            'age_limit': 0,
         },
     }, {
         'note': 'embed video with NSFW',
@@ -88,6 +89,7 @@ class MastodonIE(MastodonBaseIE):
             'title': 'Mastodonダウンローダーのテストケース用なので別に注意要素無いよ',
             'uploader': 'nao20010128nao',
             'uploader_id': 'nao20010128nao',
+            'age_limit': 18,
         },
     }, {
         'note': 'uploader_id not present in URL',
@@ -97,6 +99,7 @@ class MastodonIE(MastodonBaseIE):
             'title': 'Mastodonダウンローダーのテストケース用なので別に注意要素無いよ',
             'uploader': 'nao20010128nao',
             'uploader_id': 'nao20010128nao',
+            'age_limit': 18,
         },
     }, {
         'note': 'has YouTube as card',
@@ -153,6 +156,10 @@ class MastodonIE(MastodonBaseIE):
             uploader = account.get('display_name')
             uploader_id = uploader_id or account.get('username')
 
+        age_limit = 0
+        if api_response.get('sensitive'):
+            age_limit = 18
+
         card = api_response.get('card')
         if not formats and card:
             return self.url_result(card.get('url'))
@@ -165,6 +172,7 @@ class MastodonIE(MastodonBaseIE):
             'thumbnail': thumbnail,
             'uploader': uploader,
             'uploader_id': uploader_id,
+            'age_limit': age_limit,
         }
 
 
