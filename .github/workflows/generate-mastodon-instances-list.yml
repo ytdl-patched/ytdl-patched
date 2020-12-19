@@ -21,10 +21,10 @@ jobs:
         git config --global user.name nao20010128nao
         git config --global user.email nao20010128@gmail.com
         git config --unset  http.https://github.com/.extraheader
-        git remote add self https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
+        git remote set-url origin https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
     - name: Generate youtube_dl/extractor/mastodon/instances.py
-      run: |
-        python ./devscripts/make_mastodon_instance_list.py
-        git commit -m"[automatic] regenerate youtube_dl/extractor/mastodon/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/mastodon/instances.py
+      run: python ./devscripts/make_mastodon_instance_list.py
+    - name: Commit youtube_dl/extractor/mastodon/instances.py
+      run: git commit -m"[automatic] regenerate youtube_dl/extractor/mastodon/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/mastodon/instances.py
     - name: Push to here
       run: git push self HEAD:master

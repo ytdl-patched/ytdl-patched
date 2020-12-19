@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 import sys
 import os
 import re
+# import socket
 
 sys.path[:0] = ['.']
 
@@ -63,6 +64,15 @@ ie.to_screen('%s: len(results)=%d' % (script_id, len(results)))
 
 if not results:
     raise ExtractorError('no instances found')
+
+# for it in list(results):
+#     try:
+#         if not socket.getaddrinfo(it, None):
+#             raise ValueError()
+#     except BaseException:
+#         results.remove(it)
+
+# ie.to_screen('%s: removed unavailable domains, len(results)=%d' % (script_id, len(results)))
 
 pycode = '''# coding: utf-8
 # AUTOMATICALLY GENERATED FILE. DO NOT EDIT.
