@@ -35,6 +35,7 @@ from ..utils import (
     unsmuggle_url,
     UnsupportedError,
     url_or_none,
+    xpath_attr,
     xpath_text,
     xpath_with_ns,
 )
@@ -216,6 +217,33 @@ class GenericIE(InfoExtractor):
                     'duration': float,
                 },
             }],
+        },
+        # RSS feed with item with description and thumbnails
+        {
+            'url': 'https://anchor.fm/s/dd00e14/podcast/rss',
+            'info_dict': {
+                'id': 'https://anchor.fm/s/dd00e14/podcast/rss',
+                'title': 're:.*100% Hydrogen.*',
+                'description': 're:.*In this episode.*',
+            },
+            'playlist': [{
+                'info_dict': {
+                    'ext': 'm4a',
+                    'id': 'c1c879525ce2cb640b344507e682c36d',
+                    'title': 're:Hydrogen!',
+                    'description': 're:.*In this episode we are going.*',
+                    'timestamp': 1567977776,
+                    'upload_date': '20190908',
+                    'duration': 459,
+                    'thumbnail': r're:^https?://.*\.jpg$',
+                    'episode_number': 1,
+                    'season_number': 1,
+                    'age_limit': 0,
+                },
+            }],
+            'params': {
+                'skip_download': True,
+            },
         },
         # RSS feed with enclosures and unsupported link URLs
         {
@@ -2208,10 +2236,10 @@ class GenericIE(InfoExtractor):
                     default=None)
 
             duration = itunes('duration')
-            explicit = itunes('explicit')
-            if explicit == 'true':
+            explicit = (itunes('explicit') or '').lower()
+            if explicit in ('true', 'yes'):
                 age_limit = 18
-            elif explicit == 'false':
+            elif explicit in ('false', 'no'):
                 age_limit = 0
             else:
                 age_limit = None
@@ -2224,7 +2252,7 @@ class GenericIE(InfoExtractor):
                 'timestamp': unified_timestamp(
                     xpath_text(it, 'pubDate', default=None)),
                 'duration': int_or_none(duration) or parse_duration(duration),
-                'thumbnail': url_or_none(itunes('image')),
+                'thumbnail': url_or_none(xpath_attr(it, xpath_with_ns('./itunes:image', NS_MAP), 'href')),
                 'episode': itunes('title'),
                 'episode_number': int_or_none(itunes('episode')),
                 'season_number': int_or_none(itunes('season')),
