@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import unicode_literals, print_function
 
 import sys
@@ -64,6 +65,8 @@ ie.to_screen('%s: len(results)=%d' % (script_id, len(results)))
 
 if not results:
     raise ExtractorError('no instances found')
+
+results = {x.encode('idna') for x in results}
 
 # for it in list(results):
 #     try:
