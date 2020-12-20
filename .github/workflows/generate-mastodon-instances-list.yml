@@ -7,8 +7,10 @@ on:
     inputs: {}
 
 jobs:
-  merge:
+  generate:
     runs-on: ubuntu-latest
+    env:
+      INSTANCE_SOCIAL_API_SECRET: ${{ secrets.INSTANCE_SOCIAL_API_SECRET }}
     steps:
     - uses: actions/checkout@v2
       with:
