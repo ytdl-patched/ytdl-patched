@@ -5,7 +5,8 @@ import re
 
 from .instances import instances
 from ..common import InfoExtractor
-from ...utils import ExtractorError, clean_html
+from ...utils import ExtractorError, clean_html, preferredencoding
+from ...compat import compat_str
 
 
 class MastodonBaseIE(InfoExtractor):
@@ -25,7 +26,11 @@ class MastodonBaseIE(InfoExtractor):
         return self._test_mastodon_instance(hostname, skip, prefix)
 
     def _test_mastodon_instance(self, hostname, skip, prefix):
-        if hostname.encode('idna') in instances:
+        hostname = hostname.encode('idna')
+        if not isinstance(hostname, compat_str):
+            hostname = hostname.decode(preferredencoding())
+
+        if hostname in instances:
             return True
         if hostname in self.known_valid_instances:
             return True
