@@ -25,7 +25,7 @@ class MastodonBaseIE(InfoExtractor):
         return self._test_mastodon_instance(hostname, skip, prefix)
 
     def _test_mastodon_instance(self, hostname, skip, prefix):
-        if hostname in instances:
+        if re.sub(r'(?::\d+)?$', '', hostname).encode('idna') in instances:
             return True
         if hostname in self.known_valid_instances:
             return True

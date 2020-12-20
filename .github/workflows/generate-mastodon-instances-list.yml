@@ -29,4 +29,4 @@ jobs:
     - name: Commit youtube_dl/extractor/mastodon/instances.py
       run: git commit -m"[automatic] regenerate youtube_dl/extractor/mastodon/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/mastodon/instances.py
     - name: Push to here
-      run: git push self HEAD:master
+      run: git push origin HEAD:master
