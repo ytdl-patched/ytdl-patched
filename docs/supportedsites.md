@@ -404,7 +404,6 @@
  - **JWPlatform**
  - **Kakao**
  - **Kaltura**
- - **KanalPlay**: Kanal 5/9/11 Play
  - **Kankan**
  - **Karaoketv**
  - **KarriereVideos**
@@ -550,6 +549,11 @@
  - **NationalGeographicTV**
  - **Naver**
  - **NBA**
+ - **nba:watch**
+ - **nba:watch:collection**
+ - **NBAChannel**
+ - **NBAEmbed**
+ - **NBAWatchEmbed**
  - **NBC**
  - **NBCNews**
  - **nbcolympics**
