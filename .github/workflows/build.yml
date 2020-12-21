@@ -393,11 +393,10 @@ jobs:
               -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
               -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809 `
               .
-          docker push `
-              nao20010128nao/ytdl-patched:latest `
-              nao20010128nao/ytdl-patched:windowsservercore-1809 `
-              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
-              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809
+          docker push nao20010128nao/ytdl-patched:latest
+          docker push nao20010128nao/ytdl-patched:windowsservercore-1809
+          docker push nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}
+          docker push nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809
       - name: Build and Push (ltsc2016)
         if: ${{ matrix.windows.tag == 'ltsc2016' }}
         run: |
@@ -406,6 +405,5 @@ jobs:
               -t nao20010128nao/ytdl-patched:windowsservercore-ltsc2016 `
               -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016 `
               .
-          docker push `
-              nao20010128nao/ytdl-patched:windowsservercore-ltsc2016 `
-              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016
+          docker push nao20010128nao/ytdl-patched:windowsservercore-ltsc2016
+          docker push nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016
