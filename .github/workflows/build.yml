@@ -376,31 +376,29 @@ jobs:
           name: ytdl-windows-${{ env.windows_icon }}
       - run: ls artifacts/
       - name: Login
-        uses: docker/login-action@v1
-        with:
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.DHUB_TOKEN }}
-      - name: Build and Push (1809)
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          file: ./docker/windows.Dockerfile
-          context: .
-          build-args: |
-            base_tag=3-windowsservercore-1809
-          tags: |
-            nao20010128nao/ytdl-patched:latest
-            nao20010128nao/ytdl-patched:windowsservercore-1809
-            nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}
-            nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809
-      - name: Build and Push (ltsc2016)
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          file: ./docker/windows.Dockerfile
-          context: .
-          build-args: |
-            base_tag=3-windowsservercore-ltsc2016
-          tags: |
-            nao20010128nao/ytdl-patched:windowsservercore-ltsc2016
-            nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016
+        run: docker login --username ${{ github.repository_owner }} --password ${{ secrets.DHUB_TOKEN }}
+      - name: Build (1809)
+        run: |
+          docker build --build-arg base_tag=3-windowsservercore-1809 `
+              -f ./docker/windows.Dockerfile `
+              -t nao20010128nao/ytdl-patched:latest `
+              -t nao20010128nao/ytdl-patched:windowsservercore-1809 `
+              -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
+              -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809 `
+              .
+      - name: Build (ltsc2016)
+        run: |
+          docker build --build-arg base_tag=3-windowsservercore-ltsc2016 `
+              -f ./docker/windows.Dockerfile `
+              -t nao20010128nao/ytdl-patched:windowsservercore-ltsc2016 `
+              -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016 `
+              .
+      - name: Push
+        run: |
+          docker push `
+              nao20010128nao/ytdl-patched:latest `
+              nao20010128nao/ytdl-patched:windowsservercore-1809 `
+              nao20010128nao/ytdl-patched:windowsservercore-ltsc2016 `
+              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
+              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809 `
+              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016
