@@ -365,9 +365,15 @@ jobs:
             nao20010128nao/ytdl-patched:slim
             nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-slim
   docker-windows:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.windows.os }}
     needs: [prepare, build-windows]
     continue-on-error: true
+    strategy:
+      matrix:
+        windows: [
+          {os: windows-2019, tag: '1809'},
+          {os: windows-2016, tag: ltsc2016},
+        ]
     steps:
       - uses: actions/checkout@v2
       - name: Download artifacts
@@ -377,7 +383,8 @@ jobs:
       - run: ls artifacts/
       - name: Login
         run: docker login --username ${{ github.repository_owner }} --password ${{ secrets.DHUB_TOKEN }}
-      - name: Build (1809)
+      - name: Build and Push (1809)
+        if: ${{ matrix.windows.tag == '1809' }}
         run: |
           docker build --build-arg base_tag=3-windowsservercore-1809 `
               -f ./docker/windows.Dockerfile `
@@ -386,19 +393,19 @@ jobs:
               -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
               -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809 `
               .
-      - name: Build (ltsc2016)
+          docker push `
+              nao20010128nao/ytdl-patched:latest `
+              nao20010128nao/ytdl-patched:windowsservercore-1809 `
+              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
+              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809
+      - name: Build and Push (ltsc2016)
+        if: ${{ matrix.windows.tag == 'ltsc2016' }}
         run: |
           docker build --build-arg base_tag=3-windowsservercore-ltsc2016 `
               -f ./docker/windows.Dockerfile `
               -t nao20010128nao/ytdl-patched:windowsservercore-ltsc2016 `
               -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016 `
               .
-      - name: Push
-        run: |
           docker push `
-              nao20010128nao/ytdl-patched:latest `
-              nao20010128nao/ytdl-patched:windowsservercore-1809 `
               nao20010128nao/ytdl-patched:windowsservercore-ltsc2016 `
-              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
-              nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809 `
               nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016
