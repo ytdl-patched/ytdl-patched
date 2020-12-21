@@ -332,7 +332,6 @@ from .espn import (
 )
 from .esri import EsriVideoIE
 from .europa import EuropaIE
-from .everyonesmixtape import EveryonesMixtapeIE
 from .evoload import EvoLoadIE
 from .expotv import ExpoTVIE
 from .expressen import ExpressenIE
@@ -1155,7 +1154,6 @@ from .tagesschau import (
     TagesschauIE,
 )
 from .tass import TassIE
-from .tastytrade import TastyTradeIE
 from .tbs import TBSIE
 from .tdslifeway import TDSLifewayIE
 from .teachable import (
