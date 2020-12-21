@@ -270,7 +270,6 @@
  - **ESPNArticle**
  - **EsriVideo**
  - **Europa**
- - **EveryonesMixtape**
  - **EWETV**
  - **ExpoTV**
  - **Expressen**
@@ -890,7 +889,6 @@
  - **Tagesschau**
  - **tagesschau:player**
  - **Tass**
- - **TastyTrade**
  - **TBS**
  - **TDSLifeway**
  - **Teachable**

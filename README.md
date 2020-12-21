@@ -106,6 +106,8 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
     --mark-watched                   Mark videos watched (YouTube only)
     --no-mark-watched                Do not mark videos watched (YouTube only)
     --no-color                       Do not emit color codes in output
+    --check-mastodon-instance        Always perform online checks for Mastodon-
+                                     like URL
 
 ## Network Options:
     --proxy URL                      Use the specified HTTP/HTTPS/SOCKS proxy.
