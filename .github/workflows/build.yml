@@ -1,4 +1,4 @@
-name: Patched YTDL
+name: Build Patched YTDL
 
 on:
   push:
