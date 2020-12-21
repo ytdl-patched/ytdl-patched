@@ -317,7 +317,7 @@ jobs:
               https://twitter.com/twetchapp/status/1311686520793829376
   docker-linux:
     runs-on: ubuntu-latest
-    needs: build-linux
+    needs: [prepare, build-linux]
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
