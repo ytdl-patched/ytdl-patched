@@ -106,16 +106,18 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install PyInstaller
-        run: pip install --upgrade pyinstaller
+          # https://github.com/nao20010128nao/actions-test/blob/master/.github/workflows/build-pyinstaller-windows.yml
+          # this is temporary and must be reverted to "pyinstaller" after fix released
+        run: pip install --upgrade "https://github.com/pyinstaller/pyinstaller/archive/develop.zip"
       - name: Install UPX
-        # https://github.com/nao20010128nao/actions-test/actions/runs/409610873
-        if: ${{ '' != '' }}
         run: choco install upx
       - name: Build patched YTDL for Windows
+        shell: pwsh
         run: |
           python -OO -m PyInstaller `
               --onefile --console --distpath . `
               --hidden-import codecs `
+              --hidden-import os `
               --icon icons\youtube_social_squircle_${{ matrix.icon }}.ico `
               -n youtube-dl youtube_dl\__main__.py
           Move-Item youtube-dl.exe artifacts/
