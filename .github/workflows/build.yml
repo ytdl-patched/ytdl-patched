@@ -5,6 +5,7 @@ on:
     paths:
       - youtube_dl/**
       - test/**
+      - docker/**
       - .github/workflows/build.yml
       - Makefile
     branches:
