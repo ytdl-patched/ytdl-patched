@@ -45,6 +45,7 @@ updates_key.pem
 *.jpeg
 *.png
 *.gif
+*.aria2c
 test/local_parameters.json
 .tox
 youtube-dl.zsh
