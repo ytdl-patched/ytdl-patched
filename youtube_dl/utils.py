@@ -5712,3 +5712,46 @@ def random_birthday(year_field, month_field, day_field):
         month_field: str(random_date.month),
         day_field: str(random_date.day),
     }
+
+
+def bytes_to_scalar(value):
+    if isinstance(value, compat_str):
+        value = value.decode('utf8')
+    result = 0
+    for b in value:
+        result *= 256
+        result += b
+    return result
+
+
+def decode_base(value, digits):
+    # This will convert given base-x string to scalar (long or int)
+    table = {char: index for index, char in enumerate(digits)}
+    result = 0
+    base = len(digits)
+    for chr in value:
+        result *= base
+        result += table[chr]
+    return result
+
+
+def scalar_to_bytes(scalar):
+    if not scalar:
+        return b''
+    array = []
+    while scalar:
+        scalar, idx = divmod(scalar, 256)
+        array.insert(0, idx)
+    return intlist_to_bytes(array)
+
+
+def encode_base(scalar, digits):
+    # This will convert scalar (long or int) to base-x string
+    if not scalar:
+        return ''
+    base = len(digits)
+    result = ''
+    while scalar:
+        scalar, idx = divmod(scalar, base)
+        result = digits[idx] + result
+    return result
