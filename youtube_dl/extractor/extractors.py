@@ -501,6 +501,7 @@ from .iwara import (
     IwaraUserIE,
 )
 from .izlesene import IzleseneIE
+from .javhub import JavhubIE
 from .jamendo import (
     JamendoIE,
     JamendoAlbumIE,
