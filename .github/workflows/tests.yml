@@ -2,8 +2,6 @@ name: Run tests
 
 on:
   push:
-    branches:
-      - master
     paths:
       - youtube_dl/**
       - test/**
