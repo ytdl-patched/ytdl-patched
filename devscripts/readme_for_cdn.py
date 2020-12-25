@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import re
 import sys
 import subprocess
@@ -28,6 +30,24 @@ information_section = [
 ]
 
 release_tag = os.environ.get('GITHUB_RELEASE_TAG')
+
+if not release_tag:
+    sys.path[:0] = ['.']
+
+    from youtube_dl.extractor.common import InfoExtractor
+    from test.helper import FakeYDL
+
+    class TestIE(InfoExtractor):
+        pass
+
+    ie = TestIE(FakeYDL({'verbose': False}))
+    script_id = 'readme_for_cdn'
+
+    data = ie._download_json(
+        'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases/latest',
+        script_id, note=False)
+    release_tag = data['tag_name']
+
 if release_tag:
     information_section.append('- [download ytdl-patched](https://github.com/nao20010128nao/ytdl-patched/releases/tag/%s)' % release_tag)
     information_section.append('  - [for Linux/macOS](https://github.com/nao20010128nao/ytdl-patched/releases/download/%s/youtube-dl)' % release_tag)
