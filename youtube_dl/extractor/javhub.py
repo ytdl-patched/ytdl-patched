@@ -62,6 +62,7 @@ class JavhubIE(InfoExtractor):
                     'Referer': url,
                 },
             }],
+            'age_limit': 18,
         })
         if webvtt_url:
             result.update({
