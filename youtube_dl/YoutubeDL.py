@@ -1860,8 +1860,10 @@ class YoutubeDL(object):
                             return
                     else:
                         try:
+                            headers = info_dict.get('http_headers', {})
                             sub_data = ie._request_webpage(
-                                sub_info['url'], info_dict['id'], note=False).read()
+                                sub_info['url'], info_dict['id'],
+                                headers=headers, note=False).read()
                             with io.open(encodeFilename(sub_filename), 'wb') as subfile:
                                 subfile.write(sub_data)
                         except (ExtractorError, IOError, OSError, ValueError) as err:
