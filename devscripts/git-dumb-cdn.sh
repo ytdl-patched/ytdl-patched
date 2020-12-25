@@ -7,6 +7,13 @@ if ! command -v pandoc &> /dev/null ; then
   export PATH="$PWD/bin/:$PATH"
 fi
 
+pdoc() {
+  MD="$1"
+  HTML="$2"
+  TITLE="$3"
+  pandoc "$MD" -f gfm --metadata title="$TITLE" -t html -s -o "$HTML"
+}
+
 set -xe
 
 rm -rf public/ || true
@@ -17,8 +24,11 @@ git clone --bare https://github.com/nao20010128nao/ytdl-patched.git public/ || \
   git clone --bare https://gitea.com/nao20010128nao/ytdl-patched.git public/ || \
   git clone --bare https://git.sr.ht/~nao20010128nao/ytdl-patched public/
 
+python devscripts/readme_for_cdn.py README.md README.cdn.md
+
 cd public
-pandoc ../README.md -f gfm --metadata title="git clone https://ytdl-patched.${SERVICE}.app/" -t html -s -o index.html
+pdoc ../README.cdn.md index.html "git clone https://ytdl-patched.${SERVICE}.app/"
+pdoc ../docs/supportedsites.md supportedsites.html "List of supported sited by ytdl-patched"
 git remote rm origin
 git branch -D gh-pages
 git reflog expire --expire=now --all
