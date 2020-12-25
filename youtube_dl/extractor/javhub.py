@@ -8,8 +8,8 @@ from ..utils import (
     ExtractorError,
     determine_ext,
     decode_base,
-    encode_base,
     scalar_to_bytes,
+    char_replace,
 )
 
 
@@ -27,7 +27,7 @@ class JavhubIE(InfoExtractor):
         data_src = self._search_regex(r'data-src="([^\"]+)"(?:>| data-track)', webpage, 'data-src')
         data_track = self._search_regex(r'data-track="([^\"]+)">', webpage, 'data-track', fatal=False)
 
-        playapi_post = encode_base(decode_base(data_src, self.B58_TABLE_2), self.B58_TABLE_1).encode('utf8')
+        playapi_post = char_replace(self.B58_TABLE_2, self.B58_TABLE_1, data_src).encode('utf8')
         if data_track:
             webvtt_url = scalar_to_bytes(decode_base(data_track, self.B58_TABLE_2)).decode('utf8')
         else:
@@ -71,6 +71,9 @@ class JavhubIE(InfoExtractor):
                     'xx': [{
                         'url': webvtt_url,
                         'ext': determine_ext(webvtt_url),
+                        'http_headers': {
+                            'Referer': url,
+                        },
                     }]
                 },
             })
