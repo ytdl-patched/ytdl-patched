@@ -1633,7 +1633,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # Get video info
         video_info = {}
         embed_webpage = None
-        ytplayer_config = None
+        ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
 
         if re.search(r'["\']status["\']\s*:\s*["\']LOGIN_REQUIRED', video_webpage) is not None:
             age_gate = True
