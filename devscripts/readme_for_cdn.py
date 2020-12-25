@@ -20,29 +20,28 @@ git_commit = ''
 if re.match('[0-9a-f]+', out):
     git_commit = out
 
-# git rev-parse --short youtube-dl
-sp = subprocess.Popen(
-    ['git', 'rev-parse', '--short', 'youtube-dl'],
-    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    cwd=os.path.dirname(os.path.abspath(__file__)))
-out, err = sp.communicate()
-out = out.decode().strip()
+# https://vercel.com/docs/cli#commands/overview/unique-options
 
-git_upstream_commit = ''
-if re.match('[0-9a-f]+', out):
-    git_upstream_commit = out
+information_section = [
+    '- current commit: [`%(git_commit)s`](https://github.com/nao20010128nao/ytdl-patched/commit/%(git_commit)s)' % {'git_commit': git_commit},
+    '- [see list of supported sites](/supportedsites.html)',
+]
 
+release_tag = os.environ.get('GITHUB_RELEASE_TAG')
+if release_tag:
+    information_section.append('- [download ytdl-patched](https://github.com/nao20010128nao/ytdl-patched/releases/tag/%s)' % release_tag)
+    information_section.append('  - [for Linux/macOS](https://github.com/nao20010128nao/ytdl-patched/releases/download/%s/youtube-dl)' % release_tag)
+    information_section.append('  - [for Windows](https://github.com/nao20010128nao/ytdl-patched/releases/download/%s/youtube-dl-red.exe)' % release_tag)
+    information_section.append('  - [for pip](https://github.com/nao20010128nao/ytdl-patched/releases/download/%s/youtube-dl.tar.gz)' % release_tag)
+    information_section.append('  - or by Homebrew: `brew install nao20010128nao/my/ytdl-patched`')
 
 MARKER_RE = r'(?m)^<!-- MARKER BEGIN -->[^\0]+<!-- MARKER END -->$'
 
 NAVIGATE_TXT = """
 # Information
 
-- current commit: `%s`
-- youtube-dl commit: `%s`
-- [see list of supported sites](/supportedsites.html)
-
-""" % (git_commit, git_upstream_commit)
+%s
+""" % ('\n'.join(information_section))
 
 markdown = ''
 
