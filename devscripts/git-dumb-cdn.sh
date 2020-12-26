@@ -28,7 +28,7 @@ python devscripts/readme_for_cdn.py README.md README.cdn.md
 
 cd public
 pdoc ../README.cdn.md index.html "git clone https://ytdl-patched.${SERVICE}.app/"
-pdoc ../docs/supportedsites.md supportedsites.html "List of supported sites by ytdl-patched"
+cat ../docs/supportedsites.md | tail -n+2 | pdoc - supportedsites.html "List of supported sites by ytdl-patched"
 git remote rm origin
 git branch -D gh-pages
 git reflog expire --expire=now --all
