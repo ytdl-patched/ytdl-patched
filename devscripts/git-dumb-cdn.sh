@@ -11,7 +11,7 @@ pdoc() {
   MD="$1"
   HTML="$2"
   TITLE="$3"
-  pandoc "$MD" -f gfm --metadata title="$TITLE" -t html -s -o "$HTML"
+  pandoc "$MD" -f gfm-emoji --metadata title="$TITLE" -t html -s -o "$HTML"
 }
 
 set -xe
