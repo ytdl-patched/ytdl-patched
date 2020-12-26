@@ -1394,6 +1394,14 @@ class InfoExtractor(object):
             html, '%s form' % form_id, group='form')
         return self._hidden_inputs(form)
 
+    PROTOCOL_PREFERENCE = {
+        'm3u8': 1,
+        'm3u8_native': 1,
+        'http': 0,
+        'https': 0,
+        'rtsp': -0.5,
+    }
+
     def _sort_formats(self, formats, field_preference=None):
         if not formats:
             raise ExtractorError('No video formats found')
@@ -1424,7 +1432,7 @@ class InfoExtractor(object):
                     preference -= 0.5
 
             protocol = f.get('protocol') or determine_protocol(f)
-            proto_preference = 0 if protocol in ['http', 'https'] else (-0.5 if protocol == 'rtsp' else -0.1)
+            proto_preference = self.PROTOCOL_PREFERENCE.get(protocol, -0.1)
 
             if f.get('vcodec') == 'none':  # audio only
                 preference -= 50
@@ -1451,15 +1459,6 @@ class InfoExtractor(object):
                 audio_ext_preference = 0
 
             fmt_id = f.get('format_id') or 'none'
-            if fmt_id.startswith('hls-'):
-                _fmt_id = fmt_id[4:]
-                hls_preference = int_or_none(_fmt_id)
-                if not hls_preference and _fmt_id[-1:] == 'p':
-                    hls_preference = int_or_none(_fmt_id[:-1])
-            else:
-                hls_preference = -100
-            if not hls_preference:
-                hls_preference = 0
 
             if fmt_id.upper() == 'HD':
                 id_preference = 1
@@ -1482,7 +1481,6 @@ class InfoExtractor(object):
                 f.get('fps') if f.get('fps') is not None else -1,
                 f.get('filesize_approx') if f.get('filesize_approx') is not None else -1,
                 f.get('source_preference') if f.get('source_preference') is not None else -1,
-                hls_preference,
                 id_preference,
                 fmt_id,
             )
