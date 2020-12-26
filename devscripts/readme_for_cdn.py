@@ -9,18 +9,29 @@ infile, outfile = sys.argv[1:]
 
 # usage: python3 devscripts/readme_for_cdn.py ../README.md to_be_converted.md
 
-
 # git rev-parse --short master
-sp = subprocess.Popen(
-    ['git', 'rev-parse', '--short', 'master'],
-    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    cwd=os.path.dirname(os.path.abspath(__file__)))
-out, err = sp.communicate()
-out = out.decode().strip()
-
 git_commit = ''
-if re.match('[0-9a-f]+', out):
-    git_commit = out
+for cwd in [
+    os.path.join(os.getcwd(), os.path.abspath(__file__), '../public'),
+    os.path.join(os.getcwd(), os.path.abspath(__file__), 'public'),
+    os.path.dirname(os.path.abspath(__file__)),
+]:
+    try:
+        cwd = os.path.normpath(cwd)
+        sp = subprocess.Popen(
+            ['git', 'rev-parse', '--short', 'master'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cwd=cwd)
+        out, _ = sp.communicate()
+        out = out.decode().strip()
+        if re.match('[0-9a-f]+', out):
+            git_commit = out
+            break
+    except BaseException:
+        pass
+
+if not git_commit:
+    git_commit = os.environ.get('VERCEL_GIT_COMMIT_SHA')
 
 # https://vercel.com/docs/cli#commands/overview/unique-options
 
