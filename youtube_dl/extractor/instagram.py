@@ -159,12 +159,15 @@ class InstagramIE(InfoExtractor):
                 uploader = media.get('owner', {}).get('full_name')
                 uploader_id = media.get('owner', {}).get('username')
 
-                def get_count(key, kind):
-                    return int_or_none(try_get(
-                        media, (lambda x: x['edge_media_%s' % key]['count'],
-                                lambda x: x['%ss' % kind]['count'])))
-                    if count is not None:
-                        return count
+                def get_count(keys, kind):
+                    if not isinstance(keys, (list, tuple)):
+                        keys = [keys]
+                    for key in keys:
+                        count = int_or_none(try_get(
+                            media, (lambda x: x['edge_media_%s' % key]['count'],
+                                    lambda x: x['%ss' % kind]['count'])))
+                        if count is not None:
+                            return count
             like_count = get_count('preview_like', 'like')
             comment_count = get_count(
                 ('preview_comment', 'to_comment', 'to_parent_comment'), 'comment')
