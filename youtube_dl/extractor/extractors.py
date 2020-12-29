@@ -33,6 +33,8 @@ from .aenetworks import (
     AENetworksCollectionIE,
     AENetworksShowIE,
     HistoryTopicIE,
+    HistoryPlayerIE,
+    BiographyIE,
 )
 from .afreecatv import AfreecaTVIE
 from .airmozilla import AirMozillaIE
@@ -712,7 +714,6 @@ from .nba import (
     NBAChannelIE,
 )
 from .nbc import (
-    CSNNEIE,
     NBCIE,
     NBCNewsIE,
     NBCOlympicsIE,
