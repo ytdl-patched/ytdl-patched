@@ -15,6 +15,7 @@ from .common import InfoExtractor, SearchInfoExtractor
 from ..jsinterp import JSInterpreter
 from ..compat import (
     compat_chr,
+    compat_HTTPError,
     compat_parse_qs,
     compat_urllib_parse_unquote,
     compat_urllib_parse_unquote_plus,
@@ -278,6 +279,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     _YT_INITIAL_DATA_RE = r'(?:window\s*\[\s*["\']ytInitialData["\']\s*\]|ytInitialData)\s*=\s*({.+?})\s*;'
     _YT_INITIAL_PLAYER_RESPONSE_RE = r'ytInitialPlayerResponse\s*=\s*({.+?})\s*;'
+    _YT_INITIAL_BOUNDARY_RE = r'(?:var\s+meta|</script|if\s*\(window\.ytcsi\)|\n)'
 
     def _call_api(self, ep, query, video_id):
         data = self._DEFAULT_API_DATA.copy()
@@ -295,7 +297,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     def _extract_yt_initial_data(self, video_id, webpage):
         return self._parse_json(
             self._search_regex(
-                (r'%s\s*\n' % self._YT_INITIAL_DATA_RE,
+                (r'%s\s*%s' % (self._YT_INITIAL_DATA_RE, self._YT_INITIAL_BOUNDARY_RE),
                  self._YT_INITIAL_DATA_RE), webpage, 'yt initial data'),
             video_id)
 
@@ -1103,6 +1105,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'skip_download': True,
             },
         },
+        {
+            # another example of '};' in ytInitialData
+            'url': 'https://www.youtube.com/watch?v=gVfgbahppCY',
+            'only_matching': True,
+        },
+        {
+            'url': 'https://www.youtube.com/watch_popup?v=63RmMXCd_bQ',
+            'only_matching': True,
+        },
     ]
 
     def __init__(self, *args, **kwargs):
@@ -1307,8 +1318,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # below is to extract error reason
         patterns = (
             r'(?m)window\["ytInitialPlayerResponse"\]\s*=\s*({.+});$',
-            r'%s\s*(?:var\s+meta|</script|if\s*\(window\.ytcsi\)|\n)' % self._YT_INITIAL_PLAYER_RESPONSE_RE,
-            self._YT_INITIAL_PLAYER_RESPONSE_RE
+            r'%s\s*%s' % (self._YT_INITIAL_PLAYER_RESPONSE_RE, self._YT_INITIAL_BOUNDARY_RE),
+            self._YT_INITIAL_PLAYER_RESPONSE_RE,
         )
         config = self._search_regex(
             patterns, webpage, 'initial player response', default=None)
@@ -2686,6 +2697,11 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         'only_matching': True,
     }]
 
+    @classmethod
+    def suitable(cls, url):
+        return False if YoutubeIE.suitable(url) else super(
+            YoutubeTabIE, cls).suitable(url)
+
     def _extract_channel_id(self, webpage):
         channel_id = self._html_search_meta(
             'channelId', webpage, 'channel id', default=None)
@@ -2966,10 +2982,24 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         for page_num in itertools.count(1):
             if not continuation:
                 break
-            browse = self._download_json(
-                'https://www.youtube.com/browse_ajax', None,
-                'Downloading page %d' % page_num,
-                headers=headers, query=continuation, fatal=False)
+            count = 0
+            retries = 3
+            while count <= retries:
+                try:
+                    # Downloading page may result in intermittent 5xx HTTP error
+                    # that is usually worked around with a retry
+                    browse = self._download_json(
+                        'https://www.youtube.com/browse_ajax', None,
+                        'Downloading page %d%s'
+                        % (page_num, ' (retry #%d)' % count if count else ''),
+                        headers=headers, query=continuation)
+                    break
+                except ExtractorError as e:
+                    if isinstance(e.cause, compat_HTTPError) and e.cause.code in (500, 503):
+                        count += 1
+                        if count <= retries:
+                            continue
+                    raise
             if not browse:
                 break
             response = try_get(browse, lambda x: x[1]['response'], dict)
