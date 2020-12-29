@@ -263,6 +263,7 @@ from .dailymotion import (
     DailymotionPlaylistIE,
     DailymotionUserIE,
 )
+from .damtomo import DamtomoIE
 from .daum import (
     DaumIE,
     DaumClipIE,
