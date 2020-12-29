@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import unicode_literals
 import re
 
@@ -9,6 +10,17 @@ from ..compat import compat_etree_fromstring
 class DamtomoIE(InfoExtractor):
     IE_NAME = 'clubdam:damtomo'
     _VALID_URL = r'https?://(www\.)?clubdam\.com/app/damtomo/(?:SP/)?karaokeMovie/StreamingDkm\.do\?karaokeMovieId=(?P<id>\d+)'
+    _TEST = {
+        'url': 'https://www.clubdam.com/app/damtomo/karaokeMovie/StreamingDkm.do?karaokeMovieId=2414316',
+        'info_dict': {
+            'id': '2414316',
+            'uploader': 'Ｋドロン',
+            'uploader_id': 'ODk5NTQwMzQ',
+            'song_title': 'Get Wild',
+            'song_artist': 'TM NETWORK(TMN)',
+            'upload_date': '20201226',
+        }
+    }
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -26,7 +38,6 @@ class DamtomoIE(InfoExtractor):
             self.report_warning('Unable to extract uploader')
             uploader_id, uploader = None, None
 
-        # since videos do not have titles, name the video like '%(song_title)s-%(song_artist)s-%(uploader)s' for convenience
         song_info = re.search(r'''(?isx)
         <div\s+id="info">\s*
             <p\s+class="song_title">\s*
@@ -53,6 +64,7 @@ class DamtomoIE(InfoExtractor):
             </div>
         ''', webpage)
 
+        # since videos do not have title, name the video like '%(song_title)s-%(song_artist)s-%(uploader)s' for convenience
         if song_info:
             extra_data = song_info.groupdict()
             extra_data['uploader'] = uploader
