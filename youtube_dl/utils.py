@@ -2024,7 +2024,7 @@ def extract_attributes(html_element):
     return parser.attrs
 
 
-def clean_html(html):
+def clean_html(html, strip_script=False):
     """Clean an HTML snippet into a readable string"""
 
     if html is None:  # Convenience for sanitizing descriptions etc.
@@ -2035,6 +2035,8 @@ def clean_html(html):
     html = re.sub(r'(?u)\s*<\s*br\s*/?\s*>\s*', '\n', html)
     html = re.sub(r'(?u)<\s*/\s*p\s*>\s*<\s*p[^>]*>', '\n', html)
     # Strip html tags
+    if strip_script:
+        html = re.sub(r'<(script|style)>.*?</\1>', '', html)
     html = re.sub('<.*?>', '', html)
     # Replace html entities
     html = unescapeHTML(html)

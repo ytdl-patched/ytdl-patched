@@ -1,9 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
+
 import re
 
 from .common import InfoExtractor
-from ..utils import ExtractorError, int_or_none
+from ..utils import ExtractorError, clean_html, int_or_none
 from ..compat import compat_etree_fromstring
 
 
@@ -38,39 +39,21 @@ class DamtomoIE(InfoExtractor):
             self.report_warning('Unable to extract uploader')
             uploader_id, uploader = None, None
 
-        song_info = re.search(r'''(?isx)
-        <div\s+id="info">\s*
-            <p\s+class="song_title">\s*
-                <a\s+href="https://www\.clubdam\.com/app/damtomo/leaf/SongLeaf\.do\?contentsId=\d+">\s*
-                    (?P<song_title>[^<]+?)\s*
-                </a>\s*
-            </p>\s*
-            <p\s+class="song_artist">\s*
-                <a\s+href="https://www\.clubdam\.com/app/damtomo/leaf/ArtistLeaf\.do\?artistCode=\d+&exclude=\d+">\s*
-                    (?P<song_artist>[^<]+?)\s*
-                </a>\s*
-            </p>\s*
-
-            <div\s+class="etc\s+clearfix">\s*
-                <p\s+class="date">\s*
-                    撮影日：(?P<upload_date>\d{4}/\d\d/\d\d)\s*
-                </p>\s*
-                <p\s+class="audience">\s*
-                    再生回数：(?P<view_count>\d+)\s*
-                </p>\s*
-                <p\s+class="nice">\s*
-                    ナイス数：(?P<like_count>\d+)\s*
-                </p>\s*
-            </div>
-        ''', webpage)
+        # cleaner way to extract information in HTML
+        # example content: https://gist.github.com/nao20010128nao/1d419cc9ca3177be134094addf28ab51
+        data_dict = {g.group(2): clean_html(g.group(3), True) for g in re.finditer(r'(?s)<(p|div)\s+class="([^" ]+?)">(.+?)</\1>', webpage)}
+        data_dict = {k: re.sub(r'\s+', ' ', v) for k, v in data_dict.items() if v}
+        # print(json.dumps(data_dict))
 
         # since videos do not have title, name the video like '%(song_title)s-%(song_artist)s-%(uploader)s' for convenience
-        if song_info:
-            extra_data = song_info.groupdict()
+        if data_dict:
+            extra_data = {}
             extra_data['uploader'] = uploader
-            extra_data['upload_date'] = re.sub(r'/', '', extra_data['upload_date'])
-            extra_data['view_count'] = int_or_none(extra_data['view_count']) or extra_data['view_count']
-            extra_data['like_count'] = int_or_none(extra_data['like_count']) or extra_data['like_count']
+            extra_data['upload_date'] = re.sub(r'^.+?(\d\d\d\d)/(\d\d)/(\d\d)', r'\g<1>\g<2>\g<3>', data_dict['date'])
+            extra_data['view_count'] = int_or_none(re.sub(r'^.+?(\d+)$', r'\g<1>', data_dict['audience']))
+            extra_data['like_count'] = int_or_none(re.sub(r'^.+?(\d+)$', r'\g<1>', data_dict['nice']))
+            extra_data['song_title'] = data_dict['song_title']
+            extra_data['song_artist'] = data_dict['song_artist']
             title = '%(song_title)s-%(song_artist)s-%(uploader)s' % extra_data
         else:
             extra_data = {}
