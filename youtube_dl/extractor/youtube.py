@@ -1188,8 +1188,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 return 's[%s%s%s]' % (starts, ends, steps)
 
             step = None
-            # Quelch pyflakes warnings - start will be set when step is set
-            start = '(Never used)'
+            # Quelch Pylance warnings - start will be set when step is set
+            start, i = '(Never used)', None
             for i, prev in zip(idxs[1:], idxs[:-1]):
                 if step is not None:
                     if i - prev == step:
@@ -1610,6 +1610,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         qs = compat_parse_qs(compat_urllib_parse_urlparse(urlh.geturl()).query)
         video_id = qs.get('v', [None])[0] or video_id
 
+        player_url = None
+
         dash_mpds = []
 
         def add_dash_mpd(video_info):
@@ -1860,7 +1862,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     'width': int_or_none(fmt.get('width')),
                 }
 
-            player_url = None
             for fmt in streaming_formats:
                 if fmt.get('drmFamilies') or fmt.get('drm_families'):
                     continue
@@ -2984,6 +2985,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 break
             count = 0
             retries = 3
+            browse = None
             while count <= retries:
                 try:
                     # Downloading page may result in intermittent 5xx HTTP error
