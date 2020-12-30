@@ -46,17 +46,16 @@ class DamtomoIE(InfoExtractor):
         # print(json.dumps(data_dict))
 
         # since videos do not have title, name the video like '%(song_title)s-%(song_artist)s-%(uploader)s' for convenience
+        extra_data = {}
         if data_dict:
-            extra_data = {}
             extra_data['uploader'] = uploader
             extra_data['upload_date'] = re.sub(r'^.+?(\d\d\d\d)/(\d\d)/(\d\d)', r'\g<1>\g<2>\g<3>', data_dict['date'])
-            extra_data['view_count'] = int_or_none(re.sub(r'^.+?(\d+)$', r'\g<1>', data_dict['audience']))
-            extra_data['like_count'] = int_or_none(re.sub(r'^.+?(\d+)$', r'\g<1>', data_dict['nice']))
+            extra_data['view_count'] = int_or_none(self._search_regex(r'(\d+)', data_dict['audience'], 'view_count', default=None))
+            extra_data['like_count'] = int_or_none(self._search_regex(r'(\d+)', data_dict['nice'], 'like_count', default=None))
             extra_data['song_title'] = data_dict['song_title']
             extra_data['song_artist'] = data_dict['song_artist']
             title = '%(song_title)s-%(song_artist)s-%(uploader)s' % extra_data
         else:
-            extra_data = {}
             title = uploader or ''
 
         stream_xml = self._download_webpage(
