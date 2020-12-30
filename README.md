@@ -15,7 +15,7 @@
 |:-------:|:----:|:------:|:----:|
 | Travis CI | Tests | [![Build Status](https://travis-ci.org/nao20010128nao/ytdl-patched.svg?branch=master)](https://travis-ci.org/nao20010128nao/ytdl-patched.svg) | Stopped because of lack of credits |
 | GitHub Actions | Tests | ![Run tests](https://github.com/nao20010128nao/ytdl-patched/workflows/Run%20tests/badge.svg) | |
-| GitHub Actions | Build and release | ![Patched YTDL](https://github.com/nao20010128nao/ytdl-patched/workflows/Patched%20YTDL/badge.svg) | |
+| GitHub Actions | Build and release | ![Build Patched YTDL](https://github.com/nao20010128nao/ytdl-patched/workflows/Build%20Patched%20YTDL/badge.svg) | |
 | GitHub Actions | Merging commits from upstream | ![Merge upstream](https://github.com/nao20010128nao/ytdl-patched/workflows/Merge%20upstream/badge.svg) | There's conflict if it fails |
 
 <!-- MARKER END -->
