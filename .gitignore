@@ -23,6 +23,8 @@ cover/
 updates_key.pem
 .jython_cache/
 .pytest_cache/
+__pycache__/
+**/__pycache__/
 *.egg-info
 *.srt
 *.ttml
