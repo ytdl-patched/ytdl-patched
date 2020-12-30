@@ -106,6 +106,7 @@
  - **BilibiliAudioAlbum**
  - **BiliBiliPlayer**
  - **BioBioChileTV**
+ - **Biography**
  - **BIQLE**
  - **BitChute**
  - **BitChuteChannel**
@@ -178,6 +179,7 @@
  - **CloserToTruth**
  - **CloudflareStream**
  - **Cloudy**
+ - **clubdam:damtomo**
  - **Clubic**
  - **Clyp**
  - **cmt.com**
@@ -199,7 +201,6 @@
  - **CrooksAndLiars**
  - **crunchyroll**
  - **crunchyroll:playlist**
- - **CSNNE**
  - **CSpan**: C-SPAN
  - **CtsNews**: 華視新聞
  - **CTV**
@@ -352,6 +353,7 @@
  - **hgtv.com:show**
  - **HiDive**
  - **HistoricFilms**
+ - **history:player**
  - **history:topic**: History.com Topic
  - **hitbox**
  - **hitbox:live**
