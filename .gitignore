@@ -46,6 +46,7 @@ updates_key.pem
 *.png
 *.gif
 *.aria2c
+*.lock
 test/local_parameters.json
 .tox
 youtube-dl.zsh

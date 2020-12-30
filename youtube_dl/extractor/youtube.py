@@ -1860,6 +1860,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     'width': int_or_none(fmt.get('width')),
                 }
 
+            player_url = None
             for fmt in streaming_formats:
                 if fmt.get('drmFamilies') or fmt.get('drm_families'):
                     continue
@@ -1887,7 +1888,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     continue
                 format_id = compat_str(format_id)
 
-                player_url = None
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
                         ASSETS_RE = (
@@ -2021,7 +2021,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             dct = self._formats[itag].copy()
                             dct.update(a_format)
                             a_format = dct
-                    a_format['player_url'] = player_url
+                    # a_format['player_url'] = player_url
                     # Accept-Encoding header causes failures in live streams on Youtube and Youtube Gaming
                     a_format.setdefault('http_headers', {})['Youtubedl-no-compression'] = 'True'
                     formats.append(a_format)
