@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import ExtractorError, clean_html, int_or_none
-from ..compat import compat_etree_fromstring
+from ..utils import ExtractorError, clean_html, int_or_none, try_get
+from ..compat import compat_etree_fromstring, compat_str
 
 
 class DamtomoIE(InfoExtractor):
@@ -62,12 +62,11 @@ class DamtomoIE(InfoExtractor):
             'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML.do?movieSelectFlg=2&karaokeMovieId=%s' % video_id, video_id,
             note='Requesting stream information', encoding='sjis')
         stream_tree = compat_etree_fromstring(stream_xml)
-        m3u8_url = stream_tree.find(
+        m3u8_url = try_get(stream_tree, lambda x: x.find(
             './/d:streamingUrl',
-            {'d': 'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML'}).text
-        if not m3u8_url:
+            {'d': 'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML'}).text.strip(), compat_str)
+        if not m3u8_url or not isinstance(m3u8_url, compat_str):
             raise ExtractorError('There is no streaming URL')
-        m3u8_url = m3u8_url.strip()
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id,
             ext='mp4', entry_protocol='m3u8_native', m3u8_id='hls')
