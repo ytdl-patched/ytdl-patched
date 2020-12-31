@@ -45,18 +45,21 @@ class DamtomoIE(InfoExtractor):
         # print(json.dumps(data_dict))
 
         # since videos do not have title, name the video like '%(song_title)s-%(song_artist)s-%(uploader)s' for convenience
-        uploader = re.sub(r'\s*さん', '', data_dict['user_name'])
-        title = '%s-%s-%s' % (data_dict['song_title'], data_dict['song_artist'], uploader)
+        data_dict['user_name'] = re.sub(r'\s*さん', '', data_dict['user_name'])
+        title = '%(song_title)s-%(song_artist)s-%(user_name)s' % data_dict
 
         stream_xml = self._download_webpage(
             'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML.do?movieSelectFlg=2&karaokeMovieId=%s' % video_id, video_id,
             note='Requesting stream information', encoding='sjis')
-        stream_tree = compat_etree_fromstring(stream_xml)
-        m3u8_url = try_get(stream_tree, lambda x: x.find(
-            './/d:streamingUrl',
-            {'d': 'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML'}).text.strip(), compat_str)
-        if not m3u8_url or not isinstance(m3u8_url, compat_str):
-            raise ExtractorError('There is no streaming URL')
+        try:
+            stream_tree = compat_etree_fromstring(stream_xml)
+            m3u8_url = try_get(stream_tree, lambda x: x.find(
+                './/d:streamingUrl',
+                {'d': 'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML'}).text.strip(), compat_str)
+            if not m3u8_url or not isinstance(m3u8_url, compat_str):
+                raise ExtractorError('There is no streaming URL')
+        except ValueError:  # Python <= 2
+            m3u8_url = self._search_regex(r'<streamingUrl>\s*(.+?)\s*</streamingUrl>', stream_xml, 'm3u8 url')
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id,
             ext='mp4', entry_protocol='m3u8_native', m3u8_id='hls')
@@ -68,7 +71,7 @@ class DamtomoIE(InfoExtractor):
             'uploader_id': uploader_id,
             'description': description,
             'formats': formats,
-            'uploader': uploader,
+            'uploader': data_dict['user_name'],
             'upload_date': try_get(data_dict, lambda x: self._search_regex(r'(\d\d\d\d/\d\d/\d\d)', x['date'], 'upload_date', default=None).replace('/', ''), compat_str),
             'view_count': int_or_none(self._search_regex(r'(\d+)', data_dict['audience'], 'view_count', default=None)),
             'like_count': int_or_none(self._search_regex(r'(\d+)', data_dict['nice'], 'like_count', default=None)),
