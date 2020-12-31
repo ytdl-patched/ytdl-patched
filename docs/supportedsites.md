@@ -828,12 +828,13 @@
  - **ShowRoomLive**
  - **Sina**
  - **sky.it**
+ - **sky:news**
+ - **sky:sports**
+ - **sky:sports:news**
  - **skyacademy.it**
  - **SkylineWebcams**
- - **SkyNews**
  - **skynewsarabia:article**
  - **skynewsarabia:video**
- - **SkySports**
  - **Slideshare**
  - **SlidesLive**
  - **Slutload**
