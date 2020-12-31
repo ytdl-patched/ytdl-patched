@@ -25,19 +25,18 @@ class DamtomoIE(InfoExtractor):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        webpage = self._download_webpage(
+        webpage, handle = self._download_webpage_handle(
             'https://www.clubdam.com/app/damtomo/karaokeMovie/StreamingDkm.do?karaokeMovieId=%s' % video_id, video_id,
             encoding='sjis')
 
-        # NOTE: there is excessive amount of spaces and line breaks, so ignore spaces around these part
-        description = self._search_regex(r'(?m)<div id="public_comment">\s*<p>\s*([^<]*?)\s*</p>', webpage, video_id)
+        if handle.url == 'https://www.clubdam.com/sorry/':
+            raise ExtractorError('You are rate-limited. Try again later.', expected=True)
+        if '<h2>予期せぬエラーが発生しました。</h2>' in webpage:
+            raise ExtractorError('There is a server-side problem. Try again later.', expected=True)
 
-        uploaders = re.search(r'<a href="https://www\.clubdam\.com/app/damtomo/member/info/Profile\.do\?damtomoId=([^"]+)">\s*([^<]+?)\s*</a>さん', webpage)
-        if uploaders:
-            uploader_id, uploader = uploaders.groups()
-        else:
-            self.report_warning('Unable to extract uploader')
-            uploader_id, uploader = None, None
+        # NOTE: there is excessive amount of spaces and line breaks, so ignore spaces around these part
+        description = self._search_regex(r'(?m)<div id="public_comment">\s*<p>\s*([^<]*?)\s*</p>', webpage, 'description', default=None)
+        uploader_id = self._search_regex(r'<a href="https://www\.clubdam\.com/app/damtomo/member/info/Profile\.do\?damtomoId=([^"]+)"', webpage, 'uploader_id', default=None)
 
         # cleaner way to extract information in HTML
         # example content: https://gist.github.com/nao20010128nao/1d419cc9ca3177be134094addf28ab51
@@ -46,17 +45,8 @@ class DamtomoIE(InfoExtractor):
         # print(json.dumps(data_dict))
 
         # since videos do not have title, name the video like '%(song_title)s-%(song_artist)s-%(uploader)s' for convenience
-        extra_data = {}
-        if data_dict:
-            extra_data['uploader'] = uploader
-            extra_data['upload_date'] = re.sub(r'^.+?(\d\d\d\d)/(\d\d)/(\d\d)', r'\g<1>\g<2>\g<3>', data_dict['date'])
-            extra_data['view_count'] = int_or_none(self._search_regex(r'(\d+)', data_dict['audience'], 'view_count', default=None))
-            extra_data['like_count'] = int_or_none(self._search_regex(r'(\d+)', data_dict['nice'], 'like_count', default=None))
-            extra_data['song_title'] = data_dict['song_title']
-            extra_data['song_artist'] = data_dict['song_artist']
-            title = '%(song_title)s-%(song_artist)s-%(uploader)s' % extra_data
-        else:
-            title = uploader or ''
+        uploader = re.sub(r'\s*さん', '', data_dict['user_name'])
+        title = '%s-%s-%s' % (data_dict['song_title'], data_dict['song_artist'], uploader)
 
         stream_xml = self._download_webpage(
             'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML.do?movieSelectFlg=2&karaokeMovieId=%s' % video_id, video_id,
@@ -75,10 +65,14 @@ class DamtomoIE(InfoExtractor):
         result = {
             'id': video_id,
             'title': title,
-            'uploader': uploader,
             'uploader_id': uploader_id,
             'description': description,
             'formats': formats,
+            'uploader': uploader,
+            'upload_date': try_get(data_dict, lambda x: self._search_regex(r'(\d\d\d\d/\d\d/\d\d)', x['date'], 'upload_date', default=None).replace('/', ''), compat_str),
+            'view_count': int_or_none(self._search_regex(r'(\d+)', data_dict['audience'], 'view_count', default=None)),
+            'like_count': int_or_none(self._search_regex(r'(\d+)', data_dict['nice'], 'like_count', default=None)),
+            'song_title': data_dict['song_title'],
+            'song_artist': data_dict['song_artist'],
         }
-        result.update(extra_data)
         return result
