@@ -65,7 +65,7 @@ class DamtomoIE(InfoExtractor):
             ext='mp4', entry_protocol='m3u8_native', m3u8_id='hls')
         self._sort_formats(formats)
 
-        result = {
+        return {
             'id': video_id,
             'title': title,
             'uploader_id': uploader_id,
@@ -78,4 +78,3 @@ class DamtomoIE(InfoExtractor):
             'song_title': data_dict['song_title'],
             'song_artist': data_dict['song_artist'],
         }
-        return result
