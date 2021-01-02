@@ -159,7 +159,7 @@ class NiconicoIE(InfoExtractor):
         'only_matching': True,
     }]
 
-    _VALID_URL = r'https?://(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch/(?P<id>(?:[a-z]{2})?[0-9]+)'
+    _VALID_URL = r'https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/(?P<id>(?:[a-z]{2})?[0-9]+)'
     _NETRC_MACHINE = 'niconico'
 
     def _real_initialize(self):
