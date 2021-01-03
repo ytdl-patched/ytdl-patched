@@ -12,6 +12,7 @@ from ..utils import (
     ExtractorError,
     int_or_none,
     parse_duration,
+    str_or_none,
     try_get,
     urljoin,
     url_or_none,
@@ -204,10 +205,34 @@ class NRKIE(NRKBaseIE):
                 'height': int_or_none(image.get('pixelHeight')),
             })
 
-        age_limit = int_or_none(try_get(
-            data, lambda x: x['legalAge']['body']['rating']['code']))
+        subtitles = {}
+        for sub in try_get(playable, lambda x: x['subtitles'], list) or []:
+            if not isinstance(sub, dict):
+                continue
+            sub_url = url_or_none(sub.get('webVtt'))
+            if not sub_url:
+                continue
+            sub_key = str_or_none(sub.get('language')) or 'nb'
+            sub_type = str_or_none(sub.get('type'))
+            if sub_type:
+                sub_key += '-%s' % sub_type
+            subtitles.setdefault(sub_key, []).append({
+                'url': sub_url,
+            })
 
-        return {
+        legal_age = try_get(
+            data, lambda x: x['legalAge']['body']['rating']['code'], compat_str)
+        # https://en.wikipedia.org/wiki/Norwegian_Media_Authority
+        if legal_age == 'A':
+            age_limit = 0
+        elif legal_age.isdigit():
+            age_limit = int_or_none(legal_age)
+        else:
+            age_limit = None
+
+        is_series = try_get(data, lambda x: x['_links']['series']['name']) == 'series'
+
+        info = {
             'id': video_id,
             'title': title,
             'alt_title': alt_title,
@@ -216,7 +241,47 @@ class NRKIE(NRKBaseIE):
             'thumbnails': thumbnails,
             'age_limit': age_limit,
             'formats': formats,
+            'subtitles': subtitles,
         }
+
+        if is_series:
+            series = season_id = season_number = episode = episode_number = None
+            programs = self._call_api(
+                'programs/%s' % video_id, video_id, 'programs', fatal=False)
+            if programs and isinstance(programs, dict):
+                series = str_or_none(programs.get('seriesTitle'))
+                season_id = str_or_none(programs.get('seasonId'))
+                season_number = int_or_none(programs.get('seasonNumber'))
+                episode = str_or_none(programs.get('episodeTitle'))
+                episode_number = int_or_none(programs.get('episodeNumber'))
+            if not series:
+                series = title
+            if alt_title:
+                title += ' - %s' % alt_title
+            if not season_number:
+                season_number = int_or_none(self._search_regex(
+                    r'Sesong\s+(\d+)', description or '', 'season number',
+                    default=None))
+            if not episode:
+                episode = alt_title if is_series else None
+            if not episode_number:
+                episode_number = int_or_none(self._search_regex(
+                    r'^(\d+)\.', episode or '', 'episode number',
+                    default=None))
+            if not episode_number:
+                episode_number = int_or_none(self._search_regex(
+                    r'\((\d+)\s*:\s*\d+\)', description or '',
+                    'episode number', default=None))
+            info.update({
+                'title': title,
+                'series': series,
+                'season_id': season_id,
+                'season_number': season_number,
+                'episode': episode,
+                'episode_number': episode_number,
+            })
+
+        return info
 
 
 class NRKTVIE(InfoExtractor):
@@ -227,7 +292,7 @@ class NRKTVIE(InfoExtractor):
         'url': 'https://tv.nrk.no/program/MDDP12000117',
         'md5': 'c4a5960f1b00b40d47db65c1064e0ab1',
         'info_dict': {
-            'id': 'MDDP12000117AA',
+            'id': 'MDDP12000117',
             'ext': 'mp4',
             'title': 'Alarm Trolltunga',
             'description': 'md5:46923a6e6510eefcce23d5ef2a58f2ce',
@@ -238,24 +303,27 @@ class NRKTVIE(InfoExtractor):
         'url': 'https://tv.nrk.no/serie/20-spoersmaal-tv/MUHH48000314/23-05-2014',
         'md5': '8d40dab61cea8ab0114e090b029a0565',
         'info_dict': {
-            'id': 'MUHH48000314AA',
+            'id': 'MUHH48000314',
             'ext': 'mp4',
-            'title': '20 spørsmål 23.05.2014',
+            'title': '20 spørsmål - 23. mai 2014',
+            'alt_title': '23. mai 2014',
             'description': 'md5:bdea103bc35494c143c6a9acdd84887a',
             'duration': 1741,
             'series': '20 spørsmål',
-            'episode': '23.05.2014',
+            'episode': '23. mai 2014',
+            'age_limit': 0,
         },
     }, {
         'url': 'https://tv.nrk.no/program/mdfp15000514',
         'info_dict': {
-            'id': 'MDFP15000514CA',
+            'id': 'MDFP15000514',
             'ext': 'mp4',
-            'title': 'Grunnlovsjubiléet - Stor ståhei for ingenting 24.05.2014',
+            'title': 'Kunnskapskanalen - Grunnlovsjubiléet - Stor ståhei for ingenting',
             'description': 'md5:89290c5ccde1b3a24bb8050ab67fe1db',
             'duration': 4605.08,
             'series': 'Kunnskapskanalen',
-            'episode': '24.05.2014',
+            'episode': 'Grunnlovsjubiléet - Stor ståhei for ingenting',
+            'age_limit': 0,
         },
         'params': {
             'skip_download': True,
@@ -264,10 +332,11 @@ class NRKTVIE(InfoExtractor):
         # single playlist video
         'url': 'https://tv.nrk.no/serie/tour-de-ski/MSPO40010515/06-01-2015#del=2',
         'info_dict': {
-            'id': 'MSPO40010515AH',
+            'id': 'MSPO40010515',
             'ext': 'mp4',
             'title': 'Sprint fri teknikk, kvinner og menn 06.01.2015',
             'description': 'md5:c03aba1e917561eface5214020551b7a',
+            'age_limit': 0,
         },
         'params': {
             'skip_download': True,
@@ -277,24 +346,27 @@ class NRKTVIE(InfoExtractor):
     }, {
         'url': 'https://tv.nrk.no/serie/tour-de-ski/MSPO40010515/06-01-2015',
         'info_dict': {
-            'id': 'MSPO40010515AH',
+            'id': 'MSPO40010515',
             'ext': 'mp4',
             'title': 'Sprint fri teknikk, kvinner og menn 06.01.2015',
             'description': 'md5:c03aba1e917561eface5214020551b7a',
+            'age_limit': 0,
         },
         'expected_warnings': ['Failed to download m3u8 information'],
+        'skip': 'Ikke tilgjengelig utenfor Norge',
     }, {
         'url': 'https://tv.nrk.no/serie/anno/KMTE50001317/sesong-3/episode-13',
         'info_dict': {
-            'id': 'KMTE50001317AA',
+            'id': 'KMTE50001317',
             'ext': 'mp4',
-            'title': 'Anno 13:30',
+            'title': 'Anno - 13. episode',
             'description': 'md5:11d9613661a8dbe6f9bef54e3a4cbbfa',
             'duration': 2340,
             'series': 'Anno',
-            'episode': '13:30',
+            'episode': '13. episode',
             'season_number': 3,
             'episode_number': 13,
+            'age_limit': 0,
         },
         'params': {
             'skip_download': True,
@@ -302,13 +374,14 @@ class NRKTVIE(InfoExtractor):
     }, {
         'url': 'https://tv.nrk.no/serie/nytt-paa-nytt/MUHH46000317/27-01-2017',
         'info_dict': {
-            'id': 'MUHH46000317AA',
+            'id': 'MUHH46000317',
             'ext': 'mp4',
             'title': 'Nytt på Nytt 27.01.2017',
             'description': 'md5:5358d6388fba0ea6f0b6d11c48b9eb4b',
             'duration': 1796,
             'series': 'Nytt på nytt',
             'episode': '27.01.2017',
+            'age_limit': 0,
         },
         'params': {
             'skip_download': True,
@@ -332,19 +405,19 @@ class NRKTVIE(InfoExtractor):
 
 
 class NRKTVEpisodeIE(InfoExtractor):
-    _VALID_URL = r'https?://tv\.nrk\.no/serie/(?P<id>[^/]+/sesong/\d+/episode/\d+)'
+    _VALID_URL = r'https?://tv\.nrk\.no/serie/(?P<id>[^/]+/sesong/(?P<season_number>\d+)/episode/(?P<episode_number>\d+))'
     _TESTS = [{
         'url': 'https://tv.nrk.no/serie/hellums-kro/sesong/1/episode/2',
         'info_dict': {
-            'id': 'MUHH36005220BA',
+            'id': 'MUHH36005220',
             'ext': 'mp4',
-            'title': 'Kro, krig og kjærlighet 2:6',
-            'description': 'md5:b32a7dc0b1ed27c8064f58b97bda4350',
-            'duration': 1563,
+            'title': 'Hellums kro - 2. Kro, krig og kjærlighet',
+            'description': 'md5:ad92ddffc04cea8ce14b415deef81787',
+            'duration': 1563.92,
             'series': 'Hellums kro',
             'season_number': 1,
             'episode_number': 2,
-            'episode': '2:6',
+            'episode': '2. Kro, krig og kjærlighet',
             'age_limit': 6,
         },
         'params': {
@@ -353,15 +426,16 @@ class NRKTVEpisodeIE(InfoExtractor):
     }, {
         'url': 'https://tv.nrk.no/serie/backstage/sesong/1/episode/8',
         'info_dict': {
-            'id': 'MSUI14000816AA',
+            'id': 'MSUI14000816',
             'ext': 'mp4',
-            'title': 'Backstage 8:30',
+            'title': 'Backstage - 8. episode',
             'description': 'md5:de6ca5d5a2d56849e4021f2bf2850df4',
             'duration': 1320,
             'series': 'Backstage',
             'season_number': 1,
             'episode_number': 8,
-            'episode': '8:30',
+            'episode': '8. episode',
+            'age_limit': 0,
         },
         'params': {
             'skip_download': True,
@@ -370,7 +444,7 @@ class NRKTVEpisodeIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        display_id = self._match_id(url)
+        display_id, season_number, episode_number = re.match(self._VALID_URL, url).groups()
 
         webpage = self._download_webpage(url, display_id)
 
@@ -382,10 +456,12 @@ class NRKTVEpisodeIE(InfoExtractor):
         assert re.match(NRKTVIE._EPISODE_RE, nrk_id)
 
         info.update({
-            '_type': 'url_transparent',
+            '_type': 'url',
             'id': nrk_id,
             'url': 'nrk:%s' % nrk_id,
             'ie_key': NRKIE.ie_key(),
+            'season_number': int(season_number),
+            'episode_number': int(episode_number),
         })
         return info
 
