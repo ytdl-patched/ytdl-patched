@@ -877,6 +877,7 @@
  - **stanfordoc**: Stanford Open ClassRoom
  - **Steam**
  - **Stitcher**
+ - **StitcherShow**
  - **Streamable**
  - **streamcloud.eu**
  - **StreamCZ**
