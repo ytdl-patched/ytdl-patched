@@ -6,15 +6,11 @@ import random
 import re
 
 from .common import InfoExtractor
-from ..compat import (
-    compat_str,
-    compat_urllib_parse_unquote,
-)
+from ..compat import compat_str
 from ..utils import (
     determine_ext,
     ExtractorError,
     int_or_none,
-    parse_age_limit,
     parse_duration,
     try_get,
     urljoin,
@@ -63,7 +59,8 @@ class NRKBaseIE(InfoExtractor):
         return self._download_json(
             urljoin('http://psapi.nrk.no/', path),
             video_id, note or 'Downloading %s JSON' % item,
-            fatal=fatal, query=query)
+            fatal=fatal, query=query,
+            headers={'Accept-Encoding': 'gzip, deflate, br'})
 
 
 class NRKIE(NRKBaseIE):
@@ -116,15 +113,47 @@ class NRKIE(NRKBaseIE):
     }, {
         'url': 'https://www.nrk.no/video/humor/kommentatorboksen-reiser-til-sjos_d1fda11f-a4ad-437a-a374-0398bc84e999',
         'only_matching': True,
+    }, {
+        # podcast
+        'url': 'nrk:l_96f4f1b0-de54-4e6a-b4f1-b0de54fe6af8',
+        'only_matching': True,
+    }, {
+        'url': 'nrk:podcast/l_96f4f1b0-de54-4e6a-b4f1-b0de54fe6af8',
+        'only_matching': True,
+    }, {
+        # clip
+        'url': 'nrk:150533',
+        'only_matching': True,
+    }, {
+        'url': 'nrk:clip/150533',
+        'only_matching': True,
+    }, {
+        # program
+        'url': 'nrk:MDDP12000117',
+        'only_matching': True,
+    }, {
+        'url': 'nrk:program/ENRK10100318',
+        'only_matching': True,
+    }, {
+        # direkte
+        'url': 'nrk:nrk1',
+        'only_matching': True,
+    }, {
+        'url': 'nrk:channel/nrk1',
+        'only_matching': True,
     }]
 
-    def _extract_from_playback(self, video_id):
+    def _real_extract(self, url):
+        video_id = self._match_id(url).split('/')[-1]
+
         path_templ = 'playback/%s/' + video_id
 
         def call_playback_api(item, query=None):
             return self._call_api(path_templ % item, video_id, item, query=query)
         # known values for preferredCdn: akamai, iponly, minicdn and telenor
         manifest = call_playback_api('manifest', {'preferredCdn': 'akamai'})
+
+        video_id = try_get(manifest, lambda x: x['id'], compat_str) or video_id
 
         if manifest.get('playability') == 'nonPlayable':
             self._raise_error(manifest['nonPlayable'])
@@ -140,8 +169,15 @@ class NRKIE(NRKBaseIE):
             format_url = url_or_none(asset.get('url'))
             if not format_url:
                 continue
-            if asset.get('format') == 'HLS' or determine_ext(format_url) == 'm3u8':
+            asset_format = (asset.get('format') or '').lower()
+            if asset_format == 'hls' or determine_ext(format_url) == 'm3u8':
                 formats.extend(self._extract_nrk_formats(format_url, video_id))
+            elif asset_format == 'mp3':
+                formats.append({
+                    'url': format_url,
+                    'format_id': asset_format,
+                    'vcodec': 'none',
+                })
         self._sort_formats(formats)
 
         data = call_playback_api('metadata')
@@ -168,6 +204,9 @@ class NRKIE(NRKBaseIE):
                 'height': int_or_none(image.get('pixelHeight')),
             })
 
+        age_limit = int_or_none(try_get(
+            data, lambda x: x['legalAge']['body']['rating']['code']))
+
         return {
             'id': video_id,
             'title': title,
@@ -175,19 +214,15 @@ class NRKIE(NRKBaseIE):
             'description': description,
             'duration': duration,
             'thumbnails': thumbnails,
+            'age_limit': age_limit,
             'formats': formats,
         }
 
-    def _real_extract(self, url):
-        video_id = self._match_id(url)
-        return self._extract_from_playback(video_id)
 
-
-class NRKTVIE(NRKBaseIE):
+class NRKTVIE(InfoExtractor):
     IE_DESC = 'NRK TV and NRK Radio'
     _EPISODE_RE = r'(?P<id>[a-zA-Z]{4}\d{8})'
     _VALID_URL = r'https?://(?:tv|radio)\.nrk(?:super)?\.no/(?:[^/]+/)*%s' % _EPISODE_RE
-    _API_HOSTS = ('psapi-ne.nrk.no', 'psapi-we.nrk.no')
     _TESTS = [{
         'url': 'https://tv.nrk.no/program/MDDP12000117',
         'md5': 'c4a5960f1b00b40d47db65c1064e0ab1',
@@ -290,164 +325,10 @@ class NRKTVIE(NRKBaseIE):
         'only_matching': True,
     }]
 
-    _api_host = None
-
-    def _extract_from_mediaelement(self, video_id):
-        api_hosts = (self._api_host, ) if self._api_host else self._API_HOSTS
-
-        for api_host in api_hosts:
-            data = self._download_json(
-                'http://%s/mediaelement/%s' % (api_host, video_id),
-                video_id, 'Downloading mediaelement JSON',
-                fatal=api_host == api_hosts[-1])
-            if not data:
-                continue
-            self._api_host = api_host
-            break
-
-        title = data.get('fullTitle') or data.get('mainTitle') or data['title']
-        video_id = data.get('id') or video_id
-
-        urls = []
-        entries = []
-
-        conviva = data.get('convivaStatistics') or {}
-        live = (data.get('mediaElementType') == 'Live'
-                or data.get('isLive') is True or conviva.get('isLive'))
-
-        def make_title(t):
-            return self._live_title(t) if live else t
-
-        media_assets = data.get('mediaAssets')
-        if media_assets and isinstance(media_assets, list):
-            def video_id_and_title(idx):
-                return ((video_id, title) if len(media_assets) == 1
-                        else ('%s-%d' % (video_id, idx), '%s (Part %d)' % (title, idx)))
-            for num, asset in enumerate(media_assets, 1):
-                asset_url = asset.get('url')
-                if not asset_url or asset_url in urls:
-                    continue
-                urls.append(asset_url)
-                formats = self._extract_nrk_formats(asset_url, video_id)
-                if not formats:
-                    continue
-                self._sort_formats(formats)
-
-                entry_id, entry_title = video_id_and_title(num)
-                duration = parse_duration(asset.get('duration'))
-                subtitles = {}
-                for subtitle in ('webVtt', 'timedText'):
-                    subtitle_url = asset.get('%sSubtitlesUrl' % subtitle)
-                    if subtitle_url:
-                        subtitles.setdefault('no', []).append({
-                            'url': compat_urllib_parse_unquote(subtitle_url)
-                        })
-                entries.append({
-                    'id': asset.get('carrierId') or entry_id,
-                    'title': make_title(entry_title),
-                    'duration': duration,
-                    'subtitles': subtitles,
-                    'formats': formats,
-                    'is_live': live,
-                })
-
-        if not entries:
-            media_url = data.get('mediaUrl')
-            if media_url and media_url not in urls:
-                formats = self._extract_nrk_formats(media_url, video_id)
-                if formats:
-                    self._sort_formats(formats)
-                    duration = parse_duration(data.get('duration'))
-                    entries = [{
-                        'id': video_id,
-                        'title': make_title(title),
-                        'duration': duration,
-                        'formats': formats,
-                        'is_live': live,
-                    }]
-
-        if not entries:
-            self._raise_error(data)
-
-        series = conviva.get('seriesName') or data.get('seriesTitle')
-        episode = conviva.get('episodeName') or data.get('episodeNumberOrDate')
-
-        season_number = None
-        episode_number = None
-        if data.get('mediaElementType') == 'Episode':
-            _season_episode = data.get('scoresStatistics', {}).get('springStreamStream') or \
-                data.get('relativeOriginUrl', '')
-            EPISODENUM_RE = [
-                r'/s(?P<season>\d{,2})e(?P<episode>\d{,2})\.',
-                r'/sesong-(?P<season>\d{,2})/episode-(?P<episode>\d{,2})',
-            ]
-            season_number = int_or_none(self._search_regex(
-                EPISODENUM_RE, _season_episode, 'season number',
-                default=None, group='season'))
-            episode_number = int_or_none(self._search_regex(
-                EPISODENUM_RE, _season_episode, 'episode number',
-                default=None, group='episode'))
-
-        thumbnails = None
-        images = data.get('images')
-        if images and isinstance(images, dict):
-            web_images = images.get('webImages')
-            if isinstance(web_images, list):
-                thumbnails = [{
-                    'url': image['imageUrl'],
-                    'width': int_or_none(image.get('width')),
-                    'height': int_or_none(image.get('height')),
-                } for image in web_images if image.get('imageUrl')]
-
-        description = data.get('description')
-        category = data.get('mediaAnalytics', {}).get('category')
-
-        common_info = {
-            'description': description,
-            'series': series,
-            'episode': episode,
-            'season_number': season_number,
-            'episode_number': episode_number,
-            'categories': [category] if category else None,
-            'age_limit': parse_age_limit(data.get('legalAge')),
-            'thumbnails': thumbnails,
-        }
-
-        vcodec = 'none' if data.get('mediaType') == 'Audio' else None
-
-        for entry in entries:
-            entry.update(common_info)
-            for f in entry['formats']:
-                f['vcodec'] = vcodec
-
-        points = data.get('shortIndexPoints')
-        if isinstance(points, list):
-            chapters = []
-            for next_num, point in enumerate(points, start=1):
-                if not isinstance(point, dict):
-                    continue
-                start_time = parse_duration(point.get('startPoint'))
-                if start_time is None:
-                    continue
-                end_time = parse_duration(
-                    data.get('duration')
-                    if next_num == len(points)
-                    else points[next_num].get('startPoint'))
-                if end_time is None:
-                    continue
-                chapters.append({
-                    'start_time': start_time,
-                    'end_time': end_time,
-                    'title': point.get('title'),
-                })
-            if chapters and len(entries) == 1:
-                entries[0]['chapters'] = chapters
-
-        return self.playlist_result(entries, video_id, title, description)
-
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        return self._extract_from_mediaelement(video_id)
+        return self.url_result(
+            'nrk:%s' % video_id, ie=NRKIE.ie_key(), video_id=video_id)
 
 
 class NRKTVEpisodeIE(InfoExtractor):
@@ -518,8 +399,6 @@ class NRKTVSerieBaseIE(NRKBaseIE):
             nrk_id = episode.get('prfId') or episode.get('episodeId')
             if not nrk_id or not isinstance(nrk_id, compat_str):
                 continue
-            if not re.match(NRKTVIE._EPISODE_RE, nrk_id):
-                continue
             entries.append(self.url_result(
                 'nrk:%s' % nrk_id, ie=NRKIE.ie_key(), video_id=nrk_id))
         return entries
@@ -530,6 +409,10 @@ class NRKTVSerieBaseIE(NRKBaseIE):
         for asset_key in self._ASSETS_KEYS:
             if embedded.get(asset_key):
                 return asset_key
+
+    @staticmethod
+    def _catalog_name(serie_kind):
+        return 'podcast' if serie_kind in ('podcast', 'podkast') else 'series'
 
     def _entries(self, data, display_id):
         for page_num in itertools.count(1):
@@ -564,7 +447,16 @@ class NRKTVSerieBaseIE(NRKBaseIE):
 
 
 class NRKTVSeasonIE(NRKTVSerieBaseIE):
-    _VALID_URL = r'https?://(?P<domain>tv|radio)\.nrk\.no/serie/(?P<serie>[^/]+)/(?:sesong/)?(?P<id>\d+)'
+    _VALID_URL = r'''(?x)
+                    https?://
+                        (?P<domain>tv|radio)\.nrk\.no/
+                        (?P<serie_kind>serie|pod[ck]ast)/
+                        (?P<serie>[^/]+)/
+                        (?:
+                            (?:sesong/)?(?P<id>\d+)|
+                            sesong/(?P<id_2>[^/?#&]+)
+                        )
+                    '''
     _TESTS = [{
         'url': 'https://tv.nrk.no/serie/backstage/sesong/1',
         'info_dict': {
@@ -600,19 +492,34 @@ class NRKTVSeasonIE(NRKTVSerieBaseIE):
         # 180 entries, single page
         'url': 'https://tv.nrk.no/serie/spangas/sesong/1',
         'only_matching': True,
+    }, {
+        'url': 'https://radio.nrk.no/podkast/hele_historien/sesong/diagnose-kverulant',
+        'info_dict': {
+            'id': 'hele_historien/diagnose-kverulant',
+            'title': 'Diagnose kverulant',
+        },
+        'playlist_mincount': 3,
+    }, {
+        'url': 'https://radio.nrk.no/podkast/loerdagsraadet/sesong/202101',
+        'only_matching': True,
     }]
 
     @classmethod
     def suitable(cls, url):
-        return (False if NRKTVIE.suitable(url) or NRKTVEpisodeIE.suitable(url)
+        return (False if NRKTVIE.suitable(url) or NRKTVEpisodeIE.suitable(url) or NRKRadioPodkastIE.suitable(url)
                 else super(NRKTVSeasonIE, cls).suitable(url))
 
     def _real_extract(self, url):
-        domain, serie, season_id = re.match(self._VALID_URL, url).groups()
+        mobj = re.match(self._VALID_URL, url)
+        domain = mobj.group('domain')
+        serie_kind = mobj.group('serie_kind')
+        serie = mobj.group('serie')
+        season_id = mobj.group('id') or mobj.group('id_2')
         display_id = '%s/%s' % (serie, season_id)
 
         data = self._call_api(
-            '%s/catalog/series/%s/seasons/%s' % (domain, serie, season_id),
+            '%s/catalog/%s/%s/seasons/%s'
+            % (domain, self._catalog_name(serie_kind), serie, season_id),
             display_id, 'season', query={'pageSize': 50})
 
         title = try_get(data, lambda x: x['titles']['title'], compat_str) or display_id
@@ -622,7 +529,7 @@ class NRKTVSeasonIE(NRKTVSerieBaseIE):
 
 
 class NRKTVSeriesIE(NRKTVSerieBaseIE):
-    _VALID_URL = r'https?://(?P<domain>(?:tv|radio)\.nrk|(?:tv\.)?nrksuper)\.no/serie/(?P<id>[^/]+)'
+    _VALID_URL = r'https?://(?P<domain>(?:tv|radio)\.nrk|(?:tv\.)?nrksuper)\.no/(?P<serie_kind>serie|pod[ck]ast)/(?P<id>[^/]+)'
     _TESTS = [{
         # new layout, instalments
         'url': 'https://tv.nrk.no/serie/groenn-glede',
@@ -682,23 +589,33 @@ class NRKTVSeriesIE(NRKTVSerieBaseIE):
     }, {
         'url': 'https://nrksuper.no/serie/labyrint',
         'only_matching': True,
+    }, {
+        'url': 'https://radio.nrk.no/podkast/ulrikkes_univers',
+        'info_dict': {
+            'id': 'ulrikkes_univers',
+        },
+        'playlist_mincount': 10,
+    }, {
+        'url': 'https://radio.nrk.no/podkast/ulrikkes_univers/nrkno-poddkast-26588-134079-05042018030000',
+        'only_matching': True,
     }]
 
     @classmethod
     def suitable(cls, url):
         return (
             False if any(ie.suitable(url)
-                         for ie in (NRKTVIE, NRKTVEpisodeIE, NRKTVSeasonIE))
+                         for ie in (NRKTVIE, NRKTVEpisodeIE, NRKRadioPodkastIE, NRKTVSeasonIE))
             else super(NRKTVSeriesIE, cls).suitable(url))
 
     def _real_extract(self, url):
-        site, series_id = re.match(self._VALID_URL, url).groups()
+        site, serie_kind, series_id = re.match(self._VALID_URL, url).groups()
         is_radio = site == 'radio.nrk'
         domain = 'radio' if is_radio else 'tv'
 
         size_prefix = 'p' if is_radio else 'embeddedInstalmentsP'
         series = self._call_api(
-            '%s/catalog/series/%s' % (domain, series_id),
+            '%s/catalog/%s/%s'
+            % (domain, self._catalog_name(serie_kind), series_id),
             series_id, 'serie', query={size_prefix + 'ageSize': 50})
         titles = try_get(series, [
             lambda x: x['titles'],
@@ -713,12 +630,14 @@ class NRKTVSeriesIE(NRKTVSerieBaseIE):
         embedded_seasons = embedded.get('seasons') or []
         if len(linked_seasons) > len(embedded_seasons):
             for season in linked_seasons:
-                season_name = season.get('name')
-                if season_name and isinstance(season_name, compat_str):
+                season_url = urljoin(url, season.get('href'))
+                if not season_url:
+                    season_name = season.get('name')
+                    if season_name and isinstance(season_name, compat_str):
+                        season_url = 'https://%s.nrk.no/serie/%s/sesong/%s' % (domain, series_id, season_name)
+                if season_url:
                     entries.append(self.url_result(
-                        'https://%s.nrk.no/serie/%s/sesong/%s'
-                        % (domain, series_id, season_name),
-                        ie=NRKTVSeasonIE.ie_key(),
+                        season_url, ie=NRKTVSeasonIE.ie_key(),
                         video_title=season.get('title')))
         else:
             for season in embedded_seasons:
@@ -741,6 +660,38 @@ class NRKTVDirekteIE(NRKTVIE):
         'url': 'https://radio.nrk.no/direkte/p1_oslo_akershus',
         'only_matching': True,
     }]
+
+
+class NRKRadioPodkastIE(InfoExtractor):
+    _VALID_URL = r'https?://radio\.nrk\.no/pod[ck]ast/(?:[^/]+/)+(?P<id>l_[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12})'
+
+    _TESTS = [{
+        'url': 'https://radio.nrk.no/podkast/ulrikkes_univers/l_96f4f1b0-de54-4e6a-b4f1-b0de54fe6af8',
+        'md5': '8d40dab61cea8ab0114e090b029a0565',
+        'info_dict': {
+            'id': 'MUHH48000314AA',
+            'ext': 'mp4',
+            'title': '20 spørsmål 23.05.2014',
+            'description': 'md5:bdea103bc35494c143c6a9acdd84887a',
+            'duration': 1741,
+            'series': '20 spørsmål',
+            'episode': '23.05.2014',
+        },
+    }, {
+        'url': 'https://radio.nrk.no/podcast/ulrikkes_univers/l_96f4f1b0-de54-4e6a-b4f1-b0de54fe6af8',
+        'only_matching': True,
+    }, {
+        'url': 'https://radio.nrk.no/podkast/ulrikkes_univers/sesong/1/l_96f4f1b0-de54-4e6a-b4f1-b0de54fe6af8',
+        'only_matching': True,
+    }, {
+        'url': 'https://radio.nrk.no/podkast/hele_historien/sesong/bortfoert-i-bergen/l_774d1a2c-7aa7-4965-8d1a-2c7aa7d9652c',
+        'only_matching': True,
+    }]
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        return self.url_result(
+            'nrk:%s' % video_id, ie=NRKIE.ie_key(), video_id=video_id)
 
 
 class NRKPlaylistBaseIE(InfoExtractor):
