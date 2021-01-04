@@ -58,6 +58,7 @@ class WhoWatchIE(InfoExtractor):
         uploader_id = try_get(metadata, lambda x: x['live']['user']['user_path'], compat_str)
         uploader_id_internal = try_get(metadata, lambda x: x['live']['user']['id'], int)
         uploader = try_get(metadata, lambda x: x['live']['user']['name'], compat_str)
+        thumbnail = try_get(metadata, lambda x: x['live']['latest_thumbnail_url'], compat_str)
 
         return {
             'id': video_id,
@@ -66,5 +67,6 @@ class WhoWatchIE(InfoExtractor):
             'uploader_id_internal': uploader_id_internal,
             'uploader': uploader,
             'formats': formats,
+            'thumbnail': thumbnail,
             'is_live': True,
         }
