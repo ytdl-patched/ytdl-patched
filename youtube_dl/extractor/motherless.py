@@ -11,6 +11,7 @@ from ..utils import (
     orderedSet,
     str_to_int,
     unified_strdate,
+    determine_ext,
 )
 
 
@@ -92,14 +93,25 @@ class MotherlessIE(InfoExtractor):
         if '>The content you are trying to view is for friends only.' in webpage:
             raise ExtractorError('Video %s is for friends only' % video_id, expected=True)
 
+        html5_players = self._parse_html5_media_entries(url, webpage, video_id)
+        formats = None
+        for player in html5_players:
+            if any(video_id in x['url'] for x in player['formats']):
+                formats = player['formats']
+        if not formats:
+            video_url = (self._html_search_regex(
+                (r'setup\(\{\s*["\']file["\']\s*:\s*(["\'])(?P<url>(?:(?!\1).)+)\1',
+                 r'fileurl\s*=\s*(["\'])(?P<url>(?:(?!\1).)+)\1'),
+                webpage, 'video URL', default=None, group='url')
+                or 'http://cdn4.videos.motherlessmedia.com/videos/%s.mp4?fs=opencloud' % video_id)
+            formats = [{
+                'url': video_url,
+                'ext': determine_ext(video_url),
+            }]
+
         title = self._html_search_regex(
             (r'(?s)<div[^>]+\bclass=["\']media-meta-title[^>]+>(.+?)</div>',
              r'id="view-upload-title">\s+([^<]+)<'), webpage, 'title')
-        video_url = (self._html_search_regex(
-            (r'setup\(\{\s*["\']file["\']\s*:\s*(["\'])(?P<url>(?:(?!\1).)+)\1',
-             r'fileurl\s*=\s*(["\'])(?P<url>(?:(?!\1).)+)\1'),
-            webpage, 'video URL', default=None, group='url')
-            or 'http://cdn4.videos.motherlessmedia.com/videos/%s.mp4?fs=opencloud' % video_id)
         age_limit = self._rta_search(webpage)
         view_count = str_to_int(self._html_search_regex(
             (r'>([\d,.]+)\s+Views<', r'<strong>Views</strong>\s+([^<]+)<'),
@@ -145,7 +157,7 @@ class MotherlessIE(InfoExtractor):
             'like_count': like_count,
             'comment_count': comment_count,
             'age_limit': age_limit,
-            'url': video_url,
+            'formats': formats,
         }
 
 
