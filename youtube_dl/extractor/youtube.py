@@ -1713,7 +1713,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                 lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
                                 lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['reason']['simpleText'],
                                 lambda x: x['playabilityStatus']['messages'][0],
-                                lambda x: x['playabilityStatus']['reason']), None)
+                                lambda x: x['playabilityStatus']['reason']), compat_str)
 
         if not video_info and not player_response:
             unavailable_message = extract_unavailable_message()
