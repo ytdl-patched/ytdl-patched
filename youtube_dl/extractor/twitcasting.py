@@ -124,7 +124,20 @@ class TwitCastingIE(TwitCastingBaseIE):
 
 
 class TwitCastingUserIE(TwitCastingBaseIE):
-    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)'
+    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)(?:/[^/]*)?$'
+    _TESTS = [{
+        'url': 'https://twitcasting.tv/ivetesangalo',
+        'only_matching': True,
+    }, {
+        'url': 'https://twitcasting.tv/mttbernardini/',
+        'only_matching': True,
+    }, {
+        'url': 'https://twitcasting.tv/noriyukicas',
+        'only_matching': True,
+    }, {
+        'url': 'https://twitcasting.tv/lockedlesmi/',
+        'only_matching': True,
+    }]
 
     def _real_extract(self, url):
         uploader_id = self._match_id(url)
