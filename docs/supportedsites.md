@@ -101,6 +101,9 @@
  - **BellMedia**
  - **Bet**
  - **bfi:player**
+ - **bfmtv**
+ - **bfmtv:article**
+ - **bfmtv:live**
  - **Bigflix**
  - **Bild**: Bild.de
  - **BiliBili**
