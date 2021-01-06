@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
-import itertools
 
+import itertools
 import re
 
 from .common import InfoExtractor
