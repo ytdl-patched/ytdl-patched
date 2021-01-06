@@ -1005,6 +1005,7 @@
  - **TVPlayHome**
  - **Tweakers**
  - **TwitCasting**
+ - **TwitCastingUser**
  - **twitch:clips**
  - **twitch:stream**
  - **twitch:vod**
