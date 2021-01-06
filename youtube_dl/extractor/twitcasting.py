@@ -5,7 +5,7 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
-    clean_html,
+    ExtractorError, clean_html,
     float_or_none,
     get_element_by_class,
     get_element_by_id,
@@ -18,7 +18,11 @@ from ..utils import (
 from ..compat import compat_str
 
 
-class TwitCastingIE(InfoExtractor):
+class TwitCastingBaseIE(InfoExtractor):
+    pass
+
+
+class TwitCastingIE(TwitCastingBaseIE):
     _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<uploader_id>[^/]+)/(?:movie|twplayer)/(?P<id>\d+)'
     _TESTS = [{
         'url': 'https://twitcasting.tv/ivetesangalo/movie/2357609',
@@ -73,16 +77,20 @@ class TwitCastingIE(InfoExtractor):
             'movietitle', webpage)) or self._html_search_meta(
             ['og:title', 'twitter:title'], webpage, fatal=True)
 
-        video_js_data = try_get(webpage,
-                                lambda x: self._parse_json(self._search_regex(
-                                    r"data-movie-playlist='(\[[^']+\])'",
-                                    webpage, 'movie playlist', default=None), video_id)[0], dict) or {}
-        m3u8_url = try_get(webpage,
-                           (lambda x: self._search_regex(
-                               r'data-movie-url=(["\'])(?P<url>(?:(?!\1).)+)\1',
-                               webpage, 'm3u8 url', group='url', default=None),
-                            lambda x: video_js_data['source']['url'],
-                            lambda x: 'https://twitcasting.tv/%s/metastream.m3u8' % uploader_id), compat_str)
+        video_js_data = try_get(
+            webpage,
+            lambda x: self._parse_json(self._search_regex(
+                r"data-movie-playlist='(\[[^']+\])'",
+                x, 'movie playlist', default=None), video_id)[0], dict) or {}
+        m3u8_url = try_get(
+            webpage,
+            (lambda x: self._search_regex(
+                r'data-movie-url=(["\'])(?P<url>(?:(?!\1).)+)\1',
+                x, 'm3u8 url', group='url', default=None),
+             lambda x: video_js_data['source']['url'],
+             lambda x: 'https://twitcasting.tv/%s/metastream.m3u8' % uploader_id
+                if 'data-status="online"' in x else None),
+            compat_str)
 
         # use `m3u8` entry_protocol until EXT-X-MAP is properly supported by `m3u8_native` entry_protocol
         formats = self._extract_m3u8_formats(
@@ -113,3 +121,22 @@ class TwitCastingIE(InfoExtractor):
             'formats': formats,
             'is_live': True,
         }
+
+
+class TwitCastingUserIE(TwitCastingBaseIE):
+    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)'
+
+    def _real_extract(self, url):
+        uploader_id = self._match_id(url)
+        webpage = self._download_webpage(url, uploader_id, note='Looking for current live')
+
+        current_live = self._search_regex(
+            (r'data-type="movie" data-id="(\d+)">',
+             r'tw-sound-flag-open-link" data-id="(\d+)" style=',),
+            webpage, 'current live ID', default=None)
+        if current_live:
+            self._downloader.report_warning('Redirecting to current live on user %s' % uploader_id)
+            return self.url_result('https://twitcasting.tv/%s/movie/%s' % (uploader_id, current_live))
+
+        # TODO: enumerate lives with archive here
+        raise ExtractorError('No current live', expected=True)

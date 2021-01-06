@@ -1325,7 +1325,10 @@ from .tweakers import TweakersIE
 from .twentyfourvideo import TwentyFourVideoIE
 from .twentymin import TwentyMinutenIE
 from .twentythreevideo import TwentyThreeVideoIE
-from .twitcasting import TwitCastingIE
+from .twitcasting import (
+    TwitCastingIE,
+    TwitCastingUserIE,
+)
 from .twitch import (
     TwitchVodIE,
     TwitchCollectionIE,
