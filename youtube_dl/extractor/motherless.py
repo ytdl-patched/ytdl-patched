@@ -96,6 +96,7 @@ class MotherlessIE(InfoExtractor):
         html5_players = self._parse_html5_media_entries(url, webpage, video_id)
         formats = None
         for player in html5_players:
+            # this is needed because header might have <video> tag
             if any(video_id in x['url'] for x in player['formats']):
                 formats = player['formats']
         if not formats:
