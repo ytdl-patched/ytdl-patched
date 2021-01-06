@@ -1,11 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
+import itertools
 
 import re
 
 from .common import InfoExtractor
 from ..utils import (
-    ExtractorError, clean_html,
+    clean_html,
     float_or_none,
     get_element_by_class,
     get_element_by_id,
@@ -14,6 +15,7 @@ from ..utils import (
     unified_timestamp,
     urlencode_postdata,
     try_get,
+    urljoin,
 )
 from ..compat import compat_str
 
@@ -124,7 +126,7 @@ class TwitCastingIE(TwitCastingBaseIE):
 
 
 class TwitCastingUserIE(TwitCastingBaseIE):
-    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)(?:/[^/]*)?$'
+    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)(?:/([a-zA-Z-_][^/]*)?)*$'
     _TESTS = [{
         'url': 'https://twitcasting.tv/ivetesangalo',
         'only_matching': True,
@@ -151,5 +153,25 @@ class TwitCastingUserIE(TwitCastingBaseIE):
             self._downloader.report_warning('Redirecting to current live on user %s' % uploader_id)
             return self.url_result('https://twitcasting.tv/%s/movie/%s' % (uploader_id, current_live))
 
-        # TODO: enumerate lives with archive here
-        raise ExtractorError('No current live', expected=True)
+        next_url = 'https://twitcasting.tv/%s/show/' % uploader_id
+        urls = []
+        for index in itertools.count(1):
+            webpage = self._download_webpage(next_url, uploader_id, note='Downloading page %d' % index)
+            for match in re.finditer(r'''(?isx)
+                <a\s+class="tw-movie-thumbnail"\s*href="(?P<url>/[^/]+/movie/\d+)"\s*>
+                .+?</a>
+            ''', webpage):
+                if not re.search(r'<span\s+class="tw-movie-thumbnail-badge"\s*data-status="recorded">', match.group(0)):
+                    continue
+                video_full_url = urljoin(url, match.group('url'))
+                urls.append(self.url_result(video_full_url))
+
+            next_url = self._search_regex(
+                r'<a href="(/%s/show/%d-\d+)">%d</a>' % (re.escape(uploader_id), index, index + 1),
+                webpage, 'next url', default=None)
+            if next_url:
+                next_url = urljoin(url, next_url)
+            else:
+                break
+
+        return self.playlist_result(urls, uploader_id, 'Live archive from %s' % uploader_id)
