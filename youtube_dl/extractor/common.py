@@ -1442,9 +1442,6 @@ class InfoExtractor(object):
             if self._downloader.params.get('prefer_smaller_formats'):
                 filesize *= -1
                 filesize_approx *= -1
-                tbr *= -1
-                vbr *= -1
-                abr *= -1
 
             if f.get('vcodec') == 'none':  # audio only
                 preference -= 50
@@ -1460,6 +1457,9 @@ class InfoExtractor(object):
             else:
                 if f.get('acodec') == 'none':  # video only
                     preference -= 40
+                    if self._downloader.params.get('prefer_smaller_formats'):
+                        tbr *= -1
+                        vbr *= -1
                 if self._downloader.params.get('prefer_free_formats'):
                     ORDER = ['flv', 'mp4', 'webm']
                 else:
@@ -1486,8 +1486,6 @@ class InfoExtractor(object):
                 tbr,
                 filesize,
                 vbr,
-                # f.get('height') if f.get('height') is not None else -1,
-                # f.get('width') if f.get('width') is not None else -1,
                 proto_preference,
                 ext_preference,
                 abr,
