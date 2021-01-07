@@ -48,14 +48,26 @@ class Y2mateIE(InfoExtractor):
                 'ftype': format_ext,
                 'fquality': request_format,
             }
-            url_data = self._download_json('https://www.y2mate.com/mates/convert', video_id,
-                                           note='Fetching infomation for %s' % format_name, data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
-                                           headers={'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
-            if url_data.get('status') != 'success':
-                self.report_warning('Server responded with status %s' % url_data.get('status'))
+            for i in range(10):
+                url_data = self._download_json(
+                    'https://www.y2mate.com/mates/convert', video_id,
+                    note='Fetching infomation for %s' % format_name, data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
+                    headers={'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+                if url_data.get('status') != 'success':
+                    self.report_warning('Server responded with status %s' % url_data.get('status'))
+                    continue
+                url = self._search_regex(
+                    r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
+                    video_id, 'Download url for %s' % format_name, group=1, default=None)
+                if url and url.startswith('http'):
+                    break
+                else:
+                    self.report_warning('URL error, retrying %d of 10' % i)
+                    url = None
+
+            if not url:
                 continue
-            url = self._search_regex(r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
-                                     video_id, 'Download url for %s' % format_name, group=1)
+
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
@@ -82,14 +94,26 @@ class Y2mateIE(InfoExtractor):
                 'ftype': format_ext,
                 'fquality': request_format,
             }
-            url_data = self._download_json('https://www.y2mate.com/mates/convert', video_id,
-                                           note='Fetching infomation for %s' % format_name, data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
-                                           headers={'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
-            if url_data.get('status') != 'success':
-                self.report_warning('Server responded with status %s' % url_data.get('status'))
+            for i in range(10):
+                url_data = self._download_json(
+                    'https://www.y2mate.com/mates/convert', video_id,
+                    note='Fetching infomation for %s' % format_name, data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
+                    headers={'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+                if url_data.get('status') != 'success':
+                    self.report_warning('Server responded with status %s' % url_data.get('status'))
+                    continue
+                url = self._search_regex(
+                    r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
+                    video_id, 'Download url for %s' % format_name, group=1, default=None) or ''
+                if url.startswith('http'):
+                    break
+                else:
+                    self.report_warning('URL error: %s, retrying %d of 10' % i)
+                    url = None
+
+            if not url:
                 continue
-            url = self._search_regex(r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
-                                     video_id, 'Download url for %s' % format_name, group=1)
+
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
