@@ -1434,6 +1434,18 @@ class InfoExtractor(object):
             protocol = f.get('protocol') or determine_protocol(f)
             proto_preference = self.PROTOCOL_PREFERENCE.get(protocol, -0.1)
 
+            filesize = f.get('filesize') if f.get('filesize') is not None else -1
+            filesize_approx = f.get('filesize_approx') if f.get('filesize_approx') is not None else -1
+            tbr = f.get('tbr') if f.get('tbr') is not None else -1
+            vbr = f.get('vbr') if f.get('vbr') is not None else -1
+            abr = f.get('abr') if f.get('abr') is not None else -1
+            if self._downloader.params.get('prefer_smaller_formats'):
+                filesize *= -1
+                filesize_approx *= -1
+                tbr *= -1
+                vbr *= -1
+                abr *= -1
+
             if f.get('vcodec') == 'none':  # audio only
                 preference -= 50
                 if self._downloader.params.get('prefer_free_formats'):
@@ -1469,17 +1481,19 @@ class InfoExtractor(object):
                 preference,
                 f.get('language_preference') if f.get('language_preference') is not None else -1,
                 f.get('quality') if f.get('quality') is not None else -1,
-                f.get('tbr') if f.get('tbr') is not None else -1,
-                f.get('filesize') if f.get('filesize') is not None else -1,
-                f.get('vbr') if f.get('vbr') is not None else -1,
-                f.get('height') if f.get('height') is not None else -1,
-                f.get('width') if f.get('width') is not None else -1,
+                f.get('height') if f.get('height') is not None else -1,  # moved
+                f.get('width') if f.get('width') is not None else -1,  # moved
+                tbr,
+                filesize,
+                vbr,
+                # f.get('height') if f.get('height') is not None else -1,
+                # f.get('width') if f.get('width') is not None else -1,
                 proto_preference,
                 ext_preference,
-                f.get('abr') if f.get('abr') is not None else -1,
+                abr,
                 audio_ext_preference,
                 f.get('fps') if f.get('fps') is not None else -1,
-                f.get('filesize_approx') if f.get('filesize_approx') is not None else -1,
+                filesize_approx,
                 f.get('source_preference') if f.get('source_preference') is not None else -1,
                 id_preference,
                 fmt_id,

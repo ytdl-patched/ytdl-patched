@@ -408,6 +408,10 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='prefer_free_formats', default=False,
         help='Prefer free video formats unless a specific one is requested')
     video_format.add_option(
+        '--prefer-smaller-formats',
+        action='store_true', dest='prefer_smaller_formats', default=False,
+        help='Prefer smaller video formats unless a specific one is requested')
+    video_format.add_option(
         '-F', '--list-formats',
         action='store_true', dest='listformats',
         help='List all available formats of requested videos')
