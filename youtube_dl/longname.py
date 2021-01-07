@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from os import pathsep
+from os import sep
 from .compat import compat_str
 try:
     from typing import Union
@@ -100,7 +100,7 @@ def split_longname_str(input, encoding):
                 else:
                     result.append(chunk[i:i + 4])
     else:
-        # slow path: decode each charaters
+        # slow path: encode each charaters
         # any encoding with header/marking will break this (like UTF-16 with BOM, or 'idna')
         CHUNK_LENGTH = FS_LENGTH_LIMIT - len(DEFAULT_DELIMITER.encode(encoding))
         for chunk in chunks:
@@ -120,20 +120,19 @@ def split_longname_str(input, encoding):
             if current_split:
                 result.append(current_split)
 
-    return pathsep.join(result)
+    return sep.join(result)
 
 
 def combine_longname_str(input, encoding):
     # type: (compat_str, compat_str) -> str
-    result = ''
-    for m in re.split(r'[\\/]', input):
-        part = m.group(0)
-        if result.endswith(DEFAULT_DELIMITER):
-            result = result[:-2] + part
+    result = []
+    for part in re.split(r'[\\/]', input):
+        print(part)
+        if result and result[-1].endswith(DEFAULT_DELIMITER):
+            result[-1] = result[-1][:-2] + part
         else:
-            result += part
-            result += pathsep
-    return result[:-1]
+            result.append(part)
+    return sep.join(result)
 
 
 def utf8_byte_length(chr):
@@ -155,11 +154,11 @@ def utf8_byte_length(chr):
     return 3
 
 
-def utf8_byte_length_all_chr(chr):
+def utf8_byte_length_all_chr(string):
     "Calculates byte length in UTF-8 without encode/decode"
     # type: (compat_str) -> int
     result = 0
-    for chr in compat_str:
+    for chr in string:
         chr = ord(chr[0])
         if chr <= 0x7F:
             result += 1
