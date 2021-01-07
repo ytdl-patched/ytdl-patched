@@ -1,5 +1,7 @@
 # coding: utf-8
+from __future__ import unicode_literals
 import PySimpleGUI as sg
+# WIP
 
 import sys
 import threading
@@ -14,7 +16,7 @@ sg.theme('Dark Blue 3')
 
 layout = [
     [sg.Text('Extractor Inspector')],
-    [sg.Text('URL', size=(15, 1)), sg.InputText('https://...', key='-TEXT-')],
+    [sg.Text('URL', size=(15, 1)), sg.InputText(tooltip='https://...', key='-TEXT-')],
     [sg.Submit(button_text='Run extractor', key='-RUN-')]
 ]
 
@@ -23,10 +25,10 @@ window = sg.Window('ytdl-patched', layout)
 
 class InspectorLogger(object):
     def debug(self, msg):
-        pass
+        print(msg)
 
     def warning(self, msg):
-        pass
+        print(msg)
 
     def error(self, msg):
         print(msg)
@@ -48,7 +50,10 @@ def the_thread(window, url):
 
 
 while True:
-    event, values = window.read()
+    try:
+        event, values = window.read()
+    except InterruptedError:
+        event, values = None, None
 
     if event is None:
         window.close()
