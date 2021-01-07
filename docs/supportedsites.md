@@ -104,6 +104,7 @@
  - **bfmtv**
  - **bfmtv:article**
  - **bfmtv:live**
+ - **BibelTV**
  - **Bigflix**
  - **Bild**: Bild.de
  - **BiliBili**
