@@ -6,9 +6,15 @@ import re
 from os import sep
 from .compat import compat_str
 try:
+    from os import PathLike, fsdecode
     from typing import Union
 except ImportError:
-    pass
+    PathLike, fsdecode = None, None
+
+from .utils import (
+    sanitize_open,
+    preferredencoding,
+)
 
 # this file is to escape long file names in following manner:
 # 1. split each path segment in 255-N bytes (N=byte length of DEFAULT_DELIMITER below)
@@ -26,14 +32,25 @@ MIN_LOW_SURROGATE = 0xDC00
 MAX_LOW_SURROGATE = 0xDFFF
 
 
-def split_longname_bytes(input, encoding):
-    # type: (bytes, compat_str) -> bytes
-    return split_longname_str(input.decode(encoding)).encode(encoding)
+def split_longname(input, encoding):
+    # type: (Union[bytes, compat_str, PathLike], compat_str) -> bytes
+    if PathLike and isinstance(input, PathLike):
+        input = fsdecode(input)
+
+    was_bytes = isinstance(input, bytes)
+    if was_bytes:
+        input = input.decode(encoding)
+
+    result = split_longname_str(input, encoding)
+
+    if was_bytes:
+        result = result.encode(encoding)
+    return result
 
 
-def combine_longname_bytes(input, encoding):
+def combine_longname(input, encoding):
     # type: (bytes, compat_str) -> bytes
-    return combine_longname_bytes(input.decode(encoding)).encode(encoding)
+    return combine_longname_str(input.decode(encoding)).encode(encoding)
 
 
 def split_longname_str(input, encoding):
@@ -172,3 +189,19 @@ def utf8_byte_length_all_chr(string):
         else:
             result += 3
     return result
+
+
+def escaped_open(filename, open_mode, **kwargs):
+    "open() that escapes long names"
+    return open(split_longname(filename, preferredencoding()), open_mode, **kwargs)
+
+
+def escaped_sanitized_open(filename, open_mode):
+    "sanitized_open() that escapes long names"
+    return sanitize_open(split_longname(filename, preferredencoding()), open_mode)
+
+# mtime
+# unlink
+# path.isfile
+# path.exists
+# path.getsize
