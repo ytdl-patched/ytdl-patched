@@ -35,6 +35,7 @@ from .utils import (
     std_headers,
     write_string,
     render_table,
+    get_filesystem_encoding,
 )
 from .update import update_self
 from .downloader import (
@@ -42,6 +43,7 @@ from .downloader import (
 )
 from .extractor import gen_extractors, list_extractors
 from .extractor.adobepass import MSO_INFO
+from .longname import DEFAULT_DELIMITER
 from .YoutubeDL import YoutubeDL
 
 
@@ -124,6 +126,17 @@ def _real_main(argv=None):
     if opts.ap_list_mso:
         table = [[mso_id, mso_info['name']] for mso_id, mso_info in MSO_INFO.items()]
         write_string('Supported TV Providers:\n' + render_table(['mso', 'mso name'], table) + '\n', out=sys.stdout)
+        sys.exit(0)
+    if opts.rm_longnamedir:
+        for dirpath, _, _ in os.walk(os.getcwd(), topdown=False):
+            if isinstance(dirpath, bytes):  # Python 2
+                dirpath = dirpath.decode(get_filesystem_encoding())
+            if not dirpath.endswith(DEFAULT_DELIMITER):
+                continue
+            if os.listdir(dirpath):
+                continue
+            write_string('Removing %s\n' % dirpath, out=sys.stdout)
+            os.rmdir(dirpath)
         sys.exit(0)
 
     # Conflicting, missing and erroneous options

@@ -774,6 +774,10 @@ def parseOpts(overrideArguments=None):
         '--rm-cache-dir',
         action='store_true', dest='rm_cachedir',
         help='Delete all filesystem cache files')
+    filesystem.add_option(
+        '--rm-long-name-dir',
+        action='store_true', dest='rm_longnamedir',
+        help='Deletes all filename-splitting-related empty directories in working directory')
 
     thumbnail = optparse.OptionGroup(parser, 'Thumbnail images')
     thumbnail.add_option(
