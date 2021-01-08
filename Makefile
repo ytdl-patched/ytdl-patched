@@ -4,6 +4,7 @@ clean:
 	rm -rf youtube-dl.1.temp.md youtube-dl.1 youtube-dl.bash-completion README.txt MANIFEST build/ dist/ .coverage cover/ youtube-dl.tar.gz youtube-dl.zsh youtube-dl.fish youtube_dl/extractor/lazy_extractors.py *.dump *.part* *.ytdl *.info.json *.mp4 *.m4a *.flv *.mp3 *.avi *.mkv *.webm *.3gp *.wav *.ape *.swf *.jpg *.png CONTRIBUTING.md.tmp youtube-dl youtube-dl.exe
 	find . -name "*.pyc" -delete
 	find . -name "*.class" -delete
+	find . -name "*~~" -exec rm -rf {} + 
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin

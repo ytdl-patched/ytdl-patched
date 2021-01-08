@@ -42,3 +42,7 @@ class TestLongName(unittest.TestCase):
             split_longname_str('【妖怪ウォッチアニメ】第１３話「 コマさん 〜はじめてのファストフード編〜（#5）」「妖怪 口だけおんな」  「妖怪 ダンサーズ☆」「 じんめん犬シーズン2 犬脱走 Episode 2」-cL46Bl96_GQ.f137.mp4.part', 'sjis'),
             '【妖怪ウォッチアニメ】第１３話「 コマさん 〜はじめてのファストフード編〜（#5）」「妖怪 口だけおんな」  「妖怪 ダンサーズ☆」「 じんめん犬シーズン2 犬脱走 Episode 2」-cL46Bl96_GQ.f137.mp4.part'
         )
+
+    def test_resplit_identical(self):
+        instr = '【妖怪ウォッチアニメ】第１３話「 コマさん 〜はじめてのファストフード編〜（#5）」「妖怪 口だけおんな」  「妖怪 ダンサーズ☆」「 じんめん犬シーズン2 犬脱走 Episode 2」-cL46Bl96_GQ.f13~~/7.mp4.part'
+        self.assertEqual(split_longname_str(instr, 'utf8'), instr)

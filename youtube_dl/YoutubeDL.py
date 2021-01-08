@@ -1825,7 +1825,7 @@ class YoutubeDL(object):
             else:
                 try:
                     self.to_screen('[info] Writing video description to: ' + descfn)
-                    with io.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
+                    with self.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
                         descfile.write(info_dict['description'])
                 except (OSError, IOError):
                     self.report_error('Cannot write description file ' + descfn)
@@ -1840,7 +1840,7 @@ class YoutubeDL(object):
             else:
                 try:
                     self.to_screen('[info] Writing video annotations to: ' + annofn)
-                    with io.open(encodeFilename(annofn), 'w', encoding='utf-8') as annofile:
+                    with self.open(encodeFilename(annofn), 'w', encoding='utf-8') as annofile:
                         annofile.write(info_dict['annotations'])
                 except (KeyError, TypeError):
                     self.report_warning('There are no annotations to write.')
@@ -1867,7 +1867,7 @@ class YoutubeDL(object):
                         try:
                             # Use newline='' to prevent conversion of newline characters
                             # See https://github.com/ytdl-org/youtube-dl/issues/10268
-                            with io.open(encodeFilename(sub_filename), 'w', encoding='utf-8', newline='') as subfile:
+                            with self.open(encodeFilename(sub_filename), 'w', encoding='utf-8', newline='') as subfile:
                                 subfile.write(sub_info['data'])
                         except (OSError, IOError):
                             self.report_error('Cannot write subtitles file ' + sub_filename)
@@ -1878,7 +1878,7 @@ class YoutubeDL(object):
                             sub_data = ie._request_webpage(
                                 sub_info['url'], info_dict['id'],
                                 headers=headers, note=False).read()
-                            with io.open(encodeFilename(sub_filename), 'wb') as subfile:
+                            with self.open(encodeFilename(sub_filename), 'wb') as subfile:
                                 subfile.write(sub_data)
                         except (ExtractorError, IOError, OSError, ValueError) as err:
                             self.report_warning('Unable to download subtitle for "%s": %s' %
@@ -2117,7 +2117,7 @@ class YoutubeDL(object):
                 for old_filename in files_to_delete:
                     self.to_screen('Deleting original file %s (pass -k to keep)' % old_filename)
                     try:
-                        os.remove(encodeFilename(old_filename))
+                        self.remove(encodeFilename(old_filename))
                     except (IOError, OSError):
                         self.report_warning('Unable to remove downloaded original file')
 
@@ -2562,8 +2562,8 @@ class YoutubeDL(object):
         else:
             os.rename(src, dst, *args, **kwargs)
 
-    def remove(self, src, dst, *args, **kwargs):
+    def remove(self, path, *args, **kwargs):
         if self.params.get('escape_long_names', False):
-            escaped_remove(src, dst, *args, **kwargs)
+            escaped_remove(path, *args, **kwargs)
         else:
-            os.remove(src, dst, *args, **kwargs)
+            os.remove(path, *args, **kwargs)

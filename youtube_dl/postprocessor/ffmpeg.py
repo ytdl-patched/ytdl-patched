@@ -4,7 +4,6 @@ import io
 import subprocess
 import time
 import re
-from youtube_dl.longname import split_longname
 
 
 from .common import AudioConversionError, PostProcessor
@@ -22,6 +21,7 @@ from ..utils import (
     ISO639Utils,
     replace_extension,
 )
+from ..longname import split_longname
 
 
 EXT_TO_OUT_FORMATS = {
@@ -495,6 +495,7 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
             options.extend(['-metadata', '%s=%s' % (name, value)])
 
         chapters = info.get('chapters', [])
+        metadata_filename = None
         if chapters:
             metadata_filename = replace_extension(filename, 'meta')
             with io.open(metadata_filename, 'wt', encoding='utf-8') as f:
@@ -515,7 +516,7 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
 
         self._downloader.to_screen('[ffmpeg] Adding metadata to \'%s\'' % filename)
         self.run_ffmpeg_multiple_files(in_filenames, temp_filename, options)
-        if chapters:
+        if metadata_filename:
             self._downloader.remove(metadata_filename)
         self._downloader.remove(encodeFilename(filename))
         self._downloader.rename(encodeFilename(temp_filename), encodeFilename(filename))

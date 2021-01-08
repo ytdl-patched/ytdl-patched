@@ -9,8 +9,8 @@ try:
 except ImportError:
     PathLike, fsdecode = None, None
 
-from os import remove, rename, sep, stat, utime, unlink
-from os.path import exists, isfile, getsize
+from os import remove, rename, sep, stat, utime, unlink, makedirs
+from os.path import exists, isfile, getsize, normpath, join
 from .compat import compat_str
 from .utils import (
     sanitize_open,
@@ -33,7 +33,7 @@ MIN_LOW_SURROGATE = 0xDC00
 MAX_LOW_SURROGATE = 0xDFFF
 
 
-def split_longname(input, encoding):
+def split_longname(input, encoding=get_filesystem_encoding()):
     # type: (Union[bytes, compat_str, PathLike], compat_str) -> bytes
     if PathLike and isinstance(input, PathLike):
         input = fsdecode(input)
@@ -42,19 +42,19 @@ def split_longname(input, encoding):
     if was_bytes:
         input = input.decode(encoding)
 
-    result = split_longname_str(input, encoding)
+    result = split_longname_str(input, encoding=get_filesystem_encoding())
 
     if was_bytes:
         result = result.encode(encoding)
     return result
 
 
-def combine_longname(input, encoding):
+def combine_longname(input, encoding=get_filesystem_encoding()):
     # type: (bytes, compat_str) -> bytes
     return combine_longname_str(input.decode(encoding)).encode(encoding)
 
 
-def split_longname_str(input, encoding):
+def split_longname_str(input, encoding=get_filesystem_encoding()):
     # type: (compat_str, compat_str) -> compat_str
     # https://docs.python.org/3/library/codecs.html
     chunks = re.split(r'[\\/]', input)
@@ -63,15 +63,17 @@ def split_longname_str(input, encoding):
         # fast(er) path: UTF-8
         CHUNK_LENGTH = FS_LENGTH_LIMIT - 2
         for chunk in chunks:
-            if utf8_byte_length_all_chr(chunk) < FS_LENGTH_LIMIT:
+            if utf8_byte_length_all_chr(chunk) <= FS_LENGTH_LIMIT:
                 result.append(chunk)
                 continue
             current_split, current_length = '', 0
 
             for chr in chunk:
                 chrlen = utf8_byte_length(chr)
+                print(current_split)
                 if current_length + chrlen > CHUNK_LENGTH:
-                    result.append(current_split + DEFAULT_DELIMITER)
+                    if current_split:
+                        result.append(current_split + DEFAULT_DELIMITER)
                     current_split, current_length = '', 0
                 current_split += chr
                 current_length += chrlen
@@ -82,7 +84,7 @@ def split_longname_str(input, encoding):
         # fast path: UTF-16 ANY Endian
         CHUNK_LENGTH = FS_LENGTH_LIMIT - 4
         for chunk in chunks:
-            if len(chunk) * 2 < FS_LENGTH_LIMIT:
+            if len(chunk) * 2 <= FS_LENGTH_LIMIT:
                 result.append(chunk)
                 continue
             current_split, current_length = '', 0
@@ -96,7 +98,8 @@ def split_longname_str(input, encoding):
                     chrlen = 0  # same reason as UTF-8 does
 
                 if current_length + chrlen > CHUNK_LENGTH:
-                    result.append(current_split + DEFAULT_DELIMITER)
+                    if current_split:
+                        result.append(current_split + DEFAULT_DELIMITER)
                     current_split, current_length = '', 0
                 current_split += chr
                 current_length += chrlen
@@ -108,7 +111,7 @@ def split_longname_str(input, encoding):
         CHUNK_LENGTH = FS_LENGTH_LIMIT - 8
         for chunk in chunks:
             chunk_len = len(chunk)
-            if chunk_len * 4 < FS_LENGTH_LIMIT:
+            if chunk_len * 4 <= FS_LENGTH_LIMIT:
                 result.append(chunk)
                 continue
 
@@ -122,7 +125,7 @@ def split_longname_str(input, encoding):
         # any encoding with header/marking will break this (like UTF-16 with BOM, or 'idna')
         CHUNK_LENGTH = FS_LENGTH_LIMIT - len(DEFAULT_DELIMITER.encode(encoding))
         for chunk in chunks:
-            if len(chunk.encode(encoding)) < FS_LENGTH_LIMIT:
+            if len(chunk.encode(encoding)) <= FS_LENGTH_LIMIT:
                 result.append(chunk)
                 continue
             current_split, current_length = '', 0
@@ -130,7 +133,8 @@ def split_longname_str(input, encoding):
             for chr in chunk:
                 chrlen = len(chr.encode(encoding))
                 if current_length + chrlen > CHUNK_LENGTH:
-                    result.append(current_split + DEFAULT_DELIMITER)
+                    if current_split:
+                        result.append(current_split + DEFAULT_DELIMITER)
                     current_split, current_length = '', 0
                 current_split += chr
                 current_length += chrlen
@@ -141,7 +145,7 @@ def split_longname_str(input, encoding):
     return sep.join(result)
 
 
-def combine_longname_str(input, encoding):
+def combine_longname_str(input, encoding=get_filesystem_encoding()):
     # type: (compat_str, compat_str) -> str
     result = []
     for part in re.split(r'[\\/]', input):
@@ -194,12 +198,24 @@ def utf8_byte_length_all_chr(string):
 
 def escaped_open(filename, open_mode, **kwargs):
     "open() that escapes long names"
-    return open(split_longname(filename, get_filesystem_encoding()), open_mode, **kwargs)
+    split = split_longname(filename, get_filesystem_encoding())
+    if split != filename:
+        try:
+            makedirs(normpath(join(split, '..')))
+        except FileExistsError:
+            pass
+    return open(split, open_mode, **kwargs)
 
 
 def escaped_sanitize_open(filename, open_mode):
     "sanitized_open() that escapes long names"
-    return sanitize_open(split_longname(filename, get_filesystem_encoding()), open_mode)
+    split = split_longname(filename, get_filesystem_encoding())
+    if split != filename:
+        try:
+            makedirs(normpath(join(split, '..')))
+        except FileExistsError:
+            pass
+    return sanitize_open(split, open_mode)
 
 
 def escaped_stat(path, *args, **kwargs):
