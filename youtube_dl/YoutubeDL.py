@@ -15,6 +15,7 @@ import json
 import locale
 import operator
 import os
+import os.path
 import platform
 import re
 import shutil
@@ -79,6 +80,7 @@ from .utils import (
     replace_extension,
     SameFileError,
     sanitize_filename,
+    sanitize_open,
     sanitize_path,
     sanitize_url,
     sanitized_Request,
@@ -107,6 +109,18 @@ from .postprocessor import (
     FFmpegMergerPP,
     FFmpegPostProcessor,
     get_postprocessor,
+)
+from .longname import (
+    escaped_open,
+    escaped_path_exists,
+    escaped_path_getsize,
+    escaped_path_isfile,
+    escaped_sanitize_open,
+    escaped_stat,
+    escaped_unlink,
+    escaped_utime,
+    escaped_rename,
+    escaped_remove,
 )
 from .version import __version__
 try:
@@ -1811,7 +1825,7 @@ class YoutubeDL(object):
             else:
                 try:
                     self.to_screen('[info] Writing video description to: ' + descfn)
-                    with io.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
+                    with self.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
                         descfile.write(info_dict['description'])
                 except (OSError, IOError):
                     self.report_error('Cannot write description file ' + descfn)
@@ -1826,7 +1840,7 @@ class YoutubeDL(object):
             else:
                 try:
                     self.to_screen('[info] Writing video annotations to: ' + annofn)
-                    with io.open(encodeFilename(annofn), 'w', encoding='utf-8') as annofile:
+                    with self.open(encodeFilename(annofn), 'w', encoding='utf-8') as annofile:
                         annofile.write(info_dict['annotations'])
                 except (KeyError, TypeError):
                     self.report_warning('There are no annotations to write.')
@@ -1853,7 +1867,7 @@ class YoutubeDL(object):
                         try:
                             # Use newline='' to prevent conversion of newline characters
                             # See https://github.com/ytdl-org/youtube-dl/issues/10268
-                            with io.open(encodeFilename(sub_filename), 'w', encoding='utf-8', newline='') as subfile:
+                            with self.open(encodeFilename(sub_filename), 'w', encoding='utf-8', newline='') as subfile:
                                 subfile.write(sub_info['data'])
                         except (OSError, IOError):
                             self.report_error('Cannot write subtitles file ' + sub_filename)
@@ -1864,7 +1878,7 @@ class YoutubeDL(object):
                             sub_data = ie._request_webpage(
                                 sub_info['url'], info_dict['id'],
                                 headers=headers, note=False).read()
-                            with io.open(encodeFilename(sub_filename), 'wb') as subfile:
+                            with self.open(encodeFilename(sub_filename), 'wb') as subfile:
                                 subfile.write(sub_data)
                         except (ExtractorError, IOError, OSError, ValueError) as err:
                             self.report_warning('Unable to download subtitle for "%s": %s' %
@@ -2103,7 +2117,7 @@ class YoutubeDL(object):
                 for old_filename in files_to_delete:
                     self.to_screen('Deleting original file %s (pass -k to keep)' % old_filename)
                     try:
-                        os.remove(encodeFilename(old_filename))
+                        self.remove(encodeFilename(old_filename))
                     except (IOError, OSError):
                         self.report_warning('Unable to remove downloaded original file')
 
@@ -2486,10 +2500,70 @@ class YoutubeDL(object):
                                (info_dict['extractor'], info_dict['id'], thumb_display_id))
                 try:
                     uf = self.urlopen(t['url'])
-                    with open(encodeFilename(thumb_filename), 'wb') as thumbf:
+                    with self.open(encodeFilename(thumb_filename), 'wb') as thumbf:
                         shutil.copyfileobj(uf, thumbf)
                     self.to_screen('[%s] %s: Writing thumbnail %sto: %s' %
                                    (info_dict['extractor'], info_dict['id'], thumb_display_id, thumb_filename))
                 except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
                     self.report_warning('Unable to download thumbnail "%s": %s' %
                                         (t['url'], error_to_compat_str(err)))
+
+    def open(self, filename, open_mode, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_open(filename, open_mode, **kwargs)
+        else:
+            return open(filename, open_mode, **kwargs)
+
+    def sanitize_open(self, filename, open_mode):
+        if self.params.get('escape_long_names', False):
+            return escaped_sanitize_open(filename, open_mode)
+        else:
+            return sanitize_open(filename, open_mode)
+
+    def stat(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_stat(path, *args, **kwargs)
+        else:
+            return os.stat(path, *args, **kwargs)
+
+    def unlink(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_unlink(path, *args, **kwargs)
+        else:
+            os.unlink(path, *args, **kwargs)
+
+    def isfile(self, path):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_isfile(path)
+        else:
+            return os.path.isfile(path)
+
+    def exists(self, path):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_exists(path)
+        else:
+            return os.path.exists(path)
+
+    def getsize(self, filename):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_getsize(filename)
+        else:
+            return os.path.getsize(filename)
+
+    def utime(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_utime(path, *args, **kwargs)
+        else:
+            os.utime(path, *args, **kwargs)
+
+    def rename(self, src, dst, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_rename(src, dst, *args, **kwargs)
+        else:
+            os.rename(src, dst, *args, **kwargs)
+
+    def remove(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_remove(path, *args, **kwargs)
+        else:
+            os.remove(path, *args, **kwargs)

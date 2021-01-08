@@ -1,6 +1,5 @@
 from __future__ import division, unicode_literals
 
-import os
 import re
 import sys
 import time
@@ -187,7 +186,7 @@ class FileDownloader(object):
     def temp_name(self, filename):
         """Returns a temporary filename for the given filename."""
         if self.params.get('nopart', False) or filename == '-' or \
-                (os.path.exists(encodeFilename(filename)) and not os.path.isfile(encodeFilename(filename))):
+                (self.ydl.exists(encodeFilename(filename)) and not self.ydl.isfile(encodeFilename(filename))):
             return filename
         return filename + '.part'
 
@@ -203,7 +202,7 @@ class FileDownloader(object):
         try:
             if old_filename == new_filename:
                 return
-            os.rename(encodeFilename(old_filename), encodeFilename(new_filename))
+            self.ydl.rename(encodeFilename(old_filename), encodeFilename(new_filename))
         except (IOError, OSError) as err:
             self.report_error('unable to rename file: %s' % error_to_compat_str(err))
 
@@ -211,7 +210,7 @@ class FileDownloader(object):
         """Try to set the last-modified time of the given file."""
         if last_modified_hdr is None:
             return
-        if not os.path.isfile(encodeFilename(filename)):
+        if not self.ydl.isfile(encodeFilename(filename)):
             return
         timestr = last_modified_hdr
         if timestr is None:
@@ -223,7 +222,7 @@ class FileDownloader(object):
         if filetime == 0:
             return
         try:
-            os.utime(filename, (time.time(), filetime))
+            self.ydl.utime(filename, (time.time(), filetime))
         except Exception:
             pass
         return filetime
@@ -341,13 +340,13 @@ class FileDownloader(object):
 
         nooverwrites_and_exists = (
             self.params.get('nooverwrites', False)
-            and os.path.exists(encodeFilename(filename))
+            and self.ydl.exists(encodeFilename(filename))
         )
 
         if not hasattr(filename, 'write'):
             continuedl_and_exists = (
                 self.params.get('continuedl', True)
-                and os.path.isfile(encodeFilename(filename))
+                and self.ydl.isfile(encodeFilename(filename))
                 and not self.params.get('nopart', False)
             )
 
@@ -357,7 +356,7 @@ class FileDownloader(object):
                 self._hook_progress({
                     'filename': filename,
                     'status': 'finished',
-                    'total_bytes': os.path.getsize(encodeFilename(filename)),
+                    'total_bytes': self.ydl.getsize(encodeFilename(filename)),
                 })
                 return True
 
@@ -423,7 +422,7 @@ class FileDownloader(object):
         str_args = [decodeArgument(a) for a in args]
 
         if exe is None:
-            exe = os.path.basename(str_args[0])
+            exe = self.ydl.basename(str_args[0])
 
         self.to_screen('[debug] %s command line: %s' % (
             exe, shell_quote(str_args)))
