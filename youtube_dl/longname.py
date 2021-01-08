@@ -50,8 +50,20 @@ def split_longname(input, encoding=get_filesystem_encoding()):
 
 
 def combine_longname(input, encoding=get_filesystem_encoding()):
-    # type: (bytes, compat_str) -> bytes
-    return combine_longname_str(input.decode(encoding)).encode(encoding)
+    # type: (Union[bytes, compat_str, PathLike], compat_str) -> bytes
+    print(input)
+    if PathLike and isinstance(input, PathLike):
+        input = fsdecode(input)
+
+    was_bytes = isinstance(input, bytes)
+    if was_bytes:
+        input = input.decode(encoding)
+
+    result = combine_longname_str(input, encoding)
+
+    if was_bytes:
+        result = result.encode(encoding)
+    return result
 
 
 def split_longname_str(input, encoding=get_filesystem_encoding()):
@@ -149,7 +161,6 @@ def combine_longname_str(input, encoding=get_filesystem_encoding()):
     # type: (compat_str, compat_str) -> str
     result = []
     for part in re.split(r'[\\/]', input):
-        print(part)
         if result and result[-1].endswith(DEFAULT_DELIMITER):
             result[-1] = result[-1][:-2] + part
         else:
@@ -215,7 +226,9 @@ def escaped_open(filename, open_mode, **kwargs):
 def escaped_sanitize_open(filename, open_mode):
     "sanitized_open() that escapes long names"
     split = ensure_directory(filename)
-    return sanitize_open(split, open_mode)
+    a, b = sanitize_open(split, open_mode)
+    b = combine_longname(b)
+    return a, b
 
 
 def escaped_stat(path, *args, **kwargs):
