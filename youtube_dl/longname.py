@@ -42,7 +42,7 @@ def split_longname(input, encoding=get_filesystem_encoding()):
     if was_bytes:
         input = input.decode(encoding)
 
-    result = split_longname_str(input, encoding=get_filesystem_encoding())
+    result = split_longname_str(input, encoding)
 
     if was_bytes:
         result = result.encode(encoding)
