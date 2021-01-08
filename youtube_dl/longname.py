@@ -51,7 +51,6 @@ def split_longname(input, encoding=get_filesystem_encoding()):
 
 def combine_longname(input, encoding=get_filesystem_encoding()):
     # type: (Union[bytes, compat_str, PathLike], compat_str) -> bytes
-    print(input)
     if PathLike and isinstance(input, PathLike):
         input = fsdecode(input)
 

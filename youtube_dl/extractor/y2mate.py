@@ -58,7 +58,7 @@ class Y2mateIE(InfoExtractor):
             for i in range(5):
                 url_data = self._download_json(
                     'https://www.y2mate.com/mates/convert', video_id,
-                    note='Fetching infomation for %s' % format_name, data=request_data,
+                    note='Fetching infomation for %s (%d of 5)' % (format_name, i + 1), data=request_data,
                     headers=common_headers)
                 if url_data.get('status') != 'success':
                     self.report_warning('Server responded with status %s' % url_data.get('status'))
@@ -68,9 +68,6 @@ class Y2mateIE(InfoExtractor):
                     'Download url for %s' % format_name, group=1, default=None)
                 if url and url.startswith('http'):
                     break
-                else:
-                    self.report_warning('URL error, retrying %d of 5' % (i + 1))
-                    url = None
 
             if not url:
                 continue
@@ -104,19 +101,16 @@ class Y2mateIE(InfoExtractor):
             for i in range(5):
                 url_data = self._download_json(
                     'https://www.y2mate.com/mates/convert', video_id,
-                    note='Fetching infomation for %s' % format_name, data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
+                    note='Fetching infomation for %s (%d of 5)' % (format_name, i + 1), data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
                     headers=common_headers)
                 if url_data.get('status') != 'success':
                     self.report_warning('Server responded with status %s' % url_data.get('status'))
                     continue
                 url = self._search_regex(
                     r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
-                    'Download url for %s' % format_name, group=1, default=None) or ''
-                if url.startswith('http'):
+                    'Download url for %s' % format_name, group=1, default=None)
+                if url and url.startswith('http'):
                     break
-                else:
-                    self.report_warning('URL error: %s, retrying %d of 5' % (i + 5))
-                    url = None
 
             if not url:
                 continue
