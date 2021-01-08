@@ -74,7 +74,7 @@ jobs:
         run: |
           sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
           sudo apt update
-          sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk pandoc tzdata
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk pandoc tzdata p7zip-full
       - name: Build patched YTDL for Linux
         run: |
           make youtube-dl youtube-dl.tar.gz

@@ -55,6 +55,7 @@ youtube-dl.zsh
 public/
 bin/
 .vercel
+zip/
 
 # IntelliJ related files
 .idea
