@@ -197,7 +197,7 @@ def escaped_open(filename, open_mode, **kwargs):
     return open(split_longname(filename, get_filesystem_encoding()), open_mode, **kwargs)
 
 
-def escaped_sanitized_open(filename, open_mode):
+def escaped_sanitize_open(filename, open_mode):
     "sanitized_open() that escapes long names"
     return sanitize_open(split_longname(filename, get_filesystem_encoding()), open_mode)
 

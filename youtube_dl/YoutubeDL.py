@@ -115,7 +115,7 @@ from .longname import (
     escaped_path_exists,
     escaped_path_getsize,
     escaped_path_isfile,
-    escaped_sanitized_open,
+    escaped_sanitize_open,
     escaped_stat,
     escaped_unlink,
     escaped_utime,
@@ -2514,9 +2514,9 @@ class YoutubeDL(object):
         else:
             return open(filename, open_mode, **kwargs)
 
-    def sanitized_open(self, filename, open_mode):
+    def sanitize_open(self, filename, open_mode):
         if self.params.get('escape_long_names', False):
-            return escaped_sanitized_open(filename, open_mode)
+            return escaped_sanitize_open(filename, open_mode)
         else:
             return sanitize_open(filename, open_mode)
 
