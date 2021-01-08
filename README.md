@@ -288,6 +288,8 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                      may change.
     --no-cache-dir                   Disable filesystem caching
     --rm-cache-dir                   Delete all filesystem cache files
+    --rm-long-name-dir               Deletes all filename-splitting-related
+                                     empty directories in working directory
 
 ## Thumbnail images:
     --write-thumbnail                Write thumbnail image to disk
@@ -357,6 +359,9 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                      before each download (maximum possible
                                      number of seconds to sleep). Must only be
                                      used along with --min-sleep-interval.
+    --escape-long-names              Split filename longer than 255 bytes into
+                                     few path segments. This may create dumb
+                                     directories.
 
 ## Video Format Options:
     -f, --format FORMAT              Video format code, see the "FORMAT
@@ -364,6 +369,8 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
     --all-formats                    Download all available video formats
     --prefer-free-formats            Prefer free video formats unless a specific
                                      one is requested
+    --prefer-smaller-formats         Prefer smaller video formats unless a
+                                     specific one is requested
     -F, --list-formats               List all available formats of requested
                                      videos
     --youtube-skip-dash-manifest     Do not download the DASH manifests and
