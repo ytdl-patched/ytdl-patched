@@ -121,6 +121,7 @@ from .longname import (
     escaped_utime,
     escaped_rename,
     escaped_remove,
+    ensure_directory,
 )
 from .version import __version__
 try:
@@ -2567,3 +2568,7 @@ class YoutubeDL(object):
             escaped_remove(path, *args, **kwargs)
         else:
             os.remove(path, *args, **kwargs)
+
+    def ensure_directory(self, filename):
+        if self.params.get('escape_long_names', False):
+            ensure_directory(filename)

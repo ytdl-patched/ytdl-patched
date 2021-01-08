@@ -227,6 +227,7 @@ class FFmpegPostProcessor(PostProcessor):
             cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info'), encodeArgument('-hide_banner')]
         if self._downloader.params.get('escape_long_names', False):
             out_path = split_longname(out_path)
+            self._downloader.ensure_directory(out_path)
         cmd += (files_cmd
                 + [encodeArgument(o) for o in opts]
                 + [encodeFilename(self._ffmpeg_filename_argument(out_path), True)])
