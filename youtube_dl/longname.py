@@ -196,25 +196,25 @@ def utf8_byte_length_all_chr(string):
     return result
 
 
-def escaped_open(filename, open_mode, **kwargs):
-    "open() that escapes long names"
+def ensure_directory(filename):
     split = split_longname(filename, get_filesystem_encoding())
     if split != filename:
         try:
             makedirs(normpath(join(split, '..')))
         except FileExistsError:
             pass
+    return split
+
+
+def escaped_open(filename, open_mode, **kwargs):
+    "open() that escapes long names"
+    split = ensure_directory(filename)
     return open(split, open_mode, **kwargs)
 
 
 def escaped_sanitize_open(filename, open_mode):
     "sanitized_open() that escapes long names"
-    split = split_longname(filename, get_filesystem_encoding())
-    if split != filename:
-        try:
-            makedirs(normpath(join(split, '..')))
-        except FileExistsError:
-            pass
+    split = ensure_directory(filename)
     return sanitize_open(split, open_mode)
 
 
@@ -250,10 +250,10 @@ def escaped_utime(path, *args, **kwargs):
 
 def escaped_rename(src, dst, *args, **kwargs):
     "os.rename() that escapes long names"
+    dst = ensure_directory(dst)
     rename(
         split_longname(src, get_filesystem_encoding()),
-        split_longname(dst, get_filesystem_encoding()),
-        *args, **kwargs)
+        dst, *args, **kwargs)
 
 
 def escaped_remove(path, *args, **kwargs):

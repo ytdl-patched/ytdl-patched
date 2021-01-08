@@ -225,6 +225,7 @@ class FFmpegPostProcessor(PostProcessor):
         # avconv does not have repeat option
         if self.basename == 'ffmpeg':
             cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info'), encodeArgument('-hide_banner')]
+        self._downloader.ensure_directory(out_path)
         if self._downloader.params.get('escape_long_names', False):
             out_path = split_longname(out_path)
         cmd += (files_cmd
