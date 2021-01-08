@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-import os
-
 from ..utils import (
     PostProcessingError,
     cli_configuration_args,
@@ -57,7 +55,7 @@ class PostProcessor(object):
 
     def try_utime(self, path, atime, mtime, errnote='Cannot update utime of file'):
         try:
-            os.utime(encodeFilename(path), (atime, mtime))
+            self._downloader.utime(encodeFilename(path), (atime, mtime))
         except Exception:
             self._downloader.report_warning(errnote)
 

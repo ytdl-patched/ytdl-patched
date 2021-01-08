@@ -577,6 +577,12 @@ def parseOpts(overrideArguments=None):
             'Upper bound of a range for randomized sleep before each download '
             '(maximum possible number of seconds to sleep). Must only be used '
             'along with --min-sleep-interval.'))
+    workarounds.add_option(
+        '--escape-long-names',
+        action='store_true', dest='escape_long_names', default=False,
+        help=(
+            'Split filename longer than 255 bytes into few path segments. '
+            'This may create dumb directories.'))
 
     verbosity = optparse.OptionGroup(parser, 'Verbosity / Simulation Options')
     verbosity.add_option(

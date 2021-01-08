@@ -23,6 +23,7 @@ from ..utils import (
     check_executable,
     is_outdated_version,
 )
+from ..longname import split_longname
 
 
 class ExternalFD(FileDownloader):
@@ -49,7 +50,7 @@ class ExternalFD(FileDownloader):
                 'elapsed': time.time() - started,
             }
             if filename != '-':
-                fsize = os.path.getsize(encodeFilename(tmpfilename))
+                fsize = self.ydl.getsize(encodeFilename(tmpfilename))
                 self.to_screen('\r[%s] Downloaded %s bytes' % (self.get_basename(), fsize))
                 self.try_rename(tmpfilename, filename)
                 status.update({
@@ -185,10 +186,10 @@ class Aria2cFD(ExternalFD):
         cmd = [self.exe, '-c']
         cmd += self._configuration_args([
             '--min-split-size', '1M', '--max-connection-per-server', '4'])
-        dn = os.path.dirname(tmpfilename)
+        dn = self.ydl.dirname(tmpfilename)
         if dn:
             cmd += ['--dir', dn]
-        cmd += ['--out', os.path.basename(tmpfilename)]
+        cmd += ['--out', self.ydl.basename(tmpfilename)]
         for key, val in info_dict['http_headers'].items():
             cmd += ['--header', '%s: %s' % (key, val)]
         cmd += self._option('--interface', 'source_address')
@@ -227,6 +228,9 @@ class FFmpegFD(ExternalFD):
             self.report_error('m3u8 download detected but ffmpeg or avconv could not be found. Please install one.')
             return False
         ffpp.check_version()
+
+        if self.ydl.params.get('escape_long_names', False):
+            tmpfilename = split_longname(tmpfilename)
 
         args = [ffpp.executable, '-y']
 

@@ -745,7 +745,7 @@ class InfoExtractor(object):
                 absfilepath = os.path.abspath(filename)
                 if len(absfilepath) > 259:
                     filename = '\\\\?\\' + absfilepath
-            with open(filename, 'wb') as outf:
+            with self._downloader.open(filename, 'wb') as outf:
                 outf.write(webpage_bytes)
 
         try:

@@ -3,17 +3,18 @@ from __future__ import unicode_literals
 
 import re
 
-from os import sep
-from .compat import compat_str
 try:
     from os import PathLike, fsdecode
     from typing import Union
 except ImportError:
     PathLike, fsdecode = None, None
 
+from os import remove, rename, sep, stat, utime, unlink
+from os.path import exists, isfile, getsize
+from .compat import compat_str
 from .utils import (
     sanitize_open,
-    preferredencoding,
+    get_filesystem_encoding,
 )
 
 # this file is to escape long file names in following manner:
@@ -193,15 +194,52 @@ def utf8_byte_length_all_chr(string):
 
 def escaped_open(filename, open_mode, **kwargs):
     "open() that escapes long names"
-    return open(split_longname(filename, preferredencoding()), open_mode, **kwargs)
+    return open(split_longname(filename, get_filesystem_encoding()), open_mode, **kwargs)
 
 
 def escaped_sanitized_open(filename, open_mode):
     "sanitized_open() that escapes long names"
-    return sanitize_open(split_longname(filename, preferredencoding()), open_mode)
+    return sanitize_open(split_longname(filename, get_filesystem_encoding()), open_mode)
 
-# mtime
-# unlink
-# path.isfile
-# path.exists
-# path.getsize
+
+def escaped_stat(path, *args, **kwargs):
+    "os.stat() that escapes long names"
+    return stat(split_longname(path, get_filesystem_encoding()), *args, **kwargs)
+
+
+def escaped_unlink(path, *args, **kwargs):
+    "os.unlink() that escapes long names"
+    unlink(split_longname(path, get_filesystem_encoding()), *args, **kwargs)
+
+
+def escaped_path_isfile(path):
+    "os.path.isfile() that escapes long names"
+    return isfile(split_longname(path, get_filesystem_encoding()))
+
+
+def escaped_path_exists(path):
+    "os.path.exists() that escapes long names"
+    return exists(split_longname(path, get_filesystem_encoding()))
+
+
+def escaped_path_getsize(filename):
+    "os.path.getsize() that escapes long names"
+    return getsize(split_longname(filename, get_filesystem_encoding()))
+
+
+def escaped_utime(path, *args, **kwargs):
+    "os.utime() that escapes long names"
+    utime(split_longname(path, get_filesystem_encoding()), *args, **kwargs)
+
+
+def escaped_rename(src, dst, *args, **kwargs):
+    "os.rename() that escapes long names"
+    rename(
+        split_longname(src, get_filesystem_encoding()),
+        split_longname(dst, get_filesystem_encoding()),
+        *args, **kwargs)
+
+
+def escaped_remove(path, *args, **kwargs):
+    "os.remove() that escapes long names"
+    remove(split_longname(path, get_filesystem_encoding()), *args, **kwargs)

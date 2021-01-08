@@ -15,6 +15,7 @@ import json
 import locale
 import operator
 import os
+import os.path
 import platform
 import re
 import shutil
@@ -79,6 +80,7 @@ from .utils import (
     replace_extension,
     SameFileError,
     sanitize_filename,
+    sanitize_open,
     sanitize_path,
     sanitize_url,
     sanitized_Request,
@@ -107,6 +109,18 @@ from .postprocessor import (
     FFmpegMergerPP,
     FFmpegPostProcessor,
     get_postprocessor,
+)
+from .longname import (
+    escaped_open,
+    escaped_path_exists,
+    escaped_path_getsize,
+    escaped_path_isfile,
+    escaped_sanitized_open,
+    escaped_stat,
+    escaped_unlink,
+    escaped_utime,
+    escaped_rename,
+    escaped_remove,
 )
 from .version import __version__
 try:
@@ -2486,10 +2500,70 @@ class YoutubeDL(object):
                                (info_dict['extractor'], info_dict['id'], thumb_display_id))
                 try:
                     uf = self.urlopen(t['url'])
-                    with open(encodeFilename(thumb_filename), 'wb') as thumbf:
+                    with self.open(encodeFilename(thumb_filename), 'wb') as thumbf:
                         shutil.copyfileobj(uf, thumbf)
                     self.to_screen('[%s] %s: Writing thumbnail %sto: %s' %
                                    (info_dict['extractor'], info_dict['id'], thumb_display_id, thumb_filename))
                 except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
                     self.report_warning('Unable to download thumbnail "%s": %s' %
                                         (t['url'], error_to_compat_str(err)))
+
+    def open(self, filename, open_mode, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_open(filename, open_mode, **kwargs)
+        else:
+            return open(filename, open_mode, **kwargs)
+
+    def sanitized_open(self, filename, open_mode):
+        if self.params.get('escape_long_names', False):
+            return escaped_sanitized_open(filename, open_mode)
+        else:
+            return sanitize_open(filename, open_mode)
+
+    def stat(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_stat(path, *args, **kwargs)
+        else:
+            return os.stat(path, *args, **kwargs)
+
+    def unlink(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_unlink(path, *args, **kwargs)
+        else:
+            os.unlink(path, *args, **kwargs)
+
+    def isfile(self, path):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_isfile(path)
+        else:
+            return os.path.isfile(path)
+
+    def exists(self, path):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_exists(path)
+        else:
+            return os.path.exists(path)
+
+    def getsize(self, filename):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_getsize(filename)
+        else:
+            return os.path.getsize(filename)
+
+    def utime(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_utime(path, *args, **kwargs)
+        else:
+            os.utime(path, *args, **kwargs)
+
+    def rename(self, src, dst, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_rename(src, dst, *args, **kwargs)
+        else:
+            os.rename(src, dst, *args, **kwargs)
+
+    def remove(self, src, dst, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_remove(src, dst, *args, **kwargs)
+        else:
+            os.remove(src, dst, *args, **kwargs)

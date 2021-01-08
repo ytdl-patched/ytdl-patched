@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
 import io
-import os
 import subprocess
 import time
 import re
+from youtube_dl.longname import split_longname
 
 
 from .common import AudioConversionError, PostProcessor
@@ -99,14 +99,14 @@ class FFmpegPostProcessor(PostProcessor):
             prefer_ffmpeg = self._downloader.params.get('prefer_ffmpeg', True)
             location = self._downloader.params.get('ffmpeg_location')
             if location is not None:
-                if not os.path.exists(location):
+                if not self._downloader.exists(location):
                     self._downloader.report_warning(
                         'ffmpeg-location %s does not exist! '
                         'Continuing without avconv/ffmpeg.' % (location))
                     self._versions = {}
                     return
-                elif not os.path.isdir(location):
-                    basename = os.path.splitext(os.path.basename(location))[0]
+                elif not self._downloader.isdir(location):
+                    basename = self._downloader.splitext(self._downloader.basename(location))[0]
                     if basename not in programs:
                         self._downloader.report_warning(
                             'Cannot identify executable %s, its basename should be one of %s. '
@@ -114,12 +114,12 @@ class FFmpegPostProcessor(PostProcessor):
                             (location, ', '.join(programs)))
                         self._versions = {}
                         return None
-                    location = os.path.dirname(os.path.abspath(location))
+                    location = self._downloader.dirname(self._downloader.abspath(location))
                     if basename in ('ffmpeg', 'ffprobe'):
                         prefer_ffmpeg = True
 
                 self._paths = dict(
-                    (p, os.path.join(location, p)) for p in programs)
+                    (p, self._downloader.join(location, p)) for p in programs)
                 self._versions = dict(
                     (p, get_ffmpeg_version(self._paths[p])) for p in programs)
         if self._versions is None:
@@ -165,6 +165,8 @@ class FFmpegPostProcessor(PostProcessor):
         if not self.probe_available and not self.available:
             raise PostProcessingError('ffprobe/avprobe and ffmpeg/avconv not found. Please install one.')
         try:
+            if self._downloader.params.get('escape_long_names', False):
+                path = split_longname(path)
             if self.probe_available:
                 cmd = [
                     encodeFilename(self.probe_executable, True),
@@ -207,12 +209,14 @@ class FFmpegPostProcessor(PostProcessor):
         self.check_version()
 
         oldest_mtime = min(
-            os.stat(encodeFilename(path)).st_mtime for path in input_paths)
+            self._downloader.stat(encodeFilename(path)).st_mtime for path in input_paths)
 
         opts += self._configuration_args()
 
         files_cmd = []
         for path in input_paths:
+            if self._downloader.params.get('escape_long_names', False):
+                path = split_longname(path)
             files_cmd.extend([
                 encodeArgument('-i'),
                 encodeFilename(self._ffmpeg_filename_argument(path), True)
@@ -221,6 +225,8 @@ class FFmpegPostProcessor(PostProcessor):
         # avconv does not have repeat option
         if self.basename == 'ffmpeg':
             cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info'), encodeArgument('-hide_banner')]
+        if self._downloader.params.get('escape_long_names', False):
+            out_path = split_longname(out_path)
         cmd += (files_cmd
                 + [encodeArgument(o) for o in opts]
                 + [encodeFilename(self._ffmpeg_filename_argument(out_path), True)])
@@ -319,7 +325,7 @@ class FFmpegExtractAudioPP(FFmpegPostProcessor):
                 extension = 'wav'
                 more_opts += ['-f', 'wav']
 
-        prefix, sep, ext = path.rpartition('.')  # not os.path.splitext, since the latter does not work on unicode in all setups
+        prefix, sep, ext = path.rpartition('.')  # not self._downloader.splitext, since the latter does not work on unicode in all setups
         new_path = prefix + sep + extension
 
         information['filepath'] = new_path
@@ -327,7 +333,7 @@ class FFmpegExtractAudioPP(FFmpegPostProcessor):
 
         # If we download foo.mp3 and convert it to... foo.mp3, then don't delete foo.mp3, silly.
         if (new_path == path
-                or (self._nopostoverwrites and os.path.exists(encodeFilename(new_path)))):
+                or (self._nopostoverwrites and self._downloader.exists(encodeFilename(new_path)))):
             self._downloader.to_screen('[ffmpeg] Post-process file %s exists, skipping' % new_path)
             return [], information
 
@@ -426,8 +432,8 @@ class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
         temp_filename = prepend_extension(filename, 'temp')
         self._downloader.to_screen('[ffmpeg] Embedding subtitles in \'%s\'' % filename)
         self.run_ffmpeg_multiple_files(input_files, temp_filename, opts)
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.remove(encodeFilename(filename))
+        self._downloader.rename(encodeFilename(temp_filename), encodeFilename(filename))
 
         return sub_filenames, information
 
@@ -510,9 +516,9 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
         self._downloader.to_screen('[ffmpeg] Adding metadata to \'%s\'' % filename)
         self.run_ffmpeg_multiple_files(in_filenames, temp_filename, options)
         if chapters:
-            os.remove(metadata_filename)
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+            self._downloader.remove(metadata_filename)
+        self._downloader.remove(encodeFilename(filename))
+        self._downloader.rename(encodeFilename(temp_filename), encodeFilename(filename))
         return [], info
 
 
@@ -523,7 +529,7 @@ class FFmpegMergerPP(FFmpegPostProcessor):
         args = ['-c', 'copy', '-map', '0:v:0', '-map', '1:a:0']
         self._downloader.to_screen('[ffmpeg] Merging formats into "%s"' % filename)
         self.run_ffmpeg_multiple_files(info['__files_to_merge'], temp_filename, args)
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.rename(encodeFilename(temp_filename), encodeFilename(filename))
         return info['__files_to_merge'], info
 
     def can_merge(self):
@@ -557,8 +563,8 @@ class FFmpegFixupStretchedPP(FFmpegPostProcessor):
         self._downloader.to_screen('[ffmpeg] Fixing aspect ratio in "%s"' % filename)
         self.run_ffmpeg(filename, temp_filename, options)
 
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.remove(encodeFilename(filename))
+        self._downloader.rename(encodeFilename(temp_filename), encodeFilename(filename))
 
         return [], info
 
@@ -575,8 +581,8 @@ class FFmpegFixupM4aPP(FFmpegPostProcessor):
         self._downloader.to_screen('[ffmpeg] Correcting container in "%s"' % filename)
         self.run_ffmpeg(filename, temp_filename, options)
 
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.remove(encodeFilename(filename))
+        self._downloader.rename(encodeFilename(temp_filename), encodeFilename(filename))
 
         return [], info
 
@@ -591,8 +597,8 @@ class FFmpegFixupM3u8PP(FFmpegPostProcessor):
             self._downloader.to_screen('[ffmpeg] Fixing malformed AAC bitstream in "%s"' % filename)
             self.run_ffmpeg(filename, temp_filename, options)
 
-            os.remove(encodeFilename(filename))
-            os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+            self._downloader.remove(encodeFilename(filename))
+            self._downloader.rename(encodeFilename(temp_filename), encodeFilename(filename))
         return [], info
 
 
