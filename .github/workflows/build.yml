@@ -40,10 +40,11 @@ jobs:
         id: prepare
         run: |
           mkdir artifacts
-          export LATEST_VERSION="$(date)"
+          export NOW_RAW="$(date)"
+          export LATEST_VERSION="$(date --date="${NOW_RAW}" +'%Y.%m.%d.%s')"
           echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
           echo "::set-output name=latest_version::${LATEST_VERSION}"
-          echo "::set-output name=latest_version_numeric::$(date --date="${LATEST_VERSION}" +'%s')"
+          echo "::set-output name=latest_version_numeric::$(date --date="${NOW_RAW}" +'%s')"
 
           echo "from __future__ import unicode_literals
           __version__ = '${LATEST_VERSION}'

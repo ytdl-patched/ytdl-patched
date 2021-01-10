@@ -7,7 +7,6 @@ import hashlib
 import os
 import subprocess
 import sys
-import time
 from zipimport import zipimporter
 
 from .compat import compat_realpath
@@ -68,8 +67,7 @@ def update_self(to_screen, verbose, opener):
     version_id = versions_info['latest']
 
     def version_tuple(version_str):
-        # This assumes timestamp is in UTC
-        return time.strptime(version_str, '%a %b %d %H:%M:%S UTC %Y')
+        return tuple(map(int, version_str.split('.')))
     if version_tuple(__version__) >= version_tuple(version_id):
         to_screen('youtube-dl is up to date (%s)' % __version__)
         return
