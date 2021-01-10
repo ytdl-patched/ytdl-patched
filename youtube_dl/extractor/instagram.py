@@ -129,45 +129,50 @@ class InstagramIE(InfoExtractor):
          uploader_id, like_count, comment_count, comments, height,
          width) = [None] * 12
 
-        shared_data = try_get(webpage,
-                              (lambda x: self._parse_json(
-                                  self._search_regex(
-                                      r'window\.__additionalDataLoaded\(\'/(?:p|tv)/(?:[^/?#&]+)/\',({.+?})\);',
-                                      x, 'additional data'),
-                                  video_id),
-                               lambda x: self._parse_json(
-                                  self._search_regex(
-                                      r'window\._sharedData\s*=\s*({.+?});',
-                                      x, 'shared data'),
-                                  video_id)['entry_data']['PostPage'][0]),
-                              None)
+        shared_data = self._parse_json(
+            self._search_regex(
+                r'window\._sharedData\s*=\s*({.+?});',
+                webpage, 'shared data', default='{}'),
+            video_id, fatal=False)
         if shared_data:
             media = try_get(
                 shared_data,
-                (lambda x: x['graphql']['shortcode_media'],
-                 lambda x: x['media']),
+                (lambda x: x['entry_data']['PostPage'][0]['graphql']['shortcode_media'],
+                 lambda x: x['entry_data']['PostPage'][0]['media']),
                 dict)
-            if media:
-                video_url = media.get('video_url')
-                height = int_or_none(media.get('dimensions', {}).get('height'))
-                width = int_or_none(media.get('dimensions', {}).get('width'))
-                description = try_get(
-                    media, lambda x: x['edge_media_to_caption']['edges'][0]['node']['text'],
-                    compat_str) or media.get('caption')
-                thumbnail = media.get('display_src') or media.get('thumbnail_src')
-                timestamp = int_or_none(media.get('taken_at_timestamp') or media.get('date'))
-                uploader = media.get('owner', {}).get('full_name')
-                uploader_id = media.get('owner', {}).get('username')
+        # _sharedData.entry_data.PostPage is empty when authenticated (see
+        # https://github.com/ytdl-org/youtube-dl/pull/22880)
+        if not media:
+            additional_data = self._parse_json(
+                self._search_regex(
+                    r'window\.__additionalDataLoaded\s*\(\s*[^,]+,\s*({.+?})\s*\)\s*;',
+                    webpage, 'additional data', default='{}'),
+                video_id, fatal=False)
+            if additional_data:
+                media = try_get(
+                    additional_data, lambda x: x['graphql']['shortcode_media'],
+                    dict)
+        if media:
+            video_url = media.get('video_url')
+            height = int_or_none(media.get('dimensions', {}).get('height'))
+            width = int_or_none(media.get('dimensions', {}).get('width'))
+            description = try_get(
+                media, lambda x: x['edge_media_to_caption']['edges'][0]['node']['text'],
+                compat_str) or media.get('caption')
+            thumbnail = media.get('display_src') or media.get('display_url')
+            timestamp = int_or_none(media.get('taken_at_timestamp') or media.get('date'))
+            uploader = media.get('owner', {}).get('full_name')
+            uploader_id = media.get('owner', {}).get('username')
 
-                def get_count(keys, kind):
-                    if not isinstance(keys, (list, tuple)):
-                        keys = [keys]
-                    for key in keys:
-                        count = int_or_none(try_get(
-                            media, (lambda x: x['edge_media_%s' % key]['count'],
-                                    lambda x: x['%ss' % kind]['count'])))
-                        if count is not None:
-                            return count
+            def get_count(keys, kind):
+                if not isinstance(keys, (list, tuple)):
+                    keys = [keys]
+                for key in keys:
+                    count = int_or_none(try_get(
+                        media, (lambda x: x['edge_media_%s' % key]['count'],
+                                lambda x: x['%ss' % kind]['count'])))
+                    if count is not None:
+                        return count
             like_count = get_count('preview_like', 'like')
             comment_count = get_count(
                 ('preview_comment', 'to_comment', 'to_parent_comment'), 'comment')
