@@ -1325,6 +1325,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             patterns, webpage, 'initial player response', default=None)
         if config:
             return {'args': {'player_response': config}}
+        embedded_config = self._search_regex(
+            r'setConfig\(({.*})\);',
+            webpage, 'ytInitialData', default=None)
+        if embedded_config:
+            return try_get(
+                embedded_config,
+                lambda x: {'args': {'player_response': x['PLAYER_VARS']['embedded_player_response']}},
+                compat_str
+            )
 
     def _get_automatic_captions(self, video_id, player_response, player_config):
         """We need the webpage for getting the captions url, pass it as an
@@ -1652,15 +1661,16 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             age_gate = True
             # We simulate the access to the video from www.youtube.com/v/{video_id}
             # this can be viewed without login into Youtube
-            url = proto + '://www.youtube.com/embed/%s' % video_id
+            url = 'https://www.youtube.com/embed/%s' % video_id
             embed_webpage = self._download_webpage(url, video_id, 'Downloading embed webpage')
+            sts = self._search_regex(
+                r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default='')
             data = compat_urllib_parse_urlencode({
                 'video_id': video_id,
                 'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-                'sts': self._search_regex(
-                    r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
+                'sts': sts,
             })
-            video_info_url = proto + '://www.youtube.com/get_video_info?' + data
+            video_info_url = 'https://www.youtube.com/get_video_info?' + data
             try:
                 video_info_webpage = self._download_webpage(
                     video_info_url, video_id,
@@ -1674,27 +1684,29 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 player_response = extract_player_response(pl_response, video_id)
                 add_dash_mpd(video_info)
                 view_count = extract_view_count(video_info)
+            else:
+                ytplayer_config = self._get_ytplayer_config(video_id, embed_webpage)
         else:
             age_gate = False
-            # Try looking directly into the video webpage
-            if ytplayer_config:
-                args = ytplayer_config['args']
-                if args.get('url_encoded_fmt_stream_map') or args.get('hlsvp'):
-                    # Convert to the same format returned by compat_parse_qs
-                    video_info = dict((k, [v]) for k, v in args.items())
-                    add_dash_mpd(video_info)
-                # Rental video is not rented but preview is available (e.g.
-                # https://www.youtube.com/watch?v=yYr8q0y5Jfg,
-                # https://github.com/ytdl-org/youtube-dl/issues/10532)
-                if not video_info and args.get('ypc_vid'):
-                    return self.url_result(
-                        args['ypc_vid'], YoutubeIE.ie_key(), video_id=args['ypc_vid'])
-                if args.get('livestream') == '1' or args.get('live_playback') == 1:
-                    is_live = True
-                if not player_response:
-                    player_response = extract_player_response(args.get('player_response'), video_id)
-            if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
-                add_dash_mpd_pr(player_response)
+        # Try looking directly into the video webpage
+        if ytplayer_config:
+            args = ytplayer_config['args']
+            if args.get('url_encoded_fmt_stream_map') or args.get('hlsvp'):
+                # Convert to the same format returned by compat_parse_qs
+                video_info = dict((k, [v]) for k, v in args.items())
+                add_dash_mpd(video_info)
+            # Rental video is not rented but preview is available (e.g.
+            # https://www.youtube.com/watch?v=yYr8q0y5Jfg,
+            # https://github.com/ytdl-org/youtube-dl/issues/10532)
+            if not video_info and args.get('ypc_vid'):
+                return self.url_result(
+                    args['ypc_vid'], YoutubeIE.ie_key(), video_id=args['ypc_vid'])
+            if args.get('livestream') == '1' or args.get('live_playback') == 1:
+                is_live = True
+            if not player_response:
+                player_response = extract_player_response(args.get('player_response'), video_id)
+        if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
+            add_dash_mpd_pr(player_response)
 
         def extract_unavailable_message():
             messages = []
