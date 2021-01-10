@@ -1720,12 +1720,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if messages:
                 return '\n'.join(messages)
             if player_response:
-                return try_get(player_response,
-                               (lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['runs'][0]['text'],
-                                lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
-                                lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['reason']['simpleText'],
-                                lambda x: x['playabilityStatus']['messages'][0],
-                                lambda x: x['playabilityStatus']['reason']), compat_str)
+                return try_get(
+                    player_response,
+                    (lambda x: clean_html(''.join(r['text'] for r in x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['runs'])),
+                     lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['simpleText'],
+                     lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['reason']['simpleText'],
+                     lambda x: x['playabilityStatus']['messages'][0],
+                     lambda x: x['playabilityStatus']['reason']), compat_str)
 
         if not video_info and not player_response:
             unavailable_message = extract_unavailable_message()
