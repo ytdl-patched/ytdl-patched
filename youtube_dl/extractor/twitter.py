@@ -31,7 +31,9 @@ from .periscope import (
 class TwitterBaseIE(InfoExtractor):
     _API_BASE = 'https://api.twitter.com/1.1/'
     _BASE_REGEX = r'https?://(?:(?:www|m(?:obile)?)\.)?twitter\.com/'
-    _GUEST_TOKEN = None
+    _API_REQUEST_HEADERS = {
+        'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DTYfbDKbT3jJPCEVnMYqilB28NHfOPqkca3qaAxGfsyKCs0wRbw',
+    }
 
     def _extract_variant_formats(self, variant, video_id):
         variant_url = variant.get('url')
@@ -76,18 +78,15 @@ class TwitterBaseIE(InfoExtractor):
             })
 
     def _call_api(self, path, video_id, query={}):
-        headers = {
-            'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DTYfbDKbT3jJPCEVnMYqilB28NHfOPqkca3qaAxGfsyKCs0wRbw',
-        }
-        if not self._GUEST_TOKEN:
-            self._GUEST_TOKEN = self._download_json(
+        if not self._API_REQUEST_HEADERS.get('x-guest-token'):
+            self._API_REQUEST_HEADERS['x-guest-token'] = self._download_json(
                 self._API_BASE + 'guest/activate.json', video_id,
                 'Downloading guest token', data=b'',
-                headers=headers)['guest_token']
-        headers['x-guest-token'] = self._GUEST_TOKEN
+                headers=self._API_REQUEST_HEADERS)['guest_token']
         try:
             return self._download_json(
-                self._API_BASE + path, video_id, headers=headers, query=query)
+                self._API_BASE + path, video_id, headers=self._API_REQUEST_HEADERS,
+                query=query)
         except ExtractorError as e:
             if isinstance(e.cause, compat_HTTPError) and e.cause.code == 403:
                 raise ExtractorError(self._parse_json(
