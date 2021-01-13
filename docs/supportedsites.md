@@ -609,7 +609,8 @@
  - **nickelodeonru**
  - **nicknight**
  - **niconico**: ニコニコ動画
- - **NiconicoPlaylist**
+ - **niconico:playlist**
+ - **niconico:user**
  - **Nintendo**
  - **njoy**: N-JOY
  - **njoy:embed**
