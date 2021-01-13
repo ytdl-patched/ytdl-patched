@@ -107,9 +107,8 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install PyInstaller
-          # https://github.com/nao20010128nao/actions-test/blob/master/.github/workflows/build-pyinstaller-windows.yml
-          # this is temporary and must be reverted to "pyinstaller" after fix released
-        run: pip install --upgrade "https://github.com/pyinstaller/pyinstaller/archive/develop.zip"
+        # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
+        run: pip install --upgrade pyinstaller
       - name: Install UPX
         run: choco install upx
       - name: Build patched YTDL for Windows
