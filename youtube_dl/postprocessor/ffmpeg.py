@@ -9,6 +9,7 @@ import re
 from .common import AudioConversionError, PostProcessor
 
 from ..utils import (
+    determine_ext,
     encodeArgument,
     encodeFilename,
     get_exe_version,
@@ -226,10 +227,17 @@ class FFmpegPostProcessor(PostProcessor):
         if self.basename == 'ffmpeg':
             cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info'), encodeArgument('-hide_banner')]
         self._downloader.ensure_directory(out_path)
+        out_fmt_spec = []
         if self._downloader.params.get('escape_long_names', False):
+            if '-f' not in opts:
+                fmt_name = determine_ext(out_path, None)
+                fmt_name = EXT_TO_OUT_FORMATS.get(fmt_name, fmt_name)
+                if fmt_name:
+                    out_fmt_spec = ['-f', fmt_name]
             out_path = split_longname(out_path)
         cmd += (files_cmd
                 + [encodeArgument(o) for o in opts]
+                + out_fmt_spec
                 + [encodeFilename(self._ffmpeg_filename_argument(out_path), True)])
 
         if self._downloader.params.get('verbose', False):
