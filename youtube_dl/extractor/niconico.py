@@ -550,6 +550,10 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         'only_matching': True,
     }]
 
+    @classmethod
+    def suitable(cls, url):
+        return super(NiconicoUserIE, cls).suitable(url) and not NiconicoPlaylistIE.suitable(url)
+
     def _call_api(self, list_id, resource, query):
         return self._download_json(
             'https://nvapi.nicovideo.jp/v1/users/%s/videos' % list_id, list_id,
