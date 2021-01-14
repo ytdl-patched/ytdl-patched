@@ -30,6 +30,9 @@ class TktubeIE(InfoExtractor):
             self.report_warning('Failed to extract uploader info')
             uploader_id, uploader = None, None
 
+        # self._download_webpage('https://www.tktube.com/player/kt_player.js?v=5.2.0', video_id)
+        # self._download_webpage('https://www.tktube.com/static/js/main.min.js?v=7.2', video_id)
+
         data_dict = {g.group(1): g.group(2) for g in re.finditer(r"(\S+?):\s*'(.+?)'", webpage)}
         formats = []
         for k, v in data_dict.items():
@@ -49,7 +52,11 @@ class TktubeIE(InfoExtractor):
                     'ext': determine_ext(video_url),
                     'width': width,
                     'height': height,
-                    'http_headers': {'Referer': url},
+                    'http_headers': {
+                        'Referer': url,
+                        'Accept': '*/*',
+                        'Accept-Encoding': 'identity;q=1, *;q=0',
+                    },
                 })
 
         self._sort_formats(formats)
