@@ -25,10 +25,10 @@ class TktubeIE(InfoExtractor):
 
         mobj = re.search(r'<a href="https://www.tktube.com/members/(\d+)/">\s*(\S+?)\s*</a>', webpage)
         if mobj:
-            uploader, uploader_id = mobj.groups()
+            uploader_id, uploader = mobj.groups()
         else:
             self.report_warning('Failed to extract uploader info')
-            uploader, uploader_id = None, None
+            uploader_id, uploader = None, None
 
         data_dict = {g.group(1): g.group(2) for g in re.finditer(r"(\S+?):\s*'(.+?)'", webpage)}
         formats = []
