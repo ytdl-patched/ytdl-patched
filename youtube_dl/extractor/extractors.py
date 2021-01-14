@@ -1241,6 +1241,7 @@ from .tiktok import (
     TikTokUserIE,
 )
 from .tinypic import TinyPicIE
+from .tktube import TktubeIE
 from .tmz import (
     TMZIE,
     TMZArticleIE,
