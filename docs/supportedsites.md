@@ -950,6 +950,7 @@
  - **TikTok**
  - **TikTokUser** (Currently broken)
  - **tinypic**: tinypic.com videos
+ - **tktube**
  - **TMZ**
  - **TMZArticle**
  - **TNAFlix**
