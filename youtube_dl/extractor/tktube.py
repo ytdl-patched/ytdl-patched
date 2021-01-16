@@ -42,9 +42,9 @@ class TktubeIE(InfoExtractor):
                 # remove first 'function/0/' and add some params
                 video_url = '%s?rnd=%d' % (v[11:], int(time.time() * 1000))
                 format_id = data_dict['%s_text' % k]
-                width, height = int_or_none(format_id[:-1]), None
-                if width:
-                    height = width // 16 * 9
+                width, height = None, int_or_none(format_id[:-1])
+                if height:
+                    width = height // 16 * 9
                 formats.append({
                     'format_id': format_id,
                     'url': video_url,
