@@ -515,6 +515,9 @@
  - **Mgoon**
  - **MGTV**: 芒果TV
  - **MiaoPai**
+ - **minds**
+ - **minds:channel**
+ - **minds:group**
  - **MinistryGrid**
  - **Minoto**
  - **miomio.tv**
