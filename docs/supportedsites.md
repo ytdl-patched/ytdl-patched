@@ -875,6 +875,8 @@
  - **Sport5**
  - **SportBox**
  - **SportDeutschland**
+ - **spotify**
+ - **spotify:show**
  - **Spreaker**
  - **SpreakerPage**
  - **SpreakerShow**
