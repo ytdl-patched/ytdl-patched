@@ -25,13 +25,8 @@ class JavhubIE(InfoExtractor):
         webpage = self._download_webpage(url, video_id)
 
         data_src = self._search_regex(r'data-src="([^\"]+)"(?:>| data-track)', webpage, 'data-src')
-        data_track = self._search_regex(r'data-track="([^\"]+)">', webpage, 'data-track', fatal=False)
 
         playapi_post = char_replace(self.B58_TABLE_2, self.B58_TABLE_1, data_src).encode('utf8')
-        if data_track:
-            webvtt_url = scalar_to_bytes(decode_base(data_track, self.B58_TABLE_2)).decode('utf8')
-        else:
-            webvtt_url = None
 
         playapi_response = self._download_json(
             'https://ja.javhub.net/playapi', video_id,
@@ -64,17 +59,4 @@ class JavhubIE(InfoExtractor):
             }],
             'age_limit': 18,
         })
-        if webvtt_url:
-            result.update({
-                'subtitles': {
-                    # unknown language
-                    'xx': [{
-                        'url': webvtt_url,
-                        'ext': determine_ext(webvtt_url),
-                        'http_headers': {
-                            'Referer': url,
-                        },
-                    }]
-                },
-            })
         return result
