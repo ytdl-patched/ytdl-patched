@@ -7,13 +7,16 @@ from ..utils import (
     update_url_query,
     random_uuidv4,
 )
+from ..compat import (
+    compat_urlparse,
+)
 
 
 # pretty-printed main.js https://gist.githubusercontent.com/nao20010128nao/128d4e7ead01042f90655d4ae81e9f49/raw/cb800c51840ce5ba47a3068c8474e46134e10d69/mildom.js
 class MildomIE(InfoExtractor):
     IE_NAME = 'mildom'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
-    # _WORKING = False
+    _WORKING = False
     _GUEST_ID = None
 
     def _real_extract(self, url):
@@ -35,7 +38,7 @@ class MildomIE(InfoExtractor):
             'user_id': video_id,
             'live_server_type': 'hls',
         })
-        servers = self._download_json(servers_url, video_id)
+        servers = self._download_json(servers_url, video_id, note='Downloading live server list')
 
         m3u8_url = update_url_query(servers['body']['stream_server'] + '/%s_master.m3u8' % video_id, {
             'timestamp': self.iso_timestamp(),
@@ -54,11 +57,16 @@ class MildomIE(InfoExtractor):
         formats = self._extract_m3u8_formats(m3u8_url, video_id, headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
-        })
+        }, note='Downloading m3u8 information')
         # requires proxy that converts m3u8 to be "processable" by ffmpeg or so
         #  (appropriate redirect and appending queries to ts URLs)
         for fmt in formats:
-            pass
+            parsed = compat_urlparse.urlparse(fmt['url'])
+            parsed = parsed._replace(netloc='bookish-octo-barnacle.vercel.app')
+            fmt['url'] = compat_urlparse.urlunparse(parsed)
+            print(fmt['url'])
+
+        self._sort_formats(formats)
 
         return {
             'id': video_id,
@@ -80,7 +88,7 @@ class MildomIE(InfoExtractor):
     @staticmethod
     def iso_timestamp():
         "new Date().toISOString()"
-        return datetime.now().isoformat()[0:-3] + 'Z'
+        return datetime.utcnow().isoformat()[0:-3] + 'Z'
 
     def guest_id(self):
         "getGuestId"
