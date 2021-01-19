@@ -9,6 +9,7 @@ from ..utils import (
 )
 from ..compat import (
     compat_urlparse,
+    compat_urllib_parse_urlencode,
 )
 
 
@@ -40,7 +41,7 @@ class MildomIE(InfoExtractor):
         })
         servers = self._download_json(servers_url, video_id, note='Downloading live server list')
 
-        m3u8_url = update_url_query(servers['body']['stream_server'] + '/%s_master.m3u8' % video_id, {
+        stream_query = {
             'timestamp': self.iso_timestamp(),
             '__guest_id': self.guest_id(),
             '__location': self.location(),
@@ -53,18 +54,20 @@ class MildomIE(InfoExtractor):
             'accessToken': self.access_token(),
             'streamReqId': random_uuidv4(),
             'is_lhls': '0',
-        })
-        formats = self._extract_m3u8_formats(m3u8_url, video_id, headers={
+        }
+        m3u8_url = update_url_query(servers['body']['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
+        formats = self._extract_m3u8_formats(m3u8_url, video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
         }, note='Downloading m3u8 information')
-        # requires proxy that converts m3u8 to be "processable" by ffmpeg or so
-        #  (appropriate redirect and appending queries to ts URLs)
+        del stream_query['streamReqId']
         for fmt in formats:
             parsed = compat_urlparse.urlparse(fmt['url'])
-            parsed = parsed._replace(netloc='bookish-octo-barnacle.vercel.app')
+            parsed = parsed._replace(
+                netloc='bookish-octo-barnacle.vercel.app',
+                query=compat_urllib_parse_urlencode(stream_query, True),
+                path='/api' + parsed.path)
             fmt['url'] = compat_urlparse.urlunparse(parsed)
-            print(fmt['url'])
 
         self._sort_formats(formats)
 
