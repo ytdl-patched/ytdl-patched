@@ -2,8 +2,12 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+import json
+import base64
+
 from .common import InfoExtractor
 from ..utils import (
+    std_headers,
     update_url_query,
     random_uuidv4,
 )
@@ -19,12 +23,14 @@ class MildomIE(InfoExtractor):
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
     _WORKING = False
     _GUEST_ID = None
+    _DISPATCHER_CONFIG = None
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
         url = 'https://www.mildom.com/%s' % video_id
 
         self._download_webpage(url, video_id)
+        self._fetch_dispatcher_config()
         servers_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', {
             'timestamp': self.iso_timestamp(),
             '__guest_id': self.guest_id(),
@@ -60,7 +66,7 @@ class MildomIE(InfoExtractor):
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
         }, note='Downloading m3u8 information')
-        del stream_query['streamReqId']
+        del stream_query['streamReqId'], stream_query['timestamp']
         for fmt in formats:
             parsed = compat_urlparse.urlparse(fmt['url'])
             parsed = parsed._replace(
@@ -75,6 +81,7 @@ class MildomIE(InfoExtractor):
             'id': video_id,
             'title': 'ad hoc title',
             'formats': formats,
+            'is_live': True,
         }
     # content of getHttpCommonParams for reference:
     # timestamp: new Date().toISOString(),
@@ -87,6 +94,27 @@ class MildomIE(InfoExtractor):
     # __pcv: "v2.9.44",
     # sfr: "pc",
     # accessToken: r.a.getAccessToken(),
+
+    def _fetch_dispatcher_config(self):
+        tmp = self._download_json(
+            'https://disp.mildom.com/serverListV2', 'initialization',
+            note='Downloading dispatcher_config', data=json.dumps({
+                'protover': 0,
+                'data': base64.b64encode(json.dumps({
+                    "fr": "web",
+                    "sfr": "pc",
+                    "devi": "Windows",
+                    "la": "ja",
+                    "gid": None,
+                    "loc": "",
+                    "clu": "",
+                    "wh": "1919*810",  # don't google this magic number!
+                    "rtm": self.iso_timestamp(),
+                    "ua": std_headers['User-Agent'],
+                }).encode('utf8')).decode('utf8').replace('\n', '')
+            }).encode('utf8'))
+        self._DISPATCHER_CONFIG = json.loads(base64.b64decode(tmp['data']))
+        print(self._DISPATCHER_CONFIG)
 
     @staticmethod
     def iso_timestamp():

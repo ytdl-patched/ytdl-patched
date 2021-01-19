@@ -237,7 +237,7 @@ class FFmpegPostProcessor(PostProcessor):
             out_path = split_longname(out_path)
         cmd += (files_cmd
                 + [encodeArgument(o) for o in opts]
-                + out_fmt_spec
+                + [encodeArgument(o) for o in out_fmt_spec]
                 + [encodeFilename(self._ffmpeg_filename_argument(out_path), True)])
 
         if self._downloader.params.get('verbose', False):
