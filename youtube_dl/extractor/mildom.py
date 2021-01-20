@@ -7,7 +7,7 @@ import base64
 
 from .common import InfoExtractor
 from ..utils import (
-    std_headers,
+    ExtractorError, std_headers,
     update_url_query,
     random_uuidv4,
     try_get,
@@ -97,12 +97,13 @@ class MildomIE(InfoExtractor):
         return self._download_json(url, video_id, note=note)
 
     def _common_queries(self, query={}, init=False):
+        dc = self._fetch_dispatcher_config()
         r = {
             'timestamp': self.iso_timestamp(),
             '__guest_id': '' if init else self.guest_id(),
-            '__location': self._fetch_dispatcher_config()['location'],
-            '__country': self._fetch_dispatcher_config()['country'],
-            '__cluster': self._fetch_dispatcher_config()['cluster'],
+            '__location': dc['location'],
+            '__country': dc['country'],
+            '__cluster': dc['cluster'],
             '__platform': 'web',
             '__la': self.lang_code(),
             '__pcv': 'v2.9.44',
@@ -114,24 +115,29 @@ class MildomIE(InfoExtractor):
 
     def _fetch_dispatcher_config(self):
         if not self._DISPATCHER_CONFIG:
-            tmp = self._download_json(
-                'https://disp.mildom.com/serverListV2', 'initialization',
-                note='Downloading dispatcher_config', data=json.dumps({
-                    'protover': 0,
-                    'data': base64.b64encode(json.dumps({
-                        'fr': 'web',
-                        'sfr': 'pc',
-                        'devi': 'Windows',
-                        'la': 'ja',
-                        'gid': None,
-                        'loc': '',
-                        'clu': '',
-                        'wh': '1919*810',  # don't google this magic number!
-                        'rtm': self.iso_timestamp(),
-                        'ua': std_headers['User-Agent'],
-                    }).encode('utf8')).decode('utf8').replace('\n', ''),
-                }).encode('utf8'))
-            self._DISPATCHER_CONFIG = json.loads(base64.b64decode(tmp['data']))
+            try:
+                tmp = self._download_json(
+                    'https://disp.mildom.com/serverListV2', 'initialization',
+                    note='Downloading dispatcher_config', data=json.dumps({
+                        'protover': 0,
+                        'data': base64.b64encode(json.dumps({
+                            'fr': 'web',
+                            'sfr': 'pc',
+                            'devi': 'Windows',
+                            'la': 'ja',
+                            'gid': None,
+                            'loc': '',
+                            'clu': '',
+                            'wh': '1919*810',  # don't google this magic number!
+                            'rtm': self.iso_timestamp(),
+                            'ua': std_headers['User-Agent'],
+                        }).encode('utf8')).decode('utf8').replace('\n', ''),
+                    }).encode('utf8'))
+                self._DISPATCHER_CONFIG = self._parse_json(base64.b64decode(tmp['data']), 'initialization')
+            except ExtractorError:
+                self._DISPATCHER_CONFIG = self._download_json(
+                    'https://bookish-octo-barnacle.vercel.app/api/dispatcher_config', 'initialization',
+                    note='Downloading dispatcher_config fallback')
         return self._DISPATCHER_CONFIG
 
     @staticmethod
@@ -147,7 +153,9 @@ class MildomIE(InfoExtractor):
             return self._GUEST_ID
         self._GUEST_ID = self._call_api(
             'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
-            note='Downloading guest token', init=True)
+            note='Downloading guest token', init=True) or \
+            self._get_cookies('https://www.mildom.com').get('gid').value or \
+            ''
         if self._GUEST_ID:
             return self._GUEST_ID
         else:
