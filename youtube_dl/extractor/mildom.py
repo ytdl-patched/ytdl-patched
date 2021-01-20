@@ -19,77 +19,9 @@ from ..compat import (
 )
 
 
-class MildomIE(InfoExtractor):
-    IE_NAME = 'mildom'
-    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
+class MildomBaseIE(InfoExtractor):
     _GUEST_ID = None
     _DISPATCHER_CONFIG = None
-
-    def _real_extract(self, url):
-        video_id = self._match_id(url)
-        url = 'https://www.mildom.com/%s' % video_id
-
-        webpage = self._download_webpage(url, video_id)
-
-        enterstudio = self._call_api(
-            'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', video_id,
-            note='Downloading live metadata', query={'user_id': video_id})
-
-        # e.g. Minecraft
-        title = try_get(
-            enterstudio, (
-                lambda x: self._html_search_meta('twitter:description', webpage),
-                lambda x: x['body']['anchor_intro'],
-            ), compat_str)
-        # e.g. recording gameplay for my YouTube
-        description = try_get(
-            enterstudio, (
-                lambda x: x['body']['intro'],
-                lambda x: x['body']['live_intro'],
-            ), compat_str)
-        # e.g. @imagDonaldTrump
-        uploader = try_get(
-            enterstudio, (
-                lambda x: self._html_search_meta('twitter:title', webpage),
-                lambda x: x['body']['loginname'],
-            ), compat_str)
-
-        servers = self._call_api(
-            'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', video_id,
-            note='Downloading live server list', query={
-                'user_id': video_id,
-                'live_server_type': 'hls',
-            })
-
-        stream_query = self._common_queries({
-            'streamReqId': random_uuidv4(),
-            'is_lhls': '0',
-        })
-        m3u8_url = update_url_query(servers['body']['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
-        formats = self._extract_m3u8_formats(m3u8_url, video_id, 'mp4', headers={
-            'Referer': 'https://www.mildom.com/',
-            'Origin': 'https://www.mildom.com',
-        }, note='Downloading m3u8 information')
-        del stream_query['streamReqId'], stream_query['timestamp']
-        for fmt in formats:
-            parsed = compat_urlparse.urlparse(fmt['url'])
-            parsed = parsed._replace(
-                netloc='bookish-octo-barnacle.vercel.app',
-                query=compat_urllib_parse_urlencode(stream_query, True),
-                path='/api' + parsed.path)
-            fmt['url'] = compat_urlparse.urlunparse(parsed)
-
-        self._sort_formats(formats)
-
-        return {
-            'id': video_id,
-            'title': title,
-            'description': description,
-            'uploader': uploader,
-            'uploader_id': video_id,
-            'formats': formats,
-            'is_live': True,
-        }
 
     def _call_api(self, url, video_id, query={}, note='Downloading JSON metadata', init=False):
         url = update_url_query(url, self._common_queries(query, init=init))
@@ -161,6 +93,77 @@ class MildomIE(InfoExtractor):
     def lang_code(self):
         'getCurrentLangCode'
         return 'ja'
+
+
+class MildomIE(InfoExtractor):
+    IE_NAME = 'mildom'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        url = 'https://www.mildom.com/%s' % video_id
+
+        webpage = self._download_webpage(url, video_id)
+
+        enterstudio = self._call_api(
+            'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', video_id,
+            note='Downloading live metadata', query={'user_id': video_id})
+
+        # e.g. Minecraft
+        title = try_get(
+            enterstudio, (
+                lambda x: self._html_search_meta('twitter:description', webpage),
+                lambda x: x['body']['anchor_intro'],
+            ), compat_str)
+        # e.g. recording gameplay for my YouTube
+        description = try_get(
+            enterstudio, (
+                lambda x: x['body']['intro'],
+                lambda x: x['body']['live_intro'],
+            ), compat_str)
+        # e.g. @imagDonaldTrump
+        uploader = try_get(
+            enterstudio, (
+                lambda x: self._html_search_meta('twitter:title', webpage),
+                lambda x: x['body']['loginname'],
+            ), compat_str)
+
+        servers = self._call_api(
+            'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', video_id,
+            note='Downloading live server list', query={
+                'user_id': video_id,
+                'live_server_type': 'hls',
+            })
+
+        stream_query = self._common_queries({
+            'streamReqId': random_uuidv4(),
+            'is_lhls': '0',
+        })
+        m3u8_url = update_url_query(servers['body']['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
+        formats = self._extract_m3u8_formats(m3u8_url, video_id, 'mp4', headers={
+            'Referer': 'https://www.mildom.com/',
+            'Origin': 'https://www.mildom.com',
+        }, note='Downloading m3u8 information')
+        del stream_query['streamReqId'], stream_query['timestamp']
+        for fmt in formats:
+            parsed = compat_urlparse.urlparse(fmt['url'])
+            parsed = parsed._replace(
+                netloc='bookish-octo-barnacle.vercel.app',
+                query=compat_urllib_parse_urlencode(stream_query, True),
+                path='/api' + parsed.path)
+            fmt['url'] = compat_urlparse.urlunparse(parsed)
+
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'description': description,
+            'uploader': uploader,
+            'uploader_id': video_id,
+            'formats': formats,
+            'is_live': True,
+        }
 
 # VOD: https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio?timestamp=2021-01-20T05:12:57.292Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan%7CTokyo&__country=&__cluster=aws_japan&__platform=web&__la=ja&sfr=pc&accessToken=&user_id=10317530
 # m3u8: https://d3ooprpqd2179o.cloudfront.net/vod/jp/10317530/10317530-c03qultaks9btgbruo10/origin/raw/10317530-c03qultaks9btgbruo10_raw.m3u8?timestamp=2021-01-20T05:32:42.670Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan|Tokyo&__country=Japan&__cluster=aws_japan&__platform=web&__la=ja&__pcv=v2.9.46&sfr=pc&accessToken=&streamReqId=75eda67c-63e5-4325-8bde-438e306547e2&is_lhls=0
