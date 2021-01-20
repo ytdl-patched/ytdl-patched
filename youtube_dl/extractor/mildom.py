@@ -22,7 +22,6 @@ from ..compat import (
 class MildomIE(InfoExtractor):
     IE_NAME = 'mildom'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
-    _WORKING = False
     _GUEST_ID = None
     _DISPATCHER_CONFIG = None
 
@@ -34,7 +33,7 @@ class MildomIE(InfoExtractor):
 
         enterstudio = self._call_api(
             'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', video_id,
-            note='Downloading live server list', query={'user_id': video_id})
+            note='Downloading live metadata', query={'user_id': video_id})
 
         # e.g. Minecraft
         title = try_get(
@@ -147,19 +146,17 @@ class MildomIE(InfoExtractor):
 
     def guest_id(self):
         'getGuestId'
-        if self._get_cookies('https://www.mildom.com').get('gid'):
-            return self._get_cookies('https://www.mildom.com').get('gid').value
         if self._GUEST_ID:
             return self._GUEST_ID
-        self._GUEST_ID = self._call_api(
-            'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
-            note='Downloading guest token', init=True) or \
-            self._get_cookies('https://www.mildom.com').get('gid').value or \
-            ''
-        if self._GUEST_ID:
-            return self._GUEST_ID
-        else:
-            return self.guest_id()
+        self._GUEST_ID = try_get(
+            self, (
+                lambda x: x._call_api(
+                    'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
+                    note='Downloading guest token', init=True)['body']['guest_id'] or None,
+                lambda x: x._get_cookies('https://www.mildom.com').get('gid').value,
+                lambda x: x._get_cookies('https://m.mildom.com').get('gid').value,
+            ), compat_str) or ''
+        return self._GUEST_ID
 
     def lang_code(self):
         'getCurrentLangCode'
