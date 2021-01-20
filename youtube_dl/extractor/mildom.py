@@ -66,14 +66,14 @@ class MildomIE(InfoExtractor):
         r = {
             'timestamp': self.iso_timestamp(),
             '__guest_id': '' if init else self.guest_id(),
-            '__location': self.location(),
-            '__country': self.country(),
-            '__cluster': self.cluster(),
-            '__platform': "web",
+            '__location': self._fetch_dispatcher_config()['location'],
+            '__country': self._fetch_dispatcher_config()['country'],
+            '__cluster': self._fetch_dispatcher_config()['cluster'],
+            '__platform': 'web',
             '__la': self.lang_code(),
-            '__pcv': "v2.9.44",
-            'sfr': "pc",
-            'accessToken': self.access_token(),
+            '__pcv': 'v2.9.44',
+            'sfr': 'pc',
+            'accessToken': '',
         }
         r.update(headers)
         return r
@@ -85,16 +85,16 @@ class MildomIE(InfoExtractor):
                 note='Downloading dispatcher_config', data=json.dumps({
                     'protover': 0,
                     'data': base64.b64encode(json.dumps({
-                        "fr": "web",
-                        "sfr": "pc",
-                        "devi": "Windows",
-                        "la": "ja",
-                        "gid": None,
-                        "loc": "",
-                        "clu": "",
-                        "wh": "1919*810",  # don't google this magic number!
-                        "rtm": self.iso_timestamp(),
-                        "ua": std_headers['User-Agent'],
+                        'fr': 'web',
+                        'sfr': 'pc',
+                        'devi': 'Windows',
+                        'la': 'ja',
+                        'gid': None,
+                        'loc': '',
+                        'clu': '',
+                        'wh': '1919*810',  # don't google this magic number!
+                        'rtm': self.iso_timestamp(),
+                        'ua': std_headers['User-Agent'],
                     }).encode('utf8')).decode('utf8').replace('\n', ''),
                 }).encode('utf8'))
             self._DISPATCHER_CONFIG = json.loads(base64.b64decode(tmp['data']))
@@ -102,11 +102,11 @@ class MildomIE(InfoExtractor):
 
     @staticmethod
     def iso_timestamp():
-        "new Date().toISOString()"
+        'new Date().toISOString()'
         return datetime.utcnow().isoformat()[0:-3] + 'Z'
 
     def guest_id(self):
-        "getGuestId"
+        'getGuestId'
         if self._get_cookies('https://www.mildom.com').get('gid'):
             return self._get_cookies('https://www.mildom.com').get('gid').value
         if self._GUEST_ID:
@@ -120,21 +120,6 @@ class MildomIE(InfoExtractor):
         else:
             return self.guest_id()
 
-    def location(self):
-        "getLocation"
-        return self._fetch_dispatcher_config()['location']
-
-    def cluster(self):
-        "getCluster"
-        return self._fetch_dispatcher_config()['cluster']
-
-    def country(self):
-        "getCountry"
-        return self._fetch_dispatcher_config()['country']
-
     def lang_code(self):
-        "getCurrentLangCode"
+        'getCurrentLangCode'
         return 'ja'
-
-    def access_token(self):
-        return ''
