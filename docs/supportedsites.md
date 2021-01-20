@@ -973,6 +973,8 @@
  - **ToypicsUser**: Toypics user profile
  - **TrailerAddict** (Currently broken)
  - **Trilulilu**
+ - **Trovo**
+ - **TrovoVod**
  - **TruNews**
  - **TruTV**
  - **Tube8**
