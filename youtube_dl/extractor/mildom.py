@@ -32,10 +32,9 @@ class MildomIE(InfoExtractor):
 
         webpage = self._download_webpage(url, video_id)
 
-        enterstudio_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', self._common_queries({
-            'user_id': video_id,
-        }))
-        enterstudio = self._download_json(enterstudio_url, video_id, note='Downloading live server list')
+        enterstudio = self._call_api(
+            'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', video_id,
+            note='Downloading live server list', query={'user_id': video_id})
 
         # e.g. Minecraft
         title = try_get(
@@ -56,11 +55,12 @@ class MildomIE(InfoExtractor):
                 lambda x: x['body']['loginname'],
             ), compat_str)
 
-        servers_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', self._common_queries({
-            'user_id': video_id,
-            'live_server_type': 'hls',
-        }))
-        servers = self._download_json(servers_url, video_id, note='Downloading live server list')
+        servers = self._call_api(
+            'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', video_id,
+            note='Downloading live server list', query={
+                'user_id': video_id,
+                'live_server_type': 'hls',
+            })
 
         stream_query = self._common_queries({
             'streamReqId': random_uuidv4(),
@@ -87,11 +87,16 @@ class MildomIE(InfoExtractor):
             'title': title,
             'description': description,
             'uploader': uploader,
+            'uploader_id': video_id,
             'formats': formats,
             'is_live': True,
         }
 
-    def _common_queries(self, headers={}, init=False):
+    def _call_api(self, url, video_id, query={}, note='Downloading JSON metadata', init=False):
+        url = update_url_query(url, self._common_queries(query, init=init))
+        return self._download_json(url, video_id, note=note)
+
+    def _common_queries(self, query={}, init=False):
         r = {
             'timestamp': self.iso_timestamp(),
             '__guest_id': '' if init else self.guest_id(),
@@ -104,7 +109,7 @@ class MildomIE(InfoExtractor):
             'sfr': 'pc',
             'accessToken': '',
         }
-        r.update(headers)
+        r.update(query)
         return r
 
     def _fetch_dispatcher_config(self):
@@ -140,10 +145,9 @@ class MildomIE(InfoExtractor):
             return self._get_cookies('https://www.mildom.com').get('gid').value
         if self._GUEST_ID:
             return self._GUEST_ID
-        h5init_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', self._common_queries(init=True))
-        self._GUEST_ID = self._download_json(
-            h5init_url, 'initialization',
-            note='Downloading guest token')['body']['guest_id']
+        self._GUEST_ID = self._call_api(
+            'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
+            note='Downloading guest token', init=True)
         if self._GUEST_ID:
             return self._GUEST_ID
         else:
@@ -154,3 +158,4 @@ class MildomIE(InfoExtractor):
         return 'ja'
 
 # VOD: https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio?timestamp=2021-01-20T05:12:57.292Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan%7CTokyo&__country=&__cluster=aws_japan&__platform=web&__la=ja&sfr=pc&accessToken=&user_id=10317530
+# m3u8: https://d3ooprpqd2179o.cloudfront.net/vod/jp/10317530/10317530-c03qultaks9btgbruo10/origin/raw/10317530-c03qultaks9btgbruo10_raw.m3u8?timestamp=2021-01-20T05:32:42.670Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan|Tokyo&__country=Japan&__cluster=aws_japan&__platform=web&__la=ja&__pcv=v2.9.46&sfr=pc&accessToken=&streamReqId=75eda67c-63e5-4325-8bde-438e306547e2&is_lhls=0
