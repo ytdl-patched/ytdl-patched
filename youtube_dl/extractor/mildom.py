@@ -94,6 +94,8 @@ class MildomBaseIE(InfoExtractor):
         'getCurrentLangCode'
         return 'ja'
 
+# python3 -m youtube_dl https://www.mildom.com/10534224 -o - 2>&1 | ffmpeg -i - -f null /dev/null
+
 
 class MildomIE(MildomBaseIE):
     IE_NAME = 'mildom'
@@ -165,15 +167,10 @@ class MildomIE(MildomBaseIE):
             'is_live': True,
         }
 
-# VOD: https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio?timestamp=2021-01-20T05:12:57.292Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan%7CTokyo&__country=&__cluster=aws_japan&__platform=web&__la=ja&sfr=pc&accessToken=&user_id=10317530
-# m3u8: https://d3ooprpqd2179o.cloudfront.net/vod/jp/10317530/10317530-c03qultaks9btgbruo10/origin/raw/10317530-c03qultaks9btgbruo10_raw.m3u8?timestamp=2021-01-20T05:32:42.670Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan|Tokyo&__country=Japan&__cluster=aws_japan&__platform=web&__la=ja&__pcv=v2.9.46&sfr=pc&accessToken=&streamReqId=75eda67c-63e5-4325-8bde-438e306547e2&is_lhls=0
-
 
 class MildomVodIE(MildomBaseIE):
     IE_NAME = 'mildom:vod'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/playback/(?P<user_id>\d+)/(?P<id>(?P=user_id)-[a-zA-Z0-9]+)'
-    # Proxy is not ready
-    _WORKING = False
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -188,7 +185,6 @@ class MildomVodIE(MildomBaseIE):
             note='Downloading playback metadata', query={
                 'v_id': video_id,
             })['playback']
-        print(autoplay)
 
         # e.g. Minecraft
         title = try_get(
@@ -210,18 +206,20 @@ class MildomVodIE(MildomBaseIE):
         audio_formats = [{
             'url': autoplay['audio_url'],
             'format_id': 'audio',
-            'protocol': 'm3u8',
-            'acodec': 'aac',
+            'protocol': 'm3u8_native',
             'vcodec': 'none',
+            'acodec': 'aac',
         }]
         video_formats = []
         for fmt in autoplay['video_link']:
             video_formats.append({
-                'id': 'video-%s' % fmt['name'],
+                'format_id': 'video-%s' % fmt['name'],
                 'url': fmt['url'],
-                'protocol': 'm3u8',
+                'protocol': 'm3u8_native',
                 'width': fmt['level'],
-                'height': fmt['level'] * autoplay['video_height'] / autoplay['video_width'],
+                'height': int(fmt['level'] * autoplay['video_height'] / autoplay['video_width']),
+                'vcodec': 'h264',
+                'acodec': 'aac',
             })
 
         stream_query = self._common_queries({
@@ -230,11 +228,13 @@ class MildomVodIE(MildomBaseIE):
         del stream_query['timestamp']
         formats = audio_formats + video_formats
         for fmt in formats:
+            fmt['ext'] = 'mp4'
             parsed = compat_urlparse.urlparse(fmt['url'])
+            stream_query['path'] = parsed.path[5:]
             parsed = parsed._replace(
                 netloc='bookish-octo-barnacle.vercel.app',
                 query=compat_urllib_parse_urlencode(stream_query, True),
-                path='/api' + parsed.path)
+                path='/api/vod2/proxy')
             fmt['url'] = compat_urlparse.urlunparse(parsed)
 
         self._sort_formats(formats)
