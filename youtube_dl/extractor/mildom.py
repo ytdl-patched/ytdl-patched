@@ -10,10 +10,12 @@ from ..utils import (
     std_headers,
     update_url_query,
     random_uuidv4,
+    try_get,
 )
 from ..compat import (
     compat_urlparse,
     compat_urllib_parse_urlencode,
+    compat_str,
 )
 
 
@@ -28,7 +30,32 @@ class MildomIE(InfoExtractor):
         video_id = self._match_id(url)
         url = 'https://www.mildom.com/%s' % video_id
 
-        self._download_webpage(url, video_id)
+        webpage = self._download_webpage(url, video_id)
+
+        enterstudio_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', self._common_queries({
+            'user_id': video_id,
+        }))
+        enterstudio = self._download_json(enterstudio_url, video_id, note='Downloading live server list')
+
+        # e.g. Minecraft
+        title = try_get(
+            enterstudio, (
+                lambda x: self._html_search_meta('twitter:description', webpage),
+                lambda x: x['body']['anchor_intro'],
+            ), compat_str)
+        # e.g. recording gameplay for my YouTube
+        description = try_get(
+            enterstudio, (
+                lambda x: x['body']['intro'],
+                lambda x: x['body']['live_intro'],
+            ), compat_str)
+        # e.g. @imagDonaldTrump
+        uploader = try_get(
+            enterstudio, (
+                lambda x: self._html_search_meta('twitter:title', webpage),
+                lambda x: x['body']['loginname'],
+            ), compat_str)
+
         servers_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', self._common_queries({
             'user_id': video_id,
             'live_server_type': 'hls',
@@ -57,7 +84,9 @@ class MildomIE(InfoExtractor):
 
         return {
             'id': video_id,
-            'title': 'ad hoc title',
+            'title': title,
+            'description': description,
+            'uploader': uploader,
             'formats': formats,
             'is_live': True,
         }
@@ -123,3 +152,5 @@ class MildomIE(InfoExtractor):
     def lang_code(self):
         'getCurrentLangCode'
         return 'ja'
+
+# VOD: https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio?timestamp=2021-01-20T05:12:57.292Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan%7CTokyo&__country=&__cluster=aws_japan&__platform=web&__la=ja&sfr=pc&accessToken=&user_id=10317530
