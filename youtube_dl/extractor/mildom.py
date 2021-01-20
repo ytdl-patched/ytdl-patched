@@ -17,7 +17,6 @@ from ..compat import (
 )
 
 
-# pretty-printed main.js https://gist.githubusercontent.com/nao20010128nao/128d4e7ead01042f90655d4ae81e9f49/raw/cb800c51840ce5ba47a3068c8474e46134e10d69/mildom.js
 class MildomIE(InfoExtractor):
     IE_NAME = 'mildom'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
@@ -30,37 +29,16 @@ class MildomIE(InfoExtractor):
         url = 'https://www.mildom.com/%s' % video_id
 
         self._download_webpage(url, video_id)
-        self._fetch_dispatcher_config()
-        servers_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', {
-            'timestamp': self.iso_timestamp(),
-            '__guest_id': self.guest_id(),
-            '__location': self.location(),
-            '__country': self.country(),
-            '__cluster': self.cluster(),
-            '__platform': "web",
-            '__la': self.lang_code(),
-            '__pcv': "v2.9.44",
-            'sfr': "pc",
-            'accessToken': self.access_token(),
+        servers_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', self._common_queries({
             'user_id': video_id,
             'live_server_type': 'hls',
-        })
+        }))
         servers = self._download_json(servers_url, video_id, note='Downloading live server list')
 
-        stream_query = {
-            'timestamp': self.iso_timestamp(),
-            '__guest_id': self.guest_id(),
-            '__location': self.location(),
-            '__country': self.country(),
-            '__cluster': self.cluster(),
-            '__platform': "web",
-            '__la': self.lang_code(),
-            '__pcv': "v2.9.44",
-            'sfr': "pc",
-            'accessToken': self.access_token(),
+        stream_query = self._common_queries({
             'streamReqId': random_uuidv4(),
             'is_lhls': '0',
-        }
+        })
         m3u8_url = update_url_query(servers['body']['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
         formats = self._extract_m3u8_formats(m3u8_url, video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
@@ -83,38 +61,44 @@ class MildomIE(InfoExtractor):
             'formats': formats,
             'is_live': True,
         }
-    # content of getHttpCommonParams for reference:
-    # timestamp: new Date().toISOString(),
-    # __guest_id: r.a.getGuestId(),
-    # __location: r.a.getLocation(),
-    # __country: r.a.getCountry(),
-    # __cluster: r.a.getCluster(),
-    # __platform: "web",
-    # __la: u.getCurrentLangCode(),
-    # __pcv: "v2.9.44",
-    # sfr: "pc",
-    # accessToken: r.a.getAccessToken(),
+
+    def _common_queries(self, headers={}, init=False):
+        r = {
+            'timestamp': self.iso_timestamp(),
+            '__guest_id': '' if init else self.guest_id(),
+            '__location': self.location(),
+            '__country': self.country(),
+            '__cluster': self.cluster(),
+            '__platform': "web",
+            '__la': self.lang_code(),
+            '__pcv': "v2.9.44",
+            'sfr': "pc",
+            'accessToken': self.access_token(),
+        }
+        r.update(headers)
+        return r
 
     def _fetch_dispatcher_config(self):
-        tmp = self._download_json(
-            'https://disp.mildom.com/serverListV2', 'initialization',
-            note='Downloading dispatcher_config', data=json.dumps({
-                'protover': 0,
-                'data': base64.b64encode(json.dumps({
-                    "fr": "web",
-                    "sfr": "pc",
-                    "devi": "Windows",
-                    "la": "ja",
-                    "gid": None,
-                    "loc": "",
-                    "clu": "",
-                    "wh": "1919*810",  # don't google this magic number!
-                    "rtm": self.iso_timestamp(),
-                    "ua": std_headers['User-Agent'],
-                }).encode('utf8')).decode('utf8').replace('\n', '')
-            }).encode('utf8'))
-        self._DISPATCHER_CONFIG = json.loads(base64.b64decode(tmp['data']))
-        print(self._DISPATCHER_CONFIG)
+        if not self._DISPATCHER_CONFIG:
+            tmp = self._download_json(
+                'https://disp.mildom.com/serverListV2', 'initialization',
+                note='Downloading dispatcher_config', data=json.dumps({
+                    'protover': 0,
+                    'data': base64.b64encode(json.dumps({
+                        "fr": "web",
+                        "sfr": "pc",
+                        "devi": "Windows",
+                        "la": "ja",
+                        "gid": None,
+                        "loc": "",
+                        "clu": "",
+                        "wh": "1919*810",  # don't google this magic number!
+                        "rtm": self.iso_timestamp(),
+                        "ua": std_headers['User-Agent'],
+                    }).encode('utf8')).decode('utf8').replace('\n', ''),
+                }).encode('utf8'))
+            self._DISPATCHER_CONFIG = json.loads(base64.b64decode(tmp['data']))
+        return self._DISPATCHER_CONFIG
 
     @staticmethod
     def iso_timestamp():
@@ -127,18 +111,7 @@ class MildomIE(InfoExtractor):
             return self._get_cookies('https://www.mildom.com').get('gid').value
         if self._GUEST_ID:
             return self._GUEST_ID
-        h5init_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', {
-            'timestamp': self.iso_timestamp(),
-            '__guest_id': '',
-            '__location': self.location(),
-            '__country': self.country(),
-            '__cluster': self.cluster(),
-            '__platform': "web",
-            '__la': self.lang_code(),
-            '__pcv': "v2.9.44",
-            'sfr': "pc",
-            'accessToken': self.access_token(),
-        })
+        h5init_url = update_url_query('https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', self._common_queries(init=True))
         self._GUEST_ID = self._download_json(
             h5init_url, 'initialization',
             note='Downloading guest token')['body']['guest_id']
@@ -149,25 +122,19 @@ class MildomIE(InfoExtractor):
 
     def location(self):
         "getLocation"
-        # requires LocalStorage or current IP address. returning constant for now
-        return 'Japan|Tokyo'
+        return self._fetch_dispatcher_config()['location']
 
     def cluster(self):
         "getCluster"
-        # requires LocalStorage. returning constant for now
-        return 'aws_japan'
+        return self._fetch_dispatcher_config()['cluster']
 
     def country(self):
         "getCountry"
-        # requires LocalStorage or current IP address. returning constant for now
-        return 'Japan'
+        return self._fetch_dispatcher_config()['country']
 
     def lang_code(self):
         "getCurrentLangCode"
-        # requires LocalStorage or user preference(?). returning constant for now
         return 'ja'
 
     def access_token(self):
-        "getCurrentLangCode"
-        # requires LocalStorage. returning constant for now
         return ''
