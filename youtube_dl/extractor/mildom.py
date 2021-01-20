@@ -25,7 +25,7 @@ class MildomBaseIE(InfoExtractor):
 
     def _call_api(self, url, video_id, query={}, note='Downloading JSON metadata', init=False):
         url = update_url_query(url, self._common_queries(query, init=init))
-        return self._download_json(url, video_id, note=note)
+        return self._download_json(url, video_id, note=note)['body']
 
     def _common_queries(self, query={}, init=False):
         dc = self._fetch_dispatcher_config()
@@ -84,7 +84,7 @@ class MildomBaseIE(InfoExtractor):
             self, (
                 lambda x: x._call_api(
                     'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
-                    note='Downloading guest token', init=True)['body']['guest_id'] or None,
+                    note='Downloading guest token', init=True)['guest_id'] or None,
                 lambda x: x._get_cookies('https://www.mildom.com').get('gid').value,
                 lambda x: x._get_cookies('https://m.mildom.com').get('gid').value,
             ), compat_str) or ''
@@ -95,7 +95,7 @@ class MildomBaseIE(InfoExtractor):
         return 'ja'
 
 
-class MildomIE(InfoExtractor):
+class MildomIE(MildomBaseIE):
     IE_NAME = 'mildom'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
 
@@ -113,19 +113,19 @@ class MildomIE(InfoExtractor):
         title = try_get(
             enterstudio, (
                 lambda x: self._html_search_meta('twitter:description', webpage),
-                lambda x: x['body']['anchor_intro'],
+                lambda x: x['anchor_intro'],
             ), compat_str)
         # e.g. recording gameplay for my YouTube
         description = try_get(
             enterstudio, (
-                lambda x: x['body']['intro'],
-                lambda x: x['body']['live_intro'],
+                lambda x: x['intro'],
+                lambda x: x['live_intro'],
             ), compat_str)
         # e.g. @imagDonaldTrump
         uploader = try_get(
             enterstudio, (
                 lambda x: self._html_search_meta('twitter:title', webpage),
-                lambda x: x['body']['loginname'],
+                lambda x: x['loginname'],
             ), compat_str)
 
         servers = self._call_api(
@@ -139,7 +139,7 @@ class MildomIE(InfoExtractor):
             'streamReqId': random_uuidv4(),
             'is_lhls': '0',
         })
-        m3u8_url = update_url_query(servers['body']['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
+        m3u8_url = update_url_query(servers['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
         formats = self._extract_m3u8_formats(m3u8_url, video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
@@ -167,3 +167,83 @@ class MildomIE(InfoExtractor):
 
 # VOD: https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio?timestamp=2021-01-20T05:12:57.292Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan%7CTokyo&__country=&__cluster=aws_japan&__platform=web&__la=ja&sfr=pc&accessToken=&user_id=10317530
 # m3u8: https://d3ooprpqd2179o.cloudfront.net/vod/jp/10317530/10317530-c03qultaks9btgbruo10/origin/raw/10317530-c03qultaks9btgbruo10_raw.m3u8?timestamp=2021-01-20T05:32:42.670Z&__guest_id=pc-gp-64d28d40-5c49-4314-bb15-3743fa57779a&__location=Japan|Tokyo&__country=Japan&__cluster=aws_japan&__platform=web&__la=ja&__pcv=v2.9.46&sfr=pc&accessToken=&streamReqId=75eda67c-63e5-4325-8bde-438e306547e2&is_lhls=0
+
+
+class MildomVodIE(MildomBaseIE):
+    IE_NAME = 'mildom:vod'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/playback/(?P<user_id>\d+)/(?P<id>(?P=user_id)-[a-zA-Z0-9]+)'
+    # Proxy is not ready
+    _WORKING = False
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        m = self._VALID_URL_RE.match(url)
+        user_id = m.group('user_id')
+        url = 'https://www.mildom.com/playback/%s/%s' % (user_id, video_id)
+
+        webpage = self._download_webpage(url, video_id)
+
+        autoplay = self._call_api(
+            'https://cloudac.mildom.com/nonolive/videocontent/playback/getPlaybackDetail', video_id,
+            note='Downloading playback metadata', query={
+                'v_id': video_id,
+            })['playback']
+        print(autoplay)
+
+        # e.g. Minecraft
+        title = try_get(
+            autoplay, (
+                lambda x: self._html_search_meta('og:description', webpage),
+                lambda x: x['title'],
+            ), compat_str)
+        # e.g. recording gameplay for my YouTube
+        description = try_get(
+            autoplay, (
+                lambda x: x['video_intro'],
+            ), compat_str)
+        # e.g. @imagDonaldTrump
+        uploader = try_get(
+            autoplay, (
+                lambda x: x['author_info']['login_name'],
+            ), compat_str)
+
+        audio_formats = [{
+            'url': autoplay['audio_url'],
+            'format_id': 'audio',
+            'protocol': 'm3u8',
+            'acodec': 'aac',
+            'vcodec': 'none',
+        }]
+        video_formats = []
+        for fmt in autoplay['video_link']:
+            video_formats.append({
+                'id': 'video-%s' % fmt['name'],
+                'url': fmt['url'],
+                'protocol': 'm3u8',
+                'width': fmt['level'],
+                'height': fmt['level'] * autoplay['video_height'] / autoplay['video_width'],
+            })
+
+        stream_query = self._common_queries({
+            'is_lhls': '0',
+        })
+        del stream_query['timestamp']
+        formats = audio_formats + video_formats
+        for fmt in formats:
+            parsed = compat_urlparse.urlparse(fmt['url'])
+            parsed = parsed._replace(
+                netloc='bookish-octo-barnacle.vercel.app',
+                query=compat_urllib_parse_urlencode(stream_query, True),
+                path='/api' + parsed.path)
+            fmt['url'] = compat_urlparse.urlunparse(parsed)
+
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'description': description,
+            'uploader': uploader,
+            'uploader_id': user_id,
+            'formats': formats,
+        }
