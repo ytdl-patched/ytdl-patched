@@ -516,6 +516,7 @@
  - **MGTV**: 芒果TV
  - **MiaoPai**
  - **mildom**
+ - **mildom:vod** (Currently broken)
  - **minds**
  - **minds:channel**
  - **minds:group**
@@ -956,7 +957,7 @@
  - **TikTok**
  - **TikTokUser** (Currently broken)
  - **tinypic**: tinypic.com videos
- - **tktube**
+ - **tktube** (Currently broken)
  - **TMZ**
  - **TMZArticle**
  - **TNAFlix**
