@@ -16,7 +16,7 @@ from .twitter import TwitterIE
 
 class PeingIE(InfoExtractor):
     IE_NAME = 'peing'
-    _VALID_URL = r'https?://(?:www\.)?peing\.net/(?:../)?q/(?P<id>[a-f0-9-]{36})'
+    _VALID_URL = r'https?://(?:www\.)?peing\.net/(?:(?:en|ja|zh-CN|zh-TW|ko|dt|th)/)?q/(?P<id>[a-f0-9-]{36})'
     # extractors to be searched against
     _SEARCH_IE = (YoutubeIE, YoutubePlaylistIE, YoutubeTabIE, TwitterIE)
 
