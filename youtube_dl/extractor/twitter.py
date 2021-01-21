@@ -422,6 +422,10 @@ class TwitterIE(TwitterBaseIE):
         # poll4choice_video card
         'url': 'https://twitter.com/SouthamptonFC/status/1347577658079641604',
         'only_matching': True,
+    }, {
+        # summary_large_image card
+        'url': 'https://twitter.com/muramurasa/status/1351970239769001984',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
@@ -524,7 +528,7 @@ class TwitterIE(TwitterBaseIE):
                         'url': get_binding_value('broadcast_url'),
                         'ie_key': TwitterBroadcastIE.ie_key(),
                     })
-                elif card_name == 'summary':
+                elif re.match(r'^summary(_.+)?$', card_name):
                     info.update({
                         '_type': 'url',
                         'url': get_binding_value('card_url'),
