@@ -903,6 +903,7 @@ from .patreon import PatreonIE
 from .pbs import PBSIE
 from .pearvideo import PearVideoIE
 from .peertube import PeerTubeIE
+from .peing import PeingIE
 from .people import PeopleIE
 from .performgroup import PerformGroupIE
 from .periscope import (
