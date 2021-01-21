@@ -11,17 +11,17 @@ from .youtube import (
     YoutubePlaylistIE,
     YoutubeTabIE,
 )
+from .twitter import TwitterIE
 
 
 class PeingIE(InfoExtractor):
     IE_NAME = 'peing'
     _VALID_URL = r'https?://(?:www\.)?peing\.net/(?:../)?q/(?P<id>[a-f0-9-]{36})'
     # extractors to be searched against
-    _SEARCH_IE = (YoutubeIE, YoutubePlaylistIE, YoutubeTabIE)
+    _SEARCH_IE = (YoutubeIE, YoutubePlaylistIE, YoutubeTabIE, TwitterIE)
 
     _TEST = {
         'url': 'https://peing.net/ja/q/483f91de-f607-4384-ba5a-28ca22a3aa67',
-        'only_matching': True,
         'info_dict': {},
         'add_ie': YoutubeIE.ie_key(),
     }
