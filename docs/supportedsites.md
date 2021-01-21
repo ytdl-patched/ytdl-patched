@@ -693,6 +693,7 @@
  - **pcmag**
  - **PearVideo**
  - **PeerTube**
+ - **peing**
  - **People**
  - **PerformGroup**
  - **periscope**: Periscope
