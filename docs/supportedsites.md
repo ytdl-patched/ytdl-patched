@@ -514,8 +514,9 @@
  - **Mgoon**
  - **MGTV**: 芒果TV
  - **MiaoPai**
- - **mildom**
- - **mildom:vod**
+ - **mildom**: Record ongoing live by specific user in Mildom
+ - **mildom:user:vod**: Download all VODs from specific user in Mildom
+ - **mildom:vod**: Download a VOD in Mildom
  - **minds**
  - **minds:channel**
  - **minds:group**
