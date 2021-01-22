@@ -34,6 +34,7 @@ class PeingIE(InfoExtractor):
             ('twitter:image:alt', 'og:image:alt'),
             webpage) or self._search_regex(
             (r'<img\s+alt="(.+?)"\s*class="question-eye-catch"\s*onerror="',
+             r'data-item-body=\'(.+?)\'',
              r'<title>(.+?)\s*\|'),
             webpage, 'question text', fatal=False) or ''
         if not question_text:
