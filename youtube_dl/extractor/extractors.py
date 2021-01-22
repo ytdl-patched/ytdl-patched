@@ -1453,7 +1453,6 @@ from .viewlift import (
     ViewLiftIE,
     ViewLiftEmbedIE,
 )
-from .viewsource import ViewSourceIE
 from .viidea import ViideaIE
 from .vimeo import (
     VimeoIE,

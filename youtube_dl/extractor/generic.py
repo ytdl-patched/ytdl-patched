@@ -2320,6 +2320,10 @@ class GenericIE(InfoExtractor):
     def _real_extract(self, url):
         if url.startswith('//'):
             return self.url_result(self.http_scheme() + url)
+        mobj = re.match(r'^view-source:(.+)$', url)
+        if mobj:
+            self._downloader.report_warning('URL is pasted with "view-source:" appended')
+            return self.url_result(mobj.group(1))
 
         parsed_url = compat_urlparse.urlparse(url)
         if not parsed_url.scheme:
