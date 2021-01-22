@@ -30,20 +30,33 @@ class PeingIE(InfoExtractor):
         question_id = self._match_id(url)
         webpage = self._download_webpage(url, question_id)
 
-        content = self._html_search_meta(
+        question_text = self._html_search_meta(
             ('twitter:image:alt', 'og:image:alt'),
             webpage) or self._search_regex(
             (r'<img\s+alt="(.+?)"\s*class="question-eye-catch"\s*onerror="',
              r'<title>(.+?)\s*\|'),
-            webpage, 'alternative text', fatal=False)
-        if not content:
-            raise ExtractorError('Cannot extract alternative text')
+            webpage, 'question text', fatal=False) or ''
+        if not question_text:
+            self.report_warning('Cannot extract question text')
 
-        matches = [self.url_result(x.group(0)) for ie in self._SEARCH_IE for x in re.finditer(self.remove_anchors(ie._VALID_URL), content)]
+        answer_text = self._html_search_meta(
+            'description', webpage) or self._search_regex(
+            r"<p\s+class=(['\"])text\1>(.+?)</p>", webpage,
+            'answer text', fatal=False, group=2) or ''
+        if not question_text and not answer_text:
+            raise ExtractorError('Nothing was extracted')
+        if not answer_text:
+            self.report_warning('Cannot extract answer text')
+
+        matches = set(
+            x.group(0)
+            for message in (question_text, answer_text)
+            for ie in self._SEARCH_IE
+            for x in re.finditer(self.remove_anchors(ie._VALID_URL), message))
         if not matches:
             raise ExtractorError('There is no video URLs here', expected=True)
 
-        return self.playlist_result(matches, question_id)
+        return self.playlist_result([self.url_result(x) for x in matches], question_id)
 
     @staticmethod
     def remove_anchors(regex):
