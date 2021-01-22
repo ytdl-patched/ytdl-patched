@@ -672,6 +672,7 @@ from .microsoftvirtualacademy import (
 from .mildom import (
     MildomIE,
     MildomVodIE,
+    MildomUserVodIE,
 )
 from .minds import (
     MindsIE,

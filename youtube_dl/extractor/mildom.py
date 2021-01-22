@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+import itertools
 import json
 import base64
 
@@ -99,6 +100,7 @@ class MildomBaseIE(InfoExtractor):
 
 class MildomIE(MildomBaseIE):
     IE_NAME = 'mildom'
+    IE_DESC = 'Record ongoing live by specific user in Mildom'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
 
     def _real_extract(self, url):
@@ -148,6 +150,7 @@ class MildomIE(MildomBaseIE):
         }, note='Downloading m3u8 information')
         del stream_query['streamReqId'], stream_query['timestamp']
         for fmt in formats:
+            # source code behind bookish-octo-barnacle.vercel.app is here: https://github.com/nao20010128nao/bookish-octo-barnacle/
             parsed = compat_urlparse.urlparse(fmt['url'])
             parsed = parsed._replace(
                 netloc='bookish-octo-barnacle.vercel.app',
@@ -170,6 +173,7 @@ class MildomIE(MildomBaseIE):
 
 class MildomVodIE(MildomBaseIE):
     IE_NAME = 'mildom:vod'
+    IE_DESC = 'Download a VOD in Mildom'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/playback/(?P<user_id>\d+)/(?P<id>(?P=user_id)-[a-zA-Z0-9]+)'
 
     def _real_extract(self, url):
@@ -247,3 +251,43 @@ class MildomVodIE(MildomBaseIE):
             'uploader_id': user_id,
             'formats': formats,
         }
+
+
+# User's ongoing live can be done via MildomIE, so this is only for VODs
+class MildomUserVodIE(MildomBaseIE):
+    IE_NAME = 'mildom:user:vod'
+    IE_DESC = 'Download all VODs from specific user in Mildom'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/profile/(?P<id>\d+)'
+    _TESTS = [{
+        'url': 'https://www.mildom.com/profile/10093333',
+        'info_dict': {
+            'id': '10093333',
+            'title': 'Uploads from ねこばたけ',
+        },
+        'playlist_mincount': 351,
+    }]
+
+    def _real_extract(self, url):
+        user_id = self._match_id(url)
+
+        self._downloader.report_warning('To download ongoing live, please use "https://www.mildom.com/%s" instead. This will list up VODs belonging to user.' % user_id)
+
+        profile = self._call_api(
+            'https://cloudac.mildom.com/nonolive/gappserv/user/profileV2', user_id,
+            query={'user_id': user_id}, note='Downloading user profile')['user_info']
+
+        results = []
+        for page in itertools.count(1):
+            reply = self._call_api(
+                'https://cloudac.mildom.com/nonolive/videocontent/profile/playbackList',
+                user_id, note='Downloading page %d' % page, query={
+                    'user_id': user_id,
+                    'page': page,
+                    'limit': '30',
+                })
+            if not reply:
+                break
+            results.extend('https://www.mildom.com/playback/%s/%s' % (user_id, x['v_id']) for x in reply)
+        return self.playlist_result([
+            self.url_result(u, ie=MildomVodIE.ie_key()) for u in results
+        ], user_id, 'Uploads from %s' % profile['loginname'])
