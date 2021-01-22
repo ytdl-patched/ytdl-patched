@@ -196,8 +196,6 @@
  - **CNNArticle**
  - **CNNBlogs**
  - **ComedyCentral**
- - **ComedyCentralFullEpisodes**
- - **ComedyCentralShortname**
  - **ComedyCentralTV**
  - **CondeNast**: Condé Nast media group: Allure, Architectural Digest, Ars Technica, Bon Appétit, Brides, Condé Nast, Condé Nast Traveler, Details, Epicurious, GQ, Glamour, Golf Digest, SELF, Teen Vogue, The New Yorker, Vanity Fair, Vogue, W Magazine, WIRED
  - **CONtv**
@@ -970,7 +968,6 @@
  - **tokyomotion:user**
  - **tokyomotion:user:favs**
  - **ToonGoggles**
- - **Tosh**: Tosh.0
  - **tou.tv**
  - **Toypics**: Toypics video
  - **ToypicsUser**: Toypics user profile
