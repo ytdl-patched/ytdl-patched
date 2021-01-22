@@ -216,8 +216,8 @@ class MildomVodIE(MildomBaseIE):
                 'format_id': 'video-%s' % fmt['name'],
                 'url': fmt['url'],
                 'protocol': 'm3u8_native',
-                'width': fmt['level'],
-                'height': int(fmt['level'] * autoplay['video_height'] / autoplay['video_width']),
+                'width': fmt['level'] * autoplay['video_width'] // autoplay['video_height'],
+                'height': fmt['level'],
                 'vcodec': 'h264',
                 'acodec': 'aac',
             })
