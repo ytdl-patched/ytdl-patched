@@ -111,7 +111,7 @@ class VoicyChannelIE(VoicyBaseIE):
 
     @classmethod
     def suitable(cls, url):
-        return False if VoicyIE.suitable(url) else super(VoicyChannelIE, cls).suitable(url)
+        return not VoicyIE.suitable(url) and super(VoicyChannelIE, cls).suitable(url)
 
     def _real_extract(self, url):
         channel_id = self._match_id(url)
