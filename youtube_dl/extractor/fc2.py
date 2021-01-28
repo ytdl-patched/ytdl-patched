@@ -124,15 +124,14 @@ class FC2IE(InfoExtractor):
         info_data = self._download_json(
             'https://video.fc2.com/api/v3/videoplaylist/%s?sh=1&fs=0' % video_id, video_id,
             note='Downloading m3u8 playlist info')
-        playlists = info_data.get('playlist')
-        if playlists:
-            for (name, m3u8_url) in playlists.items():
-                formats.append({
-                    'format_id': 'hls-%s' % name,
-                    'url': 'https://video.fc2.com%s' % m3u8_url,
-                    'ext': 'mp4',
-                    'protocol': 'm3u8',
-                })
+        playlists = info_data.get('playlist') or {}
+        for (name, m3u8_url) in playlists.items():
+            formats.append({
+                'format_id': 'hls-%s' % name,
+                'url': 'https://video.fc2.com%s' % m3u8_url,
+                'ext': 'mp4',
+                'protocol': 'm3u8',
+            })
 
         if not formats:
             raise ExtractorError('Cannot download file. Are you logged in?')
