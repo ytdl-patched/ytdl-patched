@@ -112,6 +112,7 @@ class MildomIE(MildomBaseIE):
         enterstudio = self._call_api(
             'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', video_id,
             note='Downloading live metadata', query={'user_id': video_id})
+        result_video_id = enterstudio.get('log_id', video_id)
 
         # e.g. Minecraft
         title = try_get(
@@ -119,13 +120,13 @@ class MildomIE(MildomBaseIE):
                 lambda x: self._html_search_meta('twitter:description', webpage),
                 lambda x: x['anchor_intro'],
             ), compat_str)
-        # e.g. recording gameplay for my YouTube
+        # e.g. me playing Minecraft
         description = try_get(
             enterstudio, (
                 lambda x: x['intro'],
                 lambda x: x['live_intro'],
             ), compat_str)
-        # e.g. @imagDonaldTrump
+        # e.g. Donald F. Trump
         uploader = try_get(
             enterstudio, (
                 lambda x: self._html_search_meta('twitter:title', webpage),
@@ -133,7 +134,7 @@ class MildomIE(MildomBaseIE):
             ), compat_str)
 
         servers = self._call_api(
-            'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', video_id,
+            'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', result_video_id,
             note='Downloading live server list', query={
                 'user_id': video_id,
                 'live_server_type': 'hls',
@@ -144,7 +145,7 @@ class MildomIE(MildomBaseIE):
             'is_lhls': '0',
         })
         m3u8_url = update_url_query(servers['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
-        formats = self._extract_m3u8_formats(m3u8_url, video_id, 'mp4', headers={
+        formats = self._extract_m3u8_formats(m3u8_url, result_video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
         }, note='Downloading m3u8 information')
@@ -161,7 +162,7 @@ class MildomIE(MildomBaseIE):
         self._sort_formats(formats)
 
         return {
-            'id': video_id,
+            'id': result_video_id,
             'title': title,
             'description': description,
             'uploader': uploader,
@@ -196,12 +197,12 @@ class MildomVodIE(MildomBaseIE):
                 lambda x: self._html_search_meta('og:description', webpage),
                 lambda x: x['title'],
             ), compat_str)
-        # e.g. recording gameplay for my YouTube
+        # e.g. me playing Minecraft
         description = try_get(
             autoplay, (
                 lambda x: x['video_intro'],
             ), compat_str)
-        # e.g. @imagDonaldTrump
+        # e.g. Donald F. Trump
         uploader = try_get(
             autoplay, (
                 lambda x: x['author_info']['login_name'],
