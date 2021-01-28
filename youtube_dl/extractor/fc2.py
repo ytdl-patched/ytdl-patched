@@ -83,22 +83,24 @@ class FC2IE(InfoExtractor):
             self._downloader.cookiejar.clear_session_cookies()  # must clear
             self._login()
 
-        title = 'FC2 video %s' % video_id
+        title = None
         thumbnail = None
         if webpage is not None:
-            title = self._og_search_title(webpage, fatal=False) or self._search_regex(
+            title = self._search_regex(
                 r'<h2\s+(?:[a-zA-Z_-]+="[^"]+"\s+)*class="videoCnt_title"(?:[a-zA-Z_-]+="[^"]+"\s+)*>([^<]+)</h2>', webpage, 'Extracting title', video_id)
             thumbnail = self._og_search_thumbnail(webpage)
         refer = url.replace('/content/', '/a/content/') if '/a/content/' not in url else url
 
         mimi = hashlib.md5((video_id + '_gGddgPfeaf_gzyr').encode('utf-8')).hexdigest()
 
+        formats = []
+
         info_url = (
             'http://video.fc2.com/ginfo.php?mimi={1:s}&href={2:s}&v={0:s}&fversion=WIN%2011%2C6%2C602%2C180&from=2&otag=0&upid={0:s}&tk=null&'.
             format(video_id, mimi, compat_urllib_request.quote(refer, safe=b'').replace('.', '%2E')))
 
         info_webpage = self._download_webpage(
-            info_url, video_id, note='Downloading info page')
+            info_url, video_id, note='Downloading flv info page')
         info = compat_urlparse.parse_qs(info_webpage)
 
         if 'err_code' in info:
@@ -106,19 +108,44 @@ class FC2IE(InfoExtractor):
             self.report_warning(
                 'Error code was: %s... but still trying' % info['err_code'][0])
 
-        if 'filepath' not in info:
-            raise ExtractorError('Cannot download file. Are you logged in?')
+        if 'filepath' in info:
+            video_url = info['filepath'][0] + '?mid=' + info['mid'][0]
+            formats.append({
+                'format_id': 'flv',
+                'url': video_url,
+                'ext': 'flv',
+                'protocol': 'http',
+            })
 
-        video_url = info['filepath'][0] + '?mid=' + info['mid'][0]
         title_info = info.get('title')
         if title_info:
             title = title_info[0]
 
+        info_data = self._download_json(
+            'https://video.fc2.com/api/v3/videoplaylist/%s?sh=1&fs=0' % video_id, video_id,
+            note='Downloading m3u8 playlist info')
+        playlists = info_data.get('playlist')
+        if playlists:
+            for (name, m3u8_url) in playlists.items():
+                formats.append({
+                    'format_id': 'hls-%s' % name,
+                    'url': 'https://video.fc2.com%s' % m3u8_url,
+                    'ext': 'mp4',
+                    'protocol': 'm3u8',
+                })
+
+        if not formats:
+            raise ExtractorError('Cannot download file. Are you logged in?')
+
+        if not title:
+            title = 'FC2 video %s' % video_id
+
+        self._sort_formats(formats)
+
         return {
             'id': video_id,
             'title': title,
-            'url': video_url,
-            'ext': 'flv',
+            'formats': formats,
             'thumbnail': thumbnail,
         }
 
