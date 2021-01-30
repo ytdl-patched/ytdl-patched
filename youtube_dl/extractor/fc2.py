@@ -103,12 +103,8 @@ class FC2IE(InfoExtractor):
             info_url, video_id, note='Downloading flv info page')
         info = compat_urlparse.parse_qs(info_webpage)
 
-        if 'err_code' in info:
-            # most of the time we can still download wideo even if err_code is 403 or 602
-            self.report_warning(
-                'Error code was: %s... but still trying' % info['err_code'][0])
-
-        if 'filepath' in info:
+        if 'err_code' not in info and 'filepath' in info:
+            # flv download is not available if err_code is present
             video_url = info['filepath'][0] + '?mid=' + info['mid'][0]
             formats.append({
                 'format_id': 'flv',
