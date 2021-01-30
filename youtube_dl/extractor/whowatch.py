@@ -36,7 +36,7 @@ class WhoWatchIE(InfoExtractor):
         streams = live_data.get('streams') or []
 
         formats.extend(self._extract_m3u8_formats(
-            hls_url, video_id, ext='mp4', entry_protocol='m3u8_native',
+            hls_url, video_id, ext='mp4', entry_protocol='m3u8',
             m3u8_id='root', preference=len(streams) * 2))
 
         for i, fmt in enumerate(streams):
