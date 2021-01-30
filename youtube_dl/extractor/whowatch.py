@@ -13,7 +13,7 @@ from ..compat import (
 
 class WhoWatchIE(InfoExtractor):
     IE_NAME = 'whowatch'
-    _VALID_URL = r'https?://whowatch\.tv/viewer/(?P<id>\d+)/?'
+    _VALID_URL = r'https?://whowatch\.tv/(?:sp/)?(?:viewer|profile)/(?P<id>\d+)/?'
     META_API_URL = 'https://api.whowatch.tv/lives/%s'
     LIVE_API_URL = 'https://api.whowatch.tv/lives/%s/play'
 
