@@ -46,6 +46,7 @@ class Y2mateIE(InfoExtractor):
                     <td\s*.+?>.+?(?:data-ftype="(.+?)".+?)?(?:data-fquality="(.+?)".+?)?</td>\s* # download button
                 </tr>''', video_table):
             format_name, estimate_size, format_ext, request_format = rows.groups()
+            estimate_size = re.sub(r'\s*([kMG])B', r'\1iB', estimate_size)
             request_data = urlencode_postdata({
                 'type': 'youtube',
                 '_id': request_id,
@@ -74,7 +75,6 @@ class Y2mateIE(InfoExtractor):
             if not video_url:
                 continue
 
-            print(video_url)
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
@@ -92,6 +92,7 @@ class Y2mateIE(InfoExtractor):
                     <td\s*.+?>.+?(?:data-ftype="(.+?)".+?)?(?:data-fquality="(.+?)".+?)?</td>\s* # download button
                 </tr>''', audio_table):
             format_name, estimate_size, format_ext, request_format = rows.groups()
+            estimate_size = re.sub(r'\s*([kMG])B', r'\1iB', estimate_size)
             request_data = {
                 'type': 'youtube',
                 '_id': request_id,
