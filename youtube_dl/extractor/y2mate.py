@@ -55,6 +55,7 @@ class Y2mateIE(InfoExtractor):
                 'ftype': format_ext,
                 'fquality': request_format,
             })
+            video_url = None
             for i in range(5):
                 url_data = self._download_json(
                     'https://www.y2mate.com/mates/convert', video_id,
@@ -63,15 +64,17 @@ class Y2mateIE(InfoExtractor):
                 if url_data.get('status') != 'success':
                     self.report_warning('Server responded with status %s' % url_data.get('status'))
                     continue
-                url = self._search_regex(
+                video_url = self._search_regex(
                     r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
                     'Download url for %s' % format_name, group=1, default=None)
-                if url and url.startswith('http'):
+                if video_url:
                     break
+                video_url = None
 
-            if not url:
+            if not video_url:
                 continue
 
+            print(video_url)
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
@@ -98,6 +101,7 @@ class Y2mateIE(InfoExtractor):
                 'ftype': format_ext,
                 'fquality': request_format,
             }
+            video_url = None
             for i in range(5):
                 url_data = self._download_json(
                     'https://www.y2mate.com/mates/convert', video_id,
@@ -106,13 +110,14 @@ class Y2mateIE(InfoExtractor):
                 if url_data.get('status') != 'success':
                     self.report_warning('Server responded with status %s' % url_data.get('status'))
                     continue
-                url = self._search_regex(
+                video_url = self._search_regex(
                     r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
                     'Download url for %s' % format_name, group=1, default=None)
-                if url and url.startswith('http'):
+                if video_url:
                     break
+                video_url = None
 
-            if not url:
+            if not video_url:
                 continue
 
             formats.append({
