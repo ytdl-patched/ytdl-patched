@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import hashlib
 import re
+import itertools
 
 from .common import InfoExtractor
 from ..compat import (
@@ -17,33 +18,8 @@ from ..utils import (
 )
 
 
-class FC2IE(InfoExtractor):
-    _VALID_URL = r'^(?:https?://video\.fc2\.com/(?:[^/]+/)*content/|fc2:)(?P<id>[^/]+)'
-    IE_NAME = 'fc2'
+class FC2BaseIE(InfoExtractor):
     _NETRC_MACHINE = 'fc2'
-    _TESTS = [{
-        'url': 'http://video.fc2.com/en/content/20121103kUan1KHs',
-        'md5': 'a6ebe8ebe0396518689d963774a54eb7',
-        'info_dict': {
-            'id': '20121103kUan1KHs',
-            'ext': 'flv',
-            'title': 'Boxing again with Puff',
-        },
-    }, {
-        'url': 'http://video.fc2.com/en/content/20150125cEva0hDn/',
-        'info_dict': {
-            'id': '20150125cEva0hDn',
-            'ext': 'mp4',
-        },
-        'params': {
-            'username': 'ytdl@yt-dl.org',
-            'password': '(snip)',
-        },
-        'skip': 'requires actual password',
-    }, {
-        'url': 'http://video.fc2.com/en/a/content/20130926eZpARwsF',
-        'only_matching': True,
-    }]
 
     def _login(self):
         username, password = self._get_login_info()
@@ -73,6 +49,33 @@ class FC2IE(InfoExtractor):
             login_redir, None, note='Login redirect', errnote='Login redirect failed')
 
         return True
+
+
+class FC2IE(FC2BaseIE):
+    _VALID_URL = r'^(?:https?://video\.fc2\.com/(?:[^/]+/)*content/|fc2:)(?P<id>[^/]+)'
+    IE_NAME = 'fc2'
+    _TESTS = [{
+        'url': 'http://video.fc2.com/en/content/20121103kUan1KHs',
+        'info_dict': {
+            'id': '20121103kUan1KHs',
+            'ext': 'flv',
+            'title': 'Boxing again with Puff',
+        },
+    }, {
+        'url': 'http://video.fc2.com/en/content/20150125cEva0hDn/',
+        'info_dict': {
+            'id': '20150125cEva0hDn',
+            'ext': 'mp4',
+        },
+        'params': {
+            'username': 'ytdl@yt-dl.org',
+            'password': '(snip)',
+        },
+        'skip': 'requires actual password',
+    }, {
+        'url': 'http://video.fc2.com/en/a/content/20130926eZpARwsF',
+        'only_matching': True,
+    }]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -122,6 +125,9 @@ class FC2IE(InfoExtractor):
             note='Downloading m3u8 playlist info')
         playlists = info_data.get('playlist') or {}
         for (name, m3u8_url) in playlists.items():
+            # m3u8_url may be either HLS playlist or direct MP4 download,
+            #  but ffmpeg accepts both
+            # so use m3u8 rather than http or m3u8_native
             formats.append({
                 'format_id': 'hls-%s' % name,
                 'url': 'https://video.fc2.com%s' % m3u8_url,
@@ -151,7 +157,6 @@ class FC2EmbedIE(InfoExtractor):
 
     _TEST = {
         'url': 'http://video.fc2.com/flv2.swf?t=201404182936758512407645&i=20130316kwishtfitaknmcgd76kjd864hso93htfjcnaogz629mcgfs6rbfk0hsycma7shkf85937cbchfygd74&i=201403223kCqB3Ez&d=2625&sj=11&lang=ja&rel=1&from=11&cmt=1&tk=TlRBM09EQTNNekU9&tl=プリズン･ブレイク%20S1-01%20マイケル%20【吹替】',
-        'md5': 'b8aae5334cb691bdb1193a88a6ab5d5a',
         'info_dict': {
             'id': '201403223kCqB3Ez',
             'ext': 'flv',
@@ -181,3 +186,28 @@ class FC2EmbedIE(InfoExtractor):
             'title': title,
             'thumbnail': thumbnail,
         }
+
+
+class FC2UserIE(FC2BaseIE):
+    _VALID_URL = r'^https?://video\.fc2\.com/(?P<extra>(?:[^/]+/)*)account/(?P<id>\d+)'
+    IE_NAME = 'fc2:user'
+
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        extra = mobj.group('extra') or ''
+        user_id = mobj.group('id')
+        self._login()
+
+        results = []
+        uploader_name = None
+        for page in itertools.count(1):
+            webpage = self._download_webpage(
+                'https://video.fc2.com/%saccount/%s/content?page=%d' % (extra, user_id, page), user_id,
+                note='Downloading page %d' % page)
+            uploader_name = uploader_name or self._search_regex(r'<span\s+class="memberName">(.+?)</span>', webpage, 'uploader name', fatal=False, group=1)
+            videos = [self.url_result(x.group(1)) for x in re.finditer(r'<a\s+href="(https://video\.fc2\.com/(?:[^/]+/)*content/\d{8}[a-zA-Z0-9]+)"\s*class="c-boxList-111_video_ttl"', webpage)]
+            if not videos:
+                break
+            results.extend(videos)
+
+        return self.playlist_result(results, user_id, uploader_name)

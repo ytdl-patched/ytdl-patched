@@ -362,6 +362,7 @@ from .faz import FazIE
 from .fc2 import (
     FC2IE,
     FC2EmbedIE,
+    FC2UserIE,
 )
 from .fczenit import FczenitIE
 from .filmon import (
