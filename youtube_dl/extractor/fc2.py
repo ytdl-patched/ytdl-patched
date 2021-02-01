@@ -1,5 +1,5 @@
 # coding: utf-8
-from __future__ import unicode_literals
+from __future__ import unicode_literals, with_statement
 
 import hashlib
 import re
@@ -10,11 +10,14 @@ from ..compat import (
     compat_parse_qs,
     compat_urllib_request,
     compat_urlparse,
+    compat_str,
 )
 from ..utils import (
     ExtractorError,
-    sanitized_Request,
+    sanitized_Request, try_get,
     urlencode_postdata,
+    to_str,
+    std_headers,
 )
 from ..websocket import (
     WebSocket,
@@ -220,29 +223,115 @@ class FC2UserIE(FC2BaseIE):
 class FC2LiveIE(InfoExtractor):
     _VALID_URL = r'^https?://live\.fc2\.com/(?P<id>\d+)'
     IE_NAME = 'fc2:live'
+    _WORKING = False
 
     # TODO: split this extractor into separate file
     def _real_extract(self, url):
         if not HAVE_WEBSOCKET:
             raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
         video_id = self._match_id(url)
-        self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
+        webpage = self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
 
-        # orz token is JWT token
-        # header: base64 encoded of {"orz":[cookie.l_ortkn]}
-        # payload: base64 encoded of {"orz":[cookie.l_ortkn]}
-        # signature: investigating in progress
-        #   ... but nothing is ok
-        # post to https://live.fc2.com/api/getControlServer.php
-        #   with: channel_id: video_id
-        #   with: mode: "mode"
-        #   with: orz: ""
-        #   with: channel_version: "33fe385c-5eed-4e15-bb04-a6b5ae438d8e"
-        #   with: client_version: "2.0.0\n+[1]"
-        #   with: client_type: "pc"
-        #   with: client_app: "browser_hls"
-        #   with: ipv6: ""
-        # websocket to [url]?control_token=[control_token]
-        # send {"name":"get_hls_information","arguments":{},"id":1}
-        # test against .argumtnts.playlists[].url
-        # done
+        # self._download_json(
+        #     'https://live.fc2.com/api/userInfo.php', video_id, note='Downloading userInfo.php',
+        #     data=b'', headers={'X-Requested-With': 'XMLHttpRequest'})
+        # self._download_json(
+        #     'https://live.fc2.com/contents/userlist.php', video_id, note='Downloading userlist.php',
+        #     data=('page=0&channel=%s' % video_id).encode('utf-8'), headers={'X-Requested-With': 'XMLHttpRequest'})
+        # self._download_json(
+        #     'https://live.fc2.com/api/memberApi.php', video_id, note='Downloading memberApi.php',
+        #     data=('channel=1&profile=1&user=1&streamid=%s' % video_id).encode('utf-8'), headers={'X-Requested-With': 'XMLHttpRequest'})
+        # self._download_json(
+        #     'https://live.fc2.com/api/favoriteManager.php', video_id, note='Downloading favoriteManager.php',
+        #     data=('id=%s&mode=check&token=' % video_id).encode('utf-8'), headers={'X-Requested-With': 'XMLHttpRequest'})
+        # self._download_json(
+        #     'https://live.fc2.com/api/profileInfo.php', video_id, note='Downloading profileInfo.php',
+        #     data=('mode=get&userid=%s' % video_id).encode('utf-8'), headers={'X-Requested-With': 'XMLHttpRequest'})
+        # self._download_json(
+        #     'https://live.fc2.com/api/videoRecList.php', video_id, note='Downloading videoRecList.php',
+        #     data=('userid=%s&isadult=0&publish=0&per_page=10&page=1' % video_id).encode('utf-8'), headers={'X-Requested-With': 'XMLHttpRequest'})
+
+        post_dict = {
+            'channel_id': video_id,
+            'mode': 'play',
+            'orz': '',
+            'channel_version': '33fe385c-5eed-4e15-bb04-a6b5ae438d8e',
+            'client_version': '2.0.0\n [1]',
+            'client_type': 'pc',
+            'client_app': 'browser_hls',
+            'ipv6': '',
+        }
+        self._set_cookie('live.fc2.com', 'js-player_size', '1')
+        control_server = self._download_json(
+            'https://live.fc2.com/api/getControlServer.php', video_id, note='Downloading ControlServer data',
+            data=urlencode_postdata(post_dict), headers={'X-Requested-With': 'XMLHttpRequest'})
+        print(urlencode_postdata(post_dict))
+        post_dict['orz'] = control_server['orz']
+        self._set_cookie('live.fc2.com', 'l_ortkn', control_server['orz_raw'])
+        control_server = self._download_json(
+            'https://live.fc2.com/api/getControlServer.php', video_id, note='Downloading ControlServer data',
+            data=urlencode_postdata(post_dict), headers={'X-Requested-With': 'XMLHttpRequest'})
+
+        ws_url = control_server['url'] + '?control_token=' + control_server['control_token']
+        playlist_data = None
+
+        self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
+        with WebSocket(ws_url, {
+            'Cookie': str(self._get_cookies('https://live.fc2.com/'))[12:],
+            'Origin': 'https://live.fc2.com',
+            **std_headers,
+        }) as ws:
+            if self._downloader.params.get('verbose', False):
+                self.to_screen('[debug] Sending HLS server request')
+            ws.send(r'{"name":"get_hls_information","arguments":{},"id":1}')
+
+            while True:
+                recv = to_str(ws.recv()).strip()
+                if not recv:
+                    continue
+                data = self._parse_json(recv, video_id, fatal=False)
+                if not data:
+                    continue
+                if data.get('name') == '_response_' and data.get('id') == 1:
+                    if self._downloader.params.get('verbose', False):
+                        self.to_screen('[debug] Goodbye.')
+                    playlist_data = data
+                    break
+                elif self._downloader.params.get('verbose', False):
+                    self.to_screen('[debug] Server said: %s' % recv)
+
+        if not playlist_data:
+            raise ExtractorError('Unable to fetch HLS playlist info via WebSocket')
+        arguments = playlist_data['arguments']
+        playlists = arguments['playlists']
+        hls_url = None
+
+        for pl in playlists:
+            if pl.get('status') == 0 and 'master_playlist' in pl.get('url'):
+                hls_url = pl.get('url')
+                break
+
+        if not hls_url:
+            raise ExtractorError('Unable to find HLS playlist')
+
+        title = try_get(
+            webpage,
+            (lambda x: self._html_search_meta(('og:title', 'twitter:title'), x, 'live title', fatal=False).strip('\u3000 ')[1:-1],
+             lambda x: self._search_regex((r'<title>[\u3000:space:]*\[(.+?)\]\s*-\s*[^-]+?</title>', r'<p class="c-ctbName">(.+?)</p>'), x, 'live title'),
+             ), compat_str)
+        description = self._html_search_meta(
+            ('description', 'og:description', 'twitter:description'),
+            webpage, 'live description', fatal=False)
+        formats = self._extract_m3u8_formats(
+            hls_url, video_id, ext='mp4', m3u8_id='hls', live=True,
+            headers={
+                'Origin': 'https://live.fc2.com',
+                'Referer': 'https://live.fc2.com/',
+            })
+
+        return {
+            'id': video_id,
+            'title': title,
+            'description': description,
+            'formats': formats,
+        }

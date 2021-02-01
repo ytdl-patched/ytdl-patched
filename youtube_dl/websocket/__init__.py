@@ -19,8 +19,7 @@ try:
     WebSocket.__exit__ = _exit
 
     def WebSocket(url, headers={}):
-        r = create_connection(url, headers=['%s: %s' % kv for kv in headers.items()])
-        return r
+        return create_connection(url, headers=['%s: %s' % kv for kv in headers.items()])
 
     HAVE_WEBSOCKET = True
 except (ImportError, ValueError, SyntaxError):
