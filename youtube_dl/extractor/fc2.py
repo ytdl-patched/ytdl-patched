@@ -16,6 +16,10 @@ from ..utils import (
     sanitized_Request,
     urlencode_postdata,
 )
+from ..websocket import (
+    WebSocket,
+    HAVE_WEBSOCKET,
+)
 
 
 class FC2BaseIE(InfoExtractor):
@@ -219,6 +223,8 @@ class FC2LiveIE(InfoExtractor):
 
     # TODO: split this extractor into separate file
     def _real_extract(self, url):
+        if not HAVE_WEBSOCKET:
+            raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
         video_id = self._match_id(url)
         self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
 
