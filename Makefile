@@ -60,7 +60,7 @@ pypi-files: youtube-dl.bash-completion README.txt youtube-dl.1 youtube-dl.fish
 
 youtube-dl: youtube_dl/*.py youtube_dl/*/*.py
 	mkdir -p zip
-	for d in youtube_dl youtube_dl/downloader youtube_dl/extractor youtube_dl/extractor/*/ youtube_dl/postprocessor ; do \
+	for d in youtube_dl youtube_dl/downloader youtube_dl/extractor youtube_dl/extractor/*/ youtube_dl/postprocessor youtube_dl/websocket ; do \
 	  mkdir -p zip/$$d ;\
 	  cp -pPR $$d/*.py zip/$$d/ ;\
 	done
