@@ -265,7 +265,6 @@ class FC2LiveIE(InfoExtractor):
         control_server = self._download_json(
             'https://live.fc2.com/api/getControlServer.php', video_id, note='Downloading ControlServer data',
             data=urlencode_postdata(post_dict), headers={'X-Requested-With': 'XMLHttpRequest'})
-        print(urlencode_postdata(post_dict))
         post_dict['orz'] = control_server['orz']
         self._set_cookie('live.fc2.com', 'l_ortkn', control_server['orz_raw'])
         control_server = self._download_json(
