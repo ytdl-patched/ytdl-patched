@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE
 class WebsocatWrapper():
     "Wraps websocat module to use in non-async scopes"
 
-    def __init__(self, url, headers={}) -> None:
+    def __init__(self, url, headers={}):
         self.proc = Popen(
             'websocat', '-t', *['-H=%s: %s' % kv for kv in headers.items()], url,
             stdout=PIPE, stdin=PIPE, stderr=PIPE, encoding='utf8', text=True)
@@ -39,6 +39,12 @@ class WebsocatWrapper():
 
     def close(self):
         self.proc.kill()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
 
 AVAILABLE = bool(check_executable('websockat', ['-h']))

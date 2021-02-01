@@ -7,22 +7,32 @@ WebSocket = None
 # only send, recv, close are guaranteed to exist
 
 try:
-    from .websockets import WebSocketsWrapper as WebSocket
+    from websocket import create_connection, WebSocket
+
+    def _enter(self):
+        return self
+
+    def _exit(self, type, value, traceback):
+        self.close()
+
+    WebSocket.__enter__ = _enter
+    WebSocket.__exit__ = _exit
+
+    def WebSocket(url, headers={}):
+        r = create_connection(url, headers=['%s: %s' % kv for kv in headers.items()])
+        return r
+
     HAVE_WEBSOCKET = True
-except (ImportError, ValueError):
+except (ImportError, ValueError, SyntaxError):
     try:
-        from websocket import create_connection
-
-        def WebSocket(url, headers={}):
-            return create_connection(url, headers=['%s: %s' % kv for kv in headers.items()])
-
+        from .websockets import WebSocketsWrapper as WebSocket
         HAVE_WEBSOCKET = True
-    except (ImportError, ValueError):
+    except (ImportError, ValueError, SyntaxError):
         try:
             from .websocat import WebsocatWrapper, AVAILABLE
 
             if AVAILABLE:
                 WebSocket = WebsocatWrapper
                 HAVE_WEBSOCKET = True
-        except (ImportError, ValueError):
+        except (ImportError, ValueError, SyntaxError):
             pass
