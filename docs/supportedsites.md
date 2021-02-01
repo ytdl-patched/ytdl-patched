@@ -289,6 +289,7 @@
  - **faz.net**
  - **fc2**
  - **fc2:embed**
+ - **fc2:user**
  - **Fczenit**
  - **filmon**
  - **filmon:channel**
