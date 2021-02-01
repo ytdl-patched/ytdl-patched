@@ -74,7 +74,7 @@ class WebSocketsConnPool():
         run_with_loop(self.impl.send(*args), self.loop)
 
     def recv(self, *args):
-        run_with_loop(self.impl.recv(*args), self.loop)
+        return run_with_loop(self.impl.recv(*args), self.loop)
 
     def __exit__(self, type, value, traceback):
         run_with_loop(self.impl.__aexit__(type, value, traceback), self.loop)
