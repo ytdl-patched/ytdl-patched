@@ -279,7 +279,10 @@ class FC2LiveIE(InfoExtractor):
         with WebSocket(ws_url, {
             'Cookie': str(self._get_cookies('https://live.fc2.com/'))[12:],
             'Origin': 'https://live.fc2.com',
-            **std_headers,
+            'Accept': '*/*',
+            'User-Agent': std_headers['User-Agent'],
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'en-us,en;q=0.5',
         }) as ws:
             if self._downloader.params.get('verbose', False):
                 self.to_screen('[debug] Sending HLS server request')
