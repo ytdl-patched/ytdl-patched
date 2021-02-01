@@ -211,3 +211,32 @@ class FC2UserIE(FC2BaseIE):
             results.extend(videos)
 
         return self.playlist_result(results, user_id, uploader_name)
+
+
+class FC2LiveIE(InfoExtractor):
+    _VALID_URL = r'^https?://live\.fc2\.com/(?P<id>\d+)'
+    IE_NAME = 'fc2:live'
+
+    # TODO: split this extractor into separate file
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
+
+        # orz token is JWT token
+        # header: base64 encoded of {"orz":[cookie.l_ortkn]}
+        # payload: base64 encoded of {"orz":[cookie.l_ortkn]}
+        # signature: investigating in progress
+        #   ... but nothing is ok
+        # post to https://live.fc2.com/api/getControlServer.php
+        #   with: channel_id: video_id
+        #   with: mode: "mode"
+        #   with: orz: ""
+        #   with: channel_version: "33fe385c-5eed-4e15-bb04-a6b5ae438d8e"
+        #   with: client_version: "2.0.0\n+[1]"
+        #   with: client_type: "pc"
+        #   with: client_app: "browser_hls"
+        #   with: ipv6: ""
+        # websocket to [url]?control_token=[control_token]
+        # send {"name":"get_hls_information","arguments":{},"id":1}
+        # test against .argumtnts.playlists[].url
+        # done
