@@ -536,7 +536,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
 
 class NiconicoUserIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:user'
-    _VALID_URL = r'https?://(?:www\.)?nicovideo\.jp/user/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.|sp\.)?nicovideo\.jp/user/(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'https://www.nicovideo.jp/user/17988631',
