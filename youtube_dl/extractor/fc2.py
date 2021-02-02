@@ -262,14 +262,14 @@ class FC2LiveIE(InfoExtractor):
             'ipv6': '',
         }
         self._set_cookie('live.fc2.com', 'js-player_size', '1')
+
+        # https://live.fc2.com/js/playerVersion/version.txt?0.0674203108942784
+
         control_server = self._download_json(
             'https://live.fc2.com/api/getControlServer.php', video_id, note='Downloading ControlServer data',
             data=urlencode_postdata(post_dict), headers={'X-Requested-With': 'XMLHttpRequest'})
         post_dict['orz'] = control_server['orz']
         self._set_cookie('live.fc2.com', 'l_ortkn', control_server['orz_raw'])
-        control_server = self._download_json(
-            'https://live.fc2.com/api/getControlServer.php', video_id, note='Downloading ControlServer data',
-            data=urlencode_postdata(post_dict), headers={'X-Requested-With': 'XMLHttpRequest'})
 
         ws_url = control_server['url'] + '?control_token=' + control_server['control_token']
         playlist_data = None
@@ -280,8 +280,6 @@ class FC2LiveIE(InfoExtractor):
             'Origin': 'https://live.fc2.com',
             'Accept': '*/*',
             'User-Agent': std_headers['User-Agent'],
-            'Accept-Encoding': 'gzip, deflate',
-            'Accept-Language': 'en-us,en;q=0.5',
         }) as ws:
             if self._downloader.params.get('verbose', False):
                 self.to_screen('[debug] Sending HLS server request')
@@ -300,6 +298,8 @@ class FC2LiveIE(InfoExtractor):
                     playlist_data = data
                     break
                 elif self._downloader.params.get('verbose', False):
+                    if len(recv) > 100:
+                        recv = recv[:100] + '...'
                     self.to_screen('[debug] Server said: %s' % recv)
 
         if not playlist_data:
@@ -328,7 +328,7 @@ class FC2LiveIE(InfoExtractor):
             hls_url, video_id, ext='mp4', m3u8_id='hls', live=True,
             headers={
                 'Origin': 'https://live.fc2.com',
-                'Referer': 'https://live.fc2.com/',
+                'Referer': url,
             })
 
         return {
