@@ -1,5 +1,5 @@
 # idk
-pycryptodome>3.9,<3.10
+pycryptodome==3.9.9
 
 # for Python 3.x
 websockets==8.1
