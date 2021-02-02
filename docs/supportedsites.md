@@ -617,6 +617,7 @@
  - **nickelodeonru**
  - **nicknight**
  - **niconico**: ニコニコ動画
+ - **niconico:live**: ニコニコ生放送
  - **niconico:playlist**
  - **niconico:user**
  - **Nintendo**
