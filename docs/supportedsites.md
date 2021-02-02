@@ -1087,7 +1087,6 @@
  - **vidme**
  - **vidme:user**
  - **vidme:user:likes**
- - **Vidzi**
  - **vier**: vier.be and vijf.be
  - **vier:videos**
  - **viewlift**
