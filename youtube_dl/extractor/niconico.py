@@ -26,6 +26,12 @@ from ..utils import (
     unified_timestamp,
     urlencode_postdata,
     xpath_text,
+    to_str,
+    std_headers,
+)
+from ..websocket import (
+    WebSocket,
+    HAVE_WEBSOCKET,
 )
 
 
@@ -580,3 +586,65 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
             entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
         result.update(self._parse_owner(mylist))
         return result
+
+
+class NiconicoLiveIE(InfoExtractor):
+    IE_NAME = 'niconico:live'
+    IE_DESC = 'ニコニコ生放送'
+    _VALID_URL = r'https?://live2?\.nicovideo\.jp/watch/(?P<id>lv\d+)'
+
+    def _real_extract(self, url):
+        if not HAVE_WEBSOCKET:
+            raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
+
+        video_id = self._match_id(url)
+        webpage = self._download_webpage('https://live2.nicovideo.jp/watch/%s' % video_id, video_id)
+
+        embedded_data = self._search_regex(r'<script\s+id="embedded-data"\s*data-props="(.+?)"', webpage, 'embedded data')
+        embedded_data = unescapeHTML(embedded_data)
+        embedded_data = self._parse_json(embedded_data, video_id)
+
+        ws_url = embedded_data['site']['relive']['webSocketUrl']
+
+        self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
+        with WebSocket(ws_url, {
+            'Cookie': str(self._get_cookies('https://live2.nicovideo.jp/'))[12:],
+            'Origin': 'https://live2.nicovideo.jp',
+            'Accept': '*/*',
+            'User-Agent': std_headers['User-Agent'],
+        }) as ws:
+            if self._downloader.params.get('verbose', False):
+                self.to_screen('[debug] Sending HLS server request')
+            ws.send(r'{"type":"startWatching","data":{"stream":{"quality":"high","protocol":"hls","latency":"high","chasePlay":false},"room":{"protocol":"webSocket","commentable":true},"reconnect":false}}')
+
+            while True:
+                recv = to_str(ws.recv()).strip()
+                if not recv:
+                    continue
+                data = self._parse_json(recv, video_id, fatal=False)
+                if not data:
+                    continue
+                if data.get('type') == 'stream':
+                    if self._downloader.params.get('verbose', False):
+                        self.to_screen('[debug] Goodbye.')
+                    playlist_data = data
+                    break
+                elif self._downloader.params.get('verbose', False):
+                    if len(recv) > 100:
+                        recv = recv[:100] + '...'
+                    self.to_screen('[debug] Server said: %s' % recv)
+
+        if not playlist_data:
+            raise ExtractorError('Unable to fetch HLS playlist info via WebSocket')
+        hls_url = playlist_data['data']['uri']
+
+        title = self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)
+        formats = self._extract_m3u8_formats(
+            hls_url, video_id, ext='mp4', m3u8_id='hls', live=True)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'formats': formats,
+            'is_live': True,
+        }

@@ -17,13 +17,10 @@ def run_with_loop(main, loop):
         # asyncio.events.set_event_loop(loop)
         return loop.run_until_complete(main)
     finally:
-        try:
-            _cancel_all_tasks(loop)
-            loop.run_until_complete(loop.shutdown_asyncgens())
+        _cancel_all_tasks(loop)
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        if hasattr(loop, 'shutdown_default_executor'):
             loop.run_until_complete(loop.shutdown_default_executor())
-        finally:
-            # asyncio.events.set_event_loop(None)
-            pass
 
 
 def _cancel_all_tasks(loop):
