@@ -96,6 +96,7 @@ jobs:
     strategy:
       matrix:
         icon: [red, white]
+        websocket: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -109,6 +110,9 @@ jobs:
       - name: Install PyInstaller
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
         run: pip install --upgrade pyinstaller
+      - name: Install websocket_client
+        run: pip install --upgrade websocket_client
+        if: ${{ matrix.websocket }}
       - name: Install UPX
         run: choco install upx
       - name: Build patched YTDL for Windows
@@ -124,7 +128,7 @@ jobs:
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: ytdl-windows-${{ matrix.icon }}
+          name: "ytdl-windows-${{ matrix.icon }}${{ matrix.websocket && '+ws' || '' }}"
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
@@ -274,6 +278,34 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-white.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Download builds for Windows with WebSocket (red icon)
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-red+ws
+      - name: Upload exe
+        id: upload-5
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./artifacts/youtube-dl.exe
+          asset_name: youtube-dl-red+ws.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Download builds for Windows with WebSocket (white icon)
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-white+ws
+      - name: Upload exe
+        id: upload-6
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./artifacts/youtube-dl.exe
+          asset_name: youtube-dl-white+ws.exe
           asset_content_type: application/vnd.microsoft.portable-executable
   binary-test:
     needs: [build-linux, build-windows]
