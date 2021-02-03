@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import ExtractorError
+from ..utils import ExtractorError, unescapeHTML
 
 from .youtube import (
     YoutubeIE,
@@ -76,5 +76,36 @@ class PeingIE(QAWebsitesBaseIE):
             'description', webpage) or self._search_regex(
             r"<p\s+class=(['\"])text\1>(.+?)</p>", webpage,
             'answer text', fatal=False, group=2) or ''
+
+        return (question_text, answer_text)
+
+
+class AskfmIE(QAWebsitesBaseIE):
+    IE_NAME = 'ask.fm'
+    _VALID_URL = r'https?://ask\.fm/(?P<uploader>[^/]+)/answers/(?P<id>\d+)'
+
+    def _extract_text(self, url):
+        question_id = self._match_id(url)
+        webpage = self._download_webpage(url, question_id)
+
+        question_text = self._html_search_meta(
+            ('og:title'), webpage) or self._search_regex(
+            (r'<h1 class="medium">(.+?)</h1>',
+             r'data-item-body=\'(.+?)\'',
+             r'<title>(.+?)\s*\|'),
+            webpage, 'question text', fatal=False)
+        if not question_text:
+            params = self._search_regex(r'data-params="(.+?)"', webpage, 'question text', fatal=False)
+            params = unescapeHTML(params)
+            params = self._parse_json(params, question_id, fatal=False)
+            if params:
+                question_text = params['question[question_text]']
+        if not question_text:
+            question_text = ''
+
+        answer_text = self._search_regex(
+            r'<div class="streamItem_content">(.+?)</div>', webpage,
+            'answer text', fatal=False) or self._html_search_meta(
+            ('og:description', 'description'), webpage) or ''
 
         return (question_text, answer_text)
