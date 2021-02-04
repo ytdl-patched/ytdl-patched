@@ -231,6 +231,13 @@ jobs:
           release_name: ${{ needs.prepare.outputs.latest_version }}
           draft: false
           prerelease: false
+          body: |
+            What to download
+            - for Linux/macOS - `youtube-dl` (requires Python 3.x installed)
+            - for Windows
+                - red icon - `...-red.exe` (**default** in -U)
+                - white icon - `...-white.exe`
+                - with WebSocket support - `+ws`
       - name: Upload bin
         id: upload-1
         uses: actions/upload-release-asset@v1
