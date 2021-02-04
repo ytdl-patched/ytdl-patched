@@ -1422,7 +1422,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'player', {'videoId': video_id}, video_id)
 
         playability_status = player_response.get('playabilityStatus') or {}
-        if playability_status.get('reason') == 'Sign in to confirm your age':
+        if playability_status.get('reason') in ('Sign in to confirm your age', 'This video may be inappropriate for some users.'):
             pr = self._parse_json(try_get(compat_parse_qs(
                 self._download_webpage(
                     base_url + 'get_video_info', video_id,
