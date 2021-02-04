@@ -87,7 +87,7 @@ def update_self(to_screen, verbose, opener):
         return
 
     # Py2EXE
-    if hasattr(sys, 'frozen'):
+    if hasattr(sys, 'frozen') and os.name == 'nt':
         exe = filename
         directory = os.path.dirname(exe)
         if not os.access(directory, os.W_OK):
