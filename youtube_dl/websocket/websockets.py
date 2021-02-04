@@ -49,8 +49,10 @@ class WebSocketsWrapper():
     "Wraps websockets module to use in non-async scopes"
 
     def __init__(self, url, headers=None):
-        self.conn = websockets.connect(url, extra_headers=headers)
         self.loop = asyncio.events.get_event_loop() or asyncio.events.new_event_loop()
+        self.conn = websockets.connect(
+            url, extra_headers=headers, ping_interval=None,
+            close_timeout=float('inf'), loop=self.loop, ping_timeout=float('inf'))
 
     def __enter__(self):
         return WebSocketsConnPool(run_with_loop(self.conn.__aenter__(), self.loop), self.loop)
