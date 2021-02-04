@@ -290,7 +290,7 @@ class FC2LiveIE(InfoExtractor):
                 if not recv:
                     continue
                 data = self._parse_json(recv, video_id, fatal=False)
-                if not data:
+                if not data or not isinstance(data, dict):
                     continue
                 if data.get('name') == '_response_' and data.get('id') == 1:
                     if self._downloader.params.get('verbose', False):

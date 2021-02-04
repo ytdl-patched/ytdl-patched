@@ -622,7 +622,7 @@ class NiconicoLiveIE(InfoExtractor):
                 if not recv:
                     continue
                 data = self._parse_json(recv, video_id, fatal=False)
-                if not data:
+                if not data or not isinstance(data, dict):
                     continue
                 if data.get('type') == 'stream':
                     if self._downloader.params.get('verbose', False):
