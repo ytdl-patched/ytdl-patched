@@ -266,7 +266,6 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     _YT_INITIAL_DATA_RE = r'(?:window\s*\[\s*["\']ytInitialData["\']\s*\]|ytInitialData)\s*=\s*({.+?})\s*;'
     _YT_INITIAL_PLAYER_RESPONSE_RE = r'ytInitialPlayerResponse\s*=\s*({.+?})\s*;'
-    _YT_INITIAL_PLAYER_RESPONSE_RE_2 = r'(?m)window\["ytInitialPlayerResponse"\]\s*=\s*({.+});$'
     _YT_INITIAL_BOUNDARY_RE = r'(?:var\s+meta|</script|if\s*\(window\.ytcsi\)|\n)'
 
     def _call_api(self, ep, query, video_id, fatal=True):
@@ -279,6 +278,13 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             data=json.dumps(data).encode('utf8'), fatal=fatal,
             headers={'content-type': 'application/json'},
             query={'key': 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'})
+
+    def _extract_yt_initial_data(self, video_id, webpage):
+        return self._parse_json(
+            self._search_regex(
+                (r'%s\s*%s' % (self._YT_INITIAL_DATA_RE, self._YT_INITIAL_BOUNDARY_RE),
+                 self._YT_INITIAL_DATA_RE), webpage, 'yt initial data'),
+            video_id)
 
     def _extract_yt_initial_variable(self, webpage, video_id, name):
         patterns = (
@@ -299,8 +305,10 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             r'%s\s*%s' % (self._YT_INITIAL_PLAYER_RESPONSE_RE, self._YT_INITIAL_BOUNDARY_RE),
             self._YT_INITIAL_PLAYER_RESPONSE_RE,
         )
-        config = self._parse_json(self._search_regex(
-            patterns, webpage, 'initial player response', default=None), name, fatal=False)
+        config = self._search_regex(
+            patterns, webpage, 'initial player response', default=None)
+        if config:
+            config = self._parse_json(config, name, fatal=False)
         if config:
             return config
         embedded_config = self._search_regex(
@@ -2621,7 +2629,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             self.to_screen('Downloading playlist %s - add --no-playlist to just download video %s' % (playlist_id, video_id))
         webpage = self._download_webpage(url, item_id)
         identity_token = self._extract_identity_token(webpage, item_id)
-        data = self._extract_yt_initial_data(item_id, webpage)
+        data = data = self._extract_yt_initial_data(item_id, webpage)
         tabs = try_get(
             data, lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'], list)
         if tabs:
