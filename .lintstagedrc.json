@@ -1,0 +1,4 @@
+{
+  "*.py": ["flake8"],
+  "*.json": ["npx prettier --print-width 200 --write"]
+}
