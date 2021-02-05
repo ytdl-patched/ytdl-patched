@@ -49,6 +49,7 @@ __pycache__/
 *.gif
 *.aria2c
 *.lock
+*.dump
 test/local_parameters.json
 .tox
 youtube-dl.zsh
