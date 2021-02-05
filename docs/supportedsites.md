@@ -670,6 +670,8 @@
  - **OnionStudios**
  - **Ooyala**
  - **OoyalaExternal**
+ - **openrec**
+ - **openrec:capture**
  - **OraTV**
  - **orf:burgenland**: Radio Burgenland
  - **orf:fm4**: radio FM4
