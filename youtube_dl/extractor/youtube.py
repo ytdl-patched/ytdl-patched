@@ -1177,10 +1177,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         for player_re in cls._PLAYER_INFO_RE:
             id_m = re.search(player_re, player_url)
             if id_m:
-                break
+                return id_m.group('id')
         else:
             raise ExtractorError('Cannot identify player %r' % player_url)
-        return id_m.group('id')
 
     def _extract_signature_function(self, video_id, player_url, example_sig):
         player_id = self._extract_player_info(player_url)
