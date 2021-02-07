@@ -538,6 +538,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'uploader': 'AfrojackVEVO',
                 'uploader_id': 'AfrojackVEVO',
                 'upload_date': '20131011',
+                'abr': 129.495,
             },
             'params': {
                 'youtube_include_dash_manifest': True,
@@ -1056,6 +1057,28 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'url': 'https://www.youtube.com/watch_popup?v=63RmMXCd_bQ',
             'only_matching': True,
         },
+        {
+            # https://github.com/ytdl-org/youtube-dl/pull/28094
+            'url': 'OtqTfy26tG0',
+            'info_dict': {
+                'id': 'OtqTfy26tG0',
+                'ext': 'mp4',
+                'title': 'Burn Out',
+                'description': 'md5:8d07b84dcbcbfb34bc12a56d968b6131',
+                'upload_date': '20141120',
+                'uploader': 'The Cinematic Orchestra - Topic',
+                'uploader_id': 'UCIzsJBIyo8hhpFm1NK0uLgw',
+                'uploader_url': r're:https?://(?:www\.)?youtube\.com/channel/UCIzsJBIyo8hhpFm1NK0uLgw',
+                'artist': 'The Cinematic Orchestra',
+                'track': 'Burn Out',
+                'album': 'Every Day',
+                'release_data': None,
+                'release_year': None,
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
     ]
     _formats = {
         '5': {'ext': 'flv', 'width': 400, 'height': 240, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
@@ -1549,6 +1572,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
             if itag:
                 itags.append(itag)
+            tbr = float_or_none(
+                fmt.get('averageBitrate') or fmt.get('bitrate'), 1000)
             dct = {
                 'asr': int_or_none(fmt.get('audioSampleRate')),
                 'filesize': int_or_none(fmt.get('contentLength')),
@@ -1557,8 +1582,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'fps': int_or_none(fmt.get('fps')),
                 'height': int_or_none(fmt.get('height')),
                 'quality': q(quality),
-                'tbr': float_or_none(fmt.get(
-                    'averageBitrate') or fmt.get('bitrate'), 1000),
+                'tbr': tbr,
                 'url': fmt_url,
                 'width': fmt.get('width'),
             }
@@ -1569,7 +1593,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 if mobj:
                     dct['ext'] = mimetype2ext(mobj.group(1))
                     dct.update(parse_codecs(mobj.group(2)))
-            if dct.get('acodec') == 'none' or dct.get('vcodec') == 'none':
+            no_audio = dct.get('acodec') == 'none'
+            no_video = dct.get('vcodec') == 'none'
+            if no_audio:
+                dct['vbr'] = tbr
+            if no_video:
+                dct['abr'] = tbr
+            if no_audio or no_video:
                 dct['downloader_options'] = {
                     # Youtube throttles chunks >~10M
                     'http_chunk_size': 10485760,
@@ -1766,7 +1796,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     'artist': mobj.group('clean_artist') or ', '.join(a.strip() for a in mobj.group('artist').split('·')),
                     'track': mobj.group('track').strip(),
                     'release_date': release_date,
-                    'release_year': int(release_year),
+                    'release_year': int_or_none(release_year),
                 })
 
         initial_data = None
