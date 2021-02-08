@@ -481,8 +481,8 @@ from .hungama import (
 from .hypem import HypemIE
 from .ign import (
     IGNIE,
-    OneUPIE,
-    PCMagIE,
+    IGNVideoIE,
+    IGNArticleIE,
 )
 from .iheart import (
     IHeartRadioIE,
