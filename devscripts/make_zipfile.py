@@ -67,7 +67,7 @@ if check_executable('advzip', []):
 shutil.rmtree('zip/')
 
 with open('youtube-dl', 'wb') as ytdl:
-    ytdl.write(b'$!%s\n' % PYTHON.encode('utf8'))
+    ytdl.write(b'#!%s\n' % PYTHON.encode('utf8'))
     with open('youtube-dl.zip', 'rb') as zip:
         ytdl.write(zip.read())
 
