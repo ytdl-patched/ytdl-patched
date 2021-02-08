@@ -109,3 +109,29 @@ class AskfmIE(QAWebsitesBaseIE):
             ('og:description', 'description'), webpage) or ''
 
         return (question_text, answer_text)
+
+
+class MarshmallowQAIE(QAWebsitesBaseIE):
+    IE_NAME = 'marshmallow-qa'
+    _VALID_URL = r'https?://(?:www\.)?marshmallow-qa\.com/messages/(?P<id>[a-f0-9-]{36})'
+
+    _TEST = {
+        'url': 'https://marshmallow-qa.com/messages/513fb153-8e9b-4173-bea9-2210339dd81e',
+        'only_matching': True,
+    }
+
+    def _extract_text(self, url):
+        question_id = self._match_id(url)
+        webpage = self._download_webpage(url, question_id)
+
+        question_text = self._search_regex(
+            (r'<meta property="(?:og|twitter):title" content="(.+?)\s*\|\s*[^"]+?"\s*/>',
+             r'<div data-target="obscene-word\.content">(.+?)</div>',
+             r'<title>\s*(.+?)\s*\|'),
+            webpage, 'question text', fatal=False) or ''
+
+        answer_text = self._search_regex(
+            r'<div class="answer-content pre-wrap text-dark" data-target="obscene-word\.content">(.+?)</div>',
+            webpage, 'answer text', fatal=False) or ''
+
+        return (question_text, answer_text)
