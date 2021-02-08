@@ -59,20 +59,23 @@ tar: youtube-dl.tar.gz
 
 pypi-files: youtube-dl.bash-completion README.txt youtube-dl.1 youtube-dl.fish
 
-youtube-dl: youtube_dl/*.py youtube_dl/*/*.py
-	mkdir -p zip
-	for d in youtube_dl youtube_dl/downloader youtube_dl/extractor youtube_dl/extractor/*/ youtube_dl/postprocessor youtube_dl/websocket ; do \
-	  mkdir -p zip/$$d ;\
-	  cp -pPR $$d/*.py zip/$$d/ ;\
-	done
-	touch -t 200001010101 zip/youtube_dl/*.py zip/youtube_dl/*/*.py
-	mv zip/youtube_dl/__main__.py zip/
-	cd zip ; 7z a -mm=Deflate -mfb=258 -mpass=15 -mtc- ../youtube-dl.zip youtube_dl/*.py youtube_dl/*/*.py youtube_dl/*/*/*.py __main__.py
-	rm -rf zip
-	echo '#!$(PYTHON)' > youtube-dl
-	cat youtube-dl.zip >> youtube-dl
-	rm youtube-dl.zip
-	chmod a+x youtube-dl
+# youtube-dl: youtube_dl/*.py youtube_dl/*/*.py
+# 	mkdir -p zip
+# 	for d in youtube_dl youtube_dl/downloader youtube_dl/extractor youtube_dl/extractor/*/ youtube_dl/postprocessor youtube_dl/websocket ; do \
+# 	  mkdir -p zip/$$d ;\
+# 	  cp -pPR $$d/*.py zip/$$d/ ;\
+# 	done
+# 	touch -t 200001010101 zip/youtube_dl/*.py zip/youtube_dl/*/*.py
+# 	mv zip/youtube_dl/__main__.py zip/
+# 	cd zip ; 7z a -mm=Deflate -mfb=258 -mpass=15 -mtc- ../youtube-dl.zip youtube_dl/*.py youtube_dl/*/*.py youtube_dl/*/*/*.py __main__.py
+# 	rm -rf zip
+# 	echo '#!$(PYTHON)' > youtube-dl
+# 	cat youtube-dl.zip >> youtube-dl
+# 	rm youtube-dl.zip
+# 	chmod a+x youtube-dl
+
+youtube-dl: youtube_dl/*.py youtube_dl/*/*.py youtube_dl/*/*/*.py devscripts/make_zipfile.py
+	$(PYTHON) devscripts/make_zipfile.py "$(PYTHON)"
 
 README.md: youtube_dl/*.py youtube_dl/*/*.py
 	COLUMNS=80 $(PYTHON) youtube_dl/__main__.py --help | $(PYTHON) devscripts/make_readme.py
