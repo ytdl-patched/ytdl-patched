@@ -14,6 +14,7 @@ from ..compat import (
     compat_urllib_parse_unquote,
     compat_urlparse,
     compat_xml_parse_error,
+    compat_parse_qs,
 )
 from ..utils import (
     determine_ext,
@@ -2228,6 +2229,24 @@ class GenericIE(InfoExtractor):
                 'duration': 159,
             },
         },
+        {
+            # Firebase Dynamic Link
+            'url': 'https://mirrativ.page.link/?link=https%3A%2F%2Fwww.mirrativ.com%2Flive%2FD8y_lZXb7tb5gdOARr7Zpw&apn=com.dena.mirrativ&ibi=com.dena.mirrativ&isi=1028944599&ius=mirrativ&st=%E3%81%9D%E3%82%89%E3%82%8A%E3%81%99&sd=%E9%9F%B3%E3%82%B2%E3%83%BC&si=https%3A%2F%2Fcdn.mirrativ.com%2Fmirrorman-prod%2Fimage%2Fuser_profile%2F31f1a71beb12cd22f515897993e549ccaa9f8c33084ce28beff58f5fad222555_share.jpeg',
+            'info_dict': {},
+            'add_ie': ['Mirrativ'],
+        },
+        {
+            # 5ch.net redirect
+            'url': 'https://jump.5ch.net?https://www.youtube.com/watch?v=XCmzSSlZQ0w',
+            'info_dict': {},
+            'add_ie': ['Youtube'],
+        },
+        {
+            # URLs prefixed by view-source:
+            'url': 'view-source:https://www.youtube.com/watch?v=XCmzSSlZQ0w',
+            'info_dict': {},
+            'add_ie': ['Youtube'],
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -2376,8 +2395,15 @@ class GenericIE(InfoExtractor):
             host = host[:host.index(':')]
         if host[:4] == 'www.':
             host = host[4:]
+        # japan BBS redirect
         if host in ('pinktower.com', 'jump.5ch.net', 'jump.megabbs.info'):
             return self.url_result(parsed_url.query)
+        # Firebase Dynamic Link
+        # https://firebase.google.com/docs/dynamic-links/create-manually
+        if host.endswith('.page.link'):
+            qs = compat_parse_qs(parsed_url.query)
+            if qs and qs.get('link'):
+                return self.url_result(qs.get('link')[0])
 
         url, smuggled_data = unsmuggle_url(url)
         force_videoid = None
