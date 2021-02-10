@@ -502,7 +502,7 @@ class NiconicoPlaylistBaseIE(InfoExtractor):
 
 class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:playlist'
-    _VALID_URL = r'https?://(?:www\.)?nicovideo\.jp/(?:user/\d+/)?mylist/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?nicovideo\.jp/(?:user/\d+/)?(?:my/)?mylist/(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'http://www.nicovideo.jp/mylist/27411728',
