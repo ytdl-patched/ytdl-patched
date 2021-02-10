@@ -377,6 +377,8 @@ class NiconicoIE(InfoExtractor):
         # Start extracting information
         title = get_video_info('title')
         if not title:
+            title = api_data['video'].get('title')
+        if not title:
             title = self._og_search_title(webpage, default=None)
         if not title:
             title = self._html_search_regex(
@@ -390,11 +392,17 @@ class NiconicoIE(InfoExtractor):
         video_detail = watch_api_data.get('videoDetail', {})
 
         thumbnail = (
-            get_video_info(['thumbnail_url', 'thumbnailURL'])
+            self._html_search_regex(r'<meta property="og:image" content="([^"]+)">', webpage, 'thumbnail data', default=None)
+            or api_data['video'].get('largeThumbnailURL')
+            or api_data['video'].get('thumbnailURL')
+            or get_video_info(['largeThumbnailURL', 'thumbnail_url', 'thumbnailURL'])
             or self._html_search_meta('image', webpage, 'thumbnail', default=None)
             or video_detail.get('thumbnail'))
 
-        description = get_video_info('description')
+        description = (
+            api_data['video'].get('description')
+            # this cannot be checked before the JSON API check as on community videos the description is simply "community"
+            or get_video_info('description'))
 
         timestamp = (parse_iso8601(get_video_info('first_retrieve'))
                      or unified_timestamp(get_video_info('postedDateTime')))
@@ -414,11 +422,13 @@ class NiconicoIE(InfoExtractor):
                 webpage, 'view count', default=None)
             if match:
                 view_count = int_or_none(match.replace(',', ''))
-        view_count = view_count or video_detail.get('viewCount')
+        if not view_count:
+            view_count = video_detail.get('viewCount')
 
-        comment_count = (int_or_none(get_video_info('comment_num'))
-                         or video_detail.get('commentCount')
-                         or try_get(api_data, lambda x: x['thread']['commentCount']))
+        comment_count = (
+            int_or_none(get_video_info('comment_num'))
+            or video_detail.get('commentCount')
+            or try_get(api_data, lambda x: x['thread']['commentCount']))
         if not comment_count:
             match = self._html_search_regex(
                 r'>Comments: <strong[^>]*>([^<]+)</strong>',
@@ -426,10 +436,10 @@ class NiconicoIE(InfoExtractor):
             if match:
                 comment_count = int_or_none(match.replace(',', ''))
 
-        duration = (parse_duration(
-            get_video_info('length')
-            or self._html_search_meta(
-                'video:duration', webpage, 'video duration', default=None))
+        duration = (
+            parse_duration(
+                get_video_info('length')
+                or self._html_search_meta('video:duration', webpage, 'video duration', default=None))
             or video_detail.get('length')
             or get_video_info('duration'))
 
@@ -441,6 +451,9 @@ class NiconicoIE(InfoExtractor):
         uploader_id = get_video_info(['ch_id', 'user_id']) or owner.get('id')
         uploader = get_video_info(['ch_name', 'user_nickname']) or owner.get('nickname')
 
+        tags = api_data['video'].get('tags') or []
+        genre = get_video_info('genre')
+
         return {
             'id': video_id,
             'title': title,
@@ -451,6 +464,8 @@ class NiconicoIE(InfoExtractor):
             'timestamp': timestamp,
             'uploader_id': uploader_id,
             'view_count': view_count,
+            'tags': tags,
+            'genre': genre,
             'comment_count': comment_count,
             'duration': duration,
             'webpage_url': webpage_url,
