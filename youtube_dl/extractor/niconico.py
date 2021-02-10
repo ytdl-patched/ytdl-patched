@@ -10,6 +10,7 @@ from .common import InfoExtractor
 from ..compat import (
     compat_parse_qs,
     compat_urllib_parse_urlparse,
+    compat_urllib_parse_unquote_plus,
 )
 from ..utils import (
     determine_ext,
@@ -312,7 +313,20 @@ class NiconicoIE(InfoExtractor):
                 video_id, 'Downloading flv info')
 
             flv_info = compat_parse_qs(flv_info_webpage)
-            if 'url' not in flv_info:
+
+            watch_api_data_string = self._html_search_regex(
+                r'<div[^>]+id="watchAPIDataContainer"[^>]+>([^<]+)</div>',
+                webpage, 'watch api data', default=None)
+            player_flv_info = None
+            if watch_api_data_string:
+                watch_api = self._parse_json(watch_api_data_string, video_id)
+                player_flv_info = compat_parse_qs(compat_urllib_parse_unquote_plus(compat_urllib_parse_unquote_plus(watch_api['flashvars']['flvInfo'])))
+            else:
+                self._downloader.report_warning('Could not get flv info as it requires logging in, or the endpoint has been decommissioned')
+            if not player_flv_info:
+                player_flv_info = {}
+
+            if 'url' not in flv_info and 'url' not in player_flv_info:
                 if 'deleted' in flv_info:
                     raise ExtractorError('The video has been deleted.',
                                          expected=True)
@@ -342,12 +356,27 @@ class NiconicoIE(InfoExtractor):
             extension = get_video_info('movie_type')
             if not extension:
                 extension = determine_ext(video_real_url)
+            if not extension:
+                extension = 'mp4'
 
             formats = [{
                 'url': video_real_url,
                 'ext': extension,
                 'format_id': _format_id_from_url(video_real_url),
             }]
+            for video_url in player_flv_info['url']:
+                is_source = not video_url.endswith('low')
+                flash_cookies = self._get_cookies('http://nicovideo.jp')
+                formats.append({
+                    'url': video_url,
+                    'ext': extension,
+                    'format_id': 'source' if is_source else 'flash_low',
+                    'format_note': 'Source flash video' if is_source else 'Low quality flash video',
+                    'acodec': 'mp3',
+                    'container': extension,
+                    'http_headers': {'Cookie': flash_cookies.output(header='', sep=';')},
+                    'quality': 10 if is_source else -2
+                })
         else:
             formats = []
 
