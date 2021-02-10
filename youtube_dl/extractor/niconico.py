@@ -363,6 +363,8 @@ class NiconicoIE(InfoExtractor):
 
                 self._sort_formats(formats)
             else:  # "Old" HTML5 videos
+                if video_real_url.endswith('low'):
+                    self.report_warning('Site is currently in economy mode, you will only have access to lower quality streams')
                 formats = [{
                     'url': video_real_url,
                     'ext': 'mp4',
