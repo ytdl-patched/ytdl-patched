@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   } = req;
   if (release == "latest") {
     const { data: releases } = await axios("https://api.github.com/repos/nao20010128nao/ytdl-patched/releases");
-    const latest = releases[0].name;
+    const latest = releases[0].id;
     return res.redirect(`/api/release/${latest}/${filename}`);
   }
   let releaseData;
