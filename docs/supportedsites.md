@@ -216,6 +216,7 @@
  - **curiositystream**
  - **curiositystream:collection**
  - **CWTV**
+ - **DagelijkseKost**: dagelijksekost.een.be
  - **DailyMail**
  - **dailymotion**
  - **dailymotion:playlist**
