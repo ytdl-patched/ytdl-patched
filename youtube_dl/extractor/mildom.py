@@ -68,7 +68,7 @@ class MildomBaseIE(InfoExtractor):
                 self._DISPATCHER_CONFIG = self._parse_json(base64.b64decode(tmp['data']), 'initialization')
             except ExtractorError:
                 self._DISPATCHER_CONFIG = self._download_json(
-                    'https://bookish-octo-barnacle.vercel.app/api/dispatcher_config', 'initialization',
+                    'https://bookish-octo-barnacle.vercel.app/api/mildom/dispatcher_config', 'initialization',
                     note='Downloading dispatcher_config fallback')
         return self._DISPATCHER_CONFIG
 
@@ -156,7 +156,7 @@ class MildomIE(MildomBaseIE):
             parsed = parsed._replace(
                 netloc='bookish-octo-barnacle.vercel.app',
                 query=compat_urllib_parse_urlencode(stream_query, True),
-                path='/api' + parsed.path)
+                path='/api/mildom' + parsed.path)
             fmt['url'] = compat_urlparse.urlunparse(parsed)
 
         self._sort_formats(formats)
@@ -239,7 +239,7 @@ class MildomVodIE(MildomBaseIE):
             parsed = parsed._replace(
                 netloc='bookish-octo-barnacle.vercel.app',
                 query=compat_urllib_parse_urlencode(stream_query, True),
-                path='/api/vod2/proxy')
+                path='/api/mildom/vod2/proxy')
             fmt['url'] = compat_urlparse.urlunparse(parsed)
 
         self._sort_formats(formats)
