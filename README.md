@@ -20,8 +20,16 @@
 
 <!-- MARKER END -->
 
-youtube-dl - download videos from youtube.com or other video platforms
+# ytdl-patched
+ytdl-patched - download videos from youtube.com or other video platforms
 
+## GOALS
+- keep merging with [`ytdl-org/youtube-dl`](https://github.com/ytdl-org/youtube-dl)
+- implement miscellaneous extractors as possible
+- make `-U` work (yes, really)
+- do anything best
+
+## TOC
 - [INSTALLATION](#installation)
 - [DESCRIPTION](#description)
 - [OPTIONS](#options)
@@ -39,27 +47,27 @@ youtube-dl - download videos from youtube.com or other video platforms
 
 To install it right away for all UNIX users (Linux, macOS, etc.), type:
 
-    sudo curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
+    sudo curl -L https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -o /usr/local/bin/youtube-dl
     sudo chmod a+rx /usr/local/bin/youtube-dl
 
 If you do not have curl, you can alternatively use a recent wget:
 
-    sudo wget https://yt-dl.org/downloads/latest/youtube-dl -O /usr/local/bin/youtube-dl
+    sudo wget https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -O /usr/local/bin/youtube-dl
     sudo chmod a+rx /usr/local/bin/youtube-dl
 
 Windows users can [download an .exe file](https://yt-dl.org/latest/youtube-dl.exe) and place it in any location on their [PATH](https://en.wikipedia.org/wiki/PATH_%28variable%29) except for `%SYSTEMROOT%\System32` (e.g. **do not** put in `C:\Windows\System32`).
 
-You can also use pip:
+~~You can also use pip:~~
 
     sudo -H pip install --upgrade youtube-dl
     
-This command will update youtube-dl if you have already installed it. See the [pypi page](https://pypi.python.org/pypi/youtube_dl) for more information.
+~~This command will update youtube-dl if you have already installed it. See the [pypi page](https://pypi.python.org/pypi/youtube_dl) for more information.~~
 
-macOS users can install youtube-dl with [Homebrew](https://brew.sh/):
+macOS/Linux users can install youtube-dl with [Homebrew](https://brew.sh/):
 
-    brew install youtube-dl
+    brew install nao20010128nao/my/youtube-dl
 
-Or with [MacPorts](https://www.macports.org/):
+~~Or with [MacPorts](https://www.macports.org/):~~
 
     sudo port install youtube-dl
 
@@ -819,7 +827,7 @@ As a last resort, you can also uninstall the version installed by your package m
 Afterwards, simply follow [our manual installation instructions](https://ytdl-org.github.io/youtube-dl/download.html):
 
 ```
-sudo wget https://yt-dl.org/downloads/latest/youtube-dl -O /usr/local/bin/youtube-dl
+sudo wget https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -O /usr/local/bin/youtube-dl
 sudo chmod a+rx /usr/local/bin/youtube-dl
 hash -r
 ```
