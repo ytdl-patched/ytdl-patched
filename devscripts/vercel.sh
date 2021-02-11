@@ -10,5 +10,5 @@ yum install -y wget tar gzip
 ./devscripts/git-dumb-cdn.sh vercel
 
 if [[ "$__DIRNAME" == "vercel" ]] ; then
-  cp -r public/ devscripts/vercel/
+  cp -r public/* devscripts/vercel/
 fi
