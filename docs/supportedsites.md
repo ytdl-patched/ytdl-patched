@@ -1,4 +1,5 @@
 # Supported sites
+ - **17live** (Currently broken)
  - **1tv**: Первый канал
  - **20min**
  - **220.ro**
