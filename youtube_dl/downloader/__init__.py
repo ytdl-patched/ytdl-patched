@@ -26,6 +26,7 @@ PROTOCOL_MAP = {
     'f4m': F4mFD,
     'http_dash_segments': DashSegmentsFD,
     'ism': IsmFD,
+    'ffmpeg': FFmpegFD,
 }
 
 
