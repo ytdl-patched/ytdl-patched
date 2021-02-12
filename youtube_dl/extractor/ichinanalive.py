@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from .common import InfoExtractor
-from ..utils import ExtractorError, determine_ext, try_get
+from ..utils import ExtractorError, try_get
 from ..compat import compat_str
 
 
@@ -38,11 +38,11 @@ class IchinanaLiveIE(InfoExtractor):
                     continue
                 preference = 0.0
                 if 'web' in name:
-                    preference = -0.25
+                    preference -= 0.25
                 if 'High' in name:
-                    preference = 1.0
+                    preference += 1.0
                 if 'Low' in name:
-                    preference = -0.5
+                    preference -= 0.5
                 formats.append({
                     'format_id': name,
                     'url': value,
@@ -50,7 +50,9 @@ class IchinanaLiveIE(InfoExtractor):
                     # 'ffmpeg' protocol is added by ytdl-patched, same as 'm3u8'
                     'protocol': 'ffmpeg',
                     'http_headers': {'Referer': url},
-                    'ext': determine_ext(value, 'mp4')
+                    'ext': 'mp4',
+                    'vcodec': 'h264',
+                    'acodec': 'aac',
                 })
 
         self._sort_formats(formats)
