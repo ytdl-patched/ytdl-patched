@@ -185,6 +185,7 @@ instances = {
     "atsumi-munakata.online",
     "au.toot.gg",
     "auaudon.kemonox.jp",
+    "augsburg.social",
     "august-don.site",
     "aus.social",
     "ausglam.space",
