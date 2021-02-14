@@ -66,7 +66,7 @@ ie.to_screen('%s: len(results)=%d' % (script_id, len(results)))
 if not results:
     raise ExtractorError('no instances found')
 
-results = {x.encode('idna') for x in results}
+results = {x.encode('idna').decode('utf8') for x in results}
 ie.to_screen('%s: converted domain names to punycode, len(results)=%d' % (script_id, len(results)))
 
 # for it in list(results):
