@@ -1,7 +1,10 @@
 ARG base_tag=latest
 FROM python:${base_tag}
 
-ADD artifacts/youtube-dl /usr/bin/
+RUN mkdir -p /opt/bin
+ENV PATH="$PATH:/opt/bin"
 
-RUN chmod a+x /usr/bin/youtube-dl && \
+ADD artifacts/youtube-dl /opt/bin/
+
+RUN chmod a+x /opt/bin/youtube-dl && \
     youtube-dl --version && youtube-dl --help
