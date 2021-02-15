@@ -199,27 +199,27 @@ class IwaraUserIE(InfoExtractor):
 
 
 class IwaraUser2IE(InfoExtractor):
-    IE_NAME = 'iwara:user'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
-    IE_DESC = False
+    IE_NAME = 'iwara:user2'
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)/videos'
+    IE_DESC = False  # do not list this
     _TESTS = [{
         'note': 'number of all videos page is just 1 page',
-        'url': 'https://ecchi.iwara.tv/users/infinityyukarip',
+        'url': 'https://ecchi.iwara.tv/users/infinityyukarip/videos',
         'info_dict': {},
         'add_ie': [IwaraUserIE.ie_key()],
     }, {
         'note': 'no even all videos page',
-        'url': 'https://ecchi.iwara.tv/users/mmd-quintet',
+        'url': 'https://ecchi.iwara.tv/users/mmd-quintet/videos',
         'info_dict': {},
         'add_ie': [IwaraUserIE.ie_key()],
     }, {
         'note': 'has paging',
-        'url': 'https://ecchi.iwara.tv/users/theblackbirdcalls',
+        'url': 'https://ecchi.iwara.tv/users/theblackbirdcalls/videos',
         'info_dict': {},
         'add_ie': [IwaraUserIE.ie_key()],
     }, {
         'note': 'Japanese chars in URL',
-        'url': 'https://ecchi.iwara.tv/users/ぶた丼',
+        'url': 'https://ecchi.iwara.tv/users/ぶた丼/videos',
         'info_dict': {},
         'add_ie': [IwaraUserIE.ie_key()],
     }]
