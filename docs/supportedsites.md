@@ -1,5 +1,6 @@
 # Supported sites
- - **17live** (Currently broken)
+ - **17live**
+ - **17live:clip**
  - **1tv**: Первый канал
  - **20min**
  - **220.ro**
@@ -243,6 +244,7 @@
  - **Disney**
  - **dlive:stream**
  - **dlive:vod**
+ - **dnatube**
  - **Dotsub**
  - **DouyuShow**
  - **DouyuTV**: 斗鱼
@@ -547,6 +549,7 @@
  - **Motherless**
  - **MotherlessGroup**
  - **Motorsport**: motorsport.com
+ - **mottohomete**
  - **MovieClips**
  - **MovieFap**
  - **Moviezine**
