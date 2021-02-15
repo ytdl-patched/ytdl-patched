@@ -106,7 +106,6 @@ class IwaraIE(InfoExtractor):
 
 class IwaraUserIE(InfoExtractor):
     IE_NAME = 'iwara:user'
-    # stop id part before / to distinguish all videos url
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
     _TESTS = [{
         # cond: videos < 40
@@ -197,3 +196,37 @@ class IwaraUserIE(InfoExtractor):
             'uploader_id': video_id,
         })
         return playlist
+
+
+class IwaraUser2IE(InfoExtractor):
+    IE_NAME = 'iwara:user'
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
+    IE_DESC = False
+    _TESTS = [{
+        'note': 'number of all videos page is just 1 page',
+        'url': 'https://ecchi.iwara.tv/users/infinityyukarip',
+        'info_dict': {},
+        'add_ie': [IwaraUserIE.ie_key()],
+    }, {
+        'note': 'no even all videos page',
+        'url': 'https://ecchi.iwara.tv/users/mmd-quintet',
+        'info_dict': {},
+        'add_ie': [IwaraUserIE.ie_key()],
+    }, {
+        'note': 'has paging',
+        'url': 'https://ecchi.iwara.tv/users/theblackbirdcalls',
+        'info_dict': {},
+        'add_ie': [IwaraUserIE.ie_key()],
+    }, {
+        'note': 'Japanese chars in URL',
+        'url': 'https://ecchi.iwara.tv/users/ぶた丼',
+        'info_dict': {},
+        'add_ie': [IwaraUserIE.ie_key()],
+    }]
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage(url, video_id, note='Repairing URL')
+        videos_url = self._search_regex(r'<a href="(/users/.+?)"(?: title=".+?")? class="username">', webpage, 'user page url')
+        videos_url = urljoin(url, videos_url)
+        return self.url_result(videos_url, ie=IwaraUserIE.ie_key())

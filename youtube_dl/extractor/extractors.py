@@ -528,6 +528,7 @@ from .ivideon import IvideonIE
 from .iwara import (
     IwaraIE,
     IwaraUserIE,
+    IwaraUser2IE,
 )
 from .izlesene import IzleseneIE
 from .javhub import JavhubIE
