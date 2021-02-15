@@ -199,9 +199,9 @@ class IwaraUserIE(InfoExtractor):
 
 
 class IwaraUser2IE(InfoExtractor):
-    IE_NAME = 'iwara:user'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
-    IE_DESC = False
+    IE_NAME = 'iwara:user2'
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)/videos'
+    IE_DESC = False  # do not list this
     _TESTS = [{
         'note': 'number of all videos page is just 1 page',
         'url': 'https://ecchi.iwara.tv/users/infinityyukarip',
