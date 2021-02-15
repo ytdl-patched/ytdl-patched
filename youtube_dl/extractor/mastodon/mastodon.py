@@ -9,30 +9,29 @@ from ...utils import ExtractorError, clean_html, preferredencoding
 from ...compat import compat_str
 
 
-class MastodonBaseIE(InfoExtractor):
-    known_valid_instances = set()
+known_valid_instances = set()
 
-    def suitable(self, url):
-        mobj = re.match(self._VALID_URL, url)
+
+class MastodonBaseIE(InfoExtractor):
+
+    @classmethod
+    def suitable(cls, url):
+        mobj = re.match(cls._VALID_URL, url)
         if not mobj:
             return False
         prefix = mobj.group('prefix')
         hostname = mobj.group('domain')
-        dl, skip, params = self._downloader, True, None
-        if dl:
-            params = dl.params
-        if params:
-            skip = not params.get('check_mastodon_instance', False)
-        return self._test_mastodon_instance(hostname, skip, prefix)
+        return cls._test_mastodon_instance(None, hostname, True, prefix)
 
-    def _test_mastodon_instance(self, hostname, skip, prefix):
+    @staticmethod
+    def _test_mastodon_instance(ie, hostname, skip, prefix):
         hostname = hostname.encode('idna')
         if not isinstance(hostname, compat_str):
             hostname = hostname.decode(preferredencoding())
 
         if hostname in instances:
             return True
-        if hostname in self.known_valid_instances:
+        if hostname in known_valid_instances:
             return True
 
         # HELP: more cases needed
@@ -47,11 +46,11 @@ class MastodonBaseIE(InfoExtractor):
         if skip:
             return False
 
-        self.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social or joinmastodon.org.' % hostname)
+        ie.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social or joinmastodon.org.' % hostname)
 
         try:
             # try /api/v1/instance
-            api_request_instance = self._download_json(
+            api_request_instance = ie._download_json(
                 'https://%s/api/v1/instance' % hostname, hostname,
                 note='Testing Mastodon API /api/v1/instance')
             if api_request_instance.get('uri') != hostname:
@@ -60,7 +59,7 @@ class MastodonBaseIE(InfoExtractor):
                 return False
 
             # try /api/v1/directory
-            api_request_directory = self._download_json(
+            api_request_directory = ie._download_json(
                 'https://%s/api/v1/directory' % hostname, hostname,
                 note='Testing Mastodon API /api/v1/directory')
             if not isinstance(api_request_directory, (tuple, list)):
@@ -69,7 +68,7 @@ class MastodonBaseIE(InfoExtractor):
             return False
 
         # this is probably mastodon instance
-        self.known_valid_instances.add(hostname)
+        known_valid_instances.add(hostname)
         return True
 
 

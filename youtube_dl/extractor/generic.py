@@ -130,6 +130,11 @@ from .odnoklassniki import OdnoklassnikiIE
 from .kinja import KinjaEmbedIE
 from .arcpublishing import ArcPublishingIE
 from .medialaan import MedialaanIE
+from .mastodon import (
+    MastodonIE,
+    MastodonUserIE,
+    MastodonUserNumericIE,
+)
 
 
 class GenericIE(InfoExtractor):
@@ -2413,6 +2418,17 @@ class GenericIE(InfoExtractor):
             video_id = force_videoid
         else:
             video_id = self._generic_id(url)
+
+        # Test if the URL is for Mastodon instance
+
+        if self._downloader.params.get('check_mastodon_instance', False):
+            prefix = self._search_regex(
+                (MastodonIE._VALID_URL,
+                 MastodonUserIE._VALID_URL,
+                 MastodonUserNumericIE._VALID_URL),
+                url, 'mastdon test', group='prefix', default=None)
+            if MastodonIE._test_mastodon_instance(self, parsed_url.netloc, False, prefix):
+                return self.url_result(url)
 
         self.to_screen('%s: Requesting header' % video_id)
 

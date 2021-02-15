@@ -9,7 +9,6 @@ import email
 import getpass
 import io
 import itertools
-import inspect
 import optparse
 import os
 import platform
@@ -2989,15 +2988,6 @@ else:
     def compat_ctypes_WINFUNCTYPE(*args, **kwargs):
         return ctypes.WINFUNCTYPE(*args, **kwargs)
 
-if sys.version_info >= (3, 0):
-    # https://ideone.com/7Vc1X0
-    def compat_is_unbound(func):
-        return not inspect.ismethod(func)
-else:
-    # https://ideone.com/Toip14
-    def compat_is_unbound(func):
-        return inspect.ismethod(func)
-
 __all__ = [
     'compat_HTMLParseError',
     'compat_HTMLParser',
@@ -3023,7 +3013,6 @@ __all__ = [
     'compat_http_server',
     'compat_input',
     'compat_integer_types',
-    'compat_is_unbound',
     'compat_itertools_count',
     'compat_kwargs',
     'compat_numeric_types',
