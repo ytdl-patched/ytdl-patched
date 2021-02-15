@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 instances = {
     # list of instances here
-    "0",
     "0.unicomplex.co",
     "00x.club",
     "0c65d68f.ngrok.io",
@@ -1187,7 +1186,6 @@ instances = {
     "livesconnect.com",
     "llii.ga",
     "local.iwamidon.tech",
-    "localhost",
     "localmstcdn.anima-mystica.org",
     "lofi.one",
     "login.m.to",
