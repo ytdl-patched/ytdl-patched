@@ -24,7 +24,7 @@ class QAWebsitesBaseIE(InfoExtractor):
 
     def _real_extract(self, url):
         question_id = self._match_id(url)
-        (question_text, answer_text) = self._extract_text(url)
+        question_text, answer_text = self._extract_text(url)
 
         if not question_text and not answer_text:
             raise ExtractorError('Nothing is present')
@@ -77,7 +77,7 @@ class PeingIE(QAWebsitesBaseIE):
             r"<p\s+class=(['\"])text\1>(.+?)</p>", webpage,
             'answer text', fatal=False, group=2) or ''
 
-        return (question_text, answer_text)
+        return question_text, answer_text
 
 
 class AskfmIE(QAWebsitesBaseIE):
@@ -108,7 +108,7 @@ class AskfmIE(QAWebsitesBaseIE):
             'answer text', fatal=False) or self._html_search_meta(
             ('og:description', 'description'), webpage) or ''
 
-        return (question_text, answer_text)
+        return question_text, answer_text
 
 
 class MarshmallowQAIE(QAWebsitesBaseIE):
@@ -134,7 +134,7 @@ class MarshmallowQAIE(QAWebsitesBaseIE):
             r'<div class="answer-content pre-wrap text-dark" data-target="obscene-word\.content">(.+?)</div>',
             webpage, 'answer text', fatal=False) or ''
 
-        return (question_text, answer_text)
+        return question_text, answer_text
 
 
 class MottohometeIE(QAWebsitesBaseIE):
@@ -165,4 +165,4 @@ class MottohometeIE(QAWebsitesBaseIE):
             r"(?s)<div class='panel-body'>\s*<div class='cwrap'><p>(.+?)</p>",
             webpage, 'answer text', fatal=False) or ''
 
-        return (question_text, answer_text)
+        return question_text, answer_text
