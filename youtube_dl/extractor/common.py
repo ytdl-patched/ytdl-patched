@@ -421,6 +421,12 @@ class InfoExtractor(object):
         return compat_str(m.group('id'))
 
     @classmethod
+    def _valid_url_re(cls):
+        if '_VALID_URL_RE' not in cls.__dict__:
+            cls._VALID_URL_RE = re.compile(cls._VALID_URL)
+        return cls._VALID_URL_RE
+
+    @classmethod
     def working(cls):
         """Getter method for _WORKING."""
         return cls._WORKING

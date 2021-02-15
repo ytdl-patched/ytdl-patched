@@ -178,9 +178,8 @@ class MildomVodIE(MildomBaseIE):
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/playback/(?P<user_id>\d+)/(?P<id>(?P=user_id)-[a-zA-Z0-9]+)'
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        m = self._VALID_URL_RE.match(url)
-        user_id = m.group('user_id')
+        m = self._valid_url_re().match(url)
+        user_id, video_id = m.group('user_id'), m.group('id')
         url = 'https://www.mildom.com/playback/%s/%s' % (user_id, video_id)
 
         webpage = self._download_webpage(url, video_id)

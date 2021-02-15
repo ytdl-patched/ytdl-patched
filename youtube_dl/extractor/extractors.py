@@ -480,7 +480,10 @@ from .hungama import (
     HungamaSongIE,
 )
 from .hypem import HypemIE
-from .ichinanalive import IchinanaLiveIE
+from .ichinanalive import (
+    IchinanaLiveIE,
+    IchinanaLiveClipIE,
+)
 from .ign import (
     IGNIE,
     IGNVideoIE,
