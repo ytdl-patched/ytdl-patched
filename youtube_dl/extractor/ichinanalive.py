@@ -109,7 +109,7 @@ class IchinanaLiveClipIE(InfoExtractor):
 
     @classmethod
     def suitable(cls, url):
-        return not IchinanaLiveIE.suitable(url) and super().suitable(url)
+        return not IchinanaLiveIE.suitable(url) and super(IchinanaLiveClipIE, cls).suitable(url)
 
     def _real_extract(self, url):
         m = self._valid_url_re().match(url)
