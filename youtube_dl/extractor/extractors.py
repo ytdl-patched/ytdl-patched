@@ -986,6 +986,7 @@ from .pyvideo import PyvideoIE
 from .qawebsites import (
     AskfmIE,
     MarshmallowQAIE,
+    MottohometeIE,
     PeingIE,
 )
 from .qqmusic import (

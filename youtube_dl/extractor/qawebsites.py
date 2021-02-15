@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import ExtractorError, unescapeHTML
+from ..utils import ExtractorError, clean_html, unescapeHTML
 
 from .youtube import (
     YoutubeIE,
@@ -132,6 +132,37 @@ class MarshmallowQAIE(QAWebsitesBaseIE):
 
         answer_text = self._search_regex(
             r'<div class="answer-content pre-wrap text-dark" data-target="obscene-word\.content">(.+?)</div>',
+            webpage, 'answer text', fatal=False) or ''
+
+        return (question_text, answer_text)
+
+
+class MottohometeIE(QAWebsitesBaseIE):
+    IE_NAME = 'mottohomete'
+    _VALID_URL = r'https?://(?:www\.)?mottohomete\.net/letters/(?P<id>[a-f0-9-]{36})'
+
+    _TEST = {
+        'url': 'https://www.mottohomete.net/letters/cbfc80f6-61b4-44c1-9772-b2de9702f1ce',
+        'only_matching': True,
+    }
+
+    def _extract_text(self, url):
+        question_id = self._match_id(url)
+        webpage = self._download_webpage(url, question_id)
+
+        question_text = self._html_search_meta(
+            ('twitter:ttile', 'og:title'),
+            webpage)
+        if not question_text:
+            question_text = self._search_regex(
+                r"(?s)<div class='panel-heading'>\s*<div class='cwrap'><p>(.+?)</p>",
+                webpage, 'question text', fatal=False)
+            question_text = clean_html(question_text)
+        if not question_text:
+            question_text = ''
+
+        answer_text = self._search_regex(
+            r"(?s)<div class='panel-body'>\s*<div class='cwrap'><p>(.+?)</p>",
             webpage, 'answer text', fatal=False) or ''
 
         return (question_text, answer_text)
