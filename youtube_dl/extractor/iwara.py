@@ -154,6 +154,11 @@ class IwaraUserIE(InfoExtractor):
         'playlist_mincount': 170,
     }]
 
+    @classmethod
+    def suitable(cls, url):
+        return super(IwaraUserIE, cls).suitable(url) and not re.search(
+            r'iwara\.tv/users/[^/]+/videos', url)
+
     def _real_extract(self, url):
         video_id = self._match_id(url)
         webpage = self._download_webpage(url, video_id)
