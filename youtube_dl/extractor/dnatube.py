@@ -5,11 +5,11 @@ from .common import InfoExtractor
 
 
 class DnaTubeBaseIE(InfoExtractor):
-    IE_DESC = False  # Do not list
+    pass
 
 
 class DnaTubePlaylistBaseIE(DnaTubeBaseIE):
-    IE_DESC = False  # Do not list
+    pass
 
 
 class DnaTubeIE(DnaTubeBaseIE):
