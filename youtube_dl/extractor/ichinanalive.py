@@ -18,6 +18,10 @@ class IchinanaLiveIE(InfoExtractor):
         'only_matching': True,
     }
 
+    @classmethod
+    def suitable(cls, url):
+        return not IchinanaLiveClipIE.suitable(url) and super(IchinanaLiveIE, cls).suitable(url)
+
     def _real_extract(self, url):
         video_id = self._match_id(url)
         url = 'https://17.live/live/%s' % video_id
@@ -107,10 +111,6 @@ class IchinanaLiveClipIE(InfoExtractor):
         },
     }
 
-    @classmethod
-    def suitable(cls, url):
-        return not IchinanaLiveIE.suitable(url) and super().suitable(url)
-
     def _real_extract(self, url):
         m = self._valid_url_re().match(url)
         uploader_id, video_id = m.group('uploader_id'), m.group('id')
@@ -125,7 +125,7 @@ class IchinanaLiveClipIE(InfoExtractor):
         thumbnail = view_data.get('imageURL')
         duration = view_data.get('duration')
         description = view_data.get('caption')
-        upload_date = unified_strdate(view_data.get('createdAt'))
+        upload_date = unified_strdate(str_or_none(view_data.get('createdAt')))
 
         user_info = self._download_json(
             'https://api-dsa.17app.co/api/v1/clips/%s/view' % video_id, video_id,
