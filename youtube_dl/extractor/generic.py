@@ -2427,7 +2427,7 @@ class GenericIE(InfoExtractor):
                  MastodonUserIE._VALID_URL,
                  MastodonUserNumericIE._VALID_URL),
                 url, 'mastdon test', group='prefix', default=None)
-            if MastodonIE._test_mastodon_instance(self, parsed_url.netloc, False, prefix):
+            if MastodonIE._test_mastodon_instance(self, parsed_url.hostname, False, prefix):
                 return self.url_result(url)
 
         self.to_screen('%s: Requesting header' % video_id)
