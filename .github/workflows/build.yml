@@ -98,6 +98,7 @@ jobs:
       matrix:
         icon: [red, white]
         websocket: [true, false]
+        pyinstaller: ['-m PyInstaller', 'devscripts/pyinstaller_zopfli.py']
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -108,9 +109,9 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.python_version }}
-      - name: Install PyInstaller
+      - name: Install deps
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
-        run: pip install --upgrade pyinstaller
+        run: pip install --upgrade pyinstaller zopfli
       - name: Install websocket_client
         run: pip install --upgrade websocket_client
         if: ${{ matrix.websocket }}
@@ -119,7 +120,7 @@ jobs:
       - name: Build patched YTDL for Windows
         shell: pwsh
         run: |
-          python -OO -m PyInstaller `
+          python -OO ${{ matrix.pyinstaller }} `
               --onefile --console --distpath . `
               --hidden-import codecs `
               --hidden-import os `
@@ -129,7 +130,7 @@ jobs:
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: "ytdl-windows-${{ matrix.icon }}${{ matrix.websocket && '+ws' || '' }}"
+          name: "ytdl-windows-${{ matrix.icon }}${{ matrix.websocket && '+ws' || '' }}${{ matrix.pyinstaller == 'devscripts/pyinstaller_zopfli.py' && '+zp' || '' }}"
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
