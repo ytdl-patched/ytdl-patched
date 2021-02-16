@@ -98,7 +98,8 @@ jobs:
       matrix:
         icon: [red, white]
         websocket: [true, false]
-        pyinstaller: ['-m PyInstaller', 'devscripts/pyinstaller_zopfli.py']
+        # pyinstaller: ['-m PyInstaller', 'devscripts/pyinstaller_zopfli.py']
+        pyinstaller: ['devscripts/pyinstaller_zopfli.py']
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -263,7 +264,7 @@ jobs:
       - name: Download builds for Windows (red icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-red
+          name: ytdl-windows-red+zp
       - name: Upload exe
         id: upload-3
         uses: actions/upload-release-asset@v1
@@ -277,7 +278,7 @@ jobs:
       - name: Download builds for Windows (white icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-white
+          name: ytdl-windows-white+zp
       - name: Upload exe
         id: upload-4
         uses: actions/upload-release-asset@v1
@@ -291,7 +292,7 @@ jobs:
       - name: Download builds for Windows with WebSocket (red icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-red+ws
+          name: ytdl-windows-red+ws+zp
       - name: Upload exe
         id: upload-5
         uses: actions/upload-release-asset@v1
@@ -305,7 +306,7 @@ jobs:
       - name: Download builds for Windows with WebSocket (white icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-white+ws
+          name: ytdl-windows-white+ws+zp
       - name: Upload exe
         id: upload-6
         uses: actions/upload-release-asset@v1
@@ -340,7 +341,7 @@ jobs:
         uses: actions/download-artifact@v2
         if: ${{ startsWith(matrix.os, 'windows') }}
         with:
-          name: ytdl-windows-white
+          name: ytdl-windows-white+zp
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
         if: ${{ startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') }}
