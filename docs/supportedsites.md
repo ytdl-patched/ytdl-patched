@@ -1241,6 +1241,7 @@
  - **ZattooLive**
  - **ZDF**
  - **ZDFChannel**
+ - **Zhihu**
  - **zingmp3**: mp3.zing.vn
  - **zoom**
  - **Zype**
