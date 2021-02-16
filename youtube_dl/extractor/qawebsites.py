@@ -151,7 +151,7 @@ class MottohometeIE(QAWebsitesBaseIE):
         webpage = self._download_webpage(url, question_id)
 
         question_text = self._html_search_meta(
-            ('twitter:ttile', 'og:title'),
+            ('twitter:title', 'og:title'),
             webpage)
         if not question_text:
             question_text = self._search_regex(
