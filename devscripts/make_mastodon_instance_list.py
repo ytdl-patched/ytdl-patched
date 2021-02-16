@@ -69,7 +69,10 @@ results = {x.encode('idna').decode('utf8') for x in results}
 ie.to_screen('%s: converted domain names to punycode, len(results)=%d' % (script_id, len(results)))
 
 results = {x for x in results if '.' in x}
-ie.to_screen('%s: find domain names containing dot, len(results)=%d' % (script_id, len(results)))
+ie.to_screen('%s: excluded domain names without dot, len(results)=%d' % (script_id, len(results)))
+
+results = {x for x in results if not (x.endswith('.ngrok.io') or x.endswith('.localhost.run') or x.endswith('.serveo.net'))}
+ie.to_screen('%s: excluded temporary domain names, len(results)=%d' % (script_id, len(results)))
 
 # for it in list(results):
 #     try:
