@@ -14,7 +14,7 @@ on:
     inputs: {}
 
 env:
-  python_version: 3.8
+  python_version: 3.9
   windows_icon: red
 
 jobs:
@@ -97,9 +97,7 @@ jobs:
     strategy:
       matrix:
         icon: [red, white]
-        websocket: [true, false]
         # pyinstaller: ['-m PyInstaller', 'devscripts/pyinstaller_zopfli.py']
-        pyinstaller: ['devscripts/pyinstaller_zopfli.py']
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -112,26 +110,21 @@ jobs:
           python-version: ${{ env.python_version }}
       - name: Install deps
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
-        run: pip install --upgrade pyinstaller zopfli
-      - name: Install websocket_client
-        run: pip install --upgrade websocket_client
-        if: ${{ matrix.websocket }}
+        run: pip install --upgrade pyinstaller zopfli websocket_client
       - name: Install UPX
         run: choco install upx
       - name: Build patched YTDL for Windows
         shell: pwsh
         run: |
-          python -OO ${{ matrix.pyinstaller }} `
+          python -OO devscripts/pyinstaller_zopfli.py `
               --onefile --console --distpath . `
-              --hidden-import codecs `
-              --hidden-import os `
               --icon icons\youtube_social_squircle_${{ matrix.icon }}.ico `
               -n youtube-dl youtube_dl\__main__.py
           Move-Item youtube-dl.exe artifacts/
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: "ytdl-windows-${{ matrix.icon }}${{ matrix.websocket && '+ws' || '' }}${{ matrix.pyinstaller == 'devscripts/pyinstaller_zopfli.py' && '+zp' || '' }}"
+          name: "ytdl-windows-${{ matrix.icon }}"
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
@@ -237,10 +230,9 @@ jobs:
           body: |
             What to download
             - for Linux/macOS - `youtube-dl` (requires Python 3.x installed)
-            - for Windows
+            - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
-                - with WebSocket support - `+ws`
       - name: Upload bin
         id: upload-1
         uses: actions/upload-release-asset@v1
@@ -264,7 +256,7 @@ jobs:
       - name: Download builds for Windows (red icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-red+zp
+          name: ytdl-windows-red
       - name: Upload exe
         id: upload-3
         uses: actions/upload-release-asset@v1
@@ -278,7 +270,7 @@ jobs:
       - name: Download builds for Windows (white icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-white+zp
+          name: ytdl-windows-white
       - name: Upload exe
         id: upload-4
         uses: actions/upload-release-asset@v1
@@ -288,34 +280,6 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-white.exe
-          asset_content_type: application/vnd.microsoft.portable-executable
-      - name: Download builds for Windows with WebSocket (red icon)
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-windows-red+ws+zp
-      - name: Upload exe
-        id: upload-5
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./artifacts/youtube-dl.exe
-          asset_name: youtube-dl-red+ws.exe
-          asset_content_type: application/vnd.microsoft.portable-executable
-      - name: Download builds for Windows with WebSocket (white icon)
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-windows-white+ws+zp
-      - name: Upload exe
-        id: upload-6
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./artifacts/youtube-dl.exe
-          asset_name: youtube-dl-white+ws.exe
           asset_content_type: application/vnd.microsoft.portable-executable
   binary-test:
     needs: [build-linux, build-windows]
@@ -341,7 +305,7 @@ jobs:
         uses: actions/download-artifact@v2
         if: ${{ startsWith(matrix.os, 'windows') }}
         with:
-          name: ytdl-windows-white+zp
+          name: ytdl-windows-white
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
         if: ${{ startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') }}
