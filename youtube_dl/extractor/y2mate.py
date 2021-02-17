@@ -3,23 +3,65 @@ from __future__ import unicode_literals
 
 import re
 
-from ..compat import compat_urllib_parse_urlencode
+from ..compat import (
+    compat_urllib_parse_urlencode,
+    compat_str,
+)
 from ..utils import (
     ExtractorError,
     int_or_none,
     parse_filesize,
+    str_or_none,
     urlencode_postdata,
 )
 from .common import InfoExtractor
-from .youtube import YoutubeIE
+# keep it sync with extractors.py
+from .youtube import (
+    YoutubeIE,
+    YoutubeFavouritesIE,
+    YoutubeHistoryIE,
+    YoutubeTabIE,
+    YoutubePlaylistIE,
+    YoutubeRecommendedIE,
+    YoutubeSearchDateIE,
+    YoutubeSearchIE,
+    # YoutubeSearchURLIE,
+    YoutubeSubscriptionsIE,
+    YoutubeTruncatedIDIE,
+    YoutubeTruncatedURLIE,
+    YoutubeYtBeIE,
+    YoutubeYtUserIE,
+    YoutubeWatchLaterIE,
+)
 
 
-class Y2mateIE(InfoExtractor):
-    _VALID_URL = r'(?x)^(?:y2(?:mate)?:|https?://(?:www\.)y2mate\.com/(?:.+/)?youtube/)%s' % re.sub(r'^\(\?x\)\^', '', YoutubeIE._VALID_URL)
+class Y2mateBaseIE(InfoExtractor):
+    BASE_IE = InfoExtractor
+    PREFIXES = ('y2:', 'y2mate:')
+
+    @classmethod
+    def remove_prefix(cls, url):
+        for pfx in cls.PREFIXES:
+            if not url.startswith(pfx):
+                continue
+            return url[len(pfx):]
+        return url
+
+    @classmethod
+    def suitable(cls, url):
+        for pfx in cls.PREFIXES:
+            if not url.startswith(pfx):
+                continue
+            return cls.BASE_IE.suitable(url[len(pfx):])
+        return False
+
+
+class Y2mateIE(Y2mateBaseIE):
+    BASE_IE = YoutubeIE
     IE_NAME = 'y2mate'
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
+        video_id = self.BASE_IE._match_id(self.remove_prefix(url))
         self._download_webpage('https://www.y2mate.com/youtube/%s' % video_id, video_id)
         common_headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         request_data = urlencode_postdata({
@@ -138,3 +180,58 @@ class Y2mateIE(InfoExtractor):
             'title': title,
             'formats': formats,
         }
+
+
+def _convert_result(ret):
+    if not isinstance(ret, dict):
+        return ret
+
+    type = str_or_none(ret.get('_type')) or ''
+    if type == 'playlist':
+        ret['entries'] = [_convert_result(x) for x in ret['entries']]
+    elif type.startswith('url'):
+        ret['url'] = 'y2:' + ret['url']
+
+    if 'ie_key' in ret:
+        ret['ie_key'] = 'Y2mate' + ret['ie_key'][7:]
+
+    return ret
+
+
+def ___real_extract(self, url):
+    url = self.remove_prefix(url)
+    try:  # Pythpn 2.x
+        real_extract_func = self.BASE_IE._real_extract.__func__
+    except (TypeError, AttributeError):
+        real_extract_func = self.BASE_IE._real_extract
+    ret = real_extract_func(self, url)
+    return _convert_result(ret)
+
+
+for value in (
+    YoutubeFavouritesIE,
+    YoutubeHistoryIE,
+    YoutubeTabIE,
+    YoutubePlaylistIE,
+    YoutubeRecommendedIE,
+    YoutubeSearchDateIE,
+    YoutubeSearchIE,
+    YoutubeSubscriptionsIE,
+    YoutubeTruncatedIDIE,
+    YoutubeTruncatedURLIE,
+    YoutubeYtBeIE,
+    YoutubeYtUserIE,
+    YoutubeWatchLaterIE,
+):
+    key = value.__name__
+    clazz_name = 'Y2mate' + key[7:]
+    clazz_dict = {
+        'BASE_IE': value,
+        '_real_extract': ___real_extract,
+    }
+    if hasattr(value, 'IE_NAME') and isinstance(value.IE_NAME, compat_str):
+        clazz_dict['IE_NAME'] = 'y2mate' + value.IE_NAME[7:]
+    if hasattr(value, '_VALID_URL'):
+        clazz_dict['_VALID_URL'] = value._VALID_URL
+
+    globals()[clazz_name] = type(clazz_name, (Y2mateBaseIE, value), clazz_dict)
