@@ -277,6 +277,8 @@ class NiconicoIE(InfoExtractor):
             'url': session_response['data']['session']['content_uri'],
             'format_id': format_id,
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
+            'acodec': 'aac',
+            'vcodec': 'h264',  # As far as I'm aware DMC videos can only serve h264/aac combinations
             'abr': float_or_none(audio_quality.get('bitrate'), 1000),
             'vbr': float_or_none(video_quality.get('bitrate'), 1000),
             'height': resolution.get('height'),
@@ -380,6 +382,9 @@ class NiconicoIE(InfoExtractor):
         else:
             formats = []
 
+            def get_video_info(items):
+                return dict_get(api_data['video'], items)
+
             dmc_info = api_data['video'].get('dmcInfo')
             if dmc_info:  # "New" HTML5 videos
                 quality_info = dmc_info['quality']
@@ -392,16 +397,28 @@ class NiconicoIE(InfoExtractor):
 
                 self._sort_formats(formats)
             else:  # "Old" HTML5 videos
-                if video_real_url.endswith('low'):
+                is_quality = not video_real_url.endswith('low')
+                if not is_quality:
                     self.report_warning('Site is currently in economy mode, you will only have access to lower quality streams')
+
+                # Community restricted videos seem to have issues with the thumb API not returning anything at all
+                filesize = int_or_none(get_video_info('size_high') if is_quality else get_video_info('size_low'))
+
+                smile_threshold_timestamp = unified_timestamp('2016/11/30 00:00:00')
+
+                timestamp = (
+                    parse_iso8601(get_video_info('first_retrieve'))
+                    or unified_timestamp(get_video_info('postedDateTime'))
+                    or unified_timestamp(api_data['video'].get('postedDateTime'))
+                )
                 formats = [{
                     'url': video_real_url,
                     'ext': 'mp4',
                     'format_id': _format_id_from_url(video_real_url),
+                    'source_preference': 5 if is_quality else -2,
+                    'quality': 5 if timestamp < smile_threshold_timestamp and is_quality else None,
+                    'filesize': filesize,
                 }]
-
-            def get_video_info(items):
-                return dict_get(api_data['video'], items)
 
         # Start extracting information
         title = get_video_info('title')
@@ -443,6 +460,8 @@ class NiconicoIE(InfoExtractor):
             timestamp = parse_iso8601(
                 video_detail['postedAt'].replace('/', '-'),
                 delimiter=' ', timezone=datetime.timedelta(hours=9))
+
+        smile_threshold_timestamp = unified_timestamp('2016/11/30 00:00:00')
 
         view_count = int_or_none(get_video_info(['view_counter', 'viewCount']))
         if not view_count:
