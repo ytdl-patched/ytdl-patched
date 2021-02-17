@@ -135,6 +135,7 @@ from .mastodon import (
     MastodonUserIE,
     MastodonUserNumericIE,
 )
+from .simplecast import SimplecastIE
 
 
 class GenericIE(InfoExtractor):
@@ -2252,6 +2253,15 @@ class GenericIE(InfoExtractor):
             'info_dict': {},
             'add_ie': ['Youtube'],
         },
+        {
+            # Simplecast player embed
+            'url': 'https://www.bio.org/podcast',
+            'info_dict': {
+                'id': 'podcast',
+                'title': 'I AM BIO Podcast | BIO',
+            },
+            'playlist_mincount': 52,
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -2836,6 +2846,12 @@ class GenericIE(InfoExtractor):
         if matches:
             waitlist.append(self.playlist_from_matches(
                 matches, video_id, video_title, getter=unescapeHTML, ie='FunnyOrDie'))
+
+        # Look for Simplecast embeds
+        simplecast_urls = SimplecastIE._extract_urls(webpage)
+        if simplecast_urls:
+            return self.playlist_from_matches(
+                simplecast_urls, video_id, video_title)
 
         # Look for BBC iPlayer embed
         matches = re.findall(r'setPlaylist\("(https?://www\.bbc\.co\.uk/iplayer/[^/]+/[\da-z]{8})"\)', webpage)

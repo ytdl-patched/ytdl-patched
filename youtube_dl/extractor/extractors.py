@@ -294,7 +294,11 @@ from .douyutv import (
     DouyuShowIE,
     DouyuTVIE,
 )
-from .dplay import DPlayIE
+from .dplay import (
+    DPlayIE,
+    DiscoveryPlusIE,
+    HGTVDeIE,
+)
 from .dreisat import DreiSatIE
 from .drbonanza import DRBonanzaIE
 from .drtuber import DrTuberIE
@@ -1112,6 +1116,11 @@ from .shared import (
 )
 from .sharevideos import ShareVideosIE
 from .showroomlive import ShowRoomLiveIE
+from .simplecast import (
+    SimplecastIE,
+    SimplecastEpisodeIE,
+    SimplecastPodcastIE,
+)
 from .sina import SinaIE
 from .sixplay import SixPlayIE
 from .skyit import (
