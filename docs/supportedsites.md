@@ -909,6 +909,9 @@
  - **Steam**
  - **Stitcher**
  - **StitcherShow**
+ - **StoryFire**
+ - **StoryFireSeries**
+ - **StoryFireUser**
  - **Streamable**
  - **streamcloud.eu**
  - **StreamCZ**
@@ -1241,6 +1244,7 @@
  - **ZattooLive**
  - **ZDF**
  - **ZDFChannel**
+ - **Zhihu**
  - **zingmp3**: mp3.zing.vn
  - **zoom**
  - **Zype**
