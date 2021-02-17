@@ -909,6 +909,9 @@
  - **Steam**
  - **Stitcher**
  - **StitcherShow**
+ - **StoryFire**
+ - **StoryFireSeries**
+ - **StoryFireUser**
  - **Streamable**
  - **streamcloud.eu**
  - **StreamCZ**
