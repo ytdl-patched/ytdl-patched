@@ -6,3 +6,6 @@ websockets==8.1
 
 # for Python 2.x
 websocket_client==0.57.0
+
+# building
+zopflipy==1.5

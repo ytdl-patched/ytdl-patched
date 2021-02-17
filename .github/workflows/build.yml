@@ -110,7 +110,7 @@ jobs:
           python-version: ${{ env.python_version }}
       - name: Install deps
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
-        run: pip install --upgrade pyinstaller zopfli websocket_client
+        run: pip install --upgrade pyinstaller zopflipy websocket_client
       - name: Install UPX
         run: choco install upx
       - name: Build patched YTDL for Windows
