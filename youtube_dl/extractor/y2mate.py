@@ -198,6 +198,13 @@ def _convert_result(ret):
     return ret
 
 
+def _convert_test_only_matching(test):
+    return {
+        'url': 'y2:' + test['url'],
+        'only_matching': True,
+    }
+
+
 def ___real_extract(self, url):
     url = self.remove_prefix(url)
     try:  # Pythpn 2.x
@@ -224,13 +231,30 @@ for value in (
     YoutubeWatchLaterIE,
 ):
     key = value.__name__
-    clazz_name = 'Y2mate' + key[7:]
+    obj = value()
+    clazz_name = str('Y2mate' + key[7:])
     clazz_dict = {
         'BASE_IE': value,
         '_real_extract': ___real_extract,
     }
-    if hasattr(value, 'IE_NAME') and isinstance(value.IE_NAME, compat_str):
-        clazz_dict['IE_NAME'] = 'y2mate' + value.IE_NAME[7:]
+
+    if hasattr(value, '_TEST') and isinstance(getattr(value, '_TEST'), dict):
+        clazz_dict['_TEST'] = _convert_test_only_matching(obj._TEST)
+    if hasattr(value, '_TESTS') and isinstance(getattr(value, '_TESTS'), list):
+        clazz_dict['_TESTS'] = [_convert_test_only_matching(x) for x in obj._TESTS]
+
+    if hasattr(value, 'IE_NAME'):
+        ie_name = obj.IE_NAME
+        if not isinstance(value.IE_NAME, compat_str):
+            ie_name = '%s' % ie_name
+        if ie_name.startswith('youtube:'):
+            ie_name = 'y2mate' + ie_name[7:]
+        elif ie_name == key[:-2]:
+            ie_name = clazz_name[:-2]
+        else:
+            ie_name = 'y2mate:' + ie_name
+        clazz_dict['IE_NAME'] = ie_name
+
     if hasattr(value, '_VALID_URL'):
         clazz_dict['_VALID_URL'] = value._VALID_URL
 
