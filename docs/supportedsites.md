@@ -240,6 +240,7 @@
  - **DiscoveryGo**
  - **DiscoveryGoPlaylist**
  - **DiscoveryNetworksDe**
+ - **DiscoveryPlus**
  - **DiscoveryVR**
  - **Disney**
  - **dlive:stream**
@@ -364,6 +365,7 @@
  - **HentaiStigma**
  - **hetklokhuis**
  - **hgtv.com:show**
+ - **HGTVDe**
  - **HiDive**
  - **HistoricFilms**
  - **history:player**
@@ -857,6 +859,9 @@
  - **Shared**: shared.sx
  - **sharevideos**
  - **ShowRoomLive**
+ - **simplecast**
+ - **simplecast:episode**
+ - **simplecast:podcast**
  - **Sina**
  - **sky.it**
  - **sky:news**
@@ -1203,6 +1208,14 @@
  - **XVideos**
  - **XXXYMovies**
  - **y2mate**
+ - **y2mate:favorites**: YouTube.com favourite videos, ":ytfav" for short (requires authentication)
+ - **y2mate:playlist**: YouTube.com playlists
+ - **y2mate:search**: YouTube.com searches
+ - **y2mate:search:date**: YouTube.com searches, newest videos first
+ - **y2mate:tab**: YouTube.com tab
+ - **y2mate:watchlater**: Youtube watch later list, ":ytwatchlater" for short (requires authentication)
+ - **Y2mateYtBe**
+ - **Y2mateYtUser**
  - **Yahoo**: Yahoo screen and movies
  - **yahoo:gyao**
  - **yahoo:gyao:player**
@@ -1230,10 +1243,13 @@
  - **youtube**: YouTube.com
  - **youtube:favorites**: YouTube.com favourite videos, ":ytfav" for short (requires authentication)
  - **youtube:history**: Youtube watch history, ":ythistory" for short (requires authentication)
+ - **youtube:history**: Youtube watch history, ":ythistory" for short (requires authentication)
  - **youtube:playlist**: YouTube.com playlists
+ - **youtube:recommended**: YouTube.com recommended videos, ":ytrec" for short (requires authentication)
  - **youtube:recommended**: YouTube.com recommended videos, ":ytrec" for short (requires authentication)
  - **youtube:search**: YouTube.com searches
  - **youtube:search:date**: YouTube.com searches, newest videos first
+ - **youtube:subscriptions**: YouTube.com subscriptions feed, "ytsubs" keyword (requires authentication)
  - **youtube:subscriptions**: YouTube.com subscriptions feed, "ytsubs" keyword (requires authentication)
  - **youtube:tab**: YouTube.com tab
  - **youtube:watchlater**: Youtube watch later list, ":ytwatchlater" for short (requires authentication)
