@@ -1209,11 +1209,26 @@
  - **XXXYMovies**
  - **y2mate**
  - **y2mate:favorites**: YouTube.com favourite videos, ":ytfav" for short (requires authentication)
+ - **y2mate:history**: Youtube watch history, ":ythistory" for short (requires authentication)
  - **y2mate:playlist**: YouTube.com playlists
+ - **y2mate:recommended**: YouTube.com recommended videos, ":ytrec" for short (requires authentication)
+ - **y2mate:rushing**
+ - **y2mate:rushing:favorites**: YouTube.com favourite videos, ":ytfav" for short (requires authentication)
+ - **y2mate:rushing:history**: Youtube watch history, ":ythistory" for short (requires authentication)
+ - **y2mate:rushing:playlist**: YouTube.com playlists
+ - **y2mate:rushing:recommended**: YouTube.com recommended videos, ":ytrec" for short (requires authentication)
+ - **y2mate:rushing:search**: YouTube.com searches
+ - **y2mate:rushing:search:date**: YouTube.com searches, newest videos first
+ - **y2mate:rushing:subscriptions**: YouTube.com subscriptions feed, "ytsubs" keyword (requires authentication)
+ - **y2mate:rushing:tab**: YouTube.com tab
+ - **y2mate:rushing:watchlater**: Youtube watch later list, ":ytwatchlater" for short (requires authentication)
  - **y2mate:search**: YouTube.com searches
  - **y2mate:search:date**: YouTube.com searches, newest videos first
+ - **y2mate:subscriptions**: YouTube.com subscriptions feed, "ytsubs" keyword (requires authentication)
  - **y2mate:tab**: YouTube.com tab
  - **y2mate:watchlater**: Youtube watch later list, ":ytwatchlater" for short (requires authentication)
+ - **Y2mateRushingYtBe**
+ - **Y2mateRushingYtUser**
  - **Y2mateYtBe**
  - **Y2mateYtUser**
  - **Yahoo**: Yahoo screen and movies
@@ -1243,13 +1258,10 @@
  - **youtube**: YouTube.com
  - **youtube:favorites**: YouTube.com favourite videos, ":ytfav" for short (requires authentication)
  - **youtube:history**: Youtube watch history, ":ythistory" for short (requires authentication)
- - **youtube:history**: Youtube watch history, ":ythistory" for short (requires authentication)
  - **youtube:playlist**: YouTube.com playlists
- - **youtube:recommended**: YouTube.com recommended videos, ":ytrec" for short (requires authentication)
  - **youtube:recommended**: YouTube.com recommended videos, ":ytrec" for short (requires authentication)
  - **youtube:search**: YouTube.com searches
  - **youtube:search:date**: YouTube.com searches, newest videos first
- - **youtube:subscriptions**: YouTube.com subscriptions feed, "ytsubs" keyword (requires authentication)
  - **youtube:subscriptions**: YouTube.com subscriptions feed, "ytsubs" keyword (requires authentication)
  - **youtube:tab**: YouTube.com tab
  - **youtube:watchlater**: Youtube watch later list, ":ytwatchlater" for short (requires authentication)
