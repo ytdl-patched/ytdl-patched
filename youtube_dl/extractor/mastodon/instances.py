@@ -1570,7 +1570,6 @@ instances = {
     "mastodon.infra.de",
     "mastodon.ingress-enl.jp",
     "mastodon.internot.no",
-    "mastodon.iriseden.eu",
     "mastodon.irish",
     "mastodon.itunix.eu",
     "mastodon.iut-larochelle.fr",
