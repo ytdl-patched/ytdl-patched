@@ -188,10 +188,10 @@ jobs:
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@4.0.0
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: artifacts
-          SINGLE_COMMIT: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: artifacts
+          single-commit: true
   upload-homebrew:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
