@@ -243,6 +243,7 @@
  - **DiscoveryPlus**
  - **DiscoveryVR**
  - **Disney**
+ - **disneychris**
  - **dlive:stream**
  - **dlive:vod**
  - **dnatube**
