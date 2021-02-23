@@ -1,9 +1,6 @@
 {
   "name": "Python 3",
-  "build": {
-    "dockerfile": "../docker/codespaces.Dockerfile",
-    "context": ".."
-  },
+  "image": "nao20010128nao/ytdl-patched:codespaces",
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash",
     "python.pythonPath": "/usr/local/bin/python",
