@@ -4,13 +4,14 @@ on:
   push:
     paths:
       - docker/codespaces.Dockerfile
+      - .github/workflows/docker-codespaces.yml
       - .devcontainer/**
     branches:
       - master
   workflow_dispatch:
     inputs: {}
   schedule:
-    - cron: "0 2 * * 0"
+    - cron: "0 4 * * 0"
 
 jobs:
   docker-codespaces:

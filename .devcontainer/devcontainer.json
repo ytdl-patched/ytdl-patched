@@ -21,5 +21,5 @@
   "overrideCommand": false,
   "mounts": ["source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"],
   "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
-  "postCreateCommand": "oryx build && ./devscripts/init_hooks.sh"
+  "postCreateCommand": "./devscripts/init_hooks.sh"
 }

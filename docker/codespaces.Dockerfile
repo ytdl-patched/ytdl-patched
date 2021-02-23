@@ -4,4 +4,5 @@ RUN pip3 install --user -U pytest nose flake8 pip && \
     sudo apt update && \
     sudo apt upgrade -y && \
     sudo apt install -y ffmpeg rtmpdump && \
-    sudo apt-get clean
+    sudo apt-get clean && \
+    onyx build
