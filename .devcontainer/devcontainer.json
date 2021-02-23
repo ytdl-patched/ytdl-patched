@@ -1,13 +1,8 @@
 {
   "name": "Python 3",
   "build": {
-    "dockerfile": "../docker/codespace.Dockerfile",
-    "context": "..",
-    "args": {
-      "VARIANT": "3",
-      "USERNAME": "codespace",
-      "INSTALL_NODE": "true"
-    }
+    "dockerfile": "../docker/codespaces.Dockerfile",
+    "context": ".."
   },
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash",
