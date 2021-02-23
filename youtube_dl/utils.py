@@ -2027,7 +2027,7 @@ def extract_attributes(html_element):
 def clean_html(html, strip_script=False):
     """Clean an HTML snippet into a readable string"""
 
-    if html is None:  # Convenience for sanitizing descriptions etc.
+    if not html:  # Convenience for sanitizing descriptions etc.
         return html
 
     # Newline vs <br />
@@ -2211,7 +2211,7 @@ def _htmlentity_transform(entity_with_semicolon):
 
 
 def unescapeHTML(s):
-    if s is None:
+    if not s:
         return None
     assert type(s) == compat_str
 
