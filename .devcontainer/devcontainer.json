@@ -1,6 +1,9 @@
 {
   "name": "Python 3",
-  "image": "nao20010128nao/ytdl-patched:codespaces",
+  "build": {
+    "dockerfile": "../docker/codespaces.Dockerfile",
+    "context": ".."
+  },
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash",
     "python.pythonPath": "/usr/local/bin/python",
@@ -19,5 +22,7 @@
   "extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-azuretools.vscode-docker"],
   "remoteUser": "codespace",
   "overrideCommand": false,
+  "mounts": ["source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"],
+  "runArgs": ["--privileged", "--security-opt", "seccomp=unconfined"],
   "postCreateCommand": "./devscripts/init_hooks.sh"
 }
