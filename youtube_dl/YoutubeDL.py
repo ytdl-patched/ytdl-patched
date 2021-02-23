@@ -2012,6 +2012,7 @@ class YoutubeDL(object):
                     else:
                         self.to_screen(
                             '[download] %s has rejected by external test process' % filename)
+                        success = True
             except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
                 self.report_error('unable to download video data: %s' % error_to_compat_str(err))
                 return
