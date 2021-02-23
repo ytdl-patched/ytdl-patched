@@ -42,6 +42,7 @@ from .compat import (
     compat_urllib_error,
     compat_urllib_request,
     compat_urllib_request_DataHandler,
+    compat_shlex_quote,
 )
 from .utils import (
     age_restricted,
@@ -54,6 +55,7 @@ from .utils import (
     determine_protocol,
     DownloadError,
     encode_compat_str,
+    encodeArgument,
     encodeFilename,
     error_to_compat_str,
     expand_path,
@@ -1982,7 +1984,10 @@ class YoutubeDL(object):
                             'Requested formats are incompatible for merge and will be merged into mkv.')
                     # Ensure filename always has a correct extension for successful merge
                     filename = '%s.%s' % (filename_wo_ext, info_dict['ext'])
-                    if os.path.exists(encodeFilename(filename)):
+                    if not self.test_filename_external(filename):
+                        self.to_screen(
+                            '[download] %s has rejected by external test process' % filename)
+                    elif os.path.exists(encodeFilename(filename)):
                         self.to_screen(
                             '[download] %s has already been downloaded and '
                             'merged' % filename)
@@ -2002,7 +2007,11 @@ class YoutubeDL(object):
                         info_dict['__files_to_merge'] = downloaded
                 else:
                     # Just a single file
-                    success = dl(filename, info_dict)
+                    if self.test_filename_external(filename):
+                        success = dl(filename, info_dict)
+                    else:
+                        self.to_screen(
+                            '[download] %s has rejected by external test process' % filename)
             except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
                 self.report_error('unable to download video data: %s' % error_to_compat_str(err))
                 return
@@ -2173,6 +2182,26 @@ class YoutubeDL(object):
             else:
                 return
         return extractor.lower() + ' ' + video_id
+
+    # True when retcode==0
+    def test_filename_external(self, filename):
+        cmd = self.params.get('test_filename')
+        if not cmd or not isinstance(cmd, compat_str):
+            return True
+        if '{}' not in cmd:
+            cmd += ' {}'
+
+        cmd = cmd.replace('{}', compat_shlex_quote(filename))
+
+        if self.params.get('verbose'):
+            self.to_screen('[debug] Testing: %s' % cmd)
+        try:
+            retCode = subprocess.call(encodeArgument(cmd), shell=True)
+            return retCode == 0
+        except (IOError, OSError):
+            if self.params.get('verbose'):
+                self.to_screen('[debug] Testing: %s' % cmd)
+            return True
 
     def in_download_archive(self, info_dict):
         fn = self.params.get('download_archive')

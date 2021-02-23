@@ -453,6 +453,7 @@ def _real_main(argv=None):
         'geo_bypass_ip_block': opts.geo_bypass_ip_block,
         'check_mastodon_instance': opts.check_mastodon_instance,
         'escape_long_names': opts.escape_long_names,
+        'test_filename': opts.test_filename,
         # just for deprecation check
         'autonumber': opts.autonumber if opts.autonumber is True else None,
         'usetitle': opts.usetitle if opts.usetitle is True else None,
