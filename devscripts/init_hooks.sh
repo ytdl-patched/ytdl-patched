@@ -5,3 +5,4 @@ set -xe
 npx lint-staged
 make clean
 EOF
+chmod a+x .git/hooks/pre-commit
