@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - docker/codespaces.Dockerfile
+      - .devcontainer/**
     branches:
       - master
   workflow_dispatch:
