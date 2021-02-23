@@ -339,6 +339,7 @@
  - **Gaskrank**
  - **Gazeta**
  - **GDCVault**
+ - **GediDigital**
  - **generic**: Generic downloader that works on some sites
  - **Gfycat**
  - **GiantBomb**
