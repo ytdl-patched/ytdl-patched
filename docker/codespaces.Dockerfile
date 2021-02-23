@@ -6,5 +6,5 @@ RUN if [ "${INSTALL_NODE}" = "true" ]; then su vscode -c "umask 0002 && . /usr/l
     pip3 install --user -U pytest nose flake8 pip && \
     sudo apt update && \
     sudo apt upgrade -y && \
-    sudo apt install -y ffmpeg rtmpdump && \
+    sudo apt install -y ffmpeg rtmpdump shellcheck pandoc && \
     sudo apt-get clean
