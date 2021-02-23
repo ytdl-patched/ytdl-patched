@@ -37,16 +37,17 @@ from .compat import (
     compat_kwargs,
     compat_numeric_types,
     compat_os_name,
+    compat_shlex_quote,
     compat_str,
     compat_tokenize_tokenize,
     compat_urllib_error,
     compat_urllib_request,
     compat_urllib_request_DataHandler,
-    compat_shlex_quote,
 )
 from .utils import (
     age_restricted,
     args_to_str,
+    compiled_regex_type,
     ContentTooShortError,
     date_from_str,
     DateRange,
@@ -2184,11 +2185,18 @@ class YoutubeDL(object):
                 return
         return extractor.lower() + ' ' + video_id
 
-    # True when retcode==0
     def test_filename_external(self, filename):
         cmd = self.params.get('test_filename')
-        if not cmd or not isinstance(cmd, compat_str):
+        if not cmd or not isinstance(cmd, (compat_str, compiled_regex_type)):
             return True
+
+        if isinstance(cmd, compiled_regex_type) or cmd.startswith('re:'):
+            # allow Patten object or string begins with 're:' to test against regex
+            if isinstance(cmd, compat_str):
+                cmd = cmd[3:]
+            mobj = re.search(cmd, filename)
+            return bool(mobj)
+
         if '{}' not in cmd:
             cmd += ' {}'
 
@@ -2197,6 +2205,7 @@ class YoutubeDL(object):
         if self.params.get('verbose'):
             self.to_screen('[debug] Testing: %s' % cmd)
         try:
+            # True when retcode==0
             retCode = subprocess.call(encodeArgument(cmd), shell=True)
             return retCode == 0
         except (IOError, OSError):

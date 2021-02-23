@@ -206,7 +206,8 @@ def parseOpts(overrideArguments=None):
     general.add_option(
         '--test-filename',
         metavar='CMD', dest='test_filename',
-        help='Like --exec option, but used for testing if downloading should be started')
+        help='Like --exec option, but used for testing if downloading should be started. '
+             'You can begin with "re:" to use regex instead of commands')
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(
