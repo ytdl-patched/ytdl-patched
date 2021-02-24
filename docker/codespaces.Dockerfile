@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/universal:linux
 
 ENV PATH="$HOME/.local/bin:$PATH"
 ARG NODE_VERSION="14"
-RUN su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1" && \
+RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} ) && \
     sed -i 's/# export LANG/export LANG/' ~/.bashrc && \
     pip3 install --user -U pytest nose flake8 pip && \
     sudo apt update && \
@@ -37,6 +37,7 @@ RUN su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${N
 ENV PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH
 
 RUN brew doctor && \
+    echo "eval \$($(brew --prefix)/bin/brew shellenv)" >> ~/.bash_profile && \
     HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_AUTO_UPDATE=1 brew tap homebrew/core nao20010128nao/my && \
     brew install-bundler-gems && \
     brew install nao20010128nao/my/advcomp && \
