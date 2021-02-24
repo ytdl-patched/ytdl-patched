@@ -16,7 +16,6 @@ on:
 jobs:
   docker-codespaces:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v2
       - name: Login
