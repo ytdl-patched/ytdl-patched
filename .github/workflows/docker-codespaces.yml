@@ -16,7 +16,6 @@ on:
 jobs:
   docker-codespaces:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v2
       - name: Login
@@ -24,18 +23,7 @@ jobs:
         with:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.DHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
       - name: Build and Push
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          platforms: linux/amd64
-          file: ./docker/codespaces.Dockerfile
-          context: .
-          build-args: |
-            base_tag=3-alpine
-          tags: |
-            nao20010128nao/ytdl-patched:codespaces
+        run: |
+          docker build -t nao20010128nao/ytdl-patched:codespaces -f ./docker/codespaces.Dockerfile .
+          docker push nao20010128nao/ytdl-patched:codespaces
