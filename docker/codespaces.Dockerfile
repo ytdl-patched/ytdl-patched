@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/universal:linux
 
 ENV PATH="$HOME/.local/bin:$PATH"
 ARG NODE_VERSION="14"
-RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1 ) && \
+RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} ) && \
     sed -i 's/# export LANG/export LANG/' ~/.bashrc && \
     pip3 install --user -U pytest nose flake8 pip && \
     sudo apt update && \
