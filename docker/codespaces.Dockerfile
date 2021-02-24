@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/vscode/devcontainers/universal:linux
 
-ENV PATH="$HOME/.local/bin:$PATH"
+ENV PATH="$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
+
 ARG NODE_VERSION="14"
 RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} || true ) && \
     sed -i 's/# export LANG/export LANG/' ~/.bashrc && \
@@ -12,7 +13,7 @@ RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} || true )
     sudo apt-get install -y --no-install-recommends software-properties-common && \
     sudo add-apt-repository -y ppa:git-core/ppa && \
     sudo apt-get update && \
-    sudo apt-get install -y --no-install-recommends && \
+    sudo apt-get install -y --no-install-recommends \
         bzip2 ca-certificates \
         curl \
         file \
@@ -32,11 +33,9 @@ RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} || true )
     sudo rm -rf /var/lib/apt/lists/* && \
     sudo mkdir -p /home/linuxbrew/.linuxbrew && \
     sudo chown -R codespace:codespace /home/linuxbrew/ && \
-    git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/
-
-ENV PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH
-
-RUN brew doctor && \
+    git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/ && \
+    true && \
+    brew doctor && \
     echo "eval \$($(brew --prefix)/bin/brew shellenv)" >> ~/.bash_profile && \
     HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_AUTO_UPDATE=1 brew tap homebrew/core nao20010128nao/my && \
     brew install-bundler-gems && \
