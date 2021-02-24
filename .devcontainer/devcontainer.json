@@ -17,9 +17,12 @@
     "python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
     "python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
     "python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
-    "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint"
+    "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
+    "editor.codeLens": false,
+    "editor.fontSize": 12,
+    "markdown.preview.fontSize": 12
   },
-  "extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-azuretools.vscode-docker"],
+  "extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-azuretools.vscode-docker", "eamodio.gitlens"],
   "remoteUser": "codespace",
   "overrideCommand": false,
   "mounts": ["source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"],
