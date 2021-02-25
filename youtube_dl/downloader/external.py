@@ -315,7 +315,18 @@ class FFmpegFD(ExternalFD):
             elif isinstance(conn, compat_str):
                 args += ['-rtmp_conn', conn]
 
-        args += ['-i', url, '-c', 'copy']
+        args += ['-i', url]
+        extra_url = info_dict.get('extra_url')
+        if isinstance(extra_url, (list, tuple)):
+            for u in extra_url:
+                args += ['-i', u]
+        elif isinstance(extra_url, compat_str):
+            args += ['-i', extra_url]
+        args += ['-c', 'copy']
+
+        input_params = info_dict.get('input_params')
+        if isinstance(input_params, (list, tuple)):
+            args += list(input_params)
 
         if self.params.get('test', False):
             args += ['-fs', compat_str(self._TEST_FILE_SIZE)]
