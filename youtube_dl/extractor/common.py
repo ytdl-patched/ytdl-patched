@@ -1407,8 +1407,12 @@ class InfoExtractor(object):
         'https': 0,
         'rtsp': -0.5,
     }
+    ID_PREFERENCE = {
+        'hd': 1,
+        'sd': -1,
+    }
 
-    def _sort_formats(self, formats, field_preference=None):
+    def _sort_formats(self, formats, field_preference=None, id_preference_dict=ID_PREFERENCE):
         if not formats:
             raise ExtractorError('No video formats found')
 
@@ -1478,10 +1482,10 @@ class InfoExtractor(object):
 
             fmt_id = f.get('format_id') or 'none'
 
-            if fmt_id.upper() == 'HD':
-                id_preference = 1
-            else:
-                id_preference = 0
+            id_preference = 0
+            for k, v in id_preference_dict.items():
+                if k in fmt_id.lower():
+                    id_preference += v
 
             return (
                 preference,

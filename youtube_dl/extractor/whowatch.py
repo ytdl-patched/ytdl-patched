@@ -39,18 +39,21 @@ class WhoWatchIE(InfoExtractor):
             m3u8_id='hls')
 
         fmts = int(len(formats) / 2)
-        for (v, a) in zip(formats[fmts:], formats[:fmts]):
+        for v, a in zip(formats[fmts:], formats[:fmts]):
             formats.append({
                 'url': v['url'],
                 'extra_url': a['url'],  # only ffmpeg accepts this
-                'format_id': 'merged-%s-%s' % (v['format_id'], a['format_id']),
+                'format_id': 'merged-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
                 'ext': 'mp4',
                 'protocol': 'm3u8',
                 'vcodec': v.get('vcodec') or 'h264',
                 'acodec': a.get('acodec') or 'aac',
+                'vbr': v.get('vbr'),
+                'abr': a.get('abr'),
                 'width': v.get('width'),
                 'height': v.get('height'),
                 'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
+                'preference': 1,
             })
 
         for i, fmt in enumerate(streams):
@@ -60,7 +63,7 @@ class WhoWatchIE(InfoExtractor):
                 continue
             formats.append({
                 'url': rtmp_url,
-                'format_id': '%s-rtmp' % name,
+                'format_id': 'rtmp-%s' % name,
                 'ext': 'mp4',
                 'protocol': 'rtmp',
                 'vcodec': 'none' if fmt.get('audio_only') else 'h264',
@@ -68,7 +71,7 @@ class WhoWatchIE(InfoExtractor):
                 'external_downloader': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
             })
 
-        self._sort_formats(formats)
+        self._sort_formats(formats, id_preference_dict={'high': 2, 'middle': 1, 'low': 0})
 
         uploader_id = try_get(metadata, lambda x: x['live']['user']['user_path'], compat_str)
         uploader_id_internal = try_get(metadata, lambda x: x['live']['user']['id'], int)
