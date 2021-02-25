@@ -65,7 +65,7 @@ class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
 
 class TokyoMotionIE(TokyoMotionBaseIE):
     IE_NAME = 'tokyomotion'
-    _VALID_URL = r'(?P<url>https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/video/(?P<id>\d+)/[^#?&]+)(?:#.*)?'
+    _VALID_URL = r'(?P<url>https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/video/(?P<id>\d+)/.+)'
     _TEST = {
         'url': 'https://www.tokyomotion.net/video/915034/%E9%80%86%E3%81%95',
         'info_dict': {
@@ -84,16 +84,19 @@ class TokyoMotionIE(TokyoMotionBaseIE):
         title = self._og_search_title(webpage, default=None)
 
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')
-        variant_name = 'TokyoMotion' if variant == 'tokyo' else 'OsakaMotion'
         if not entries:
             raise ExtractorError('Private video', expected=True)
         entry = entries[0]
+
+        for fmt in entry['formats']:
+            fmt['external_downloader'] = 'ffmpeg'
+
         self._sort_formats(entry['formats'])
         entry.update({
             'id': video_id,
             'title': title,
             'age_limit': 18,
-            'series': variant_name,
+            'series': 'TokyoMotion' if variant == 'tokyo' else 'OsakaMotion',
         })
         return entry
 
@@ -101,6 +104,7 @@ class TokyoMotionIE(TokyoMotionBaseIE):
 class TokyoMotionCorruptedUrlIE(TokyoMotionBaseIE):
     IE_NAME = 'tokyomotion:corrupted'
     _VALID_URL = r'https?://(?:www\.)?(?:tokyo|osaka)motion\.net/video/(?P<id>\d+)/?$'
+    IE_DESC = False
 
     def _real_extract(self, url):
         self.to_screen('Given URL looks corrupted, trying to repair')
