@@ -39,7 +39,6 @@ class WhoWatchIE(InfoExtractor):
             m3u8_id='hls')
 
         fmts = int(len(formats) / 2)
-        print(len(formats[fmts:]), len(formats[:fmts]))
         for (v, a) in zip(formats[fmts:], formats[:fmts]):
             formats.append({
                 'url': v['url'],
@@ -47,8 +46,8 @@ class WhoWatchIE(InfoExtractor):
                 'format_id': 'merged-%s-%s' % (v['format_id'], a['format_id']),
                 'ext': 'mp4',
                 'protocol': 'm3u8',
-                'vcodec': 'h264',
-                'acodec': 'aac',
+                'vcodec': v.get('vcodec') or 'h264',
+                'acodec': a.get('acodec') or 'aac',
                 'width': v.get('width'),
                 'height': v.get('height'),
                 'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
