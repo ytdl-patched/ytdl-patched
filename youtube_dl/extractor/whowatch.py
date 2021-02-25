@@ -37,7 +37,7 @@ class WhoWatchIE(InfoExtractor):
 
         formats.extend(self._extract_m3u8_formats(
             hls_url, video_id, ext='mp4', entry_protocol='m3u8',
-            m3u8_id='root', preference=len(streams) * 2))
+            m3u8_id='hls'))
 
         for i, fmt in enumerate(streams):
             name = fmt.get('name') or 'source-%d' % i
@@ -48,9 +48,9 @@ class WhoWatchIE(InfoExtractor):
                 'url': rtmp_url,
                 'format_id': '%s-rtmp' % name,
                 'ext': 'mp4',
-                'protocol': 'rtmp',
-                'preference': len(streams) - i,
-                'vcodec': 'none' if fmt.get('audio_only') else None,
+                'protocol': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
+                'vcodec': 'none' if fmt.get('audio_only') else 'h264',
+                'acodec': 'aac',
             })
 
         self._sort_formats(formats)
