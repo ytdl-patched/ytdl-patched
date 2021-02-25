@@ -38,7 +38,7 @@ def get_suitable_downloader(info_dict, params={}):
     # if (info_dict.get('start_time') or info_dict.get('end_time')) and not info_dict.get('requested_formats') and FFmpegFD.can_download(info_dict):
     #     return FFmpegFD
 
-    external_downloader = params.get('external_downloader')
+    external_downloader = params.get('external_downloader') or info_dict.get('external_downloader')
     if external_downloader is not None:
         ed = get_external_downloader(external_downloader)
         if ed.can_download(info_dict):
