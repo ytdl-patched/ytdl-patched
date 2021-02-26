@@ -20,7 +20,7 @@ RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} || true )
     brew doctor && \
     echo "eval \$($(brew --prefix)/bin/brew shellenv)" >> ~/.bash_profile && \
     HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_AUTO_UPDATE=1 brew tap homebrew/core nao20010128nao/my && \
-    brew install nao20010128nao/my/advcomp docker-clean && \
+    brew install nao20010128nao/my/advcomp docker-clean python@3.7 python@3.8 python@3.9 && \
     brew cleanup --prune 0 && \
     { git -C /home/linuxbrew/.linuxbrew config --unset gc.auto; true; } && \
     { git -C /home/linuxbrew/.linuxbrew config --unset homebrew.devcmdrun; true; } && \
