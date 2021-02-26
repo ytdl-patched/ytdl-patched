@@ -3,7 +3,7 @@
   "image": "nao20010128nao/ytdl-patched:codespaces",
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash",
-    "python.pythonPath": "/usr/local/bin/python",
+    "python.pythonPath": "/home/lesmi/.linuxbrew/bin/python3.9",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
     "python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
