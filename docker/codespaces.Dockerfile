@@ -12,7 +12,8 @@ RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} || true )
     sudo apt install -y --no-install-recommends \
         bzip2 ca-certificates curl file fonts-dejavu-core g++ \
         less libz-dev locales make netbase openssh-client patch \
-        uuid-runtime tzdata ffmpeg rtmpdump shellcheck pandoc && \
+        uuid-runtime tzdata ffmpeg rtmpdump shellcheck pandoc \
+        aria2 transmission-cli axel httpie && \
     sudo rm -rf /var/lib/apt/lists/* && \
     sudo mkdir -p /home/linuxbrew/.linuxbrew && \
     sudo chown -R codespace:codespace /home/linuxbrew/ && \
