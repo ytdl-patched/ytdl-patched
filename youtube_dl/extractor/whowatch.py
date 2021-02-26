@@ -46,14 +46,13 @@ class WhoWatchIE(InfoExtractor):
                 'format_id': 'merged-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
                 'ext': 'mp4',
                 'protocol': 'm3u8',
-                'vcodec': v.get('vcodec') or 'h264',
-                'acodec': a.get('acodec') or 'aac',
-                'vbr': v.get('vbr'),
-                'abr': a.get('abr'),
+                'vcodec': v.get('vcodec'),
+                'acodec': a.get('acodec'),
+                'vbr': v.get('tbr') or v.get('vbr'),
+                'abr': a.get('tbr') or a.get('abr'),
                 'width': v.get('width'),
                 'height': v.get('height'),
                 'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
-                'preference': 1,
             })
 
         for i, fmt in enumerate(streams):
@@ -61,17 +60,46 @@ class WhoWatchIE(InfoExtractor):
             rtmp_url = fmt.get('rtmp_url')
             if not rtmp_url:
                 continue
+            if fmt.get('audio_only'):
+                # in this case, same url is already added with video stream available
+                continue
             formats.append({
                 'url': rtmp_url,
                 'format_id': 'rtmp-%s' % name,
                 'ext': 'mp4',
                 'protocol': 'rtmp',
-                'vcodec': 'none' if fmt.get('audio_only') else 'h264',
+                'vcodec': 'h264',
                 'acodec': 'aac',
                 'external_downloader': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
             })
 
-        self._sort_formats(formats, id_preference_dict={'high': 2, 'middle': 1, 'low': 0})
+        for i, fmt in enumerate(streams):
+            hls_url = fmt.get('hls_url')
+            if not hls_url:
+                continue
+            hls_fmts = self._extract_m3u8_formats(
+                hls_url, video_id, ext='mp4', entry_protocol='m3u8',
+                m3u8_id='hls')
+            formats.extend(hls_fmts)
+            if len(hls_fmts) == 2:
+                self._sort_formats(hls_fmts)
+                a, v = hls_fmts
+                formats.append({
+                    'url': v['url'],
+                    'extra_url': a['url'],  # only ffmpeg accepts this
+                    'format_id': 'hls-playlist-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
+                    'ext': 'mp4',
+                    'protocol': 'm3u8',
+                    'vcodec': v.get('vcodec'),
+                    'acodec': a.get('acodec'),
+                    'vbr': v.get('tbr') or v.get('vbr'),
+                    'abr': a.get('tbr') or a.get('abr'),
+                    'width': v.get('width'),
+                    'height': v.get('height'),
+                    'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
+                })
+
+        self._sort_formats(formats, id_preference_dict={'veryhigh': 3, 'high': 2, 'middle': 1, 'low': 0, 'hls-playlist': -1000})
 
         uploader_id = try_get(metadata, lambda x: x['live']['user']['user_path'], compat_str)
         uploader_id_internal = try_get(metadata, lambda x: x['live']['user']['id'], int)
