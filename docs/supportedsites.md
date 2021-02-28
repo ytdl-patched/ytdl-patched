@@ -87,6 +87,7 @@
  - **awaan:video**
  - **AZMedien**: AZ Medien videos
  - **BaiduVideo**: 百度视频
+ - **bandaichannel**
  - **Bandcamp**
  - **Bandcamp:album**
  - **Bandcamp:weekly**
