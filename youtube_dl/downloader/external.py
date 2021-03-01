@@ -238,6 +238,8 @@ class FFmpegFD(ExternalFD):
             if self.params.get(log_level, False):
                 args += ['-loglevel', log_level]
                 break
+        else:
+            args += ['-hide_banner']
 
         seekable = info_dict.get('_seekable')
         if seekable is not None:
