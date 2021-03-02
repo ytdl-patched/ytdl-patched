@@ -17,6 +17,7 @@ on:
 env:
   python_version: 3.9
   windows_icon: red
+  ZOPFLI_ITERATIONS: 40
 
 jobs:
   prepare:

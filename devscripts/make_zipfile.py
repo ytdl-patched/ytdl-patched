@@ -12,6 +12,11 @@ sys.path[:0] = ['.']
 
 from youtube_dl.utils import check_executable
 
+try:
+    iterations = str(int(os.environ['ZOPFLI_ITERATIONS']))
+except BaseException:
+    iterations = '30'
+
 parser = optparse.OptionParser(usage='%prog PYTHON')
 options, args = parser.parse_args()
 if len(args) != 1:
@@ -61,7 +66,7 @@ if ret != 0:
 
 if check_executable('advzip', []):
     subprocess.Popen(
-        ['advzip', '-z', '-4', '-i', '30', 'youtube-dl.zip'],
+        ['advzip', '-z', '-4', '-i', iterations, 'youtube-dl.zip'],
         stdin=subprocess.DEVNULL, stdout=sys.stdout, stderr=sys.stderr).wait()
 
 shutil.rmtree('zip/')

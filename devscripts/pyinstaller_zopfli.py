@@ -5,10 +5,16 @@ from PyInstaller import __main__
 
 import zlib
 import zopfli
+import os
+
+try:
+    iterations = int(os.environ['ZOPFLI_ITERATIONS'])
+except BaseException:
+    iterations = 30
 
 
 def zlib_compress(data, level=-1):
-    c = zopfli.ZopfliCompressor(zopfli.ZOPFLI_FORMAT_ZLIB, iterations=30)
+    c = zopfli.ZopfliCompressor(zopfli.ZOPFLI_FORMAT_ZLIB, iterations=iterations)
     return c.compress(data) + c.flush()
 
 
