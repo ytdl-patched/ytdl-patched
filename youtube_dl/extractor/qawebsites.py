@@ -12,11 +12,12 @@ from .youtube import (
     YoutubeTabIE,
 )
 from .twitter import TwitterIE
+from .instagram import InstagramIE
 
 
 class QAWebsitesBaseIE(InfoExtractor):
     # extractors to be searched against
-    _SEARCH_IE = (YoutubeIE, YoutubePlaylistIE, YoutubeTabIE, TwitterIE)
+    _SEARCH_IE = (InstagramIE, YoutubeIE, YoutubePlaylistIE, YoutubeTabIE, TwitterIE)
 
     def _extract_text(self, url):
         " Implement this in subclasses "
