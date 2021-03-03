@@ -2508,27 +2508,42 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         headers = {
             'x-youtube-client-name': '1',
             'x-youtube-client-version': '2.20201112.04.01',
+            'content-type': 'application/json',
         }
         if identity_token:
             headers['x-youtube-identity-token'] = identity_token
 
+        data = {
+            'context': {
+                'client': {
+                    'clientName': 'WEB',
+                    'clientVersion': '2.20201021.03.00',
+                }
+            },
+        }
+
         for page_num in itertools.count(1):
             if not continuation:
                 break
+            data['continuation'] = continuation['continuation']
+            data['clickTracking'] = {
+                'clickTrackingParams': continuation['itct']
+            }
             retries = self._downloader.params.get('extractor_retries', 3)
             count = -1
             last_error = None
-            browse = None
             while count < retries:
                 count += 1
                 if last_error:
                     self.report_warning('%s. Retrying...' % last_error)
                 try:
-                    browse = self._download_json(
-                        'https://www.youtube.com/browse_ajax', None,
-                        'Downloading page %d%s'
-                        % (page_num, ' (retry #%d)' % count if count else ''),
-                        headers=headers, query=continuation)
+                    # Downloading page may result in intermittent 5xx HTTP error
+                    # that is usually worked around with a retry
+                    response = self._download_json(
+                        'https://www.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8',
+                        None, 'Downloading page %d%s' % (page_num, ' (retry #%d)' % count if count else ''),
+                        headers=headers, data=json.dumps(data).encode('utf8'))
+                    break
                 except ExtractorError as e:
                     if isinstance(e.cause, compat_HTTPError) and e.cause.code in (500, 503, 404):
                         # Downloading page may result in intermittent 5xx HTTP error
@@ -2536,16 +2551,10 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                         last_error = 'HTTP Error %s' % e.cause.code
                         if count < retries:
                             continue
-                    raise
-                else:
-                    response = try_get(browse, lambda x: x[1]['response'], dict)
-
-                    # Youtube sometimes sends incomplete data
-                    # See: https://github.com/ytdl-org/youtube-dl/issues/28194
-                    if response.get('continuationContents') or response.get('onResponseReceivedActions'):
-                        break
-                    last_error = 'Incomplete data recieved'
-            if not browse or not response:
+                    last_error = e
+            if last_error:
+                raise last_error
+            if not response:
                 break
 
             continuation_contents = try_get(
