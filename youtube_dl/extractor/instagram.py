@@ -128,6 +128,7 @@ class InstagramIE(InfoExtractor):
 
         retries = self._downloader.params.get('extractor_retries', 3)
         count = -1
+        last_error = None
         while count < retries:
             count += 1
             if count:
@@ -142,6 +143,7 @@ class InstagramIE(InfoExtractor):
                     video_id, fatal=False)
             except ExtractorError as e:
                 self.report_warning('%s' % e)
+                last_error = e
                 continue
 
             if shared_data:
@@ -164,6 +166,9 @@ class InstagramIE(InfoExtractor):
                         dict)
             if media:
                 break
+
+        if last_error:
+            raise last_error
 
         if media:
             video_url = media.get('video_url')
@@ -309,6 +314,7 @@ class InstagramPlaylistIE(InfoExtractor):
             # try all of the ways to generate a GIS query, and not only use the
             # first one that works, but cache it for future requests
             media = None
+            last_error = None
             for gis_tmpl in gis_tmpls:
                 retries = self._downloader.params.get('extractor_retries', 3)
                 count = -1
@@ -332,9 +338,12 @@ class InstagramPlaylistIE(InfoExtractor):
                         break
                     except ExtractorError as e:
                         self.report_warning('%s' % e)
+                        last_error = e
                         continue
                 if isinstance(media, dict):
                     break
+            if last_error:
+                raise last_error
 
             edges = media.get('edges')
             if not edges or not isinstance(edges, list):
