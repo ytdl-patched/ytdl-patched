@@ -2522,6 +2522,8 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             },
         }
 
+        # note for merging: revert to "Incoming Change" once and add retry section again
+        # this is easier
         for page_num in itertools.count(1):
             if not continuation:
                 break
