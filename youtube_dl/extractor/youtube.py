@@ -2515,29 +2515,37 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         for page_num in itertools.count(1):
             if not continuation:
                 break
-            count = 0
-            retries = 3
+            retries = self._downloader.params.get('extractor_retries', 3)
+            count = -1
+            last_error = None
             browse = None
-            while count <= retries:
+            while count < retries:
+                count += 1
+                if last_error:
+                    self.report_warning('%s. Retrying ...' % last_error)
                 try:
-                    # Downloading page may result in intermittent 5xx HTTP error
-                    # that is usually worked around with a retry
                     browse = self._download_json(
                         'https://www.youtube.com/browse_ajax', None,
                         'Downloading page %d%s'
                         % (page_num, ' (retry #%d)' % count if count else ''),
                         headers=headers, query=continuation)
-                    break
                 except ExtractorError as e:
-                    if isinstance(e.cause, compat_HTTPError) and e.cause.code in (500, 503):
-                        count += 1
-                        if count <= retries:
+                    if isinstance(e.cause, compat_HTTPError) and e.cause.code in (500, 503, 404):
+                        # Downloading page may result in intermittent 5xx HTTP error
+                        # Sometimes a 404 is also recieved. See: https://github.com/ytdl-org/youtube-dl/issues/28289
+                        last_error = 'HTTP Error %s' % e.cause.code
+                        if count < retries:
                             continue
                     raise
-            if not browse:
-                break
-            response = try_get(browse, lambda x: x[1]['response'], dict)
-            if not response:
+                else:
+                    response = try_get(browse, lambda x: x[1]['response'], dict)
+
+                    # Youtube sometimes sends incomplete data
+                    # See: https://github.com/ytdl-org/youtube-dl/issues/28194
+                    if response.get('continuationContents') or response.get('onResponseReceivedActions'):
+                        break
+                    last_error = 'Incomplete data recieved'
+            if not browse or not response:
                 break
 
             continuation_contents = try_get(
@@ -2701,9 +2709,32 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 self.to_screen('Downloading just video %s because of --no-playlist' % video_id)
                 return self.url_result(video_id, ie=YoutubeIE.ie_key(), video_id=video_id)
             self.to_screen('Downloading playlist %s - add --no-playlist to just download video %s' % (playlist_id, video_id))
-        webpage = self._download_webpage(url, item_id)
-        identity_token = self._extract_identity_token(webpage, item_id)
-        data = data = self._extract_yt_initial_data(item_id, webpage)
+
+        retries = self._downloader.params.get('extractor_retries', 3)
+        count = -1
+        while count < retries:
+            count += 1
+            # Sometimes youtube returns a webpage with incomplete ytInitialData
+            # See: https://github.com/yt-dlp/yt-dlp/issues/116
+            if count:
+                self.report_warning('Incomplete yt initial data recieved. Retrying ...')
+            webpage = self._download_webpage(url, item_id,
+                'Downloading webpage%s' % ' (retry #%d)' % count if count else '')
+            identity_token = self._extract_identity_token(webpage, item_id)
+            data = self._extract_yt_initial_data(item_id, webpage)
+            err_msg = None
+            for alert_type, alert_message in self._extract_alerts(data):
+                if alert_type.lower() == 'error':
+                    if err_msg:
+                        self._downloader.report_warning('YouTube said: %s - %s' % ('ERROR', err_msg))
+                    err_msg = alert_message
+                else:
+                    self._downloader.report_warning('YouTube said: %s - %s' % (alert_type, alert_message))
+            if err_msg:
+                raise ExtractorError('YouTube said: %s' % err_msg, expected=True)
+            if data.get('contents') or data.get('currentVideoEndpoint'):
+                break
+
         tabs = try_get(
             data, lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'], list)
         if tabs:

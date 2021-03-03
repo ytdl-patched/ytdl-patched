@@ -339,11 +339,12 @@ class YoutubeDL(object):
     postprocessor_args: A list of additional command-line arguments for the
                         postprocessor.
 
-    The following options are used by the Youtube extractor:
+    The following options are used by the extractors:
     youtube_include_dash_manifest: If True (default), DASH manifests and related
                         data will be downloaded and processed by extractor.
                         You can reduce network I/O by disabling it if you don't
                         care about DASH.
+    extractor_retries: Number of times to retry for known errors
     """
 
     _NUMERIC_FIELDS = set((

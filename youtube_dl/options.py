@@ -264,6 +264,12 @@ def parseOpts(overrideArguments=None):
         dest='geo_bypass_ip_block', default=None,
         help='Force bypass geographic restriction with explicitly provided IP block in CIDR notation')
 
+    extractor = optparse.OptionGroup(parser, 'Extractor Options')
+    extractor.add_option(
+        '--extractor-retries',
+        dest='extractor_retries', metavar='RETRIES', default=3,
+        help='Number of retries for known extractor errors (default is 3), or "infinite"')
+
     selection = optparse.OptionGroup(parser, 'Video Selection')
     selection.add_option(
         '--playlist-start',
@@ -891,6 +897,7 @@ def parseOpts(overrideArguments=None):
     parser.add_option_group(network)
     parser.add_option_group(geo)
     parser.add_option_group(selection)
+    parser.add_option_group(extractor)
     parser.add_option_group(downloader)
     parser.add_option_group(filesystem)
     parser.add_option_group(thumbnail)
