@@ -165,7 +165,7 @@ jobs:
           echo '{"versions":{}}' | jq ".latest=\"${{ needs.prepare.outputs.latest_version }}\"" \
             | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].bin=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl\",\"${FILEHASH_BIN}\"]" \
             | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].tar=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
-            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].exe=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.exe\",\"${FILEHASH_EXE}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].exe=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl-${{ env.windows_icon }}.exe\",\"${FILEHASH_EXE}\"]" \
             | tee artifacts/versions.json
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
