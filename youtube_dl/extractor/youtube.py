@@ -2522,7 +2522,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             while count < retries:
                 count += 1
                 if last_error:
-                    self.report_warning('%s. Retrying ...' % last_error)
+                    self.report_warning('%s. Retrying...' % last_error)
                 try:
                     browse = self._download_json(
                         'https://www.youtube.com/browse_ajax', None,
@@ -2686,6 +2686,24 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             self._playlist_entries(playlist), playlist_id=playlist_id,
             playlist_title=title)
 
+    @staticmethod
+    def _extract_alerts(data):
+        for alert_dict in try_get(data, lambda x: x['alerts'], list) or []:
+            if not isinstance(alert_dict, dict):
+                continue
+            for renderer in alert_dict:
+                alert = alert_dict[renderer]
+                alert_type = alert.get('type')
+                if not alert_type:
+                    continue
+                message = try_get(alert, lambda x: x['text']['simpleText'], compat_str)
+                if message:
+                    yield alert_type, message
+                for run in try_get(alert, lambda x: x['text']['runs'], list) or []:
+                    message = try_get(run, lambda x: x['text'], compat_str)
+                    if message:
+                        yield alert_type, message
+
     def _extract_identity_token(self, webpage, item_id):
         ytcfg = self._extract_ytcfg(item_id, webpage)
         if ytcfg:
@@ -2717,9 +2735,9 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             # Sometimes youtube returns a webpage with incomplete ytInitialData
             # See: https://github.com/yt-dlp/yt-dlp/issues/116
             if count:
-                self.report_warning('Incomplete yt initial data recieved. Retrying ...')
-            webpage = self._download_webpage(url, item_id,
-                'Downloading webpage%s' % ' (retry #%d)' % count if count else '')
+                self.report_warning('Incomplete yt initial data recieved. Retrying...')
+            webpage = self._download_webpage(
+                url, item_id, note='Downloading webpage%s' % (' (retry #%d)' % count if count else ''))
             identity_token = self._extract_identity_token(webpage, item_id)
             data = self._extract_yt_initial_data(item_id, webpage)
             err_msg = None
