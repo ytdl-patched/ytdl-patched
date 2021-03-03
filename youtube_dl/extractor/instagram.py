@@ -8,7 +8,6 @@ import re
 from .common import InfoExtractor
 from ..compat import (
     compat_str,
-    compat_HTTPError,
 )
 from ..utils import (
     ExtractorError,
@@ -123,35 +122,49 @@ class InstagramIE(InfoExtractor):
         video_id = mobj.group('id')
         url = mobj.group('url')
 
-        webpage = self._download_webpage(url, video_id)
-
         (media, video_url, description, thumbnail, timestamp, uploader,
          uploader_id, like_count, comment_count, comments, height,
          width) = [None] * 12
 
-        shared_data = self._parse_json(
-            self._search_regex(
-                r'window\._sharedData\s*=\s*({.+?});',
-                webpage, 'shared data', default='{}'),
-            video_id, fatal=False)
-        if shared_data:
-            media = try_get(
-                shared_data,
-                (lambda x: x['entry_data']['PostPage'][0]['graphql']['shortcode_media'],
-                 lambda x: x['entry_data']['PostPage'][0]['media']),
-                dict)
-        # _sharedData.entry_data.PostPage is empty when authenticated (see
-        # https://github.com/ytdl-org/youtube-dl/pull/22880)
-        if not media:
-            additional_data = self._parse_json(
-                self._search_regex(
-                    r'window\.__additionalDataLoaded\s*\(\s*[^,]+,\s*({.+?})\s*\)\s*;',
-                    webpage, 'additional data', default='{}'),
-                video_id, fatal=False)
-            if additional_data:
+        retries = self._downloader.params.get('extractor_retries', 3)
+        count = -1
+        while count < retries:
+            count += 1
+            if count:
+                self.report_warning('Failed to parse response. Retrying...')
+
+            try:
+                webpage = self._download_webpage(url, video_id)
+                shared_data = self._parse_json(
+                    self._search_regex(
+                        r'window\._sharedData\s*=\s*({.+?});',
+                        webpage, 'shared data', default='{}'),
+                    video_id, fatal=False)
+            except ExtractorError as e:
+                self.report_warning('%s' % e)
+                continue
+
+            if shared_data:
                 media = try_get(
-                    additional_data, lambda x: x['graphql']['shortcode_media'],
+                    shared_data,
+                    (lambda x: x['entry_data']['PostPage'][0]['graphql']['shortcode_media'],
+                     lambda x: x['entry_data']['PostPage'][0]['media']),
                     dict)
+            # _sharedData.entry_data.PostPage is empty when authenticated (see
+            # https://github.com/ytdl-org/youtube-dl/pull/22880)
+            if not media:
+                additional_data = self._parse_json(
+                    self._search_regex(
+                        r'window\.__additionalDataLoaded\s*\(\s*[^,]+,\s*({.+?})\s*\)\s*;',
+                        webpage, 'additional data', default='{}'),
+                    video_id, fatal=False)
+                if additional_data:
+                    media = try_get(
+                        additional_data, lambda x: x['graphql']['shortcode_media'],
+                        dict)
+            if media:
+                break
+
         if media:
             video_url = media.get('video_url')
             height = int_or_none(media.get('dimensions', {}).get('height'))
@@ -295,28 +308,33 @@ class InstagramPlaylistIE(InfoExtractor):
 
             # try all of the ways to generate a GIS query, and not only use the
             # first one that works, but cache it for future requests
+            media = None
             for gis_tmpl in gis_tmpls:
-                try:
-                    json_data = self._download_json(
-                        'https://www.instagram.com/graphql/query/', uploader_id,
-                        'Downloading JSON page %d' % page_num, headers={
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-Instagram-GIS': hashlib.md5(
-                                ('%s:%s' % (gis_tmpl, variables)).encode('utf-8')).hexdigest(),
-                        }, query={
-                            'query_hash': self._QUERY_HASH,
-                            'variables': variables,
-                        })
-                    media = self._parse_timeline_from(json_data)
-                    self._gis_tmpl = gis_tmpl
+                retries = self._downloader.params.get('extractor_retries', 3)
+                count = -1
+                while count < retries:
+                    count += 1
+                    if count:
+                        self.report_warning('Failed to parse response. Retrying...')
+                    try:
+                        json_data = self._download_json(
+                            'https://www.instagram.com/graphql/query/', uploader_id,
+                            'Downloading JSON page %d' % page_num, headers={
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-Instagram-GIS': hashlib.md5(
+                                    ('%s:%s' % (gis_tmpl, variables)).encode('utf-8')).hexdigest(),
+                            }, query={
+                                'query_hash': self._QUERY_HASH,
+                                'variables': variables,
+                            })
+                        media = self._parse_timeline_from(json_data)
+                        self._gis_tmpl = gis_tmpl
+                        break
+                    except ExtractorError as e:
+                        self.report_warning('%s' % e)
+                        continue
+                if isinstance(media, dict):
                     break
-                except ExtractorError as e:
-                    # if it's an error caused by a bad query, and there are
-                    # more GIS templates to try, ignore it and keep trying
-                    if isinstance(e.cause, compat_HTTPError) and e.cause.code == 403:
-                        if gis_tmpl != gis_tmpls[-1]:
-                            continue
-                    raise
 
             edges = media.get('edges')
             if not edges or not isinstance(edges, list):
