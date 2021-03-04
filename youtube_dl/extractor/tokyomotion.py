@@ -7,6 +7,7 @@ from .common import InfoExtractor
 from ..utils import (
     sanitized_Request,
     ExtractorError,
+    try_get,
 )
 from ..compat import (
     compat_str,
@@ -19,7 +20,6 @@ except ImportError:
 
 
 class TokyoMotionBaseIE(InfoExtractor):
-
     def _download_page(self, url, video_id, note=None):
         # This fails
         # return self._download_webpage(url, video_id)
@@ -31,9 +31,7 @@ class TokyoMotionBaseIE(InfoExtractor):
 
     @staticmethod
     def _int_id(url):
-        if '_VALID_URL_RE' not in TokyoMotionIE.__dict__:
-            TokyoMotionIE._VALID_URL_RE = re.compile(TokyoMotionIE._VALID_URL)
-        m = TokyoMotionIE._VALID_URL_RE.match(url)
+        m = TokyoMotionIE._valid_url_re().match(url)
         return int(compat_str(m.group('id')))
 
     @staticmethod
@@ -55,7 +53,6 @@ class TokyoMotionBaseIE(InfoExtractor):
 
 
 class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
-
     def _real_extract(self, url):
         user_id = self._match_id(url)
         variant = self._VALID_URL_RE.match(url).group('variant')
@@ -65,7 +62,7 @@ class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
 
 class TokyoMotionIE(TokyoMotionBaseIE):
     IE_NAME = 'tokyomotion'
-    _VALID_URL = r'(?P<url>https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/video/(?P<id>\d+)/.+)'
+    _VALID_URL = r'https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/video/(?P<id>\d+)(?P<excess>/.+)?'
     _TEST = {
         'url': 'https://www.tokyomotion.net/video/915034/%E9%80%86%E3%81%95',
         'info_dict': {
@@ -76,17 +73,29 @@ class TokyoMotionIE(TokyoMotionBaseIE):
     }
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        url = self._VALID_URL_RE.match(url).group('url')
-        variant = self._VALID_URL_RE.match(url).group('variant')
+        url = url.split('?')[0].split('#')[0]  # sanitize URL
+
+        mobj = self._valid_url_re().match(url)
+        assert mobj
+        video_id = mobj.group('id')
+        variant = mobj.group('variant')
+        if not mobj.group('excess'):
+            # fix URL silently
+            url = url.split('#')[0]
+            if not url.endswith('/'):
+                url += '/'
+            url += 'a'
+
         webpage = self._download_page(url, video_id)
 
         title = self._og_search_title(webpage, default=None)
 
-        entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')
-        if not entries:
+        entry = try_get(
+            webpage,
+            lambda x: self._parse_html5_media_entries(url, x, video_id, m3u8_id='hls')[0],
+            dict)
+        if not entry:
             raise ExtractorError('Private video', expected=True)
-        entry = entries[0]
 
         for fmt in entry['formats']:
             fmt['external_downloader'] = 'ffmpeg'
@@ -99,18 +108,6 @@ class TokyoMotionIE(TokyoMotionBaseIE):
             'series': 'TokyoMotion' if variant == 'tokyo' else 'OsakaMotion',
         })
         return entry
-
-
-class TokyoMotionCorruptedUrlIE(TokyoMotionBaseIE):
-    IE_NAME = 'tokyomotion:corrupted'
-    _VALID_URL = r'https?://(?:www\.)?(?:tokyo|osaka)motion\.net/video/(?P<id>\d+)/?$'
-    IE_DESC = False
-
-    def _real_extract(self, url):
-        self.to_screen('Given URL looks corrupted, trying to repair')
-        without_hash = url.split('#')[0]
-        repaired = without_hash + 'a' if without_hash.endswith('/') else '/a'
-        return self.url_result(repaired)
 
 
 class TokyoMotionUserIE(TokyoMotionPlaylistBaseIE):
@@ -144,8 +141,10 @@ class TokyoMotionScannerIE(TokyoMotionBaseIE):
     _TEST = {}
 
     def _real_extract(self, url):
-        user_id = self._match_id(url) or ''
-        variant = self._VALID_URL_RE.match(url).group('variant')
+        mobj = self._valid_url_re().match(url)
+        assert mobj
+        user_id = mobj.group('id')
+        variant = mobj.group('variant')
         webpage = self._download_page(url[7:], user_id)
         matches = self._extract_video_urls(variant, webpage)
         playlist = (self.url_result(url) for url in sorted(set(matches), key=self._int_id))
