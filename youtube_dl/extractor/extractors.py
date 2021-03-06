@@ -1591,7 +1591,6 @@ from .wistia import (
     WistiaIE,
     WistiaPlaylistIE,
 )
-from .wix import WixIE
 from .worldstarhiphop import WorldStarHipHopIE
 from .wsj import (
     WSJIE,
