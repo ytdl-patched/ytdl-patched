@@ -100,6 +100,7 @@ class Y2mateIE(Y2mateBaseIE):
         title = self._search_regex(r'<b>(.+?)</b>', size_specs, 'video title', group=1)
         request_id = self._search_regex(r'var k__id\s*=\s*(["\'])(.+?)\1', size_specs, 'request ID', group=2)
         formats = []
+        retries = self._downloader.params.get('extractor_retries', 3)
         # video    , mp3, audio
         video_table, _, audio_table = re.findall(r'<table\s*.+?>(.+?)</table>', size_specs)
 
@@ -120,10 +121,10 @@ class Y2mateIE(Y2mateBaseIE):
                 'fquality': request_format,
             })
             video_url = None
-            for i in range(5):
+            for i in range(retries):
                 url_data = self._download_json(
                     'https://www.y2mate.com/mates/convert', video_id,
-                    note='Fetching infomation for %s (%d of 5)' % (format_name, i + 1), data=request_data,
+                    note='Fetching infomation for %s (%d of %d)' % (format_name, i + 1, retries), data=request_data,
                     headers=common_headers)
                 if url_data.get('status') != 'success':
                     self.report_warning('Server responded with status %s' % url_data.get('status'))
@@ -166,10 +167,10 @@ class Y2mateIE(Y2mateBaseIE):
                 'fquality': request_format,
             }
             video_url = None
-            for i in range(5):
+            for i in range(retries):
                 url_data = self._download_json(
                     'https://www.y2mate.com/mates/convert', video_id,
-                    note='Fetching infomation for %s (%d of 5)' % (format_name, i + 1), data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
+                    note='Fetching infomation for %s (%d of %d)' % (format_name, i + 1, retries), data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
                     headers=common_headers)
                 if url_data.get('status') != 'success':
                     self.report_warning('Server responded with status %s' % url_data.get('status'))
