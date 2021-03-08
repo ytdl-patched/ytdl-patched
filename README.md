@@ -6,6 +6,7 @@
 - https://gitea.com/nao20010128nao/ytdl-patched (secondary)
 - https://git.sr.ht/~nao20010128nao/ytdl-patched (secondary)
   - manually mirrored at every git push
+- https://codeberg.org/nao20010128nao/ytdl-patched (secondary)
 - https://ytdl-patched.vercel.app/ (just for fun)
 - https://ytdl-patched.netlify.app/ (just for fun)
 
