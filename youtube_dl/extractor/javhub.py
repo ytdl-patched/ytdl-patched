@@ -15,7 +15,7 @@ from ..utils import (
 
 class JavhubIE(InfoExtractor):
     IE_NAME = 'javhub'
-    _VALID_URL = r'https://(?:ja\.)?javhub\.net/play/(?P<id>[^/]+)'
+    _VALID_URL = r'https?://(?:ja\.)?javhub\.net/play/(?P<id>[^/]+)'
 
     B58_TABLE_1 = '23456789ABCDEFGHJKLNMPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz1'
     B58_TABLE_2 = '789ABCDEFGHJKLNMPQRSTUVWX23456YZabcdefghijkmnopqrstuvwxyz1'
