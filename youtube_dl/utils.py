@@ -5766,7 +5766,7 @@ def char_replace(base, replace, string):
     assert len(base) == len(replace)
     table = {b: r for b, r in zip(base, replace) if b != r}
     if not table:
-        return ''
+        return string
     result = ''
     for i in string:
         result += table.get(i, i)
