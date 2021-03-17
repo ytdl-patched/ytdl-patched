@@ -614,7 +614,7 @@ from .limelight import (
     LimelightChannelIE,
     LimelightChannelListIE,
 )
-from .line import LineTVIE
+from .line import LineTVIE, LineLiveIE
 from .linkedin import (
     LinkedInLearningIE,
     LinkedInLearningCourseIE,

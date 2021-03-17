@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import js_to_json
+from ..utils import int_or_none, js_to_json
 
 
 class LineTVIE(InfoExtractor):
@@ -87,4 +87,53 @@ class LineTVIE(InfoExtractor):
             'thumbnails': [{'url': thumbnail['source']}
                            for thumbnail in video_info.get('thumbnails', {}).get('list', [])],
             'view_count': video_info.get('meta', {}).get('count'),
+        }
+
+
+class LineLiveIE(InfoExtractor):
+    _VALID_URL = r'https?://live\.line\.me/channels/(?P<uploader_id>\d+)/broadcast/(?P<id>\d+)'
+
+    _TESTS = [{
+        'url': 'https://live.line.me/channels/4740935/broadcast/16224496',
+        'only_matching': True,
+    }, {
+        'url': 'https://live.line.me/channels/248560/broadcast/16220147',
+        'only_matching': True,
+    }]
+
+    def _real_extract(self, url):
+        uploader_id, video_id = re.match(self._VALID_URL, url).groups()
+
+        # webpage = self._download_webpage(url, video_id)
+        channel_info = self._download_json(
+            'https://live-api.line-apps.com/web/v4.0/channel/%s/broadcast/%s' % (uploader_id, video_id), video_id,
+            note='Fetching channel metadata')
+
+        live_item = channel_info.get('item', {})
+        title = live_item.get('title')
+
+        uploader = live_item.get('channel', {}).get('name')
+
+        formats = []
+        for key_name, postfix in (('liveHLSURLs', ''), ('archivedHLSURLs', '-archive')):
+            for k, v in channel_info.get(key_name, {}).items():
+                if not v:
+                    continue
+                formats.append({
+                    'format_id': '%s%s' % (k, postfix),
+                    'url': v,
+                    'vcodec': 'none' if k == 'aac' else None,
+                    'preference': -1 if k == 'abr' else 0,
+                    'resolution': int_or_none(k),
+                    'ext': 'mp4',
+                })
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'formats': formats,
+            'uploader': uploader,
+            'uploader_id': uploader_id,
+            'is_live': True,
         }

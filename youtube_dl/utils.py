@@ -4620,6 +4620,18 @@ def cli_configuration_args(argdict, keys, default=[], use_compat=True):
         return default
     assert isinstance(argdict, dict)
 
+    if not isinstance(keys, (list, tuple)):
+        keys = [keys]
+    for key_list in keys:
+        if isinstance(key_list, compat_str):
+            key_list = (key_list,)
+        arg_list = list(filter(
+            lambda x: x is not None,
+            [argdict.get(key.lower()) for key in key_list]))
+        if arg_list:
+            return [arg for args in arg_list for arg in args]
+    return default
+
 
 class ISO639Utils(object):
     # See http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt
