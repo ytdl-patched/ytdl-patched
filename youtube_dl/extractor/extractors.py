@@ -822,6 +822,7 @@ from .niconico import (
     NiconicoIE,
     NiconicoPlaylistIE,
     NiconicoUserIE,
+    NiconicoSeriesIE,
     NiconicoLiveIE,
 )
 from .ninecninemedia import NineCNineMediaIE

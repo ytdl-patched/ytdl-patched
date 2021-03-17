@@ -5,6 +5,7 @@ import datetime
 import functools
 import json
 import math
+import re
 
 from .common import InfoExtractor
 from ..compat import (
@@ -651,6 +652,43 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
             entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
         result.update(self._parse_owner(mylist))
         return result
+
+
+# cannot use NiconicoPlaylistBaseIE because /series/ has different structure than others
+class NiconicoSeriesIE(InfoExtractor):
+    IE_NAME = 'niconico:series'
+    _VALID_URL = r'https?://(?:www\.|sp\.)?nicovideo\.jp/series/(?P<id>\d+)'
+
+    _TESTS = [{
+        'url': 'https://www.nicovideo.jp/series/110226',
+        'info_dict': {
+            'id': '110226',
+            'title': 'ご立派ァ！のシリーズ',
+        },
+        'playlist_mincount': 10,  # as of 2021/03/17
+    }, {
+        'url': 'https://www.nicovideo.jp/series/12312/',
+        'info_dict': {
+            'id': '12312',
+            'title': 'バトルスピリッツ　お勧めカード紹介(調整中)',
+        },
+        'playlist_mincount': 97,  # as of 2021/03/17
+    }]
+
+    def _real_extract(self, url):
+        list_id = self._match_id(url)
+        webpage = self._download_webpage('https://www.nicovideo.jp/series/%s' % list_id, list_id)
+
+        title = self._search_regex(
+            (r'<title>「(.+)（全',
+             r'<div class="TwitterShareButton"\s+data-text="(.+)\s+https:'),
+            webpage, 'title', fatal=False)
+        if title:
+            title = unescapeHTML(title)
+        playlist = []
+        for match in re.finditer(r'<a href="/watch/([a-z0-9]+)" data-href="/watch/\1', webpage):
+            playlist.append(self.url_result('https://www.nicovideo.jp/watch/%s' % match.group(1)))
+        return self.playlist_result(playlist, list_id, title)
 
 
 class NiconicoLiveIE(InfoExtractor):
