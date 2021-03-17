@@ -5,6 +5,7 @@ from ..utils import (
     cli_configuration_args,
     encodeFilename,
 )
+from ..compat import compat_str
 
 
 class PostProcessor(object):
@@ -31,6 +32,12 @@ class PostProcessor(object):
 
     def __init__(self, downloader=None):
         self._downloader = downloader
+        self.PP_NAME = self.pp_key()
+
+    @classmethod
+    def pp_key(cls):
+        name = cls.__name__[:-2]
+        return compat_str(name[6:]) if name[:6].lower() == 'ffmpeg' else name
 
     def set_downloader(self, downloader):
         """Sets the downloader for this PP."""
@@ -59,8 +66,45 @@ class PostProcessor(object):
         except Exception:
             self._downloader.report_warning(errnote)
 
-    def _configuration_args(self, default=[]):
-        return cli_configuration_args(self._downloader.params, 'postprocessor_args', default)
+    def _configuration_args(self, exe, keys=None, default=[], use_compat=True):
+        pp_key = self.pp_key().lower()
+        exe = exe.lower()
+        root_key = exe if pp_key == exe else '%s+%s' % (pp_key, exe)
+        keys = ['%s%s' % (root_key, k) for k in (keys or [''])]
+        if root_key in keys:
+            keys += [root_key] + ([] if pp_key == exe else [(self.pp_key(), exe)]) + ['default']
+        else:
+            use_compat = False
+        return cli_configuration_args(
+            self._downloader.params.get('postprocessor_args'),
+            keys, default, use_compat)
+
+    def to_screen(self, text, prefix=True, *args, **kwargs):
+        tag = '[%s] ' % self.PP_NAME if prefix else ''
+        if self._downloader:
+            return self._downloader.to_screen('%s%s' % (tag, text), *args, **kwargs)
+
+    def report_warning(self, text, *args, **kwargs):
+        if self._downloader:
+            return self._downloader.report_warning(text, *args, **kwargs)
+
+    def report_error(self, text, *args, **kwargs):
+        if self._downloader:
+            return self._downloader.report_error(text, *args, **kwargs)
+
+    def write_debug(self, text, prefix=True, *args, **kwargs):
+        tag = '[debug] ' if prefix else ''
+        if self.get_param('verbose', False) and self._downloader:
+            return self._downloader.to_screen('%s%s' % (tag, text), *args, **kwargs)
+
+    def get_param(self, name, default=None, *args, **kwargs):
+        if self._downloader:
+            return self._downloader.params.get(name, default, *args, **kwargs)
+        return default
+
+    @property
+    def params(self):
+        return self._downloader.params
 
 
 class AudioConversionError(PostProcessingError):

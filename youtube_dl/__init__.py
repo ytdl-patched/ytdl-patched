@@ -190,6 +190,13 @@ def _real_main(argv=None):
     if opts.ap_mso and opts.ap_mso not in MSO_INFO:
         parser.error('Unsupported TV Provider, use --ap-list-mso to get a list of supported TV Providers')
 
+    def report_conflict(arg1, arg2):
+        write_string('WARNING: %s is ignored since %s was given\n' % (arg2, arg1), out=sys.stderr)
+
+    if opts.sponskrub_cut and opts.split_chapters and opts.sponskrub is not False:
+        report_conflict('--split-chapter', '--sponskrub-cut')
+        opts.sponskrub_cut = False
+
     def parse_retries(retries, name=''):
         if retries in ('inf', 'infinite'):
             parsed_retries = float('inf')
@@ -311,6 +318,15 @@ def _real_main(argv=None):
         })
         if not already_have_thumbnail:
             opts.writethumbnail = True
+    if opts.sponskrub is not False:
+        postprocessors.append({
+            'key': 'SponSkrub',
+            'path': opts.sponskrub_path,
+            'args': opts.sponskrub_args,
+            'cut': opts.sponskrub_cut,
+            'force': opts.sponskrub_force,
+            'ignoreerror': opts.sponskrub is None,
+        })
     # XAttrMetadataPP should be run after post-processors that may change file
     # contents
     if opts.xattrs:

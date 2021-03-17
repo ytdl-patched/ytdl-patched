@@ -16,6 +16,7 @@ from .ffmpeg import (
 from .xattrpp import XAttrMetadataPP
 from .execafterdownload import ExecAfterDownloadPP
 from .metadatafromtitle import MetadataFromTitlePP
+from .sponskrub import SponSkrubPP
 
 
 def get_postprocessor(key):
@@ -36,5 +37,6 @@ __all__ = [
     'FFmpegSubtitlesConvertorPP',
     'FFmpegVideoConvertorPP',
     'MetadataFromTitlePP',
+    'SponSkrubPP',
     'XAttrMetadataPP',
 ]

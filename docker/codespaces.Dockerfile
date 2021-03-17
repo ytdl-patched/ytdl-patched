@@ -27,4 +27,5 @@ RUN ( umask 0002 && . $HOME/.nvm/nvm.sh && nvm install ${NODE_VERSION} || true )
     { git -C /home/linuxbrew/.linuxbrew config --unset homebrew.devcmdrun; true; } && \
     rm -rf ~/.cache && \
     chmod -R g+w,o-w /home/linuxbrew/.linuxbrew && \
-    git config --global pull.rebase false 
+    git config --global pull.rebase false && \
+    wget https://github.com/yt-dlp/SponSkrub/releases/download/2021.03.15/sponskrub -O ~/.local/bin/sponskrub

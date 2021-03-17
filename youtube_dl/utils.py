@@ -4610,12 +4610,15 @@ def cli_valueless_option(params, command_option, param, expected_value=True):
     return [command_option] if param == expected_value else []
 
 
-def cli_configuration_args(params, param, default=[]):
-    ex_args = params.get(param)
-    if ex_args is None:
+def cli_configuration_args(argdict, keys, default=[], use_compat=True):
+    if isinstance(argdict, (list, tuple)):  # for backward compatibility
+        if use_compat:
+            return argdict
+        else:
+            argdict = None
+    if argdict is None:
         return default
-    assert isinstance(ex_args, list)
-    return ex_args
+    assert isinstance(argdict, dict)
 
 
 class ISO639Utils(object):
@@ -5801,3 +5804,12 @@ def to_str(value):
     if isinstance(value, bytes):
         value = value.decode(preferredencoding())
     return value
+
+
+def process_communicate_or_kill(p, *args, **kwargs):
+    try:
+        return p.communicate(*args, **kwargs)
+    except BaseException:  # Including KeyboardInterrupt
+        p.kill()
+        p.wait()
+        raise

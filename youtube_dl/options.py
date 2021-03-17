@@ -893,6 +893,43 @@ def parseOpts(overrideArguments=None):
         metavar='FORMAT', dest='convertsubtitles', default=None,
         help='Convert the subtitles to other format (currently supported: srt|ass|vtt|lrc)')
 
+    sponskrub = optparse.OptionGroup(parser, 'SponSkrub (SponsorBlock) Options', description=(
+        'SponSkrub (https://github.com/yt-dlp/SponSkrub) is a utility to mark/remove sponsor segments '
+        'from downloaded YouTube videos using SponsorBlock API (https://sponsor.ajay.app)'))
+    sponskrub.add_option(
+        '--sponskrub',
+        action='store_true', dest='sponskrub', default=None,
+        help=(
+            'Use sponskrub to mark sponsored sections. '
+            'This is enabled by default if the sponskrub binary exists (Youtube only)'))
+    sponskrub.add_option(
+        '--no-sponskrub',
+        action='store_false', dest='sponskrub',
+        help='Do not use sponskrub')
+    sponskrub.add_option(
+        '--sponskrub-cut', default=False,
+        action='store_true', dest='sponskrub_cut',
+        help='Cut out the sponsor sections instead of simply marking them')
+    sponskrub.add_option(
+        '--no-sponskrub-cut',
+        action='store_false', dest='sponskrub_cut',
+        help='Simply mark the sponsor sections, not cut them out (default)')
+    sponskrub.add_option(
+        '--sponskrub-force', default=False,
+        action='store_true', dest='sponskrub_force',
+        help='Run sponskrub even if the video was already downloaded')
+    sponskrub.add_option(
+        '--no-sponskrub-force',
+        action='store_true', dest='sponskrub_force',
+        help='Do not cut out the sponsor sections if the video was already downloaded (default)')
+    sponskrub.add_option(
+        '--sponskrub-location', metavar='PATH',
+        dest='sponskrub_path', default='',
+        help='Location of the sponskrub binary; either the path to the binary or its containing directory')
+    sponskrub.add_option(
+        '--sponskrub-args', dest='sponskrub_args', metavar='ARGS',
+        help=optparse.SUPPRESS_HELP)
+
     parser.add_option_group(general)
     parser.add_option_group(network)
     parser.add_option_group(geo)
@@ -908,6 +945,7 @@ def parseOpts(overrideArguments=None):
     parser.add_option_group(authentication)
     parser.add_option_group(adobe_pass)
     parser.add_option_group(postproc)
+    parser.add_option_group(sponskrub)
 
     if overrideArguments is not None:
         opts, args = parser.parse_args(overrideArguments)
