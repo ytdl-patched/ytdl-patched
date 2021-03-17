@@ -524,6 +524,12 @@ class NiconicoIE(InfoExtractor):
 class NiconicoPlaylistBaseIE(InfoExtractor):
     _PAGE_SIZE = 100
 
+    _API_HEADERS = {
+        'X-Frontend-ID': '6',
+        'X-Frontend-Version': '0',
+        'X-Niconico-Language': 'en-us'
+    }
+
     def _call_api(self, list_id, resource, query):
         "Implement this in child class"
         pass
@@ -589,7 +595,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         return self._download_json(
             'https://nvapi.nicovideo.jp/v2/mylists/' + list_id, list_id,
             'Downloading %s JSON metatdata' % resource, query=query,
-            headers={'X-Frontend-Id': 6})['data']['mylist']
+            headers=self._API_HEADERS)['data']['mylist']
 
     def _real_extract(self, url):
         list_id = self._match_id(url)
@@ -630,7 +636,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         return self._download_json(
             'https://nvapi.nicovideo.jp/v1/users/%s/videos' % list_id, list_id,
             'Downloading %s JSON metatdata' % resource, query=query,
-            headers={'X-Frontend-Id': 6})['data']
+            headers=self._API_HEADERS)['data']
 
     def _real_extract(self, url):
         list_id = self._match_id(url)
