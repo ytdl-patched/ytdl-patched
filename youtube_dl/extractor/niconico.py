@@ -6,6 +6,12 @@ import functools
 import json
 import math
 import re
+try:
+    import dateutil.parser
+    HAVE_DATEUTIL = True
+except (ImportError, SyntaxError):
+    # dateutil is optional
+    HAVE_DATEUTIL = False
 
 from .common import InfoExtractor
 from ..compat import (
@@ -204,28 +210,49 @@ class NiconicoIE(InfoExtractor):
         def yesno(boolean):
             return 'yes' if boolean else 'no'
 
-        session_api_data = api_data['video']['dmcInfo']['session_api']
-        session_api_endpoint = session_api_data['urls'][0]
+        def extract_video_quality(video_quality):
+            try:
+                # Example: 480p | 0.9M
+                r = re.match(r'^.*\| ([0-9]*\.?[0-9]*[MK])', video_quality)
+                if r is None:
+                    # Maybe conditionally throw depending on the settings?
+                    return 0
+
+                vbr_with_unit = r.group(1)
+                unit = vbr_with_unit[-1]
+                video_bitrate = float(vbr_with_unit[:-1])
+
+                if unit == 'M':
+                    video_bitrate *= 1000000
+                elif unit == 'K':
+                    video_bitrate *= 1000
+
+                return video_bitrate
+            except BaseException:
+                # Should at least log or something here
+                return 0
+
+        session_api_data = api_data['media']['delivery']['movie']['session']
 
         format_id = '-'.join(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
 
         session_response = self._download_json(
-            session_api_endpoint['url'], video_id,
+            session_api_data['urls'][0]['url'], video_id,
             query={'_format': 'json'},
             headers={'Content-Type': 'application/json'},
             note='Downloading JSON metadata for %s' % format_id,
             data=json.dumps({
                 'session': {
                     'client_info': {
-                        'player_id': session_api_data['player_id'],
+                        'player_id': session_api_data['playerId'],
                     },
                     'content_auth': {
-                        'auth_type': session_api_data['auth_types'][session_api_data['protocols'][0]],
-                        'content_key_timeout': session_api_data['content_key_timeout'],
+                        'auth_type': session_api_data['authTypes'][session_api_data['protocols'][0]],
+                        'content_key_timeout': session_api_data['contentKeyTimeout'],
                         'service_id': 'nicovideo',
-                        'service_user_id': session_api_data['service_user_id']
+                        'service_user_id': session_api_data['serviceUserId']
                     },
-                    'content_id': session_api_data['content_id'],
+                    'content_id': session_api_data['contentId'],
                     'content_src_id_sets': [{
                         'content_src_ids': [{
                             'src_id_to_mux': {
@@ -238,7 +265,7 @@ class NiconicoIE(InfoExtractor):
                     'content_uri': '',
                     'keep_method': {
                         'heartbeat': {
-                            'lifetime': session_api_data['heartbeat_lifetime']
+                            'lifetime': session_api_data['heartbeatLifetime']
                         }
                     },
                     'priority': session_api_data['priority'],
@@ -248,14 +275,14 @@ class NiconicoIE(InfoExtractor):
                             'http_parameters': {
                                 'parameters': {
                                     'http_output_download_parameters': {
-                                        'use_ssl': yesno(session_api_endpoint['is_ssl']),
-                                        'use_well_known_port': yesno(session_api_endpoint['is_well_known_port']),
+                                        'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
+                                        'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
                                     }
                                 }
                             }
                         }
                     },
-                    'recipe_id': session_api_data['recipe_id'],
+                    'recipe_id': session_api_data['recipeId'],
                     'session_operation_auth': {
                         'session_operation_auth_by_signature': {
                             'signature': session_api_data['signature'],
@@ -267,23 +294,29 @@ class NiconicoIE(InfoExtractor):
             }).encode())
 
         # get heartbeat info
-        heartbeat_url = session_api_endpoint['url'] + '/' + session_response['data']['session']['id'] + '?_format=json&_method=PUT'
+        heartbeat_url = session_api_data['urls'][0]['url'] + '/' + session_response['data']['session']['id'] + '?_format=json&_method=PUT'
         heartbeat_data = json.dumps(session_response['data']).encode()
         # interval, convert milliseconds to seconds, then halve to make a buffer.
-        heartbeat_interval = session_api_data['heartbeat_lifetime'] / 2000
+        heartbeat_interval = session_api_data['heartbeatLifetime'] / 8000
 
-        resolution = video_quality.get('resolution', {})
+        resolution = video_quality['metadata'].get('resolution', {})
+        vid_quality = video_quality['metadata'].get('bitrate')
+        is_low = 'low' in video_quality['id']
 
         return {
             'url': session_response['data']['session']['content_uri'],
             'format_id': format_id,
+            'format_note': 'DMC ' + video_quality['metadata']['label'],
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
             'acodec': 'aac',
             'vcodec': 'h264',  # As far as I'm aware DMC videos can only serve h264/aac combinations
             'abr': float_or_none(audio_quality.get('bitrate'), 1000),
-            'vbr': float_or_none(video_quality.get('bitrate'), 1000),
+            # So this is kind of a hack; sometimes, the bitrate is incorrectly reported as 0kbs. If this is the case,
+            # extract it from the rest of the metadata we have available
+            'vbr': float_or_none(vid_quality if vid_quality > 0 else extract_video_quality(video_quality['metadata'].get('label')), 1000),
             'height': resolution.get('height'),
             'width': resolution.get('width'),
+            'quality': -2 if is_low else None,
             'heartbeat_url': heartbeat_url,
             'heartbeat_data': heartbeat_data,
             'heartbeat_interval': heartbeat_interval,
@@ -308,7 +341,8 @@ class NiconicoIE(InfoExtractor):
             return 'economy' if video_real_url.endswith('low') else 'normal'
 
         try:
-            video_real_url = api_data['video']['smileInfo']['url']
+            # video_real_url = api_data['video']['smileInfo']['url']
+            pass
         except KeyError:  # Flash videos
             # Get flv info
             flv_info_webpage = self._download_webpage(
@@ -386,40 +420,17 @@ class NiconicoIE(InfoExtractor):
             def get_video_info(items):
                 return dict_get(api_data['video'], items)
 
-            dmc_info = api_data['video'].get('dmcInfo')
-            if dmc_info:  # "New" HTML5 videos
-                quality_info = dmc_info['quality']
+            # dmc_info = api_data['video'].get('dmcInfo')
+            quality_info = api_data['media']['delivery']['movie']
+            if quality_info:  # "New" HTML5 videos
                 for audio_quality in quality_info['audios']:
                     for video_quality in quality_info['videos']:
-                        if not audio_quality['available'] or not video_quality['available']:
+                        if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                             continue
                         formats.append(self._extract_format_for_quality(
                             api_data, video_id, audio_quality, video_quality))
 
                 self._sort_formats(formats)
-            else:  # "Old" HTML5 videos
-                is_quality = not video_real_url.endswith('low')
-                if not is_quality:
-                    self.report_warning('Site is currently in economy mode, you will only have access to lower quality streams')
-
-                # Community restricted videos seem to have issues with the thumb API not returning anything at all
-                filesize = int_or_none(get_video_info('size_high') if is_quality else get_video_info('size_low'))
-
-                smile_threshold_timestamp = unified_timestamp('2016/11/30 00:00:00')
-
-                timestamp = (
-                    parse_iso8601(get_video_info('first_retrieve'))
-                    or unified_timestamp(get_video_info('postedDateTime'))
-                    or unified_timestamp(api_data['video'].get('postedDateTime'))
-                )
-                formats = [{
-                    'url': video_real_url,
-                    'ext': 'mp4',
-                    'format_id': _format_id_from_url(video_real_url),
-                    'source_preference': 5 if is_quality else -2,
-                    'quality': 5 if timestamp < smile_threshold_timestamp and is_quality else None,
-                    'filesize': filesize,
-                }]
 
         # Start extracting information
         title = get_video_info('title')
@@ -443,16 +454,29 @@ class NiconicoIE(InfoExtractor):
             or api_data['video'].get('largeThumbnailURL')
             or api_data['video'].get('thumbnailURL')
             or get_video_info(['largeThumbnailURL', 'thumbnail_url', 'thumbnailURL'])
-            or self._html_search_meta('image', webpage, 'thumbnail', default=None)
-            or video_detail.get('thumbnail'))
+            or self._html_search_meta('image', webpage, 'thumbnail', default=None))
+
+        match = self._html_search_meta('datePublished', webpage, 'date published', default=None)
+        if match:
+            timestamp = parse_iso8601(match.replace('+', ':00+'))
+        else:
+            date = api_data['video']['registeredAt']
+            # FIXME see animelover1984/youtube-dl
+            if HAVE_DATEUTIL:
+                timestamp = math.floor(dateutil.parser.parse(date).timestamp())
+            else:
+                timestamp = None
+
+        view_count = int_or_none(api_data['video']['count'].get('view'))
 
         description = (
             api_data['video'].get('description')
             # this cannot be checked before the JSON API check as on community videos the description is simply "community"
             or get_video_info('description'))
 
-        timestamp = (parse_iso8601(get_video_info('first_retrieve'))
-                     or unified_timestamp(get_video_info('postedDateTime')))
+        if not timestamp:
+            timestamp = (parse_iso8601(get_video_info('first_retrieve'))
+                         or unified_timestamp(get_video_info('postedDateTime')))
         if not timestamp:
             match = self._html_search_meta('datePublished', webpage, 'date published', default=None)
             if match:
@@ -462,21 +486,8 @@ class NiconicoIE(InfoExtractor):
                 video_detail['postedAt'].replace('/', '-'),
                 delimiter=' ', timezone=datetime.timedelta(hours=9))
 
-        smile_threshold_timestamp = unified_timestamp('2016/11/30 00:00:00')
-
-        view_count = int_or_none(get_video_info(['view_counter', 'viewCount']))
-        if not view_count:
-            match = self._html_search_regex(
-                r'>Views: <strong[^>]*>([^<]+)</strong>',
-                webpage, 'view count', default=None)
-            if match:
-                view_count = int_or_none(match.replace(',', ''))
-        if not view_count:
-            view_count = video_detail.get('viewCount')
-
         comment_count = (
-            int_or_none(get_video_info('comment_num'))
-            or video_detail.get('commentCount')
+            api_data['video']['count'].get('comment')
             or try_get(api_data, lambda x: x['thread']['commentCount']))
         if not comment_count:
             match = self._html_search_regex(
