@@ -634,6 +634,7 @@
  - **niconico**: ニコニコ動画
  - **niconico:live**: ニコニコ生放送
  - **niconico:playlist**
+ - **niconico:series**
  - **niconico:user**
  - **Nintendo**
  - **njoy**: N-JOY
