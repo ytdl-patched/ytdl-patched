@@ -138,3 +138,4 @@ youtube-dl.tar.gz: youtube-dl README.md README.txt youtube-dl.1 youtube-dl.bash-
 		Makefile MANIFEST.in youtube-dl.1 youtube-dl.bash-completion \
 		youtube-dl.zsh youtube-dl.fish setup.py setup.cfg \
 		youtube-dl
+	advdef -z -4 -i 30 youtube-dl.tar.gz
