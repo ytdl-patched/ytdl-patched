@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import os
 import os.path
 import warnings
 import sys
@@ -26,7 +27,7 @@ except ImportError:
 
 py2exe_options = {
     'bundle_files': 1,
-    'compressed': 1,
+    'compressed': True,
     'optimize': 2,
     'dist_dir': '.',
     'dll_excludes': ['w9xpopen.exe', 'crypt32.dll'],
@@ -51,12 +52,18 @@ py2exe_console = [{
 
 py2exe_params = {
     'console': py2exe_console,
+    'windows': py2exe_console,
     'options': {'py2exe': py2exe_options},
     'zipfile': None
 }
 
 if len(sys.argv) >= 2 and sys.argv[1] == 'py2exe':
     params = py2exe_params
+
+    icon_path = os.environ.get('PY2EXE_WINDOWS_ICON_PATH')
+
+    if icon_path:
+        py2exe_console[0]['icon_resources'] = [(0, icon_path)]
 else:
     files_spec = [
         ('etc/bash_completion.d', ['youtube-dl.bash-completion']),
@@ -136,6 +143,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: Implementation',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: IronPython',

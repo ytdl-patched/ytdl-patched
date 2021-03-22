@@ -19,7 +19,7 @@
     "editor.fontSize": 12,
     "markdown.preview.fontSize": 12
   },
-  "extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-azuretools.vscode-docker", "eamodio.gitlens"],
+  "extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-azuretools.vscode-docker", "eamodio.gitlens", "ms-vscode.powershell"],
   "remoteUser": "codespace",
   "overrideCommand": false,
   "mounts": ["source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"],
