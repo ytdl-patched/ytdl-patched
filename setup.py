@@ -56,7 +56,21 @@ py2exe_params = {
 }
 
 if len(sys.argv) >= 2 and sys.argv[1] == 'py2exe':
+    from optparse import OptionParser
+
     params = py2exe_params
+
+    parser = OptionParser()
+    parser.add_option(
+        "-i", "--icon", dest="icon",
+        help=".ico path", metavar="FILE")
+
+    (options, args) = parser.parse_args(sys.argv[2:])
+
+    if options.icon:
+        params['windows'] = [{
+            "icon_resources": [(1, options.icon)]
+        }]
 else:
     files_spec = [
         ('etc/bash_completion.d', ['youtube-dl.bash-completion']),
@@ -136,6 +150,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: Implementation',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: IronPython',

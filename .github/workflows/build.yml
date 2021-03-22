@@ -99,7 +99,7 @@ jobs:
     strategy:
       matrix:
         icon: [red, white]
-        # pyinstaller: ['-m PyInstaller', 'devscripts/pyinstaller_zopfli.py']
+        builder: [PyInstaller, py2exe]
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -112,21 +112,17 @@ jobs:
           python-version: ${{ env.python_version }}
       - name: Install deps
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
-        run: pip install --upgrade pyinstaller zopflipy websocket_client
+        run: pip install --upgrade ${{ matrix.builder }} zopflipy websocket_client
       - name: Install UPX
         run: choco install upx
       - name: Build patched YTDL for Windows
         shell: pwsh
         run: |
-          python -OO devscripts/pyinstaller_zopfli.py `
-              --onefile --console --distpath . `
-              --icon icons\youtube_social_squircle_${{ matrix.icon }}.ico `
-              -n youtube-dl youtube_dl\__main__.py
-          Move-Item youtube-dl.exe artifacts/
+          pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: "ytdl-windows-${{ matrix.icon }}"
+          name: "ytdl-windows-${{ matrix.icon }}-${{ matrix.builder }}"
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
@@ -262,7 +258,7 @@ jobs:
       - name: Download builds for Windows (red icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-red
+          name: ytdl-windows-red-PyInstaller
       - name: Upload exe
         id: upload-3
         uses: actions/upload-release-asset@v1
@@ -276,7 +272,7 @@ jobs:
       - name: Download builds for Windows (white icon)
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-white
+          name: ytdl-windows-white-PyInstaller
       - name: Upload exe
         id: upload-4
         uses: actions/upload-release-asset@v1
