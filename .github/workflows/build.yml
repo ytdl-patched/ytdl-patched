@@ -99,6 +99,7 @@ jobs:
     strategy:
       matrix:
         icon: [red, white]
+        # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
         builder: [PyInstaller, py2exe]
     steps:
       - uses: actions/checkout@v2
@@ -111,7 +112,6 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install deps
-        # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
         run: pip install --upgrade ${{ matrix.builder }} zopflipy websocket_client
       - name: Install UPX
         run: choco install upx
@@ -230,7 +230,7 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            What to download
+            What to download?
             - for Linux/macOS - `youtube-dl` (requires Python 3.x installed)
             - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)

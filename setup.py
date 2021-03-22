@@ -57,15 +57,14 @@ py2exe_params = {
 }
 
 if len(sys.argv) >= 2 and sys.argv[1] == 'py2exe':
-    from optparse import OptionParser
-
     params = py2exe_params
 
     icon_path = os.environ.get('PY2EXE_WINDOWS_ICON_PATH')
 
     if icon_path:
         params['windows'] = [{
-            "icon_resources": [(1, icon_path)]
+            'script': './youtube_dl/__main__.py',
+            'icon_resources': [(0, icon_path)]
         }]
 else:
     files_spec = [
