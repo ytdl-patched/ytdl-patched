@@ -585,7 +585,7 @@ class NiconicoPlaylistBaseIE(InfoExtractor):
 
 class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:playlist'
-    _VALID_URL = r'https?://(?:www\.)?nicovideo\.jp/(?:user/\d+/)?(?:my/)?mylist/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/(?:user/\d+/)?(?:my/)?mylist/(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'http://www.nicovideo.jp/mylist/27411728',
@@ -625,7 +625,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
 
 class NiconicoUserIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:user'
-    _VALID_URL = r'https?://(?:www\.|sp\.)?nicovideo\.jp/user/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/user/(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'https://www.nicovideo.jp/user/17988631',
@@ -636,6 +636,9 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         'playlist_mincount': 37,  # as of 2021/01/13
     }, {
         'url': 'https://www.nicovideo.jp/user/805442/',
+        'only_matching': True,
+    }, {
+        'url': 'https://nico.ms/user/805442/',
         'only_matching': True,
     }]
 
@@ -674,7 +677,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
 # cannot use NiconicoPlaylistBaseIE because /series/ has different structure than others
 class NiconicoSeriesIE(InfoExtractor):
     IE_NAME = 'niconico:series'
-    _VALID_URL = r'https?://(?:www\.|sp\.)?nicovideo\.jp/series/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/series/(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'https://www.nicovideo.jp/series/110226',
@@ -690,6 +693,9 @@ class NiconicoSeriesIE(InfoExtractor):
             'title': 'バトルスピリッツ　お勧めカード紹介(調整中)',
         },
         'playlist_mincount': 97,  # as of 2021/03/17
+    }, {
+        'url': 'https://nico.ms/series/203559',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
