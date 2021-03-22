@@ -2,6 +2,7 @@
 # $IconName - red or white
 # $BuilderName - PyInstaller or py2exe
 Param($BuilderName, $IconName)
+$ErrorActionPreference = "Stop"
 
 switch ($BuilderName) {
     "PyInstaller" {
@@ -19,12 +20,10 @@ switch ($BuilderName) {
         Move-Item youtube-dl.exe artifacts/
     }
     "py2exe" {
-        $IconArg = @()
-        if ($IconName) {
-            $IconArg = "--icon", "icons\youtube_social_squircle_${IconName}.ico"
-        }
+        $env:PY2EXE_WINDOWS_ICON_PATH="icons\youtube_social_squircle_${IconName}.ico"
+
         write-host "Building an EXE using py2exe"
-        python setup.py py2exe @IconArg
+        python setup.py py2exe
 
         write-host "Moving built EXE into artifacts/"
         Move-Item youtube-dl.exe artifacts/

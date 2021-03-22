@@ -285,32 +285,31 @@ jobs:
           asset_content_type: application/vnd.microsoft.portable-executable
   binary-test:
     needs: [build-linux, build-windows]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.environ.os }}
     continue-on-error: true
     strategy:
       matrix:
-        os: [
-          "ubuntu-20.04", "ubuntu-18.04", "ubuntu-16.04",
-          #"macos-11.0", "macos-10.15",
-          "windows-2016", "windows-2019"
+        environ: [
+          { os: "ubuntu-20.04", artifact: linux },
+          { os: "ubuntu-18.04", artifact: linux },
+          { os: "ubuntu-16.04", artifact: linux },
+          # { os: "macos-11.0", artifact: linux },
+          # { os: "macos-10.15", artifact: linux },
+
+          { os: "windows-2016", artifact: windows-white-PyInstaller },
+          { os: "windows-2016", artifact: windows-white-py2exe },
+          { os: "windows-2019", artifact: windows-white-PyInstaller },
+          { os: "windows-2019", artifact: windows-white-py2exe },
         ]
-        python_version: [
-          "3.9", "3.8", "3.7"
-        ]
+        python_version: ["3.9", "3.8", "3.7"]
     steps:
-      - name: Download artifacts (Linux/macOS)
+      - name: Download artifacts
         uses: actions/download-artifact@v2
-        if: ${{ startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') }}
         with:
-          name: ytdl-linux
-      - name: Download artifacts (Windows)
-        uses: actions/download-artifact@v2
-        if: ${{ startsWith(matrix.os, 'windows') }}
-        with:
-          name: ytdl-windows-white-PyInstaller
+          name: ytdl-${{ matrix.environ.artifact }}
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
-        if: ${{ startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') }}
+        if: ${{ startsWith(runner.os, 'ubuntu') || startsWith(runner.os, 'macos') }}
         with:
           python-version: ${{ matrix.python_version }}
       - name: youtube-dl --help and --version

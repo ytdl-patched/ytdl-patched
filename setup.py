@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import os
 import os.path
 import warnings
 import sys
@@ -26,7 +27,7 @@ except ImportError:
 
 py2exe_options = {
     'bundle_files': 1,
-    'compressed': 1,
+    'compressed': True,
     'optimize': 2,
     'dist_dir': '.',
     'dll_excludes': ['w9xpopen.exe', 'crypt32.dll'],
@@ -47,8 +48,6 @@ py2exe_console = [{
     'comments': LONG_DESCRIPTION,
     'product_name': 'youtube-dl',
     'product_version': __version__,
-    'bundle_files': 1,
-    'compressed': True,
 }]
 
 py2exe_params = {
@@ -62,16 +61,11 @@ if len(sys.argv) >= 2 and sys.argv[1] == 'py2exe':
 
     params = py2exe_params
 
-    parser = OptionParser()
-    parser.add_option(
-        "-i", "--icon", dest="icon",
-        help=".ico path", metavar="FILE")
+    icon_path = os.environ.get('PY2EXE_WINDOWS_ICON_PATH')
 
-    (options, args) = parser.parse_args(sys.argv[2:])
-
-    if options.icon:
+    if icon_path:
         params['windows'] = [{
-            "icon_resources": [(1, options.icon)]
+            "icon_resources": [(1, icon_path)]
         }]
 else:
     files_spec = [
