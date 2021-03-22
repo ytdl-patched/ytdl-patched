@@ -2440,6 +2440,13 @@ class GenericIE(InfoExtractor):
             if MastodonIE._test_mastodon_instance(self, parsed_url.hostname, False, prefix):
                 return self.url_result(url)
 
+        if self._downloader.params.get('check_peertube_instance', False):
+            prefix = self._search_regex(
+                PeerTubeIE._VALID_URL,
+                url, 'peertube test', group='prefix', default=None)
+            if PeerTubeIE._test_peertube_instance(self, parsed_url.hostname, False, prefix):
+                return self.url_result(url)
+
         self.to_screen('%s: Requesting header' % video_id)
 
         head_req = HEADRequest(url)

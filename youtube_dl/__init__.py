@@ -471,6 +471,7 @@ def _real_main(argv=None):
         'geo_bypass_country': opts.geo_bypass_country,
         'geo_bypass_ip_block': opts.geo_bypass_ip_block,
         'check_mastodon_instance': opts.check_mastodon_instance,
+        'check_peertube_instance': opts.check_peertube_instance,
         'escape_long_names': opts.escape_long_names,
         'test_filename': opts.test_filename,
         # just for deprecation check

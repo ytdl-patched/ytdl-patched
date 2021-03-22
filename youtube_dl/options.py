@@ -204,6 +204,11 @@ def parseOpts(overrideArguments=None):
         default=False,
         help='Always perform online checks for Mastodon-like URL')
     general.add_option(
+        '--check-peertube-instance',
+        action='store_true', dest='check_peertube_instance',
+        default=False,
+        help='Always perform online checks for PeerTube-like URL')
+    general.add_option(
         '--test-filename',
         metavar='CMD', dest='test_filename',
         help='Like --exec option, but used for testing if downloading should be started. '
