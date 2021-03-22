@@ -73,6 +73,7 @@ class PeerTubeIE(InfoExtractor):
     }, {
         'url': 'https://peertube.tamanoir.foucry.net/videos/watch/0b04f13d-1e18-4f1d-814e-4979aa7c9c44',
         'only_matching': True,
+        'skip': 'instance vanished and no longer matches',
     }, {
         # nsfw
         'url': 'https://tube.22decembre.eu/videos/watch/9bb88cd3-9959-46d9-9ab9-33d2bb704c39',
