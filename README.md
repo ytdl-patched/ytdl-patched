@@ -24,11 +24,17 @@
 # ytdl-patched
 ytdl-patched - download videos from youtube.com or other video platforms
 
+ytdl-patched is not intended modify heavily, but just to "patch" the ytdl-org one.
+This is where "patched" is come from.
+
 ## GOALS
 - keep merging with [`ytdl-org/youtube-dl`](https://github.com/ytdl-org/youtube-dl)
 - implement miscellaneous extractors as possible
-- make `-U` work (yes, really)
+- make `-U` work (yes, really works)
 - do anything best
+
+## NOT TO DO
+- don't change very much from ytdl-org
 
 ## TOC
 - [INSTALLATION](#installation)
@@ -126,6 +132,10 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
     --no-color                           Do not emit color codes in output
     --check-mastodon-instance            Always perform online checks for
                                          Mastodon-like URL
+    --test-filename CMD                  Like --exec option, but used for
+                                         testing if downloading should be
+                                         started. You can begin with "re:" to
+                                         use regex instead of commands
 
 ## Network Options:
     --proxy URL                          Use the specified HTTP/HTTPS/SOCKS
@@ -222,6 +232,10 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                          downloaded videos in it.
     --include-ads                        Download advertisements as well
                                          (experimental)
+
+## Extractor Options:
+    --extractor-retries RETRIES          Number of retries for known extractor
+                                         errors (default is 3), or "infinite"
 
 ## Download Options:
     -r, --limit-rate RATE                Maximum download rate in bytes per
@@ -514,6 +528,29 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                          /sdcard/Music/ && rm {}'
     --convert-subs FORMAT                Convert the subtitles to other format
                                          (currently supported: srt|ass|vtt|lrc)
+
+## SponSkrub (SponsorBlock) Options:
+    SponSkrub (https://github.com/yt-dlp/SponSkrub) is a utility to
+    mark/remove sponsor segments from downloaded YouTube videos using
+    SponsorBlock API (https://sponsor.ajay.app)
+
+    --sponskrub                          Use sponskrub to mark sponsored
+                                         sections. This is enabled by default if
+                                         the sponskrub binary exists (Youtube
+                                         only)
+    --no-sponskrub                       Do not use sponskrub
+    --sponskrub-cut                      Cut out the sponsor sections instead of
+                                         simply marking them
+    --no-sponskrub-cut                   Simply mark the sponsor sections, not
+                                         cut them out (default)
+    --sponskrub-force                    Run sponskrub even if the video was
+                                         already downloaded
+    --no-sponskrub-force                 Do not cut out the sponsor sections if
+                                         the video was already downloaded
+                                         (default)
+    --sponskrub-location PATH            Location of the sponskrub binary;
+                                         either the path to the binary or its
+                                         containing directory
 
 # CONFIGURATION
 

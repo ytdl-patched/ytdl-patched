@@ -66,7 +66,9 @@ class PostProcessor(object):
         except Exception:
             self._downloader.report_warning(errnote)
 
-    def _configuration_args(self, exe, keys=None, default=[], use_compat=True):
+    def _configuration_args(self, exe=None, keys=None, default=[], use_compat=True):
+        if not exe:
+            return cli_configuration_args(self._downloader.params.get('postprocessor_args'), default)
         pp_key = self.pp_key().lower()
         exe = exe.lower()
         root_key = exe if pp_key == exe else '%s+%s' % (pp_key, exe)
