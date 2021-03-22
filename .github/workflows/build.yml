@@ -144,7 +144,7 @@ jobs:
       - name: Download builds for Windows
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-${{ env.windows_icon }}
+          name: ytdl-windows-${{ env.windows_icon }}-PyInstaller
       - name: Install deps
         run: |
           sudo apt update
@@ -307,7 +307,7 @@ jobs:
         uses: actions/download-artifact@v2
         if: ${{ startsWith(matrix.os, 'windows') }}
         with:
-          name: ytdl-windows-white
+          name: ytdl-windows-white-PyInstaller
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
         if: ${{ startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') }}
@@ -389,7 +389,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-windows-${{ env.windows_icon }}
+          name: ytdl-windows-${{ env.windows_icon }}-PyInstaller
       - run: ls artifacts/
       - name: Login
         run: docker login --username ${{ github.repository_owner }} --password ${{ secrets.DHUB_TOKEN }}

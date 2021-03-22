@@ -47,6 +47,8 @@ py2exe_console = [{
     'comments': LONG_DESCRIPTION,
     'product_name': 'youtube-dl',
     'product_version': __version__,
+    'bundle_files': 1,
+    'compressed': True,
 }]
 
 py2exe_params = {
