@@ -52,7 +52,6 @@ py2exe_console = [{
 
 py2exe_params = {
     'console': py2exe_console,
-    'windows': py2exe_console,
     'options': {'py2exe': py2exe_options},
     'zipfile': None
 }
