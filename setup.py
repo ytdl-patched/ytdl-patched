@@ -119,7 +119,8 @@ setup(
     packages=[
         'youtube_dl',
         'youtube_dl.extractor', 'youtube_dl.downloader',
-        'youtube_dl.postprocessor'],
+        'youtube_dl.postprocessor', 'youtube_dl.websocket',
+        'youtube_dl.extractor.mastodon', 'youtube_dl.extractor.peertube'],
 
     # Provokes warning on most systems (why?!)
     # test_suite = 'nose.collector',
