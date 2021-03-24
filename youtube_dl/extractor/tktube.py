@@ -24,7 +24,7 @@ class TktubeIE(InfoExtractor):
              r'<meta property="og:title" content="(.+?)"',), webpage, 'title')
         description = self._og_search_description(webpage)
 
-        mobj = re.search(r'<a href="https://www.tktube.com/members/(\d+)/">\s*(\S+?)\s*</a>', webpage)
+        mobj = re.search(r'<a href="https://www\.tktube\.com/members/(\d+)/">\s*(\S+?)\s*</a>', webpage)
         if mobj:
             uploader_id, uploader = mobj.groups()
         else:

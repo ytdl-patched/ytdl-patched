@@ -3005,7 +3005,7 @@ class GenericIE(InfoExtractor):
             webpage)
         if not mobj:
             mobj = re.search(
-                r'data-video-link=["\'](?P<url>http://m.mlb.com/video/[^"\']+)',
+                r'data-video-link=["\'](?P<url>http://m\.mlb\.com/video/[^"\']+)',
                 webpage)
         if mobj is not None:
             waitlist.append(self.url_result(mobj.group('url'), 'MLB'))
