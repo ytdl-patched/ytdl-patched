@@ -1280,5 +1280,6 @@
  - **ZDFChannel**
  - **Zhihu**
  - **zingmp3**: mp3.zing.vn
+ - **zingmp3:album**
  - **zoom**
  - **Zype**
