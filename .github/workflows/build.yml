@@ -108,9 +108,7 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install deps
-        run: |
-          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
-          pip3 install -U pip build wheel setuptools
+        run: pip3 install -U pip build wheel setuptools
       - name: Build wheel
         run: python3 -m build
       - name: Upload artifacts for the next steps
@@ -142,9 +140,7 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
       - name: Install deps
-        run: |
-          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
-          pip3 install -U pip build wheel setuptools
+        run: pip3 install -U pip build wheel setuptools
       - name: Build egg
         run: python3 setup.py bdist_egg
       - name: Upload artifacts for the next steps
