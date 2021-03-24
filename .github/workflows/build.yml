@@ -111,10 +111,8 @@ jobs:
         run: |
           sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
           pip3 install -U pip build wheel setuptools
-      - name: Build patched YTDL for Linux
-        run: |
-          python3 -m build
-          mv dist artifacts
+      - name: Build wheel
+        run: python3 -m build
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -122,7 +120,41 @@ jobs:
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
-            artifacts/
+            dist/
+            README.md
+  build-eggs:
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      matrix:
+        python_version: [
+          2.6, 2.7,
+          3.5, 3.6, 3.7, 3.8, 3.9
+        ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download base
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-base
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install deps
+        run: |
+          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+          pip3 install -U pip build wheel setuptools
+      - name: Build egg
+        run: python3 setup.py bdist_egg
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-egg-${{ matrix.python_version }}
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            dist/
             README.md
   build-windows:
     runs-on: windows-latest
@@ -325,7 +357,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./artifacts/youtube_dl-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
+          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
           asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
           asset_content_type: application/zip
       - name: Upload wheel tar
@@ -335,7 +367,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./artifacts/youtube_dl-${{ needs.prepare.outputs.latest_version }}.tar.gz
+          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version }}.tar.gz
           asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-wheel.tar.gz
           asset_content_type: application/gzip
   binary-test:
