@@ -47,6 +47,7 @@ jobs:
           export LATEST_VERSION="$(date --date="${NOW_RAW}" +'%Y.%m.%d.%s')"
           echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
           echo "::set-output name=latest_version::${LATEST_VERSION}"
+          echo "::set-output name=latest_version_normalized::$(python3 devscripts/normalize_version.py "${LATEST_VERSION}")"
           echo "::set-output name=latest_version_numeric::$(date --date="${NOW_RAW}" +'%s')"
 
           echo "from __future__ import unicode_literals
@@ -353,7 +354,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
+          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
           asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
           asset_content_type: application/zip
       - name: Upload wheel tar
@@ -363,7 +364,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version }}.tar.gz
+          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
           asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-wheel.tar.gz
           asset_content_type: application/gzip
   binary-test:
