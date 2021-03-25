@@ -1904,7 +1904,14 @@ class YoutubeDL(object):
                     self.to_screen('[info] Video subtitle %s.%s is already present' % (sub_lang, sub_format))
                 else:
                     self.to_screen('[info] Writing video subtitles to: ' + sub_filename)
-                    if sub_info.get('data') is not None:
+                    if sub_info.get('protocol'):
+                        try:
+                            get_suitable_downloader(sub_info, self.params)(self, self.params).download(sub_filename, sub_info)
+                        except (ExtractorError, IOError, OSError, ValueError, compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
+                            self.report_warning('Unable to download subtitle for "%s": %s' %
+                                                (sub_lang, error_to_compat_str(err)))
+                            continue
+                    elif sub_info.get('data') is not None:
                         try:
                             # Use newline='' to prevent conversion of newline characters
                             # See https://github.com/ytdl-org/youtube-dl/issues/10268

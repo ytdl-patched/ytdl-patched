@@ -1733,7 +1733,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             video_details.get('lengthSeconds')
             or microformat.get('lengthSeconds')) \
             or parse_duration(search_meta('duration'))
-        is_live = video_details.get('isLive')
+        is_live = bool(video_details.get('isLive'))
         owner_profile_url = microformat.get('ownerProfileUrl')
 
         info = {
@@ -1764,6 +1764,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'categories': [category] if category else None,
             'tags': keywords,
             'is_live': is_live,
+            'subtitles': {},
+            'automatic_captions': {},
         }
 
         pctr = try_get(
@@ -1782,7 +1784,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     })
                 container[lang_code] = lang_subs
 
-            subtitles = {}
+            subtitles = info['subtitles']
             for caption_track in (pctr.get('captionTracks') or []):
                 base_url = caption_track.get('baseUrl')
                 if not base_url:
@@ -1794,7 +1796,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     process_language(
                         subtitles, base_url, lang_code, {})
                     continue
-                automatic_captions = {}
+                automatic_captions = info['automatic_captions']
                 for translation_language in (pctr.get('translationLanguages') or []):
                     translation_language_code = translation_language.get('languageCode')
                     if not translation_language_code:
@@ -1802,8 +1804,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     process_language(
                         automatic_captions, base_url, translation_language_code,
                         {'tlang': translation_language_code})
-                info['automatic_captions'] = automatic_captions
-            info['subtitles'] = subtitles
 
         parsed_url = compat_urllib_parse_urlparse(url)
         for component in [parsed_url.fragment, parsed_url.query]:
@@ -1838,6 +1838,19 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if not initial_data:
             initial_data = self._call_api(
                 'next', {'videoId': video_id}, video_id, fatal=False)
+
+        if not is_live and initial_data:
+            try:
+                # This will error if there is no livechat
+                # initial_data['contents']['twoColumnWatchNextResults']['conversationBar']['liveChatRenderer']['continuations'][0]['reloadContinuationData']['continuation']
+                info['subtitles']['live_chat'] = [{
+                    'url': 'https://www.youtube.com/watch?v=%s' % video_id,  # url is needed to set cookies
+                    'video_id': video_id,
+                    'ext': 'json',
+                    'protocol': 'youtube_live_chat_replay',
+                }]
+            except (KeyError, IndexError, TypeError):
+                pass
 
         if initial_data:
             chapters = self._extract_chapters_from_json(
