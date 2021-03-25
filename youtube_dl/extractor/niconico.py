@@ -714,7 +714,7 @@ class NiconicoSeriesIE(InfoExtractor):
 class NiconicoLiveIE(InfoExtractor):
     IE_NAME = 'niconico:live'
     IE_DESC = 'ニコニコ生放送'
-    _VALID_URL = r'https?://live2?\.nicovideo\.jp/watch/(?P<id>lv\d+)'
+    _VALID_URL = r'https?://(?:sp\.)?live2?\.nicovideo\.jp/watch/(?P<id>lv\d+)'
 
     def _real_extract(self, url):
         if not HAVE_WEBSOCKET:
@@ -728,6 +728,8 @@ class NiconicoLiveIE(InfoExtractor):
         embedded_data = self._parse_json(embedded_data, video_id)
 
         ws_url = embedded_data['site']['relive']['webSocketUrl']
+        if not ws_url:
+            raise ExtractorError('the live hasn\'t started yet or alreadyended', expected=True)
 
         self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
         with WebSocket(ws_url, {
