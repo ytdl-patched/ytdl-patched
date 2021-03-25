@@ -767,6 +767,8 @@ class NiconicoLiveIE(InfoExtractor):
         formats = self._extract_m3u8_formats(
             hls_url, video_id, ext='mp4', m3u8_id='hls', live=True)
 
+        self.sort_formats(formats)
+
         return {
             'id': video_id,
             'title': title,
