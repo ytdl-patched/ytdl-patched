@@ -433,15 +433,13 @@ class NiconicoIE(InfoExtractor):
                 self._sort_formats(formats)
 
         # Start extracting information
-        title = get_video_info('title')
-        if not title:
-            title = api_data['video'].get('title')
-        if not title:
-            title = self._og_search_title(webpage, default=None)
-        if not title:
-            title = self._html_search_regex(
+        title = (
+            get_video_info(['originalTitle', 'title'])
+            or self._og_search_title(webpage, default=None)
+            or self._html_search_regex(
                 r'<span[^>]+class="videoHeaderTitle"[^>]*>([^<]+)</span>',
-                webpage, 'video title')
+                webpage, 'video title'))
+
 
         watch_api_data_string = self._html_search_regex(
             r'<div[^>]+id="watchAPIDataContainer"[^>]+>([^<]+)</div>',
