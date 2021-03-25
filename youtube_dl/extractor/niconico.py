@@ -440,7 +440,6 @@ class NiconicoIE(InfoExtractor):
                 r'<span[^>]+class="videoHeaderTitle"[^>]*>([^<]+)</span>',
                 webpage, 'video title'))
 
-
         watch_api_data_string = self._html_search_regex(
             r'<div[^>]+id="watchAPIDataContainer"[^>]+>([^<]+)</div>',
             webpage, 'watch api data', default=None)
