@@ -206,7 +206,7 @@ class NiconicoIE(InfoExtractor):
             self._downloader.report_warning('unable to log in: bad username or password')
         return login_ok
 
-    def _extract_format_for_quality(self, api_data, video_id, audio_quality, video_quality):
+    def _extract_format_for_quality(self, api_data, video_id, audio_quality, video_quality, dmc_protocol):
         def yesno(boolean):
             return 'yes' if boolean else 'no'
 
@@ -234,11 +234,13 @@ class NiconicoIE(InfoExtractor):
 
         session_api_data = api_data['media']['delivery']['movie']['session']
 
-        format_id = '-'.join(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
+        format_id = '-'.join(
+            list(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
+            + [dmc_protocol])
 
         protocol_parameters = {}
         protocol = None
-        if 'http' in session_api_data['protocols']:
+        if dmc_protocol == 'http':
             protocol = 'http'
             protocol_parameters['http_parameters'] = {
                 'parameters': {
@@ -248,7 +250,7 @@ class NiconicoIE(InfoExtractor):
                     }
                 }
             }
-        else:
+        elif dmc_protocol == 'hls':
             protocol = 'm3u8'
             parsed_token = self._parse_json(session_api_data['token'], video_id)
             protocol_parameters['http_parameters'] = {
@@ -269,6 +271,8 @@ class NiconicoIE(InfoExtractor):
                         'key_uri': api_data['media']['delivery']['encryption']['keyUri']
                     }
                 }
+        else:
+            return None
 
         session_response = self._download_json(
             session_api_data['urls'][0]['url'], video_id,
@@ -331,7 +335,7 @@ class NiconicoIE(InfoExtractor):
         return {
             'url': session_response['data']['session']['content_uri'],
             'format_id': format_id,
-            'format_note': 'DMC ' + video_quality['metadata']['label'],
+            'format_note': 'DMC ' + video_quality['metadata']['label'] + ' ' + dmc_protocol.upper(),
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
             'acodec': 'aac',
             'vcodec': 'h264',  # As far as I'm aware DMC videos can only serve h264/aac combinations
@@ -452,13 +456,15 @@ class NiconicoIE(InfoExtractor):
 
             # dmc_info = api_data['video'].get('dmcInfo')
             quality_info = api_data['media']['delivery']['movie']
+            session_api_data = api_data['media']['delivery']['movie']['session']
             if quality_info:  # "New" HTML5 videos
                 for audio_quality in quality_info['audios']:
                     for video_quality in quality_info['videos']:
                         if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                             continue
-                        formats.append(self._extract_format_for_quality(
-                            api_data, video_id, audio_quality, video_quality))
+                        for protocol in session_api_data['protocols']:
+                            formats.append(self._extract_format_for_quality(
+                                api_data, video_id, audio_quality, video_quality, protocol))
 
                 self._sort_formats(formats)
 
