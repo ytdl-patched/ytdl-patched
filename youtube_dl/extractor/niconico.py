@@ -17,10 +17,8 @@ from .common import InfoExtractor
 from ..compat import (
     compat_parse_qs,
     compat_urllib_parse_urlparse,
-    compat_urllib_parse_unquote_plus,
 )
 from ..utils import (
-    determine_ext,
     dict_get,
     ExtractorError,
     float_or_none,
@@ -33,7 +31,6 @@ from ..utils import (
     unescapeHTML,
     unified_timestamp,
     urlencode_postdata,
-    xpath_text,
     to_str,
     std_headers,
 )
@@ -337,84 +334,8 @@ class NiconicoIE(InfoExtractor):
             'data-api-data="([^"]+)"', webpage,
             'API data', default='{}'), video_id)
 
-        def _format_id_from_url(video_url):
-            return 'economy' if video_real_url.endswith('low') else 'normal'
-
-        try:
-            # video_real_url = api_data['video']['smileInfo']['url']
-            pass
-        except KeyError:  # Flash videos
-            # Get flv info
-            flv_info_webpage = self._download_webpage(
-                'http://flapi.nicovideo.jp/api/getflv/' + video_id + '?as3=1',
-                video_id, 'Downloading flv info')
-
-            flv_info = compat_parse_qs(flv_info_webpage)
-
-            watch_api_data_string = self._html_search_regex(
-                r'<div[^>]+id="watchAPIDataContainer"[^>]+>([^<]+)</div>',
-                webpage, 'watch api data', default=None)
-            player_flv_info = None
-            if watch_api_data_string:
-                watch_api = self._parse_json(watch_api_data_string, video_id)
-                player_flv_info = compat_parse_qs(compat_urllib_parse_unquote_plus(compat_urllib_parse_unquote_plus(watch_api['flashvars']['flvInfo'])))
-            else:
-                self._downloader.report_warning('Could not get flv info as it requires logging in, or the endpoint has been decommissioned')
-            if not player_flv_info:
-                player_flv_info = {}
-
-            if 'url' not in flv_info and 'url' not in player_flv_info:
-                if 'deleted' in flv_info:
-                    raise ExtractorError('The video has been deleted.',
-                                         expected=True)
-                elif 'closed' in flv_info:
-                    raise ExtractorError('Niconico videos now require logging in',
-                                         expected=True)
-                elif 'error' in flv_info:
-                    raise ExtractorError('%s reports error: %s' % (
-                        self.IE_NAME, flv_info['error'][0]), expected=True)
-                else:
-                    raise ExtractorError('Unable to find video URL')
-
-            video_info_xml = self._download_xml(
-                'http://ext.nicovideo.jp/api/getthumbinfo/' + video_id,
-                video_id, note='Downloading video info page')
-
-            def get_video_info(items):
-                if not isinstance(items, list):
-                    items = [items]
-                for item in items:
-                    ret = xpath_text(video_info_xml, './/' + item)
-                    if ret:
-                        return ret
-
-            video_real_url = flv_info['url'][0]
-
-            extension = get_video_info('movie_type')
-            if not extension:
-                extension = determine_ext(video_real_url)
-            if not extension:
-                extension = 'mp4'
-
-            formats = [{
-                'url': video_real_url,
-                'ext': extension,
-                'format_id': _format_id_from_url(video_real_url),
-            }]
-            for video_url in player_flv_info['url']:
-                is_source = not video_url.endswith('low')
-                flash_cookies = self._get_cookies('http://nicovideo.jp')
-                formats.append({
-                    'url': video_url,
-                    'ext': extension,
-                    'format_id': 'source' if is_source else 'flash_low',
-                    'format_note': 'Source flash video' if is_source else 'Low quality flash video',
-                    'acodec': 'mp3',
-                    'container': extension,
-                    'http_headers': {'Cookie': flash_cookies.output(header='', sep=';')},
-                    'quality': 10 if is_source else -2
-                })
-        else:
+        if True:
+            # keep this section indented for mergeability
             formats = []
 
             def get_video_info(items):
