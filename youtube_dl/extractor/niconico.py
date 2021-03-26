@@ -236,6 +236,40 @@ class NiconicoIE(InfoExtractor):
 
         format_id = '-'.join(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
 
+        protocol_parameters = {}
+        protocol = None
+        if False:
+            protocol = 'http'
+            protocol_parameters['http_parameters'] = {
+                'parameters': {
+                    'http_output_download_parameters': {
+                        'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
+                        'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
+                    }
+                }
+            }
+        else:
+            protocol = 'm3u8'
+            parsed_token = self._parse_json(session_api_data['token'], video_id)
+            protocol_parameters['http_parameters'] = {
+                'parameters': {
+                    # 'method': 'GET',
+                    'hls_parameters': {
+                        'segment_duration': 6000,
+                        'transfer_preset': '',
+                        'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
+                        'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
+                    }
+                }
+            }
+            if 'hls_encryption' in parsed_token:
+                protocol_parameters['http_parameters']['parameters']['hls_parameters']['encryption'] = {
+                    parsed_token['hls_encryption']: {
+                        'encrypted_key': api_data['media']['delivery']['encryption']['encryptedKey'],
+                        'key_uri': api_data['media']['delivery']['encryption']['keyUri']
+                    }
+                }
+
         session_response = self._download_json(
             session_api_data['urls'][0]['url'], video_id,
             query={'_format': 'json'},
@@ -271,16 +305,7 @@ class NiconicoIE(InfoExtractor):
                     'priority': session_api_data['priority'],
                     'protocol': {
                         'name': 'http',
-                        'parameters': {
-                            'http_parameters': {
-                                'parameters': {
-                                    'http_output_download_parameters': {
-                                        'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
-                                        'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
-                                    }
-                                }
-                            }
-                        }
+                        'parameters': protocol_parameters
                     },
                     'recipe_id': session_api_data['recipeId'],
                     'session_operation_auth': {
@@ -320,6 +345,7 @@ class NiconicoIE(InfoExtractor):
             'heartbeat_url': heartbeat_url,
             'heartbeat_data': heartbeat_data,
             'heartbeat_interval': heartbeat_interval,
+            'protocol': protocol,
         }
 
     def _real_extract(self, url):
