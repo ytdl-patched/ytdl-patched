@@ -238,7 +238,7 @@ class NiconicoIE(InfoExtractor):
 
         protocol_parameters = {}
         protocol = None
-        if False:
+        if 'http' in session_api_data['protocols']:
             protocol = 'http'
             protocol_parameters['http_parameters'] = {
                 'parameters': {
@@ -346,6 +346,10 @@ class NiconicoIE(InfoExtractor):
             'heartbeat_data': heartbeat_data,
             'heartbeat_interval': heartbeat_interval,
             'protocol': protocol,
+            'http_headers': {
+                'Origin': 'https://www.nicovideo.jp',
+                'Referer': 'https://www.nicovideo.jp/watch/' + video_id,
+            }
         }
 
     def _real_extract(self, url):
