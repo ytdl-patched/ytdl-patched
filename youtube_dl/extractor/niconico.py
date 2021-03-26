@@ -425,7 +425,7 @@ class NiconicoIE(InfoExtractor):
 
         # Note: cannot use api_data.get('owner', {}) because owner may be set to "null"
         # in the JSON, which will cause None to be returned instead of {}.
-        owner = try_get(api_data, lambda x: x.get('owner'), dict) or {}
+        owner = try_get(api_data, lambda x: x['owner'], dict) or {}
         uploader_id = get_video_info(['ch_id', 'user_id']) or owner.get('id')
         uploader = get_video_info(['ch_name', 'user_nickname']) or owner.get('nickname')
 
