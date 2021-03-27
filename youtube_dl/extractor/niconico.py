@@ -463,6 +463,10 @@ class NiconicoPlaylistBaseIE(InfoExtractor):
         "Implement this in child class"
         pass
 
+    @staticmethod
+    def _get_video_item(video):
+        return video.get('video')
+
     def _parse_owner(self, item):
         owner = item.get('owner') or {}
         if owner:
@@ -480,7 +484,7 @@ class NiconicoPlaylistBaseIE(InfoExtractor):
         })['items']
         for video in items:
             # this is needed to support both mylist and user
-            video = video.get('video', video) or {}
+            video = self._get_video_item(video)
             video_id = video.get('id')
             if not video_id:
                 continue
@@ -523,7 +527,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
     def _call_api(self, list_id, resource, query):
         return self._download_json(
             'https://nvapi.nicovideo.jp/v2/mylists/' + list_id, list_id,
-            'Downloading %s JSON metatdata' % resource, query=query,
+            'Downloading %s' % resource, query=query,
             headers=self._API_HEADERS)['data']['mylist']
 
     def _real_extract(self, url):
@@ -567,8 +571,12 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
     def _call_api(self, list_id, resource, query):
         return self._download_json(
             'https://nvapi.nicovideo.jp/v1/users/%s/videos' % list_id, list_id,
-            'Downloading %s JSON metatdata' % resource, query=query,
+            'Downloading %s' % resource, query=query,
             headers=self._API_HEADERS)['data']
+
+    @staticmethod
+    def _get_video_item(video):
+        return video
 
     def _real_extract(self, url):
         list_id = self._match_id(url)
