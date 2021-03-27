@@ -9,11 +9,11 @@ on:
       - .github/workflows/build.yml
       - Makefile
       - setup.py
-    branches:
-      - master
-  pull_request: {}
+    branches-ignore:
+      - gh-pages
+  pull_request:
   workflow_dispatch:
-    inputs: {}
+    inputs:
 
 env:
   python_version: 3.9
@@ -192,7 +192,7 @@ jobs:
   prepare-artifacts:
     runs-on: ubuntu-latest
     needs: [prepare, build-linux, build-windows]
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     outputs:
       filehash_bin: ${{ steps.hash-and-versions.outputs.filehash_bin }}
       filehash_exe: ${{ steps.hash-and-versions.outputs.filehash_exe }}
@@ -236,7 +236,7 @@ jobs:
   upload-gh-pages:
     needs: prepare-artifacts
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     steps:
       - uses: actions/checkout@v2
       - name: Download artifacts
@@ -253,7 +253,7 @@ jobs:
   upload-homebrew:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     env:
       FILEHASH_TAR: ${{ needs.prepare-artifacts.outputs.filehash_tar }}
       VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
@@ -274,7 +274,7 @@ jobs:
   upload-releases:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
@@ -414,7 +414,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prepare, build-linux]
     continue-on-error: true
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     steps:
       - uses: actions/checkout@v2
       - name: Download artifacts
@@ -461,7 +461,7 @@ jobs:
     runs-on: ${{ matrix.windows.os }}
     needs: [prepare, build-windows]
     continue-on-error: true
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     strategy:
       matrix:
         windows: [
