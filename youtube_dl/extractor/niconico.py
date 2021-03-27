@@ -464,8 +464,10 @@ class NiconicoIE(InfoExtractor):
                         if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                             continue
                         for protocol in session_api_data['protocols']:
-                            formats.append(self._extract_format_for_quality(
-                                api_data, video_id, audio_quality, video_quality, protocol))
+                            fmt = self._extract_format_for_quality(
+                                api_data, video_id, audio_quality, video_quality, protocol)
+                            if fmt:
+                                formats.append(fmt)
 
                 self._sort_formats(formats)
 
