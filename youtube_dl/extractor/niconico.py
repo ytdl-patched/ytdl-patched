@@ -172,6 +172,10 @@ class NiconicoIE(InfoExtractor):
     }, {
         'url': 'http://sp.nicovideo.jp/watch/sm28964488?ss_pos=1&cp_in=wt_tg',
         'only_matching': True,
+    }, {
+        'note': 'a video that is only served as an ENCRYPTED HLS, which we\'re working on',
+        'url': 'https://www.nicovideo.jp/watch/so38016254',
+        'only_matching': True,
     }]
 
     _VALID_URL = r'https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/(?P<id>(?:[a-z]{2})?[0-9]+)'
@@ -238,34 +242,27 @@ class NiconicoIE(InfoExtractor):
             list(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
             + [dmc_protocol])
 
-        protocol_parameters = {}
-        protocol = None
         if dmc_protocol == 'http':
             protocol = 'http'
-            protocol_parameters['http_parameters'] = {
-                'parameters': {
-                    'http_output_download_parameters': {
-                        'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
-                        'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
-                    }
+            protocol_parameters = {
+                'http_output_download_parameters': {
+                    'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
+                    'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
                 }
             }
         elif dmc_protocol == 'hls':
             protocol = 'm3u8'
             parsed_token = self._parse_json(session_api_data['token'], video_id)
-            protocol_parameters['http_parameters'] = {
-                'parameters': {
-                    # 'method': 'GET',
-                    'hls_parameters': {
-                        'segment_duration': 6000,
-                        'transfer_preset': '',
-                        'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
-                        'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
-                    }
+            protocol_parameters = {
+                'hls_parameters': {
+                    'segment_duration': 6000,
+                    'transfer_preset': '',
+                    'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
+                    'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
                 }
             }
             if 'hls_encryption' in parsed_token:
-                protocol_parameters['http_parameters']['parameters']['hls_parameters']['encryption'] = {
+                protocol_parameters['hls_parameters']['encryption'] = {
                     parsed_token['hls_encryption']: {
                         'encrypted_key': api_data['media']['delivery']['encryption']['encryptedKey'],
                         'key_uri': api_data['media']['delivery']['encryption']['keyUri']
@@ -309,7 +306,11 @@ class NiconicoIE(InfoExtractor):
                     'priority': session_api_data['priority'],
                     'protocol': {
                         'name': 'http',
-                        'parameters': protocol_parameters
+                        'parameters': {
+                            'http_parameters': {
+                                'parameters': protocol_parameters
+                            }
+                        }
                     },
                     'recipe_id': session_api_data['recipeId'],
                     'session_operation_auth': {
