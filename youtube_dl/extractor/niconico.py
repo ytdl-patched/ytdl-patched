@@ -307,7 +307,7 @@ class NiconicoIE(InfoExtractor):
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
             'acodec': 'aac',
             'vcodec': 'h264',  # As far as I'm aware DMC videos can only serve h264/aac combinations
-            'abr': float_or_none(audio_quality.get('bitrate'), 1000),
+            'abr': float_or_none(audio_quality['metadata'].get('bitrate'), 1000),
             # So this is kind of a hack; sometimes, the bitrate is incorrectly reported as 0kbs. If this is the case,
             # extract it from the rest of the metadata we have available
             'vbr': float_or_none(vid_quality if vid_quality > 0 else extract_video_quality(video_quality['metadata'].get('label')), 1000),
