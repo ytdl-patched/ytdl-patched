@@ -24,7 +24,7 @@ jobs:
         git remote add self https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
         git remote add upstream https://github.com/ytdl-org/youtube-dl.git
     - name: Pull from ytdl-org/youtube-dl
-      run: git pull upstream master
+      run: git pull upstream master --log
     - name: Regenerate docs/supportedsites.md
       continue-on-error: true
       run: |
