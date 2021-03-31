@@ -173,7 +173,7 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install deps
-        run: pip install --upgrade ${{ matrix.builder }} zopflipy websocket_client
+        run: pip install --upgrade ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
       - name: Install UPX
         run: choco install upx
       - name: Build patched YTDL for Windows

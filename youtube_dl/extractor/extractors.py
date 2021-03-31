@@ -826,6 +826,7 @@ from .niconico import (
     NiconicoSeriesIE,
     NiconicoLiveIE,
 )
+from .nicozon import NicozonIE
 from .ninecninemedia import NineCNineMediaIE
 from .ninegag import NineGagIE
 from .ninenow import NineNowIE
