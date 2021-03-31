@@ -474,6 +474,7 @@ def _real_main(argv=None):
         'check_peertube_instance': opts.check_peertube_instance,
         'escape_long_names': opts.escape_long_names,
         'test_filename': opts.test_filename,
+        'printjsontypes': opts.printjsontypes,
         # just for deprecation check
         'autonumber': opts.autonumber if opts.autonumber is True else None,
         'usetitle': opts.usetitle if opts.usetitle is True else None,

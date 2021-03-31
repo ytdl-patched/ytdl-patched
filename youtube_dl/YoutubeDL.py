@@ -54,6 +54,7 @@ from .utils import (
     DEFAULT_OUTTMPL,
     determine_ext,
     determine_protocol,
+    dig_object_type,
     DownloadError,
     encode_compat_str,
     encodeArgument,
@@ -1804,6 +1805,8 @@ class YoutubeDL(object):
         if self.params.get('forceduration', False) and info_dict.get('duration') is not None:
             self.to_stdout(formatSeconds(info_dict['duration']))
         print_mandatory('format')
+        if self.params.get('printjsontypes', False):
+            self.to_stdout('\n'.join(dig_object_type(info_dict)))
         if self.params.get('forcejson', False):
             self.to_stdout(json.dumps(info_dict))
 

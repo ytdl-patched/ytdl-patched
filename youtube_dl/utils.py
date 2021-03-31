@@ -5825,3 +5825,15 @@ def process_communicate_or_kill(p, *args, **kwargs):
         p.kill()
         p.wait()
         raise
+
+
+def dig_object_type(obj, prefix='', lines=[]):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            dig_object_type(v, prefix + '.' + str(k), lines)
+    elif isinstance(obj, (list, tuple, map, filter)):
+        for i, v in enumerate(obj):
+            dig_object_type(v, prefix + '[' + str(i) + ']', lines)
+    else:
+        lines.append(prefix + ': ' + str(type(obj)))
+    return lines

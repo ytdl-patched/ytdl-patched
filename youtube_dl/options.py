@@ -213,6 +213,12 @@ def parseOpts(overrideArguments=None):
         metavar='CMD', dest='test_filename',
         help='Like --exec option, but used for testing if downloading should be started. '
              'You can begin with "re:" to use regex instead of commands')
+    general.add_option(
+        '--print-infojson-types',
+        action='store_true', dest='printjsontypes',
+        default=False,
+        help='DO NOT USE. IT\'S MEANINGLESS FOR MOST PEOPLE. Prints types of object in info json. '
+             'Use this for extractors that --print-json won\' work.')
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(
