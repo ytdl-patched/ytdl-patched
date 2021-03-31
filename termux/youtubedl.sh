@@ -41,36 +41,36 @@ sleep 0.3
 
 sleep 1.5
 
-echo -e "$Y" "$L""ytdl-patched Installer by"  "$R" "nao20010128nao" "$N"
+echo -e "$Y""$L""ytdl-patched Installer by"  "$R""nao20010128nao""$N"
 
-echo -e "$Y" "$L""Please accept permission access..." "$N"
+echo -e "$Y""$L""Please accept permission access...""$N"
 termux-setup-storage
 
-echo -e "$Y" "$L""Installing packages..." "$N"
+echo -e "$Y""$L""Installing packages...""$N"
 apt install -y python ffmpeg wget
 
-echo -e "$Y" "$L" "Creating bin folder..." "$N"
+echo -e "$Y""$L""Creating bin folder...""$N"
 mkdir ~/bin
 
-echo -e "$Y" "$L""Installing ytdl-patched..." "$N" 
-wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/home/bin/ytdl-patched
-chmod a+x /data/data/com.termux/files/home/bin/ytdl-patched
-/data/data/com.termux/files/home/bin/ytdl-patched -U
+echo -e "$Y""$L""Installing ytdl-patched...""$N" 
+wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/usr/bin/ytdl-patched
+chmod a+x /data/data/com.termux/files/usr/bin/ytdl-patched
+/data/data/com.termux/files/usr/bin/ytdl-patched -U
 
-echo -e "$Y" "$L""Setting up configs..." "$N"
+echo -e "$Y""$L""Setting up configs...""$N"
 
-echo -e "$Y" "$L" "Creating Youtube folder..." "$N"
+echo -e "$Y""$L""Creating Youtube folder...""$N"
 mkdir /data/data/com.termux/files/home/storage/shared/Youtube
 
-echo -e "$Y" "$L" "Creating youtube-dl config..." "$N"
+echo -e "$Y""$L""Creating youtube-dl config...""$N"
 mkdir -p ~/.config/youtube-dl
 
-echo -e "$Y" "$L" "Getting config file..." "$N"
+echo -e "$Y""$L""Getting config file...""$N"
 wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/config -P /data/data/com.termux/files/home/.config/youtube-dl
 
-echo -e "$Y" "$L" "Getting files..." "$N"
+echo -e "$Y""$L""Getting files...""$N"
 wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/termux-url-opener -P /data/data/com.termux/files/home/bin
 
-echo -e "$G""Installation finished..." "$N"
+echo -e "$G""Installation finished...""$N"
 
 kill -1 $PPID
