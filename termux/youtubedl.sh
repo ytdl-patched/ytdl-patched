@@ -1,4 +1,4 @@
-#!/system/bin/sh
+#!/bin/bash
 # shellcheck disable=SC2034,SC2039
 
 # Colors
@@ -53,9 +53,9 @@ echo -e "$Y""$L""Creating bin folder...""$N"
 mkdir ~/bin
 
 echo -e "$Y""$L""Installing ytdl-patched...""$N" 
-wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/usr/bin/ytdl-patched
-chmod a+x /data/data/com.termux/files/usr/bin/ytdl-patched
-/data/data/com.termux/files/usr/bin/ytdl-patched -U
+wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/home/bin/ytdl-patched
+chmod a+x /data/data/com.termux/files/home/bin/ytdl-patched
+/data/data/com.termux/files/home/bin/ytdl-patched -U
 
 echo -e "$Y""$L""Setting up configs...""$N"
 
@@ -68,9 +68,10 @@ mkdir -p ~/.config/youtube-dl
 echo -e "$Y""$L""Getting config file...""$N"
 wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/config -P /data/data/com.termux/files/home/.config/youtube-dl
 
-echo -e "$Y""$L""Getting files...""$N"
-wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/termux-url-opener -P /data/data/com.termux/files/home/bin
+echo -e "$Y""$L""Creating files...""$N"
+echo '#!/bin/bash' > /data/data/com.termux/files/home/bin/termux-url-opener
+echo '/data/data/com.termux/files/home/bin/ytdl-patched "$@"' > /data/data/com.termux/files/home/bin/termux-url-opener
 
-echo -e "$G""Installation finished...""$N"
+echo -e "$G""Installation finished.""$N"
 
 kill -1 $PPID
