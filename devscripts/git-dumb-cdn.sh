@@ -2,7 +2,7 @@
 SERVICE="$1"
 
 if ! command -v pandoc &> /dev/null ; then
-  wget -O- https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-linux-amd64.tar.gz | \
+  wget -O- https://github.com/jgm/pandoc/releases/download/2.13/pandoc-2.13-linux-amd64.tar.gz | \
       tar -xvzf - --strip-components 1
   export PATH="$PWD/bin/:$PATH"
 fi
