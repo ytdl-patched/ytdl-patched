@@ -70,7 +70,6 @@ wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux
 
 echo -e "$Y" "$L" "Getting files..." "$N"
 wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/termux-url-opener -P /data/data/com.termux/files/home/bin
-clear
 
 echo -e "$G""Installation finished..." "$N"
 
