@@ -5831,7 +5831,7 @@ def dig_object_type(obj, prefix='', lines=[]):
     if isinstance(obj, dict):
         for k, v in obj.items():
             dig_object_type(v, prefix + '.' + str(k), lines)
-    elif isinstance(obj, tuple(x for x in (list, tuple, map, filter) if isinstance(obj, type))):
+    elif isinstance(obj, tuple(x for x in (list, tuple, map, filter) if isinstance(x, type))):
         for i, v in enumerate(obj):
             dig_object_type(v, prefix + '[' + str(i) + ']', lines)
     else:
