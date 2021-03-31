@@ -41,60 +41,37 @@ sleep 0.3
 
 sleep 1.5
 
-echo -e "$Y" "$L""ytdl-patched Installer By"  "$R" "nao20010128nao" "$N"
+echo -e "$Y" "$L""ytdl-patched Installer by"  "$R" "nao20010128nao" "$N"
 
 echo -e "$Y" "$L""Please accept permission access..." "$N"
+termux-setup-storage
 
-		termux-setup-storage
-		clear
-
-echo -e "$Y" "$L""Installing python..." "$N"
-
-		pkg install python -y
-		clear
-
-echo -e "$Y" "$L""Installing ffmpeg..." "$N"
-
-		apt install ffmpeg -y
-		apt update -y
-		clear
-
-echo -e "$Y" "$L""Installing wget..." "$N"
-
-		pkg install wget -y
+echo -e "$Y" "$L""Installing packages..." "$N"
+apt install -y python ffmpeg wget
 
 echo -e "$Y" "$L" "Creating bin folder..." "$N"
-		mkdir ~/bin
-sleep 1.5
+mkdir ~/bin
 
 echo -e "$Y" "$L""Installing ytdl-patched..." "$N" 
-
-		wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/home/bin/ytdl-patched
-		chmod a+x /data/data/com.termux/files/home/bin/ytdl-patched
-		/data/data/com.termux/files/home/bin/ytdl-patched -U
-		clear
+wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/home/bin/ytdl-patched
+chmod a+x /data/data/com.termux/files/home/bin/ytdl-patched
+/data/data/com.termux/files/home/bin/ytdl-patched -U
 
 echo -e "$Y" "$L""Setting up configs..." "$N"
-sleep 2
 
 echo -e "$Y" "$L" "Creating Youtube folder..." "$N"
-		mkdir /data/data/com.termux/files/home/storage/shared/Youtube
-sleep 1.5
+mkdir /data/data/com.termux/files/home/storage/shared/Youtube
 
 echo -e "$Y" "$L" "Creating youtube-dl config..." "$N"
-		mkdir -p ~/.config/youtube-dl
-sleep 1.5
+mkdir -p ~/.config/youtube-dl
 
 echo -e "$Y" "$L" "Getting config file..." "$N"
-		wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/config -P /data/data/com.termux/files/home/.config/youtube-dl
+wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/config -P /data/data/com.termux/files/home/.config/youtube-dl
 
 echo -e "$Y" "$L" "Getting files..." "$N"
-		wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/termux-url-opener -P /data/data/com.termux/files/home/bin
-		clear
-		
-echo -e "$Y" "$L" "Finishing configuration..." "$N"
-sleep 5
+wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/termux-url-opener -P /data/data/com.termux/files/home/bin
+clear
 
-echo -e "$G""Installation Finished..." "$N"
+echo -e "$G""Installation finished..." "$N"
 
 kill -1 $PPID
