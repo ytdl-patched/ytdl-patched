@@ -18,7 +18,7 @@ case "$YTDL_TEST_SET" in
         fi
     ;;
     *)
-        break
+        # break
     ;;
 esac
 

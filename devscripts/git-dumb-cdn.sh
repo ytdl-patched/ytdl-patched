@@ -28,12 +28,12 @@ python devscripts/readme_for_cdn.py README.md README.cdn.md
 
 cd public
 pdoc ../README.cdn.md index.html "git clone https://ytdl-patched.${SERVICE}.app/"
-cat ../docs/supportedsites.md | tail -n+2 | pdoc - supportedsites.html "List of supported sites by ytdl-patched"
+tail -n+2 ../docs/supportedsites.md | pdoc - supportedsites.html "List of supported sites by ytdl-patched"
 git remote rm origin
 git branch -D gh-pages
 git reflog expire --expire=now --all
 git gc --aggressive --prune=now
 mv objects/pack/pack-* . || true
-find . -name 'pack-*.pack' -type f -exec bash -c 'git unpack-objects < {}' \;
+find . -name 'pack-*.pack' -type f -exec bash -c 'git unpack-objects < "$1' _ {} \;
 rm -rf pack-* objects/pack/
 git update-server-info

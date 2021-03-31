@@ -1,5 +1,5 @@
 #!/bin/bash
-export __DIRNAME="$(basename $(pwd))"
+export __DIRNAME="$(basename "$(pwd)")"
 
 if [[ "$__DIRNAME" == "vercel" ]] ; then
   cd ../../

@@ -7,6 +7,7 @@
 set -e
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+export WINEPREFIX
 
 if [ ! -d wine-py2exe ]; then
 
@@ -14,7 +15,7 @@ if [ ! -d wine-py2exe ]; then
 
     mkdir wine-py2exe
     cd wine-py2exe
-    export WINEPREFIX=`pwd`
+    WINEPREFIX="$(pwd)"
 
     axel -a "http://www.python.org/ftp/python/2.7/python-2.7.msi"
     axel -a "http://downloads.sourceforge.net/project/py2exe/py2exe/0.6.9/py2exe-0.6.9.win32-py2.7.exe"
@@ -45,7 +46,7 @@ if [ ! -d wine-py2exe ]; then
     
 else
 
-    export WINEPREFIX="$( cd wine-py2exe && pwd )"
+    WINEPREFIX="$( cd wine-py2exe && pwd )"
 
 fi
 
