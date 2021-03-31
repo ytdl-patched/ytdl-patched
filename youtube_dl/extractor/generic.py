@@ -30,7 +30,7 @@ from ..utils import (
     orderedSet,
     parse_duration,
     sanitized_Request,
-    smuggle_url,
+    smuggle_url, try_get,
     unescapeHTML,
     unified_timestamp,
     unsmuggle_url,
@@ -2416,9 +2416,9 @@ class GenericIE(InfoExtractor):
         # Firebase Dynamic Link
         # https://firebase.google.com/docs/dynamic-links/create-manually
         if host.endswith('.page.link'):
-            qs = compat_parse_qs(parsed_url.query)
-            if qs and qs.get('link'):
-                return self.url_result(qs.get('link')[0])
+            link = try_get(compat_parse_qs(parsed_url.query), lambda qs: qs.get('link')[0], compat_str)
+            if link:
+                return self.url_result(link)
 
         url, smuggled_data = unsmuggle_url(url)
         force_videoid = None
