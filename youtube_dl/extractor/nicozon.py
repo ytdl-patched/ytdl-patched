@@ -49,25 +49,22 @@ class NicozonIE(InfoExtractor):
 
         _headers['Referer'] = 'http://smile-ccm12.nicovideo.jp/'
 
-        formats = []
-        formats.append({
+        formats = [{
             'format_id': 'flv',
             'url': nicozon_video_url.replace('/smile?v=', '/smile?m='),
             'ext': 'flv',
             'http_headers': _headers,
-        })
-        formats.append({
+        }, {
             'format_id': 'economy',
             'url': nicozon_video_url + 'low',
             'ext': 'mp4',
             'http_headers': _headers,
-        })
-        formats.append({
+        }, {
             'format_id': 'high',
             'url': nicozon_video_url,
             'ext': 'mp4',
             'http_headers': _headers,
-        })
+        }]
 
         return {
             'id': video_id,
