@@ -53,7 +53,10 @@ echo -e "$Y""$L""Creating bin folder...""$N"
 mkdir ~/bin
 
 echo -e "$Y""$L""Installing ytdl-patched...""$N" 
-wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/home/bin/ytdl-patched
+wget https://github.com/nao20010128nao/ytdl-patched/releases/download/1617160331/youtube-dl -O /data/data/com.termux/files/home/bin/ytdl-patched.dled
+echo '#!'"$(command -v python)" > /data/data/com.termux/files/home/bin/ytdl-patched
+cat /data/data/com.termux/files/home/bin/ytdl-patched.dled >> /data/data/com.termux/files/home/bin/ytdl-patched
+rm /data/data/com.termux/files/home/bin/ytdl-patched.dled
 chmod a+x /data/data/com.termux/files/home/bin/ytdl-patched
 /data/data/com.termux/files/home/bin/ytdl-patched -U
 
@@ -66,7 +69,9 @@ echo -e "$Y""$L""Creating youtube-dl config...""$N"
 mkdir -p ~/.config/youtube-dl
 
 echo -e "$Y""$L""Getting config file...""$N"
-wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/config -P /data/data/com.termux/files/home/.config/youtube-dl
+if ! [ -e /data/data/com.termux/files/home/.config/youtube-dl/config ] ; then
+	wget https://raw.githubusercontent.com/nao20010128nao/ytdl-patched/master/termux/config -O /data/data/com.termux/files/home/.config/youtube-dl/config
+fi
 
 echo -e "$Y""$L""Creating files...""$N"
 echo '#!/bin/bash' > /data/data/com.termux/files/home/bin/termux-url-opener
