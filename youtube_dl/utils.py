@@ -5831,9 +5831,20 @@ def dig_object_type(obj, prefix='', lines=[]):
     if isinstance(obj, dict):
         for k, v in obj.items():
             dig_object_type(v, prefix + '.' + str(k), lines)
-    elif isinstance(obj, (list, tuple, map, filter)):
+    elif isinstance(obj, tuple(x for x in (list, tuple, map, filter) if isinstance(obj, type))):
         for i, v in enumerate(obj):
             dig_object_type(v, prefix + '[' + str(i) + ']', lines)
     else:
         lines.append(prefix + ': ' + str(type(obj)))
     return lines
+
+
+class PrintJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bytes):
+            try:
+                return obj.decode('utf-8')
+            except BaseException:
+                return None
+        else:
+            return json.JSONEncoder.default(self, obj)

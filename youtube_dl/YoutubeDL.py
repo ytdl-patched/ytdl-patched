@@ -78,6 +78,7 @@ from .utils import (
     PostProcessingError,
     preferredencoding,
     prepend_extension,
+    PrintJsonEncoder,
     register_socks_protocols,
     render_table,
     replace_extension,
@@ -1808,7 +1809,7 @@ class YoutubeDL(object):
         if self.params.get('printjsontypes', False):
             self.to_stdout('\n'.join(dig_object_type(info_dict)))
         if self.params.get('forcejson', False):
-            self.to_stdout(json.dumps(info_dict))
+            self.to_stdout(json.dumps(info_dict, cls=PrintJsonEncoder))
 
     def process_info(self, info_dict):
         """Process a single resolved IE result."""
