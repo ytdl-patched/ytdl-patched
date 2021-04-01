@@ -1827,6 +1827,10 @@ class YoutubeDL(object):
         if 'format' not in info_dict:
             info_dict['format'] = info_dict['ext']
 
+        if info_dict.get('ext') == 'mp4' and info_dict.get('is_live', False) and self.params.get('live_download_mkv', False):
+            info_dict['format'] = info_dict['ext'] = 'mkv'
+            info_dict['protocol'] = 'ffmpeg'
+
         reason = self._match_entry(info_dict, incomplete=False)
         if reason is not None:
             self.to_screen('[download] ' + reason)
