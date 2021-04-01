@@ -33,6 +33,12 @@ for cwd in [
 if not git_commit:
     git_commit = os.environ.get('VERCEL_GIT_COMMIT_SHA')
 
+if isinstance(git_commit, str):
+    if len(git_commit) > 8:
+        git_commit = git_commit[0:8]
+else:
+    git_commit = 'master'
+
 # https://vercel.com/docs/cli#commands/overview/unique-options
 
 information_section = [
