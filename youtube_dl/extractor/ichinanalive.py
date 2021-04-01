@@ -53,33 +53,31 @@ class IchinanaLiveIE(InfoExtractor):
         if not video_urls:
             raise ExtractorError('unable to extract live URL information')
         formats = []
-        for data in video_urls:
-            # currently, only provider==5 is accepted
-            if data.get('provider') != 5:
+        # it used to select an item with .provider == 5,
+        # but js code seems to select the first element
+        for (name, value) in video_urls[0].items():
+            if not isinstance(value, compat_str):
                 continue
-            for (name, value) in data.items():
-                if not isinstance(value, compat_str):
-                    continue
-                if not value.startswith('http'):
-                    continue
-                preference = 0.0
-                if 'web' in name:
-                    preference -= 0.25
-                if 'High' in name:
-                    preference += 1.0
-                if 'Low' in name:
-                    preference -= 0.5
-                formats.append({
-                    'format_id': name,
-                    'url': value,
-                    'preference': preference,
-                    # 'ffmpeg' protocol is added by ytdl-patched, same as 'm3u8'
-                    'protocol': 'ffmpeg',
-                    'http_headers': {'Referer': url},
-                    'ext': 'mp4',
-                    'vcodec': 'h264',
-                    'acodec': 'aac',
-                })
+            if not value.startswith('http'):
+                continue
+            preference = 0.0
+            if 'web' in name:
+                preference -= 0.25
+            if 'High' in name:
+                preference += 1.0
+            if 'Low' in name:
+                preference -= 0.5
+            formats.append({
+                'format_id': name,
+                'url': value,
+                'preference': preference,
+                # 'ffmpeg' protocol is added by ytdl-patched, same as 'm3u8'
+                'protocol': 'ffmpeg',
+                'http_headers': {'Referer': url},
+                'ext': 'mp4',
+                'vcodec': 'h264',
+                'acodec': 'aac',
+            })
 
         self._sort_formats(formats)
 
