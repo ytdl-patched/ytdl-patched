@@ -709,6 +709,9 @@
  - **OutsideTV**
  - **PacktPub**
  - **PacktPubCourse**
+ - **PalcoMP3:artist**
+ - **PalcoMP3:song**
+ - **PalcoMP3:video**
  - **pandora.tv**: 판도라TV
  - **ParamountNetwork**
  - **parliamentlive.tv**: UK parliament videos
@@ -1100,6 +1103,7 @@
  - **Vidbit**
  - **Viddler**
  - **Videa**
+ - **video.arnes.si**: Arnes Video
  - **video.google:search**: Google Video search
  - **video.sky.it**
  - **video.sky.it:live**
