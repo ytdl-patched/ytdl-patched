@@ -452,6 +452,13 @@ def parseOpts(overrideArguments=None):
             'If a merge is required (e.g. bestvideo+bestaudio), '
             'output to given container format. One of mkv, mp4, ogg, webm, flv. '
             'Ignored if no merge is required'))
+    video_format.add_option(
+        '--live-download-mkv',
+        action='store_true', dest='live_download_mkv', default=False,
+        help=(
+            'Changes video file format to MKV when downloading a live. '
+            'This is useful if you need to be able to recover the stream, '
+            'especially when the computer may shutdown while downloading.'))
 
     subtitles = optparse.OptionGroup(parser, 'Subtitle Options')
     subtitles.add_option(
