@@ -2040,7 +2040,8 @@ def clean_html(html, strip_script=False):
     html = re.sub('<.*?>', '', html)
     # Replace html entities
     html = unescapeHTML(html)
-    return html.strip()
+    if html:
+        return html.strip()
 
 
 def sanitize_open(filename, open_mode):
