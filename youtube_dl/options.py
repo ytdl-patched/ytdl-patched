@@ -457,8 +457,7 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='live_download_mkv', default=False,
         help=(
             'Changes video file format to MKV when downloading a live. '
-            'This is useful if you need to be able to recover the stream, '
-            'especially when the computer may shutdown while downloading.'))
+            'This is useful if the computer could shutdown while downloading.'))
 
     subtitles = optparse.OptionGroup(parser, 'Subtitle Options')
     subtitles.add_option(
