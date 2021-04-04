@@ -557,6 +557,13 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         },
         'playlist_mincount': 37,  # as of 2021/01/13
     }, {
+        'url': 'https://www.nicovideo.jp/user/1050860/video',
+        'info_dict': {
+            'id': '1050860',
+            'title': '花たんとかユリカとか✿',
+        },
+        'playlist_mincount': 165,  # as of 2021/04/04
+    }, {
         'url': 'https://www.nicovideo.jp/user/805442/',
         'only_matching': True,
     }, {
