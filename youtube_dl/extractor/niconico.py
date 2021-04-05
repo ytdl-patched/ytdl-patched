@@ -15,6 +15,7 @@ except (ImportError, SyntaxError):
 
 from .common import InfoExtractor
 from ..compat import (
+    compat_str,
     compat_parse_qs,
     compat_urllib_parse_urlparse,
     compat_urllib_parse_unquote_plus,
@@ -43,7 +44,15 @@ from ..websocket import (
 )
 
 
-class NiconicoIE(InfoExtractor):
+class NiconicoBaseIE(InfoExtractor):
+    _API_HEADERS = {
+        'X-Frontend-ID': '6',
+        'X-Frontend-Version': '0',
+        'X-Niconico-Language': 'en-us'
+    }
+
+
+class NiconicoIE(NiconicoBaseIE):
     IE_NAME = 'niconico'
     IE_DESC = 'ニコニコ動画'
 
@@ -550,6 +559,15 @@ class NiconicoIE(InfoExtractor):
         tags = api_data['video'].get('tags') or []
         genre = get_video_info('genre')
 
+        tracking_id = try_get(api_data, lambda x: x['media']['delivery']['trackingId'], compat_str)
+        if tracking_id:
+            watch_request_response = self._download_json(
+                'https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=%s' % tracking_id, video_id,
+                note='Acquiring permission for downloading video', fatal=False,
+                headers=self._API_HEADERS)
+            if watch_request_response.get('meta', {}).get('status') != 200:
+                self.report_warning('Failed to acquire permission for playing video. The video may not download.')
+
         return {
             'id': video_id,
             'title': title,
@@ -568,7 +586,7 @@ class NiconicoIE(InfoExtractor):
         }
 
 
-class NiconicoPlaylistBaseIE(InfoExtractor):
+class NiconicoPlaylistBaseIE(NiconicoBaseIE):
     _PAGE_SIZE = 100
 
     _API_HEADERS = {
@@ -711,7 +729,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
 
 
 # cannot use NiconicoPlaylistBaseIE because /series/ has different structure than others
-class NiconicoSeriesIE(InfoExtractor):
+class NiconicoSeriesIE(NiconicoBaseIE):
     IE_NAME = 'niconico:series'
     _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/series/(?P<id>\d+)'
 
@@ -750,7 +768,7 @@ class NiconicoSeriesIE(InfoExtractor):
         return self.playlist_result(playlist, list_id, title)
 
 
-class NiconicoLiveIE(InfoExtractor):
+class NiconicoLiveIE(NiconicoBaseIE):
     IE_NAME = 'niconico:live'
     IE_DESC = 'ニコニコ生放送'
     _VALID_URL = r'https?://(?:sp\.)?live2?\.nicovideo\.jp/watch/(?P<id>lv\d+)'
