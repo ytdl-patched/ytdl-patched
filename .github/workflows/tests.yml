@@ -50,7 +50,8 @@ jobs:
         if: ${{ matrix.python.special == 'jython' }}
         uses: actions/setup-java@v1
         with:
-          java-version: 11
+          distribution: 'zulu'
+          java-version: '11'
       - name: Install Jython
         if: ${{ matrix.python.special == 'jython' }}
         run: ./devscripts/install_jython.sh
