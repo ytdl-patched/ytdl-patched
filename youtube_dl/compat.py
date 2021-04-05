@@ -3001,6 +3001,7 @@ __all__ = [
     'compat_HTMLParseError',
     'compat_HTMLParser',
     'compat_HTTPError',
+    'compat_SimpleCookie',
     'compat_Struct',
     'compat_b64decode',
     'compat_basestring',
