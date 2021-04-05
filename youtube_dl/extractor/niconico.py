@@ -48,7 +48,9 @@ class NiconicoBaseIE(InfoExtractor):
     _API_HEADERS = {
         'X-Frontend-ID': '6',
         'X-Frontend-Version': '0',
-        'X-Niconico-Language': 'en-us'
+        'X-Niconico-Language': 'en-us',
+        'Referer': 'https://www.nicovideo.jp/',
+        'Origin': 'https://www.nicovideo.jp',
     }
 
 
@@ -561,6 +563,7 @@ class NiconicoIE(NiconicoBaseIE):
 
         tracking_id = try_get(api_data, lambda x: x['media']['delivery']['trackingId'], compat_str)
         if tracking_id:
+            # TODO: may need to simulate https://public.api.nicovideo.jp/v1/user/actions/video/watch-events.json?__retry=0 ?
             watch_request_response = self._download_json(
                 'https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=%s' % tracking_id, video_id,
                 note='Acquiring permission for downloading video', fatal=False,
