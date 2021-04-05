@@ -380,28 +380,26 @@ class NiconicoIE(NiconicoBaseIE):
             'data-api-data="([^"]+)"', webpage,
             'API data', default='{}'), video_id)
 
-        if True:
-            # keep this section indented for mergeability
-            formats = []
+        formats = []
 
-            def get_video_info(items):
-                return dict_get(api_data['video'], items)
+        def get_video_info(items):
+            return dict_get(api_data['video'], items)
 
-            # dmc_info = api_data['video'].get('dmcInfo')
-            quality_info = api_data['media']['delivery']['movie']
-            session_api_data = api_data['media']['delivery']['movie']['session']
-            if quality_info:  # "New" HTML5 videos
-                for audio_quality in quality_info['audios']:
-                    for video_quality in quality_info['videos']:
-                        if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
-                            continue
-                        for protocol in session_api_data['protocols']:
-                            fmt = self._extract_format_for_quality(
-                                api_data, video_id, audio_quality, video_quality, protocol)
-                            if fmt:
-                                formats.append(fmt)
+        # dmc_info = api_data['video'].get('dmcInfo')
+        quality_info = api_data['media']['delivery']['movie']
+        session_api_data = api_data['media']['delivery']['movie']['session']
+        if quality_info:  # "New" HTML5 videos
+            for audio_quality in quality_info['audios']:
+                for video_quality in quality_info['videos']:
+                    if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
+                        continue
+                    for protocol in session_api_data['protocols']:
+                        fmt = self._extract_format_for_quality(
+                            api_data, video_id, audio_quality, video_quality, protocol)
+                        if fmt:
+                            formats.append(fmt)
 
-                self._sort_formats(formats)
+            self._sort_formats(formats)
 
         # Start extracting information
         title = (
@@ -489,7 +487,7 @@ class NiconicoIE(NiconicoBaseIE):
                 'https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=%s' % tracking_id, video_id,
                 note='Acquiring permission for downloading video', fatal=False,
                 headers=self._API_HEADERS)
-            if watch_request_response.get('meta', {}).get('status') != 200:
+            if try_get(watch_request_response, lambda x: x['meta']['status'], int) != 200:
                 self.report_warning('Failed to acquire permission for playing video. The video may not download.')
 
         return {
