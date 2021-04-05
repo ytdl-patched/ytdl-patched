@@ -15,6 +15,7 @@ except (ImportError, SyntaxError):
 
 from .common import InfoExtractor
 from ..compat import (
+    compat_str,
     compat_parse_qs,
     compat_urllib_parse_urlparse,
 )
@@ -40,7 +41,17 @@ from ..websocket import (
 )
 
 
-class NiconicoIE(InfoExtractor):
+class NiconicoBaseIE(InfoExtractor):
+    _API_HEADERS = {
+        'X-Frontend-ID': '6',
+        'X-Frontend-Version': '0',
+        'X-Niconico-Language': 'en-us',
+        'Referer': 'https://www.nicovideo.jp/',
+        'Origin': 'https://www.nicovideo.jp',
+    }
+
+
+class NiconicoIE(NiconicoBaseIE):
     IE_NAME = 'niconico'
     IE_DESC = 'ニコニコ動画'
 
@@ -169,6 +180,10 @@ class NiconicoIE(InfoExtractor):
     }, {
         'url': 'http://sp.nicovideo.jp/watch/sm28964488?ss_pos=1&cp_in=wt_tg',
         'only_matching': True,
+    }, {
+        'note': 'a video that is only served as an ENCRYPTED HLS.',
+        'url': 'https://www.nicovideo.jp/watch/so38016254',
+        'only_matching': True,
     }]
 
     _VALID_URL = r'https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/(?P<id>(?:[a-z]{2})?[0-9]+)'
@@ -203,7 +218,7 @@ class NiconicoIE(InfoExtractor):
             self._downloader.report_warning('unable to log in: bad username or password')
         return login_ok
 
-    def _extract_format_for_quality(self, api_data, video_id, audio_quality, video_quality):
+    def _extract_format_for_quality(self, api_data, video_id, audio_quality, video_quality, dmc_protocol):
         def yesno(boolean):
             return 'yes' if boolean else 'no'
 
@@ -231,7 +246,38 @@ class NiconicoIE(InfoExtractor):
 
         session_api_data = api_data['media']['delivery']['movie']['session']
 
-        format_id = '-'.join(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
+        format_id = '-'.join(
+            list(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
+            + [dmc_protocol])
+
+        if dmc_protocol == 'http':
+            protocol = 'http'
+            protocol_parameters = {
+                'http_output_download_parameters': {
+                    'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
+                    'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
+                }
+            }
+        elif dmc_protocol == 'hls':
+            protocol = 'm3u8'
+            parsed_token = self._parse_json(session_api_data['token'], video_id)
+            protocol_parameters = {
+                'hls_parameters': {
+                    'segment_duration': 6000,
+                    'transfer_preset': '',
+                    'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
+                    'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
+                }
+            }
+            if 'hls_encryption' in parsed_token:
+                protocol_parameters['hls_parameters']['encryption'] = {
+                    parsed_token['hls_encryption']: {
+                        'encrypted_key': api_data['media']['delivery']['encryption']['encryptedKey'],
+                        'key_uri': api_data['media']['delivery']['encryption']['keyUri']
+                    }
+                }
+        else:
+            return None
 
         session_response = self._download_json(
             session_api_data['urls'][0]['url'], video_id,
@@ -270,12 +316,7 @@ class NiconicoIE(InfoExtractor):
                         'name': 'http',
                         'parameters': {
                             'http_parameters': {
-                                'parameters': {
-                                    'http_output_download_parameters': {
-                                        'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
-                                        'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
-                                    }
-                                }
+                                'parameters': protocol_parameters
                             }
                         }
                     },
@@ -303,7 +344,7 @@ class NiconicoIE(InfoExtractor):
         return {
             'url': session_response['data']['session']['content_uri'],
             'format_id': format_id,
-            'format_note': 'DMC ' + video_quality['metadata']['label'],
+            'format_note': 'DMC ' + video_quality['metadata']['label'] + ' ' + dmc_protocol.upper(),
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
             'acodec': 'aac',
             'vcodec': 'h264',  # As far as I'm aware DMC videos can only serve h264/aac combinations
@@ -317,6 +358,11 @@ class NiconicoIE(InfoExtractor):
             'heartbeat_url': heartbeat_url,
             'heartbeat_data': heartbeat_data,
             'heartbeat_interval': heartbeat_interval,
+            'protocol': protocol,
+            'http_headers': {
+                'Origin': 'https://www.nicovideo.jp',
+                'Referer': 'https://www.nicovideo.jp/watch/' + video_id,
+            }
         }
 
     def _real_extract(self, url):
@@ -343,13 +389,17 @@ class NiconicoIE(InfoExtractor):
 
             # dmc_info = api_data['video'].get('dmcInfo')
             quality_info = api_data['media']['delivery']['movie']
+            session_api_data = api_data['media']['delivery']['movie']['session']
             if quality_info:  # "New" HTML5 videos
                 for audio_quality in quality_info['audios']:
                     for video_quality in quality_info['videos']:
                         if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                             continue
-                        formats.append(self._extract_format_for_quality(
-                            api_data, video_id, audio_quality, video_quality))
+                        for protocol in session_api_data['protocols']:
+                            fmt = self._extract_format_for_quality(
+                                api_data, video_id, audio_quality, video_quality, protocol)
+                            if fmt:
+                                formats.append(fmt)
 
                 self._sort_formats(formats)
 
@@ -432,6 +482,16 @@ class NiconicoIE(InfoExtractor):
         tags = api_data['video'].get('tags') or []
         genre = get_video_info('genre')
 
+        tracking_id = try_get(api_data, lambda x: x['media']['delivery']['trackingId'], compat_str)
+        if tracking_id:
+            # TODO: may need to simulate https://public.api.nicovideo.jp/v1/user/actions/video/watch-events.json?__retry=0 ?
+            watch_request_response = self._download_json(
+                'https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=%s' % tracking_id, video_id,
+                note='Acquiring permission for downloading video', fatal=False,
+                headers=self._API_HEADERS)
+            if watch_request_response.get('meta', {}).get('status') != 200:
+                self.report_warning('Failed to acquire permission for playing video. The video may not download.')
+
         return {
             'id': video_id,
             'title': title,
@@ -450,7 +510,7 @@ class NiconicoIE(InfoExtractor):
         }
 
 
-class NiconicoPlaylistBaseIE(InfoExtractor):
+class NiconicoPlaylistBaseIE(NiconicoBaseIE):
     _PAGE_SIZE = 100
 
     _API_HEADERS = {
@@ -608,7 +668,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
 
 
 # cannot use NiconicoPlaylistBaseIE because /series/ has different structure than others
-class NiconicoSeriesIE(InfoExtractor):
+class NiconicoSeriesIE(NiconicoBaseIE):
     IE_NAME = 'niconico:series'
     _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/series/(?P<id>\d+)'
 
@@ -647,7 +707,7 @@ class NiconicoSeriesIE(InfoExtractor):
         return self.playlist_result(playlist, list_id, title)
 
 
-class NiconicoLiveIE(InfoExtractor):
+class NiconicoLiveIE(NiconicoBaseIE):
     IE_NAME = 'niconico:live'
     IE_DESC = 'ニコニコ生放送'
     _VALID_URL = r'https?://(?:sp\.)?live2?\.nicovideo\.jp/watch/(?P<id>lv\d+)'
