@@ -182,7 +182,7 @@ class NiconicoIE(NiconicoBaseIE):
         'url': 'http://sp.nicovideo.jp/watch/sm28964488?ss_pos=1&cp_in=wt_tg',
         'only_matching': True,
     }, {
-        'note': 'a video that is only served as an ENCRYPTED HLS, which we\'re working on',
+        'note': 'a video that is only served as an ENCRYPTED HLS.',
         'url': 'https://www.nicovideo.jp/watch/so38016254',
         'only_matching': True,
     }]
