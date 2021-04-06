@@ -477,6 +477,7 @@
  - **limelight:channel**
  - **limelight:channel_list**
  - **LineLive**
+ - **LineLiveChannel**
  - **LineTV**
  - **linkedin:learning**
  - **linkedin:learning:course**
