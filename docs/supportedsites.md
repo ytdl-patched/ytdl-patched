@@ -5,6 +5,7 @@
  - **20min**
  - **220.ro**
  - **23video**
+ - **247sports**
  - **24video**
  - **3qsdn**: 3Q SDN
  - **3sat**
@@ -165,7 +166,8 @@
  - **cbsnews**: CBS News
  - **cbsnews:embed**
  - **cbsnews:livevideo**: CBS News Live Videos
- - **CBSSports**
+ - **cbssports**
+ - **cbssports:embed**
  - **CCMA**
  - **CCTV**: 央视网
  - **CDA**
