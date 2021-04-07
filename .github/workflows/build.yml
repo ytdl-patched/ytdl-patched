@@ -124,10 +124,15 @@ jobs:
             dist/
             README.md
   build-eggs:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: prepare
     strategy:
       matrix:
+        os: [
+          ubuntu-latest,
+          windows-latest,
+          macos-latest,
+        ]
         python_version: [
           2.7,
           3.5, 3.6, 3.7, 3.8, 3.9
@@ -149,7 +154,7 @@ jobs:
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: ytdl-egg-${{ matrix.python_version }}
+          name: ytdl-egg-${{ matrix.python_version }}-${{ runner.os }}
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
