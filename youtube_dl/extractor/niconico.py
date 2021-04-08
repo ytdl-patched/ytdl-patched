@@ -250,6 +250,7 @@ class NiconicoIE(NiconicoBaseIE):
             list(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
             + [dmc_protocol])
 
+        extract_m3u8 = False
         if dmc_protocol == 'http':
             protocol = 'http'
             protocol_parameters = {
@@ -276,6 +277,9 @@ class NiconicoIE(NiconicoBaseIE):
                         'key_uri': api_data['media']['delivery']['encryption']['keyUri']
                     }
                 }
+            else:
+                protocol = 'm3u8_native'
+                extract_m3u8 = True
         else:
             return None
 
@@ -341,7 +345,7 @@ class NiconicoIE(NiconicoBaseIE):
         vid_quality = video_quality['metadata'].get('bitrate')
         is_low = 'low' in video_quality['id']
 
-        return {
+        ret = {
             'url': session_response['data']['session']['content_uri'],
             'format_id': format_id,
             'format_note': 'DMC ' + video_quality['metadata']['label'] + ' ' + dmc_protocol.upper(),
@@ -364,6 +368,14 @@ class NiconicoIE(NiconicoBaseIE):
                 'Referer': 'https://www.nicovideo.jp/watch/' + video_id,
             }
         }
+
+        if extract_m3u8:
+            m3u8_format = self._extract_m3u8_formats(
+                ret['url'], video_id, ext='mp4', entry_protocol='m3u8_native', note=False)[0]
+            del m3u8_format['format_id'], m3u8_format['protocol']
+            ret.update(m3u8_format)
+
+        return ret
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
