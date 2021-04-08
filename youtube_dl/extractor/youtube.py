@@ -342,7 +342,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         return self._parse_json(
             self._search_regex(
                 r'ytcfg\.set\s*\(\s*({.+?})\s*\)\s*;', webpage, 'ytcfg',
-                default='{}'), video_id, fatal=False)
+                default='{}'), video_id, fatal=False) or {}
 
     def _extract_video(self, renderer):
         video_id = renderer['videoId']
@@ -2518,7 +2518,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             ctp = continuation_ep.get('clickTrackingParams')
             return YoutubeTabIE._build_continuation_query(continuation, ctp)
 
-    def _entries(self, tab, identity_token):
+    def _entries(self, tab, item_id, webpage):
         tab_content = try_get(tab, lambda x: x['content'], dict)
         if not tab_content:
             return
@@ -2578,21 +2578,30 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 yield entry
             continuation = self._extract_continuation(rich_grid_renderer)
 
+        ytcfg = self._extract_ytcfg(item_id, webpage)
+        client_version = try_get(
+            ytcfg, lambda x: x['INNERTUBE_CLIENT_VERSION'], compat_str) or '2.20210407.08.00'
+
         headers = {
             'x-youtube-client-name': '1',
-            'x-youtube-client-version': '2.20201112.04.01',
+            'x-youtube-client-version': client_version,
             'content-type': 'application/json',
         }
+
+        context = try_get(ytcfg, lambda x: x['INNERTUBE_CONTEXT'], dict) or {
+            'client': {
+                'clientName': 'WEB',
+                'clientVersion': client_version,
+            }
+        }
+        visitor_data = try_get(context, lambda x: x['client']['visitorData'], compat_str)
+
+        identity_token = self._extract_identity_token(ytcfg, webpage)
         if identity_token:
             headers['x-youtube-identity-token'] = identity_token
 
         data = {
-            'context': {
-                'client': {
-                    'clientName': 'WEB',
-                    'clientVersion': '2.20201021.03.00',
-                }
-            },
+            'context': context,
         }
 
         # note for merging: revert to "Incoming Change" once and add retry section again
@@ -2600,6 +2609,8 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         for page_num in itertools.count(1):
             if not continuation:
                 break
+            if visitor_data:
+                headers['x-goog-visitor-id'] = visitor_data
             data['continuation'] = continuation['continuation']
             data['clickTracking'] = {
                 'clickTrackingParams': continuation['itct']
@@ -2631,6 +2642,9 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 raise last_error
             if not response:
                 break
+
+            visitor_data = try_get(
+                response, lambda x: x['responseContext']['visitorData'], compat_str) or visitor_data
 
             continuation_contents = try_get(
                 response, lambda x: x['continuationContents'], dict)
@@ -2740,7 +2754,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 alerts.append(text)
         return '\n'.join(alerts)
 
-    def _extract_from_tabs(self, item_id, webpage, data, tabs, identity_token):
+    def _extract_from_tabs(self, item_id, webpage, data, tabs):
         selected_tab = self._extract_selected_tab(tabs)
         renderer = try_get(
             data, lambda x: x['metadata']['channelMetadataRenderer'], dict)
@@ -2765,7 +2779,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 if renderer:
                     title = try_get(renderer, lambda x: x['hashtag']['simpleText'])
         playlist = self.playlist_result(
-            self._entries(selected_tab, identity_token),
+            self._entries(selected_tab, item_id, webpage),
             playlist_id=playlist_id, playlist_title=title,
             playlist_description=description)
         playlist.update(self._extract_uploader(data))
@@ -2807,8 +2821,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                     if message:
                         yield alert_type, message
 
-    def _extract_identity_token(self, webpage, item_id):
-        ytcfg = self._extract_ytcfg(item_id, webpage)
+    def _extract_identity_token(self, ytcfg, webpage):
         if ytcfg:
             token = try_get(ytcfg, lambda x: x['ID_TOKEN'], compat_str)
             if token:
@@ -2841,7 +2854,6 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 self.report_warning('Incomplete yt initial data recieved. Retrying...')
             webpage = self._download_webpage(
                 url, item_id, note='Downloading webpage%s' % (' (retry #%d)' % count if count else ''))
-            identity_token = self._extract_identity_token(webpage, item_id)
             data = self._extract_yt_initial_data(item_id, webpage)
             err_msg = None
             for alert_type, alert_message in self._extract_alerts(data):
@@ -2859,7 +2871,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         tabs = try_get(
             data, lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'], list)
         if tabs:
-            return self._extract_from_tabs(item_id, webpage, data, tabs, identity_token)
+            return self._extract_from_tabs(item_id, webpage, data, tabs)
         playlist = try_get(
             data, lambda x: x['contents']['twoColumnWatchNextResults']['playlist']['playlist'], dict)
         if playlist:
