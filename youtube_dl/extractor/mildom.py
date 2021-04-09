@@ -101,7 +101,7 @@ class MildomBaseIE(InfoExtractor):
 class MildomIE(MildomBaseIE):
     IE_NAME = 'mildom'
     IE_DESC = 'Record ongoing live by specific user in Mildom'
-    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)?mildom\.com/(?P<id>\d+)'
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -175,7 +175,7 @@ class MildomIE(MildomBaseIE):
 class MildomVodIE(MildomBaseIE):
     IE_NAME = 'mildom:vod'
     IE_DESC = 'Download a VOD in Mildom'
-    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/playback/(?P<user_id>\d+)/(?P<id>(?P=user_id)-[a-zA-Z0-9]+)'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)?mildom\.com/playback/(?P<user_id>\d+)/(?P<id>(?P=user_id)-[a-zA-Z0-9]+)'
 
     def _real_extract(self, url):
         m = self._valid_url_re().match(url)
@@ -257,7 +257,7 @@ class MildomVodIE(MildomBaseIE):
 class MildomUserVodIE(MildomBaseIE):
     IE_NAME = 'mildom:user:vod'
     IE_DESC = 'Download all VODs from specific user in Mildom'
-    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/profile/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)?mildom\.com/profile/(?P<id>\d+)'
     _TESTS = [{
         'url': 'https://www.mildom.com/profile/10093333',
         'info_dict': {
