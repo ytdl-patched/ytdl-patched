@@ -2248,8 +2248,20 @@ class GenericIE(InfoExtractor):
             'add_ie': ['Youtube'],
         },
         {
-            # URLs prefixed by view-source:
+            # URL prefixed by view-source:
             'url': 'view-source:https://www.youtube.com/watch?v=XCmzSSlZQ0w',
+            'info_dict': {},
+            'add_ie': ['Youtube'],
+        },
+        {
+            # URL starting with invalid (but fixable) scheme
+            'url': 'tps://www.youtube.com/watch?v=MVpMUgKtds4',
+            'info_dict': {},
+            'add_ie': ['Youtube'],
+        },
+        {
+            # another URL starting with invalid (but fixable) scheme
+            'url': 'ttp://www.youtube.com/watch?v=MVpMUgKtds4',
             'info_dict': {},
             'add_ie': ['Youtube'],
         },
@@ -2263,6 +2275,16 @@ class GenericIE(InfoExtractor):
             'playlist_mincount': 52,
         },
     ]
+
+    _CORRUPTED_SCHEME_CONVERSION_TABLE = {
+        # HTTP protocol
+        'htp': 'http',
+        'htps': 'https',
+        'ttp': 'http',
+        'ttps': 'https',
+        'tp': 'http',
+        'tps': 'https',
+    }
 
     def report_following_redirect(self, new_url):
         """Report information extraction."""
@@ -2404,6 +2426,12 @@ class GenericIE(InfoExtractor):
                 if ':' not in default_search:
                     default_search += ':'
                 return self.url_result(default_search + url)
+        elif parsed_url.scheme in self._CORRUPTED_SCHEME_CONVERSION_TABLE:
+            new_scheme = self._CORRUPTED_SCHEME_CONVERSION_TABLE[parsed_url.scheme]
+            self._downloader.report_warning('scheme seems corrupted, correcting to %s' % new_scheme)
+            fixed_urlp = parsed_url._replace(scheme=new_scheme)
+            fixed_url = compat_urlparse.urlunparse(fixed_urlp)
+            return self.url_result(fixed_url)
 
         host = parsed_url.netloc
         if ':' in host:
