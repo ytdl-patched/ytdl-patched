@@ -82,7 +82,7 @@ class TwitCastingIE(TwitCastingBaseIE):
         video_js_data = try_get(
             webpage,
             lambda x: self._parse_json(self._search_regex(
-                r"data-movie-playlist='([^']+)'",
+                r"data-movie-playlist='([^']+?)'",
                 x, 'movie playlist', default=None), video_id)["2"][0], dict) or {}
         m3u8_url = try_get(
             webpage,
