@@ -18,6 +18,7 @@ from ..compat import (
     compat_str,
     compat_parse_qs,
     compat_urllib_parse_urlparse,
+    compat_HTTPError,
 )
 from ..utils import (
     dict_get,
@@ -383,14 +384,29 @@ class NiconicoIE(NiconicoBaseIE):
         # Get video webpage. We are not actually interested in it for normal
         # cases, but need the cookies in order to be able to download the
         # info webpage
-        webpage, handle = self._download_webpage_handle(
-            'http://www.nicovideo.jp/watch/' + video_id, video_id)
-        if video_id.startswith('so'):
-            video_id = self._match_id(handle.geturl())
+        try:
+            webpage, handle = self._download_webpage_handle(
+                'http://www.nicovideo.jp/watch/' + video_id, video_id)
+            if video_id.startswith('so'):
+                video_id = self._match_id(handle.geturl())
 
-        api_data = self._parse_json(self._html_search_regex(
-            'data-api-data="([^"]+)"', webpage,
-            'API data', default='{}'), video_id)
+            api_data = self._parse_json(self._html_search_regex(
+                'data-api-data="([^"]+)"', webpage,
+                'API data', default='{}'), video_id)
+        except ExtractorError as e:
+            if not isinstance(e.cause, compat_HTTPError):
+                raise e
+            else:
+                e = e.cause
+            webpage = e.read().decode('utf-8', 'replace')
+            error_msg = self._html_search_regex(
+                r'(?s)<section\s+class="(?:(?:ErrorMessage|WatchExceptionPage-message)\s*)+">(.+?)</section>',
+                webpage, 'error reason', group=1, default=None)
+            if not error_msg:
+                raise
+            else:
+                error_msg = re.sub(r'\s+', ' ', error_msg)
+                raise ExtractorError(error_msg, expected=True)
 
         formats = []
 
