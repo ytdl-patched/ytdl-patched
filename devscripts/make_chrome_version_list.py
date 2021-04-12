@@ -7,16 +7,8 @@ import subprocess
 sys.path[:0] = ['.']
 
 from youtube_dl.utils import int_or_none
-from youtube_dl.extractor.common import InfoExtractor
-from test.helper import FakeYDL
 
 
-class TestIE(InfoExtractor):
-    pass
-
-
-ie = TestIE(FakeYDL({'verbose': False}))
-script_id = 'chrome_version'
 results = set()
 
 minimum_version = (88, 0, 0, 0)  # mark 88.0.0.0 as minimum version
@@ -41,10 +33,10 @@ pycode = '''# coding: utf-8
 # This list is created from git tags in https://chromium.googlesource.com/chromium/src
 from __future__ import unicode_literals
 
-versions = {
+versions = [
     # list of instances here
     "%s"
-}
+]
 
 __all__ = ['versions']
 ''' % '",\n    "'.join(sorted(results))
