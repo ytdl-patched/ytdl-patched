@@ -1,11 +1,12 @@
-name: Generate supported fediverse instances list
+name: Automatically regenerate files
 
 on:
   push:
     paths:
-      - .github/workflows/generate-fediverse-instances-list.yml
+      - .github/workflows/generate-files-automatic.yml
       - devscripts/make_mastodon_instance_list.py
       - devscripts/make_peertube_instance_list.py
+      - devscripts/make_chrome_version_list.py
     branches:
       - master
   schedule:
@@ -40,13 +41,18 @@ jobs:
       run: python ./devscripts/make_mastodon_instance_list.py
     - name: Generate youtube_dl/extractor/peertube/instances.py
       run: python ./devscripts/make_peertube_instance_list.py
+    - name: Generate youtube_dl/chrome_versions.py
+      run: python ./devscripts/make_chrome_version_list.py
 
     - name: Commit youtube_dl/extractor/mastodon/instances.py
       run: git commit -m"[automatic] regenerate youtube_dl/extractor/mastodon/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/mastodon/instances.py
-      continue-on-error: true
+      continue-on-error: false
     - name: Commit youtube_dl/extractor/peertube/instances.py
       run: git commit -m"[automatic] regenerate youtube_dl/extractor/peertube/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/peertube/instances.py
-      continue-on-error: true
+      continue-on-error: false
+    - name: Commit youtube_dl/chrome_versions.py
+      run: git commit -m"[automatic] regenerate youtube_dl/chrome_versions.py @ $(date +'%Y%m%d')" youtube_dl/chrome_versions.py
+      continue-on-error: false
 
     - name: Push to here
       run: git push origin HEAD:master
