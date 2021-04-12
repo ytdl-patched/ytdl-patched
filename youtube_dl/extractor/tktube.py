@@ -10,7 +10,7 @@ from ..utils import determine_ext, int_or_none
 
 class TktubeIE(InfoExtractor):
     IE_NAME = 'tktube'
-    _VALID_URL = r'https?://(?:www\.)tktube\.com/videos/(?P<id>\d+/[^/?#&]+)'
+    _VALID_URL = r'https?://(?:www\.)?tktube\.com/videos/(?P<id>\d+/[^/?#&]+)'
     _WORKING = False
 
     def _real_extract(self, url):
