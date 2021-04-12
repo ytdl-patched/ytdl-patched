@@ -2270,7 +2270,10 @@ class YoutubeDL(object):
             self.to_screen('[debug] locking %s' % vid_id)
         try:
             with locked_file(vid_id, 'w', encoding='utf-8') as w:
-                w.write(vid_id)
+                w.write('%s\n' % vid_id)
+                url = info_dict.get('url')
+                if url:
+                    w.write('%s\n' % url)
         except IOError:
             pass
 
