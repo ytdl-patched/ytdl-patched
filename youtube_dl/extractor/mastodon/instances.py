@@ -602,6 +602,7 @@ instances = {
     "fd.bashx.eu",
     "fedi.absturztau.be",
     "fedi.z0ne.moe",
+    "fedibird.com",
     "fedivers.net",
     "fediverse.worldbuilding.zone",
     "feed.studio",
