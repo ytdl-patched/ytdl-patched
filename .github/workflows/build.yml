@@ -184,8 +184,11 @@ jobs:
         run: choco install upx
       - name: Build patched YTDL for Windows
         shell: pwsh
-        run: |
-          pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}
+        run: pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}
+      - name: Compress generated EXE
+        run: upx --lzma --best artifacts/youtube-dl.exe
+        if: ${{ matrix.builder == 'PyInstaller' }}
+        continue-on-error: true
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
