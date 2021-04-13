@@ -34,7 +34,6 @@ pycode = '''# coding: utf-8
 from __future__ import unicode_literals
 
 versions = [
-    # list of instances here
     "%s"
 ]
 
