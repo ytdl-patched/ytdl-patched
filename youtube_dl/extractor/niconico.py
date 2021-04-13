@@ -371,10 +371,14 @@ class NiconicoIE(NiconicoBaseIE):
         }
 
         if extract_m3u8:
-            m3u8_format = self._extract_m3u8_formats(
-                ret['url'], video_id, ext='mp4', entry_protocol='m3u8_native', note=False)[0]
-            del m3u8_format['format_id'], m3u8_format['protocol']
-            ret.update(m3u8_format)
+            try:
+                m3u8_format = self._extract_m3u8_formats(
+                    ret['url'], video_id, ext='mp4', entry_protocol='m3u8_native', note=False)[0]
+            except BaseException:
+                ret['protocol'] = 'm3u8'
+            else:
+                del m3u8_format['format_id'], m3u8_format['protocol']
+                ret.update(m3u8_format)
 
         return ret
 
@@ -428,6 +432,8 @@ class NiconicoIE(NiconicoBaseIE):
                             formats.append(fmt)
 
             self._sort_formats(formats)
+        else:
+            raise ExtractorError('Failed to extract formats')
 
         # Start extracting information
         title = (
