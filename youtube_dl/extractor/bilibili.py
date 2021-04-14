@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import hashlib
 import re
+import json
 
 from .common import InfoExtractor
 from ..compat import (
@@ -323,6 +324,32 @@ class BiliBiliBangumiIE(InfoExtractor):
         return self.playlist_result(
             entries, bangumi_id,
             season_info.get('bangumi_title'), season_info.get('evaluate'))
+
+
+class BilibiliChannelIE(InfoExtractor):
+    _VALID_URL = r'https?://space.bilibili\.com/(?P<id>\d+)'
+    # May need to add support for pagination? Need to find a user with many video uploads to test
+    _API_URL = "https://api.bilibili.com/x/space/arc/search?mid=%s&pn=1&ps=25&jsonp=jsonp"
+    _TEST = {}  # TODO: Add tests
+
+    def _real_extract(self, url):
+        list_id = self._match_id(url)
+        json_str = self._download_webpage(self._API_URL % list_id, list_id)
+
+        json_parsed = json.loads(json_str)
+        entries = [{
+            '_type': 'url',
+            'ie_key': BiliBiliIE.ie_key(),
+            'url': ('https://www.bilibili.com/video/%s' %
+                    entry['bvid']),
+            'id': entry['bvid'],
+        } for entry in json_parsed['data']['list']['vlist']]
+
+        return {
+            '_type': 'playlist',
+            'id': list_id,
+            'entries': entries
+        }
 
 
 class BilibiliAudioBaseIE(InfoExtractor):
