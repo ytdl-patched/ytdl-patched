@@ -329,7 +329,7 @@ class BiliBiliBangumiIE(InfoExtractor):
 
 class BilibiliChannelIE(InfoExtractor):
     _VALID_URL = r'https?://space.bilibili\.com/(?P<id>\d+)'
-    _API_URL = "https://api.bilibili.com/x/space/arc/search?mid=%s&pn=%d&keyword=&order=pubdate&jsonp=jsonp"
+    _API_URL = "https://api.bilibili.com/x/space/arc/search?mid=%s&pn=%d&jsonp=jsonp"
     _TESTS = [{
         'url': 'https://space.bilibili.com/3985676/video',
         'info_dict': {},
@@ -344,18 +344,18 @@ class BilibiliChannelIE(InfoExtractor):
             json_str = self._download_webpage(
                 self._API_URL % (list_id, page_num), list_id,
                 note='Downloading page %d' % page_num)
-            json_parsed = self._parse_json(json_str, list_id)
-            data = json_parsed['data']
+            data = self._parse_json(json_str, list_id)['data']
 
             entries.extend({
                 '_type': 'url',
                 'ie_key': BiliBiliIE.ie_key(),
-                'url': ('https://www.bilibili.com/video/%s' %
-                        entry['bvid']),
+                'url': 'https://www.bilibili.com/video/%s' % entry['bvid'],
                 'id': entry['bvid'],
             } for entry in data['list']['vlist'])
-            page_maximum = ceil(data['page']['count'] / data['page']['ps'])
-            if page_maximum <= page_num:
+
+            count = data['page']['count']
+            page_maximum = ceil(count / data['page']['ps'])
+            if page_maximum <= page_num or not data['list']['vlist'] or len(entries) == count:
                 break
 
         return {
