@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 
 import hashlib
 import re
-import json
+import itertools
 
+from math import ceil
 from .common import InfoExtractor
 from ..compat import (
     compat_parse_qs,
@@ -328,22 +329,34 @@ class BiliBiliBangumiIE(InfoExtractor):
 
 class BilibiliChannelIE(InfoExtractor):
     _VALID_URL = r'https?://space.bilibili\.com/(?P<id>\d+)'
-    # May need to add support for pagination? Need to find a user with many video uploads to test
-    _API_URL = "https://api.bilibili.com/x/space/arc/search?mid=%s&pn=1&ps=25&jsonp=jsonp"
-    _TEST = {}  # TODO: Add tests
+    _API_URL = "https://api.bilibili.com/x/space/arc/search?mid=%s&pn=%d&keyword=&order=pubdate&jsonp=jsonp"
+    _TESTS = [{
+        'url': 'https://space.bilibili.com/3985676/video',
+        'info_dict': {},
+        'playlist_count': 111,
+    }]
 
     def _real_extract(self, url):
         list_id = self._match_id(url)
-        json_str = self._download_webpage(self._API_URL % list_id, list_id)
 
-        json_parsed = json.loads(json_str)
-        entries = [{
-            '_type': 'url',
-            'ie_key': BiliBiliIE.ie_key(),
-            'url': ('https://www.bilibili.com/video/%s' %
-                    entry['bvid']),
-            'id': entry['bvid'],
-        } for entry in json_parsed['data']['list']['vlist']]
+        entries = []
+        for page_num in itertools.count(1):
+            json_str = self._download_webpage(
+                self._API_URL % (list_id, page_num), list_id,
+                note='Downloading page %d' % page_num)
+            json_parsed = self._parse_json(json_str, list_id)
+            data = json_parsed['data']
+
+            entries.extend({
+                '_type': 'url',
+                'ie_key': BiliBiliIE.ie_key(),
+                'url': ('https://www.bilibili.com/video/%s' %
+                        entry['bvid']),
+                'id': entry['bvid'],
+            } for entry in data['list']['vlist'])
+            page_maximum = ceil(data['page']['count'] / data['page']['ps'])
+            if page_maximum <= page_num:
+                break
 
         return {
             '_type': 'playlist',
