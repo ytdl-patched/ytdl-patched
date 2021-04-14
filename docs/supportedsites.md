@@ -116,6 +116,7 @@
  - **BiliBili**
  - **BilibiliAudio**
  - **BilibiliAudioAlbum**
+ - **BilibiliChannel**
  - **BiliBiliPlayer**
  - **BioBioChileTV**
  - **Biography**
