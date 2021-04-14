@@ -335,8 +335,18 @@ class BilibiliChannelIE(InfoExtractor):
     _USER_INFO_API_URL = "https://api.bilibili.com/x/space/acc/info?mid=%s&jsonp=jsonp"
     _TESTS = [{
         'url': 'https://space.bilibili.com/3985676/video',
-        'info_dict': {},
+        'info_dict': {
+            'id': '3985676',
+            'title': '扶桑大红花丶',
+        },
         'playlist_count': 111,
+    }, {
+        'url': 'https://space.bilibili.com/477631979',
+        'info_dict': {
+            'id': '477631979',
+            'title': 'vansamaofficial',
+        },
+        'playlist_count': 98,
     }]
 
     def _real_extract(self, url):
@@ -346,7 +356,7 @@ class BilibiliChannelIE(InfoExtractor):
             user_info = self._download_json(
                 self._USER_INFO_API_URL % list_id, list_id,
                 fatal=False)['data']
-        except ExtractorError:
+        except BaseException:
             user_info = None
         title = try_get(user_info, lambda x: x['name'], compat_str) or list_id
 
