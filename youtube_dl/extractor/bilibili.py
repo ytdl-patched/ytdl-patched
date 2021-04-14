@@ -8,6 +8,7 @@ import itertools
 from math import ceil
 from .common import InfoExtractor
 from ..compat import (
+    compat_str,
     compat_parse_qs,
     compat_urlparse,
 )
@@ -19,6 +20,7 @@ from ..utils import (
     smuggle_url,
     str_or_none,
     strip_jsonp,
+    try_get,
     unified_timestamp,
     unsmuggle_url,
     urlencode_postdata,
@@ -330,6 +332,7 @@ class BiliBiliBangumiIE(InfoExtractor):
 class BilibiliChannelIE(InfoExtractor):
     _VALID_URL = r'https?://space.bilibili\.com/(?P<id>\d+)'
     _API_URL = "https://api.bilibili.com/x/space/arc/search?mid=%s&pn=%d&jsonp=jsonp"
+    _USER_INFO_API_URL = "https://api.bilibili.com/x/space/acc/info?mid=%s&jsonp=jsonp"
     _TESTS = [{
         'url': 'https://space.bilibili.com/3985676/video',
         'info_dict': {},
@@ -339,28 +342,37 @@ class BilibiliChannelIE(InfoExtractor):
     def _real_extract(self, url):
         list_id = self._match_id(url)
 
+        try:
+            user_info = self._download_json(
+                self._USER_INFO_API_URL % list_id, list_id,
+                fatal=False)['data']
+        except ExtractorError:
+            user_info = None
+        title = try_get(user_info, lambda x: x['name'], compat_str) or list_id
+
         entries = []
         for page_num in itertools.count(1):
-            json_str = self._download_webpage(
+            data = self._download_json(
                 self._API_URL % (list_id, page_num), list_id,
-                note='Downloading page %d' % page_num)
-            data = self._parse_json(json_str, list_id)['data']
+                note='Downloading page %d' % page_num)['data']
+            vlist = data['list']['vlist']
+            count = data['page']['count']
 
             entries.extend({
                 '_type': 'url',
                 'ie_key': BiliBiliIE.ie_key(),
                 'url': 'https://www.bilibili.com/video/%s' % entry['bvid'],
                 'id': entry['bvid'],
-            } for entry in data['list']['vlist'])
+            } for entry in vlist)
 
-            count = data['page']['count']
             page_maximum = ceil(count / data['page']['ps'])
-            if page_maximum <= page_num or not data['list']['vlist'] or len(entries) == count:
+            if page_maximum <= page_num or not vlist or len(entries) == count:
                 break
 
         return {
             '_type': 'playlist',
             'id': list_id,
+            'title': title,
             'entries': entries
         }
 
