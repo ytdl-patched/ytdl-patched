@@ -13,6 +13,36 @@ paths = sys.argv[1:]
 
 denylist = ['_TEST', '_TESTS']
 
+
+def cleanup_regex(regex_str: str):
+    has_extended = re.search(r'\(\?[aiLmsux]*x[aiLmsux]*\)', regex_str)  # something like (?xxs) may match, but (?s) or (?i) won't
+    if not has_extended:
+        return regex_str
+    # remove comments
+    regex_str = re.sub(r'(?m)\s*#.+?$', '', regex_str)
+    # remove spaces and indents
+    regex_str = re.sub(r'\s+', '', regex_str)
+    # remove x (EXTENDED) from all inline flags
+    regex_str = re.sub(r'\(\?([aiLmsux]+)\)', lambda m: '(?%s)' % m.group(1).replace('x', ''), regex_str)
+    regex_str = re.sub(r'\(\?\)', '', regex_str)
+
+    return regex_str
+
+
+def try_find_regex_constant(rhs):
+    # simple assignment
+    # _VALID_URL = r'https://example\.com/video/\d+'
+    if isinstance(rhs, ast.Constant) and isinstance(rhs.value, str):
+        return rhs
+
+    # formatted regexes
+    # _VALID_URL = r'https://example\.com/video/\d+'
+    if isinstance(rhs, ast.BinOp) and isinstance(rhs.op, ast.Mod) and isinstance(rhs.left, ast.Constant) and isinstance(rhs.left.value, str):
+        return rhs.left
+
+    return None
+
+
 for path in paths:
     print('Processing %s' % path)
     with open(path, 'r', encoding='utf-8') as r:
@@ -30,24 +60,16 @@ for path in paths:
                 continue
             assign_name = member.targets[0].id
             assign_value = member.value
-            # TODO: support formatted string like YoutubeIE
-            if assign_name == '_VALID_URL' and isinstance(assign_value, ast.Constant) and isinstance(assign_value.value, str):
-                # clean up regexes
-                regex_str = assign_value.value
-                has_extended = re.search(r'\(\?[aiLmsux]*x[aiLmsux]*\)', regex_str)  # something like (?xxs) may match, but (?s) or (?i) won't
-                if not has_extended:
+            if assign_name == '_VALID_URL':
+                regex_statement = try_find_regex_constant(assign_value)
+                if not regex_statement:
                     continue
-                # remove comments
-                regex_str = re.sub(r'(?m)\s*#.+?$', '', regex_str)
-                # remove spaces and indents
-                regex_str = re.sub(r'\s+', '', regex_str)
-                # remove x (EXTENDED) from all inline flags
-                regex_str = re.sub(r'\(\?([aiLmsux]+)\)', lambda m: '(?%s)' % m.group(1).replace('x', ''), regex_str)
-                regex_str = re.sub(r'\(\?\)', '', regex_str)
+                # clean up regexes
+                regex_str = cleanup_regex(regex_statement.value)
                 # set it back, if it is smaller
-                if len(assign_value.value) > len(regex_str):
+                if len(regex_statement.value) > len(regex_str):
                     print('    Cleaning up _VALID_URL in %s' % stmt.name)
-                    assign_value.value = regex_str
+                    regex_statement.value = regex_str
                     modified = True
             if assign_name not in denylist:
                 continue
