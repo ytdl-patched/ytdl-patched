@@ -196,7 +196,8 @@ class NiconicoIE(NiconicoBaseIE):
         'only_matching': True,
     }]
 
-    _VALID_URL = r'(?:https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/|nico(?:nico|video)?:)(?P<id>(?P<alphabet>[a-z]{2})?[0-9]+)'
+    _URL_BEFORE_ID_PART = r'(?:https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/|nico(?:nico|video)?:)'
+    _VALID_URL = r'%s(?P<id>(?P<alphabet>[a-z]{2})?[0-9]+)' % _URL_BEFORE_ID_PART
     _NETRC_MACHINE = 'niconico'
 
     @classmethod
