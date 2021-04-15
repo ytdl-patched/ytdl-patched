@@ -187,8 +187,20 @@ class NiconicoIE(NiconicoBaseIE):
         'only_matching': True,
     }]
 
-    _VALID_URL = r'(?:https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/|nico(?:nico|video)?:)(?P<id>(?:[a-z]{2})?[0-9]+)'
+    _VALID_URL = r'(?:https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/|nico(?:nico|video)?:)(?P<id>(?P<alphabet>[a-z]{2})?[0-9]+)'
     _NETRC_MACHINE = 'niconico'
+
+    @classmethod
+    def suitable(cls, url):
+        m = cls._valid_url_re().match(url)
+        if not m:
+            return False
+        if m.group('alphabet') == 'lv':
+            # niconico:live should take place
+            return False
+        # The only case that 'id_alphabet' never matches is channel-belonging video (which usually starts with 'so'),
+        # but in this case NiconicoIE can handle it
+        return True
 
     def _real_initialize(self):
         self._login()
@@ -742,7 +754,7 @@ class NiconicoSeriesIE(NiconicoBaseIE):
 class NiconicoLiveIE(NiconicoBaseIE):
     IE_NAME = 'niconico:live'
     IE_DESC = 'ニコニコ生放送'
-    _VALID_URL = r'https?://(?:sp\.)?live2?\.nicovideo\.jp/watch/(?P<id>lv\d+)'
+    _VALID_URL = r'(?:https?://(?:sp\.)?live2?\.nicovideo\.jp/watch/|nico(?:nico|video)?:)(?P<id>lv\d+)'
 
     def _real_extract(self, url):
         if not HAVE_WEBSOCKET:

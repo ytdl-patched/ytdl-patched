@@ -11,7 +11,7 @@ from ..utils import (
 
 class NicozonIE(InfoExtractor):
     IE_NAME = 'nicozon'
-    _VALID_URL = r'(?:https?://www\.nicozon\.net/downloader\.html\?video_id=|nicozon:(?:%s)?)(?P<id>(?:[a-z]{2})?[0-9]+)' % NiconicoIE._VALID_URL[0:-27]
+    _VALID_URL = r'(?:https?://www\.nicozon\.net/downloader\.html\?video_id=|nicozon:(?:%s)?)(?P<id>(?:[a-z]{2})?[0-9]+)' % NiconicoIE._VALID_URL[0:-37]
     IE10_USERAGENT = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)'
     _WORKING = False  # WIP
 
