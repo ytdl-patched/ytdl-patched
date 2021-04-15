@@ -184,7 +184,7 @@ jobs:
         run: choco install upx
       - name: Remove unneeded tests in InfoExtractor
         shell: bash
-        run: python3 ./devscripts/remove_tests.py youtube_dl/extractor/*.py
+        run: python3 ./devscripts/reduce_code.py youtube_dl/extractor/*.py
       - name: Build patched YTDL for Windows
         shell: pwsh
         run: pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}

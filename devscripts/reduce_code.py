@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 
-# This script removes test cases from InfoExtractor using AST
+# This script does the following using AST
+# - removes test cases from InfoExtractor
 
 import ast
 import sys
