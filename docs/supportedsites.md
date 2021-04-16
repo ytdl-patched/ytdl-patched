@@ -333,7 +333,6 @@
  - **FrontendMasters**
  - **FrontendMastersCourse**
  - **FrontendMastersLesson**
- - **FujiTVFODPlus7**
  - **Funimation**
  - **Funk**
  - **Fusion**
