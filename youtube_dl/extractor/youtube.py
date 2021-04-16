@@ -47,6 +47,10 @@ from ..utils import (
 )
 
 
+def parse_qs(url):
+    return compat_urlparse.parse_qs(compat_urlparse.urlparse(url).query)
+
+
 class YoutubeBaseInfoExtractor(InfoExtractor):
     """Provide base functions for Youtube extractors"""
     _LOGIN_URL = 'https://accounts.google.com/ServiceLogin'
@@ -391,21 +395,28 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         r'(?:www\.)?invidious\.mastodon\.host',
         r'(?:www\.)?invidious\.zapashcanon\.fr',
         r'(?:www\.)?invidious\.kavin\.rocks',
+        r'(?:www\.)?invidious\.tinfoil-hat\.net',
+        r'(?:www\.)?invidious\.himiko\.cloud',
+        r'(?:www\.)?invidious\.reallyancient\.tech',
         r'(?:www\.)?invidious\.tube',
         r'(?:www\.)?invidiou\.site',
         r'(?:www\.)?invidious\.site',
         r'(?:www\.)?invidious\.xyz',
         r'(?:www\.)?invidious\.nixnet\.xyz',
+        r'(?:www\.)?invidious\.048596\.xyz',
         r'(?:www\.)?invidious\.drycat\.fr',
+        r'(?:www\.)?inv\.skyn3t\.in',
         r'(?:www\.)?tube\.poal\.co',
         r'(?:www\.)?tube\.connect\.cafe',
         r'(?:www\.)?vid\.wxzm\.sx',
         r'(?:www\.)?vid\.mint\.lgbt',
+        r'(?:www\.)?vid\.puffyan\.us',
         r'(?:www\.)?yewtu\.be',
         r'(?:www\.)?yt\.elukerio\.org',
         r'(?:www\.)?yt\.lelux\.fi',
         r'(?:www\.)?invidious\.ggc-project\.de',
         r'(?:www\.)?yt\.maisputain\.ovh',
+        r'(?:www\.)?ytprivate\.com',
         r'(?:www\.)?invidious\.13ad\.de',
         r'(?:www\.)?invidious\.toot\.koeln',
         r'(?:www\.)?invidious\.fdn\.fr',
@@ -451,16 +462,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                          |(?:www\.)?cleanvideosearch\.com/media/action/yt/watch\?videoId=
                          )
                      )?                                                       # all until now is optional -> you can pass the naked ID
-                     (?P<id>[0-9A-Za-z_-]{11})                                      # here is it! the YouTube video ID
-                     (?!.*?\blist=
-                        (?:
-                            %(playlist_id)s|                                  # combined list/video URLs are handled by the playlist IE
-                            WL                                                # WL are handled by the watch later IE
-                        )
-                     )
+                     (?P<id>[0-9A-Za-z_-]{11})                                # here is it! the YouTube video ID
                      (?(1).+)?                                                # if we found the ID, everything can follow
                      $""" % {
-        'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE,
         'invidious': '|'.join(_INVIDIOUS_SITES),
     }
     _PLAYER_INFO_RE = (
@@ -1245,6 +1249,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         '396': {'acodec': 'none', 'vcodec': 'av01.0.05M.08'},
         '397': {'acodec': 'none', 'vcodec': 'av01.0.05M.08'},
     }
+
+    @classmethod
+    def suitable(cls, url):
+        qs = parse_qs(url)
+        if qs.get('list', [None])[0]:
+            return False
+        return super(YoutubeIE, cls).suitable(url)
 
     def __init__(self, *args, **kwargs):
         super(YoutubeIE, self).__init__(*args, **kwargs)
@@ -2327,6 +2338,9 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             'title': '#cctv9',
         },
         'playlist_mincount': 350,
+    }, {
+        'url': 'https://www.youtube.com/watch?list=PLW4dVinRY435CBE_JD3t-0SRXKfnZHS1P&feature=youtu.be&v=M9cJMXmQ_ZU',
+        'only_matching': True,
     }]
 
     @classmethod
@@ -2857,7 +2871,7 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         url = compat_urlparse.urlunparse(
             compat_urlparse.urlparse(url)._replace(netloc='www.youtube.com'))
         # Handle both video/playlist URLs
-        qs = compat_urlparse.parse_qs(compat_urlparse.urlparse(url).query)
+        qs = parse_qs(url)
         video_id = qs.get('v', [None])[0]
         playlist_id = qs.get('list', [None])[0]
         if video_id and playlist_id:
@@ -2976,12 +2990,16 @@ class YoutubePlaylistIE(InfoExtractor):
 
     @classmethod
     def suitable(cls, url):
-        return False if YoutubeTabIE.suitable(url) else super(
-            YoutubePlaylistIE, cls).suitable(url)
+        if YoutubeTabIE.suitable(url):
+            return False
+        qs = parse_qs(url)
+        if qs.get('v', [None])[0]:
+            return False
+        return super(YoutubePlaylistIE, cls).suitable(url)
 
     def _real_extract(self, url):
         playlist_id = self._match_id(url)
-        qs = compat_urlparse.parse_qs(compat_urlparse.urlparse(url).query)
+        qs = parse_qs(url)
         if not qs:
             qs = {'list': playlist_id}
         return self.url_result(
