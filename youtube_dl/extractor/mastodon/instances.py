@@ -619,7 +619,6 @@ instances = {
     "fido.stephenbasile.com",
     "fikaverse.club",
     "fimidi.com",
-    "fintoot.space",
     "firedragonvideos.com",
     "fissionator.com",
     "fivewords.uk",
