@@ -115,13 +115,16 @@ class FC2IE(FC2BaseIE):
 
         if 'err_code' not in info and 'filepath' in info:
             # flv download is not available if err_code is present
-            video_url = info['filepath'][0] + '?mid=' + info['mid'][0]
-            formats.append({
-                'format_id': 'flv',
-                'url': video_url,
-                'ext': 'flv',
-                'protocol': 'http',
-            })
+            mid = try_get(
+                info, (lambda x: x['mid'][0], lambda x: x['amp;mid'][0]), compat_str)
+            if mid:
+                video_url = info['filepath'][0] + '?mid=' + mid
+                formats.append({
+                    'format_id': 'flv',
+                    'url': video_url,
+                    'ext': 'flv',
+                    'protocol': 'http',
+                })
 
         title_info = info.get('title')
         if title_info:
