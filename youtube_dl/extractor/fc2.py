@@ -133,14 +133,14 @@ class FC2IE(FC2BaseIE):
             note='Downloading m3u8 playlist info')
         playlists = info_data.get('playlist') or {}
         for (name, m3u8_url) in playlists.items():
-            # m3u8_url may be either HLS playlist or direct MP4 download,
-            #  but ffmpeg accepts both
-            # so use m3u8 rather than http or m3u8_native
+            # m3u8_url may be either HLS playlist or direct MP4 download.
+            # since ffmpeg accepts both,
+            #  we use m3u8 rather than http or m3u8_native
             formats.append({
                 'format_id': 'hls-%s' % name,
                 'url': 'https://video.fc2.com%s' % m3u8_url,
                 'ext': 'mp4',
-                'protocol': 'm3u8',
+                'protocol': 'ffmpeg',
             })
 
         if not formats:
