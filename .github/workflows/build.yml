@@ -120,7 +120,9 @@ jobs:
           sudo apt update
           sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk pandoc tzdata p7zip-full wget
           brew install nao20010128nao/my/advcomp
+          mkdir -p $HOME/.local/bin/
           wget https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage -O $HOME/.local/bin/appimagetool
+          chmod a+x $HOME/.local/bin/appimagetool
           echo $HOME/.local/bin/ >> $GITHUB_PATH
           pip install --upgrade ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
       - name: Build patched YTDL with AppImage
@@ -131,6 +133,7 @@ jobs:
               -n youtube-dl ../youtube_dl/__main__.py
           rm -rf build/ *.spec
           appimagetool ytdl-patched.AppDir
+          mv ytdl-patched-x86_64.AppImage ../artifacts/youtube-dl
         working-directory: appimage/
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
@@ -139,7 +142,7 @@ jobs:
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
-            appimage/*.AppImage
+            artifacts/
             README.md
   build-wheel:
     runs-on: ubuntu-latest
@@ -492,8 +495,38 @@ jobs:
           # { os: "windows-2016", artifact: windows-white-py2exe },
           { os: "windows-2019", artifact: windows-white-PyInstaller },
           # { os: "windows-2019", artifact: windows-white-py2exe },
+
+          { os: "ubuntu-20.04", artifact: appimage-white-PyInstaller },
+          { os: "ubuntu-18.04", artifact: appimage-white-PyInstaller },
+          { os: "ubuntu-16.04", artifact: appimage-white-PyInstaller },
         ]
         python_version: ["3.9", "3.8", "3.7"]
+
+        exclude:
+          - environ: { os: "windows-2016", artifact: windows-white-PyInstaller }
+            python_version: "3.8"
+          - environ: { os: "windows-2016", artifact: windows-white-PyInstaller }
+            python_version: "3.7"
+
+          - environ: { os: "windows-2019", artifact: windows-white-PyInstaller }
+            python_version: "3.8"
+          - environ: { os: "windows-2019", artifact: windows-white-PyInstaller }
+            python_version: "3.7"
+
+          - environ: { os: "ubuntu-20.04", artifact: appimage-white-PyInstaller }
+            python_version: "3.8"
+          - environ: { os: "ubuntu-20.04", artifact: appimage-white-PyInstaller }
+            python_version: "3.7"
+
+          - environ: { os: "ubuntu-18.04", artifact: appimage-white-PyInstaller }
+            python_version: "3.8"
+          - environ: { os: "ubuntu-18.04", artifact: appimage-white-PyInstaller }
+            python_version: "3.7"
+
+          - environ: { os: "ubuntu-16.04", artifact: appimage-white-PyInstaller }
+            python_version: "3.8"
+          - environ: { os: "ubuntu-16.04", artifact: appimage-white-PyInstaller }
+            python_version: "3.7"
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
