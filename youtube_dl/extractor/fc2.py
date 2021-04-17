@@ -113,18 +113,16 @@ class FC2IE(FC2BaseIE):
             info_url, video_id, note='Downloading flv info page')
         info = compat_urlparse.parse_qs(info_webpage)
 
-        if 'err_code' not in info and 'filepath' in info:
+        mid = try_get(info, (lambda x: x['mid'][0], lambda x: x['amp;mid'][0]), compat_str)
+        if 'err_code' not in info and 'filepath' in info and mid:
             # flv download is not available if err_code is present
-            mid = try_get(
-                info, (lambda x: x['mid'][0], lambda x: x['amp;mid'][0]), compat_str)
-            if mid:
-                video_url = info['filepath'][0] + '?mid=' + mid
-                formats.append({
-                    'format_id': 'flv',
-                    'url': video_url,
-                    'ext': 'flv',
-                    'protocol': 'http',
-                })
+            video_url = info['filepath'][0] + '?mid=' + mid
+            formats.append({
+                'format_id': 'flv',
+                'url': video_url,
+                'ext': 'flv',
+                'protocol': 'http',
+            })
 
         title_info = info.get('title')
         if title_info:
