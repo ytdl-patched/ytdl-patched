@@ -134,7 +134,7 @@ jobs:
               --onedir --console --distpath ./ytdl-patched.AppDir/usr/bin/ \
               -n youtube-dl ../youtube_dl/__main__.py
           rm -rf build/ *.spec
-          appimagetool ytdl-patched.AppDir
+          appimagetool --comp xz ytdl-patched.AppDir
           mv ytdl-patched-x86_64.AppImage ../artifacts/youtube-dl
         working-directory: appimage/
       - name: Upload artifacts for the next steps
