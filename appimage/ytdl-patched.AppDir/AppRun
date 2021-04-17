@@ -1,5 +1,5 @@
 #!/bin/bash
 HERE=$(dirname $(readlink -f "${0}"))
-export LD_LIBRARY_PATH="${HERE}/usr/bin/youtube-dl/:$PATH"
-export PATH="${HERE}/usr/bin/youtube-dl/:$PATH"
+export LD_LIBRARY_PATH="${HERE}/opt/youtube-dl/:$PATH"
+export PATH="${HERE}/opt/youtube-dl/:$PATH"
 youtube-dl "$@"
