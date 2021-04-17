@@ -1,0 +1,5 @@
+.DirIcon
+build/
+usr/
+*.spec
+*.png

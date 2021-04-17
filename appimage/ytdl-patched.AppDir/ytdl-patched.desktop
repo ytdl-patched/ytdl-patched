@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=ytdl-patched
+Exec=youtube-dl
+Icon=ytdl-patched
+Type=Application
+Categories=Utility;

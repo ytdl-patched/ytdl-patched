@@ -97,6 +97,50 @@ jobs:
           path: |
             artifacts/
             README.md
+  build-linux-appimage:
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      matrix:
+        icon: [red, white]
+        builder: [PyInstaller]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download base
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-base
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Install deps
+        run: |
+          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+          sudo apt update
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk pandoc tzdata p7zip-full wget
+          brew install nao20010128nao/my/advcomp
+          wget https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage -O $HOME/.local/bin/appimagetool
+          echo $HOME/.local/bin/ >> $GITHUB_PATH
+          pip install --upgrade ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
+      - name: Build patched YTDL with AppImage
+        run: |
+          cp ../icons/youtube_social_squircle_${{ matrix.icon }}.png ytdl-patched.AppDir/ytdl-patched.png
+          python3 ../devscripts/pyinstaller_zopfli.py \
+              --onedir --console --distpath ./ytdl-patched.AppDir/usr/bin/ \
+              -n youtube-dl ../youtube_dl/__main__.py
+          rm -rf build/ *.spec
+          appimagetool ytdl-patched.AppDir
+        working-directory: appimage/
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: "ytdl-appimage-${{ matrix.icon }}-${{ matrix.builder }}"
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            appimage/*.AppImage
+            README.md
   build-wheel:
     runs-on: ubuntu-latest
     needs: prepare
