@@ -119,7 +119,7 @@ jobs:
           sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
           sudo apt update
           sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk pandoc tzdata p7zip-full wget
-          brew install nao20010128nao/my/advcomp
+          brew install nao20010128nao/my/advcomp upx
           mkdir -p $HOME/.local/bin/
           wget https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage -O $HOME/.local/bin/appimagetool
           chmod a+x $HOME/.local/bin/appimagetool
@@ -131,8 +131,10 @@ jobs:
           python3 ../devscripts/pyinstaller_zopfli.py \
               --onedir --console --distpath ./ytdl-patched.AppDir/usr/bin/ \
               -n youtube-dl ../youtube_dl/__main__.py
+          upx --best ./ytdl-patched.AppDir/usr/bin/youtube-dl/youtube-dl
           rm -rf build/ *.spec
           appimagetool ytdl-patched.AppDir
+          upx --best ytdl-patched-x86_64.AppImage
           mv ytdl-patched-x86_64.AppImage ../artifacts/youtube-dl
         working-directory: appimage/
       - name: Upload artifacts for the next steps
