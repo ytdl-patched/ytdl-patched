@@ -5,6 +5,7 @@ from datetime import datetime
 import itertools
 import json
 import base64
+import random
 
 from .common import InfoExtractor
 from ..utils import (
@@ -23,6 +24,10 @@ from ..compat import (
 class MildomBaseIE(InfoExtractor):
     _GUEST_ID = None
     _DISPATCHER_CONFIG = None
+
+    _MILDOM_PROXY_HOSTS = (
+        'bookish-octo-barnacle.vercel.app',
+        'free-mountain-goal.glitch.me',)
 
     def _call_api(self, url, video_id, query={}, note='Downloading JSON metadata', init=False):
         url = update_url_query(url, self._common_queries(query, init=init))
@@ -68,7 +73,7 @@ class MildomBaseIE(InfoExtractor):
                 self._DISPATCHER_CONFIG = self._parse_json(base64.b64decode(tmp['data']), 'initialization')
             except ExtractorError:
                 self._DISPATCHER_CONFIG = self._download_json(
-                    'https://bookish-octo-barnacle.vercel.app/api/mildom/dispatcher_config', 'initialization',
+                    'https://%s/api/mildom/dispatcher_config' % self._mildom_proxy_host(), 'initialization',
                     note='Downloading dispatcher_config fallback')
         return self._DISPATCHER_CONFIG
 
@@ -94,6 +99,9 @@ class MildomBaseIE(InfoExtractor):
     def lang_code(self):
         'getCurrentLangCode'
         return 'ja'
+
+    def _mildom_proxy_host(self):
+        return random.choice(self._MILDOM_PROXY_HOSTS)
 
 # python3 -m youtube_dl https://www.mildom.com/10534224 -o - 2>&1 | ffmpeg -i - -f null /dev/null
 
@@ -154,7 +162,7 @@ class MildomIE(MildomBaseIE):
             # source code behind bookish-octo-barnacle.vercel.app is here: https://github.com/nao20010128nao/bookish-octo-barnacle/
             parsed = compat_urlparse.urlparse(fmt['url'])
             parsed = parsed._replace(
-                netloc='bookish-octo-barnacle.vercel.app',
+                netloc=self._mildom_proxy_host(),
                 query=compat_urllib_parse_urlencode(stream_query, True),
                 path='/api/mildom' + parsed.path)
             fmt['url'] = compat_urlparse.urlunparse(parsed)
@@ -236,7 +244,7 @@ class MildomVodIE(MildomBaseIE):
             parsed = compat_urlparse.urlparse(fmt['url'])
             stream_query['path'] = parsed.path[5:]
             parsed = parsed._replace(
-                netloc='bookish-octo-barnacle.vercel.app',
+                netloc=self._mildom_proxy_host(),
                 query=compat_urllib_parse_urlencode(stream_query, True),
                 path='/api/mildom/vod2/proxy')
             fmt['url'] = compat_urlparse.urlunparse(parsed)
