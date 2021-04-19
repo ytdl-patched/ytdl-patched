@@ -26,8 +26,10 @@ class MildomBaseIE(InfoExtractor):
     _DISPATCHER_CONFIG = None
 
     _MILDOM_PROXY_HOSTS = (
-        'bookish-octo-barnacle.vercel.app',
-        'free-mountain-goal.glitch.me',)
+        'bookish-octo-barnacle.vercel.app',  # Vercel (has 100GB limit, no ratelimit)
+        'free-mountain-goal.glitch.me',  # Glitch (400 req/hrs, has execution time limit per month)
+        'lesmimonabb.dip.jp',  # Self-hosted (2 TB bandwidth limit, but may slower than other)
+    )
 
     def _call_api(self, url, video_id, query={}, note='Downloading JSON metadata', init=False):
         url = update_url_query(url, self._common_queries(query, init=init))
