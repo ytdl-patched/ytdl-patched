@@ -33,6 +33,7 @@ from ..utils import (
     unescapeHTML,
     unified_timestamp,
     urlencode_postdata,
+    update_url_query,
     to_str,
     std_headers,
 )
@@ -538,9 +539,10 @@ class NiconicoIE(NiconicoBaseIE):
 
         tracking_id = try_get(api_data, lambda x: x['media']['delivery']['trackingId'], compat_str)
         if tracking_id:
+            tracking_url = update_url_query('https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch', {'t': tracking_id})
             # TODO: may need to simulate https://public.api.nicovideo.jp/v1/user/actions/video/watch-events.json?__retry=0 ?
             watch_request_response = self._download_json(
-                'https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=%s' % tracking_id, video_id,
+                tracking_url, video_id,
                 note='Acquiring permission for downloading video', fatal=False,
                 headers=self._API_HEADERS)
             if try_get(watch_request_response, lambda x: x['meta']['status'], int) != 200:
