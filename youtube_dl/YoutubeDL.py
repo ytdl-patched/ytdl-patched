@@ -1979,27 +1979,13 @@ class YoutubeDL(object):
                     else:
                         postprocessors = [merger]
 
-                    def compatible_formats(formats):
-                        video, audio = formats
-                        # Check extension
-                        video_ext, audio_ext = video.get('ext'), audio.get('ext')
-                        if video_ext and audio_ext:
-                            COMPATIBLE_EXTS = (
-                                ('mp3', 'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'ismv', 'isma')
-                            )
-                            for exts in COMPATIBLE_EXTS:
-                                if video_ext in exts and audio_ext in exts:
-                                    return True
-                        # TODO: Check acodec/vcodec
-                        return False
-
                     filename_real_ext = os.path.splitext(filename)[1][1:]
                     filename_wo_ext = (
                         os.path.splitext(filename)[0]
                         if filename_real_ext == info_dict['ext']
                         else filename)
                     requested_formats = info_dict['requested_formats']
-                    if self.params.get('merge_output_format') is None and not compatible_formats(requested_formats):
+                    if self.params.get('merge_output_format') is None:
                         info_dict['ext'] = 'mkv'
                     # Ensure filename always has a correct extension for successful merge
                     filename = '%s.%s' % (filename_wo_ext, info_dict['ext'])
