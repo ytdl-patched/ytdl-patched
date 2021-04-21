@@ -21,7 +21,7 @@ with open('devscripts/lazy_load_template.py', 'rt') as f:
     module_template = f.read()
 
 module_contents = [
-    module_template + '\n' + getsource(InfoExtractor.suitable) + '\n',
+    module_template + '\n' + getsource(InfoExtractor.suitable) + '\n' + getsource(InfoExtractor._valid_url_re) + '\n',
     'class LazyLoadSearchExtractor(LazyLoadExtractor):\n    pass\n']
 
 ie_template = '''
