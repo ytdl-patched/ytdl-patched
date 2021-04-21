@@ -6,7 +6,7 @@ on:
       - youtube_dl/**
       - test/**
       - .github/workflows/tests.yml
-      - devscripts/
+      - devscripts/**
     branches-ignore:
       - gh-pages
   workflow_dispatch:
