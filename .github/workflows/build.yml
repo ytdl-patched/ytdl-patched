@@ -400,7 +400,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-wheel
-      - uses: actions/github-script@v3
+      - uses: actions/github-script@v4
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -418,7 +418,7 @@ jobs:
     needs: [prepare, prepare-artifacts, build-windows, build-linux]
     if: ${{ github.event_name == 'pull_request' && failure() }}
     steps:
-      - uses: actions/github-script@v3
+      - uses: actions/github-script@v4
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
