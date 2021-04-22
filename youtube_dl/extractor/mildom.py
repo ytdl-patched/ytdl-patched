@@ -5,32 +5,20 @@ from datetime import datetime
 import itertools
 import json
 import base64
-import random
 
 from .common import InfoExtractor
 from ..utils import (
-    ExtractorError, std_headers,
+    std_headers,
     update_url_query,
     random_uuidv4,
     try_get,
 )
-from ..compat import (
-    compat_urlparse,
-    compat_urllib_parse_urlencode,
-    compat_str,
-)
+from ..compat import compat_str
 
 
 class MildomBaseIE(InfoExtractor):
     _GUEST_ID = None
     _DISPATCHER_CONFIG = None
-
-    # note: don't forget to update bookish-octo-barnacle repository too
-    _MILDOM_PROXY_HOSTS = (
-        # 'bookish-octo-barnacle.vercel.app',  # Vercel (has 100GB limit, no ratelimit)
-        'free-mountain-goal.glitch.me',  # Glitch (400 req/hrs, has execution time limit per month)
-        'lesmih0sted.f5.si',  # Self-hosted (1TB bandwidth limit, but other contents are served in the host)
-    )
 
     def _call_api(self, url, video_id, query={}, note='Downloading JSON metadata', init=False):
         url = update_url_query(url, self._common_queries(query, init=init))
@@ -55,29 +43,24 @@ class MildomBaseIE(InfoExtractor):
 
     def _fetch_dispatcher_config(self):
         if not self._DISPATCHER_CONFIG:
-            try:
-                tmp = self._download_json(
-                    'https://disp.mildom.com/serverListV2', 'initialization',
-                    note='Downloading dispatcher_config', data=json.dumps({
-                        'protover': 0,
-                        'data': base64.b64encode(json.dumps({
-                            'fr': 'web',
-                            'sfr': 'pc',
-                            'devi': 'Windows',
-                            'la': 'ja',
-                            'gid': None,
-                            'loc': '',
-                            'clu': '',
-                            'wh': '1919*810',  # don't google this magic number!
-                            'rtm': self.iso_timestamp(),
-                            'ua': std_headers['User-Agent'],
-                        }).encode('utf8')).decode('utf8').replace('\n', ''),
-                    }).encode('utf8'))
-                self._DISPATCHER_CONFIG = self._parse_json(base64.b64decode(tmp['data']), 'initialization')
-            except ExtractorError:
-                self._DISPATCHER_CONFIG = self._download_json(
-                    'https://%s/api/mildom/dispatcher_config' % self._mildom_proxy_host(), 'initialization',
-                    note='Downloading dispatcher_config fallback')
+            tmp = self._download_json(
+                'https://disp.mildom.com/serverListV2', 'initialization',
+                note='Downloading dispatcher_config', data=json.dumps({
+                    'protover': 0,
+                    'data': base64.b64encode(json.dumps({
+                        'fr': 'web',
+                        'sfr': 'pc',
+                        'devi': 'Windows',
+                        'la': 'ja',
+                        'gid': None,
+                        'loc': '',
+                        'clu': '',
+                        'wh': '1919*810',  # don't google this magic number!
+                        'rtm': self.iso_timestamp(),
+                        'ua': std_headers['User-Agent'],
+                    }).encode('utf8')).decode('utf8').replace('\n', ''),
+                }).encode('utf8'))
+            self._DISPATCHER_CONFIG = self._parse_json(base64.b64decode(tmp['data']), 'initialization')
         return self._DISPATCHER_CONFIG
 
     @staticmethod
@@ -103,11 +86,6 @@ class MildomBaseIE(InfoExtractor):
         'getCurrentLangCode'
         return 'ja'
 
-    def _mildom_proxy_host(self):
-        return random.choice(self._MILDOM_PROXY_HOSTS)
-
-# python3 -m youtube_dl https://www.mildom.com/10534224 -o - 2>&1 | ffmpeg -i - -f null /dev/null
-
 
 class MildomIE(MildomBaseIE):
     IE_NAME = 'mildom'
@@ -118,10 +96,6 @@ class MildomIE(MildomBaseIE):
         video_id = self._match_id(url)
         url = 'https://www.mildom.com/%s' % video_id
 
-        self.to_screen(
-            'Live videos are downloaded using proxies based on "https://github.com/nao20010128nao/bookish-octo-barnacle"\n'
-            ' %s  If you do not trust these proxies, please refrain from downloading live %s videos. '
-            ' See why it\'s required: https://github.com/yt-dlp/yt-dlp/issues/251 ' % (' ' * len(self.IE_NAME), self.IE_NAME))
         webpage = self._download_webpage(url, video_id)
 
         enterstudio = self._call_api(
@@ -166,13 +140,7 @@ class MildomIE(MildomBaseIE):
         }, note='Downloading m3u8 information')
         del stream_query['streamReqId'], stream_query['timestamp']
         for fmt in formats:
-            # source code behind bookish-octo-barnacle.vercel.app is here: https://github.com/nao20010128nao/bookish-octo-barnacle/
-            parsed = compat_urlparse.urlparse(fmt['url'])
-            parsed = parsed._replace(
-                netloc=self._mildom_proxy_host(),
-                query=compat_urllib_parse_urlencode(stream_query, True),
-                path='/api/mildom' + parsed.path)
-            fmt['url'] = compat_urlparse.urlunparse(parsed)
+            fmt.setdefault('http_headers', {})['Referer'] = 'https://www.mildom.com/'
 
         self._sort_formats(formats)
 
@@ -246,15 +214,6 @@ class MildomVodIE(MildomBaseIE):
         })
         del stream_query['timestamp']
         formats = audio_formats + video_formats
-        # for fmt in formats:
-        #     fmt['ext'] = 'mp4'
-        #     parsed = compat_urlparse.urlparse(fmt['url'])
-        #     stream_query['path'] = parsed.path[5:]
-        #     parsed = parsed._replace(
-        #         netloc=self._mildom_proxy_host(),
-        #         query=compat_urllib_parse_urlencode(stream_query, True),
-        #         path='/api/mildom/vod2/proxy')
-        #     fmt['url'] = compat_urlparse.urlunparse(parsed)
 
         self._sort_formats(formats)
 
