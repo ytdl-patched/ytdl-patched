@@ -10,7 +10,6 @@ from .common import InfoExtractor
 from ..utils import (
     std_headers,
     update_url_query,
-    random_uuidv4,
     try_get,
 )
 from ..compat import compat_str
@@ -33,7 +32,7 @@ class MildomBaseIE(InfoExtractor):
             '__country': dc['country'],
             '__cluster': dc['cluster'],
             '__platform': 'web',
-            '__la': self.lang_code(),
+            '__la': 'ja',
             '__pcv': 'v2.9.44',
             'sfr': 'pc',
             'accessToken': '',
@@ -70,21 +69,16 @@ class MildomBaseIE(InfoExtractor):
 
     def guest_id(self):
         'getGuestId'
-        if self._GUEST_ID:
-            return self._GUEST_ID
-        self._GUEST_ID = try_get(
-            self, (
-                lambda x: x._call_api(
-                    'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
-                    note='Downloading guest token', init=True)['guest_id'] or None,
-                lambda x: x._get_cookies('https://www.mildom.com').get('gid').value,
-                lambda x: x._get_cookies('https://m.mildom.com').get('gid').value,
-            ), compat_str) or ''
+        if not self._GUEST_ID:
+            self._GUEST_ID = try_get(
+                self, (
+                    lambda x: x._call_api(
+                        'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
+                        note='Downloading guest token', init=True)['guest_id'] or None,
+                    lambda x: x._get_cookies('https://www.mildom.com').get('gid').value,
+                    lambda x: x._get_cookies('https://m.mildom.com').get('gid').value,
+                ), compat_str) or ''
         return self._GUEST_ID
-
-    def lang_code(self):
-        'getCurrentLangCode'
-        return 'ja'
 
 
 class MildomIE(MildomBaseIE):
@@ -129,18 +123,14 @@ class MildomIE(MildomBaseIE):
                 'live_server_type': 'hls',
             })
 
-        stream_query = self._common_queries({
-            'streamReqId': random_uuidv4(),
-            'is_lhls': '0',
-        })
-        m3u8_url = update_url_query(servers['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
+        m3u8_url = servers['stream_server'] + '/%s_master.m3u8' % video_id
         formats = self._extract_m3u8_formats(m3u8_url, result_video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
         }, note='Downloading m3u8 information')
-        del stream_query['streamReqId'], stream_query['timestamp']
         for fmt in formats:
             fmt.setdefault('http_headers', {})['Referer'] = 'https://www.mildom.com/'
+            fmt.setdefault('http_headers', {})['Origin'] = 'https://www.mildom.com'
 
         self._sort_formats(formats)
 
@@ -190,16 +180,15 @@ class MildomVodIE(MildomBaseIE):
                 lambda x: x['author_info']['login_name'],
             ), compat_str)
 
-        audio_formats = [{
+        formats = [{
             'url': autoplay['audio_url'],
             'format_id': 'audio',
             'protocol': 'm3u8_native',
             'vcodec': 'none',
             'acodec': 'aac',
         }]
-        video_formats = []
         for fmt in autoplay['video_link']:
-            video_formats.append({
+            formats.append({
                 'format_id': 'video-%s' % fmt['name'],
                 'url': fmt['url'],
                 'protocol': 'm3u8_native',
@@ -208,12 +197,6 @@ class MildomVodIE(MildomBaseIE):
                 'vcodec': 'h264',
                 'acodec': 'aac',
             })
-
-        stream_query = self._common_queries({
-            'is_lhls': '0',
-        })
-        del stream_query['timestamp']
-        formats = audio_formats + video_formats
 
         self._sort_formats(formats)
 
@@ -261,7 +244,7 @@ class MildomUserVodIE(MildomBaseIE):
                 })
             if not reply:
                 break
-            results.extend('https://www.mildom.com/playback/%s/%s' % (user_id, x['v_id']) for x in reply)
-        return self.playlist_result([
-            self.url_result(u, ie=MildomVodIE.ie_key()) for u in results
-        ], user_id, 'Uploads from %s' % profile['loginname'])
+            results.extend(
+                self.url_result('https://www.mildom.com/playback/%s/%s' % (user_id, x['v_id']), ie=MildomVodIE.ie_key())
+                for x in reply)
+        return self.playlist_result(results, user_id, 'Uploads from %s' % profile['loginname'])
