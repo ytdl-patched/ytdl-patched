@@ -368,12 +368,11 @@ class BilibiliChannelIE(InfoExtractor):
             vlist = data['list']['vlist']
             count = data['page']['count']
 
-            entries.extend({
-                '_type': 'url',
-                'ie_key': BiliBiliIE.ie_key(),
-                'url': 'https://www.bilibili.com/video/%s' % entry['bvid'],
-                'id': entry['bvid'],
-            } for entry in vlist)
+            entries.extend(
+                self.url_result(
+                    'https://www.bilibili.com/video/%s' % entry['bvid'],
+                    BiliBiliIE.ie_key(),
+                    entry['bvid']) for entry in vlist)
 
             page_maximum = ceil(count / data['page']['ps'])
             if page_maximum <= page_num or not vlist or len(entries) == count:
