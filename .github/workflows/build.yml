@@ -168,6 +168,7 @@ jobs:
         icon: [red, white]
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
         builder: [PyInstaller, py2exe]
+        remove_tests: ['-notests', '']  # yes and no
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -185,6 +186,7 @@ jobs:
       - name: Remove unneeded tests in InfoExtractor
         shell: bash
         run: python3 ./devscripts/reduce_code.py youtube_dl/extractor/*.py
+        if: ${{ matrix.remove_tests == '-notests' }}
       - name: Build patched YTDL for Windows
         shell: pwsh
         run: pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}
@@ -195,7 +197,7 @@ jobs:
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: "ytdl-windows-${{ matrix.icon }}-${{ matrix.builder }}"
+          name: "ytdl-windows-${{ matrix.icon }}-${{ matrix.builder }}${{ matrix.remove_tests }}"
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
