@@ -47,12 +47,14 @@ def get_base_name(base):
         return base.__name__
 
 
-def cleanup_regex(regex_str: str):
+def cleanup_regex(regex_str):
+    if not isinstance(regex_str, (str, bytes)):
+        return regex_str
     has_extended = re.search(r'\(\?[aiLmsux]*x[aiLmsux]*\)', regex_str)  # something like (?xxs) may match, but (?s) or (?i) won't
     if not has_extended:
         return regex_str
     # remove comments
-    regex_str = re.sub(r'(?m)\s*#.+?$', '', regex_str)
+    regex_str = re.sub(r'(?m)\s+#.+?$', '', regex_str)
     # remove spaces and indents
     regex_str = re.sub(r'\s+', '', regex_str)
     # remove x (EXTENDED) from all inline flags

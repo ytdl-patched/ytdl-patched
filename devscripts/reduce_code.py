@@ -19,7 +19,7 @@ def cleanup_regex(regex_str: str):
     if not has_extended:
         return regex_str
     # remove comments
-    regex_str = re.sub(r'(?m)\s*#.+?$', '', regex_str)
+    regex_str = re.sub(r'(?m)\s+#.+?$', '', regex_str)
     # remove spaces and indents
     regex_str = re.sub(r'\s+', '', regex_str)
     # remove x (EXTENDED) from all inline flags
