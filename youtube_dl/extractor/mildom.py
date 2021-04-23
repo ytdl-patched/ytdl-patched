@@ -87,15 +87,15 @@ class MildomIE(MildomBaseIE):
     _VALID_URL = r'https?://(?:(?:www|m)\.)?mildom\.com/(?P<id>\d+)'
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        url = 'https://www.mildom.com/%s' % video_id
+        user_id = self._match_id(url)
+        url = 'https://www.mildom.com/%s' % user_id
 
-        webpage = self._download_webpage(url, video_id)
+        webpage = self._download_webpage(url, user_id)
 
         enterstudio = self._call_api(
-            'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', video_id,
-            note='Downloading live metadata', query={'user_id': video_id})
-        result_video_id = enterstudio.get('log_id', video_id)
+            'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', user_id,
+            note='Downloading live metadata', query={'user_id': user_id})
+        video_id = enterstudio.get('log_id') or user_id
 
         # e.g. Minecraft
         title = try_get(
@@ -109,7 +109,7 @@ class MildomIE(MildomBaseIE):
                 lambda x: x['intro'],
                 lambda x: x['live_intro'],
             ), compat_str)
-        # e.g. Donald F. Trump
+        # e.g. Donald F. McDonald
         uploader = try_get(
             enterstudio, (
                 lambda x: self._html_search_meta('twitter:title', webpage),
@@ -117,29 +117,31 @@ class MildomIE(MildomBaseIE):
             ), compat_str)
 
         servers = self._call_api(
-            'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', result_video_id,
+            'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', video_id,
             note='Downloading live server list', query={
-                'user_id': video_id,
+                'user_id': user_id,
                 'live_server_type': 'hls',
             })
 
-        m3u8_url = servers['stream_server'] + '/%s_master.m3u8' % video_id
-        formats = self._extract_m3u8_formats(m3u8_url, result_video_id, 'mp4', headers={
+        m3u8_url = servers['stream_server'] + '/%s_master.m3u8' % user_id
+        formats = self._extract_m3u8_formats(m3u8_url, video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
         }, note='Downloading m3u8 information')
         for fmt in formats:
-            fmt.setdefault('http_headers', {})['Referer'] = 'https://www.mildom.com/'
-            fmt.setdefault('http_headers', {})['Origin'] = 'https://www.mildom.com'
+            fmt.setdefault('http_headers', {}).update({
+                'Referer': 'https://www.mildom.com/',
+                'Origin': 'https://www.mildom.com',
+            })
 
         self._sort_formats(formats)
 
         return {
-            'id': result_video_id,
+            'id': video_id,
             'title': title,
             'description': description,
             'uploader': uploader,
-            'uploader_id': video_id,
+            'uploader_id': user_id,
             'formats': formats,
             'is_live': True,
         }
@@ -174,7 +176,7 @@ class MildomVodIE(MildomBaseIE):
             autoplay, (
                 lambda x: x['video_intro'],
             ), compat_str)
-        # e.g. Donald F. Trump
+        # e.g. Donald F. McDonald
         uploader = try_get(
             autoplay, (
                 lambda x: x['author_info']['login_name'],
