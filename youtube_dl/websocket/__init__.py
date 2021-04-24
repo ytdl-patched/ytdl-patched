@@ -40,6 +40,8 @@ try:
 
     if AVAILABLE:
         from .websocat import WebsocatWrapper
+        HAVE_WS_WEBSOCAT = True
+        HAVE_WEBSOCKET = True
     else:
         WebsocatWrapper = None
 except (ImportError, ValueError, SyntaxError):
