@@ -778,7 +778,11 @@ class NiconicoLiveIE(NiconicoBaseIE):
         if not ws_url:
             raise ExtractorError('the live hasn\'t started yet or already ended', expected=True)
 
-        title = self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)
+        title = try_get(
+            None,
+            (lambda x: embedded_data['program']['title'],
+             lambda x: self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)),
+            compat_str)
 
         return {
             'id': video_id,
@@ -787,7 +791,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
                 'url': ws_url,
                 'format_id': 'live',
                 'video_id': video_id,
-                'cookies': str(self._get_cookies('https://live2.nicovideo.jp/'))[12:],
+                'cookies': str(self._get_cookies('https://live2.nicovideo.jp/')).replace('Set-Cookie: ', ''),
                 'ext': 'mp4',
                 'is_live': True,
                 'protocol': 'niconico_live',
