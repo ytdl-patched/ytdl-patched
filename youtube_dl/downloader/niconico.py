@@ -39,7 +39,7 @@ class NiconicoLiveFD(FileDownloader):
         lock = threading.Lock()
         lock.acquire()
 
-        def communicate_ws():
+        def communicate_ws(reconnect):
             with WebSocket(ws_url, {
                 'Cookie': str_or_none(cookies) or '',
                 'Origin': 'https://live2.nicovideo.jp',
@@ -61,7 +61,7 @@ class NiconicoLiveFD(FileDownloader):
                             "protocol": "webSocket",
                             "commentable": True
                         },
-                        "reconnect": False
+                        "reconnect": reconnect
                     }
                 }))
 
@@ -81,13 +81,23 @@ class NiconicoLiveFD(FileDownloader):
                         ws.send(r'{"type":"keepSeat"}')
                     elif data.get('type') == 'disconnect':
                         print(data)
-                        break
+                        return True
                     elif self.ydl.params.get('verbose', False):
                         if len(recv) > 100:
                             recv = recv[:100] + '...'
                         self.to_screen('[debug] Server said: %s' % recv)
 
-        thread = threading.Thread(target=communicate_ws, daemon=True)
+        def ws_main():
+            reconnect = False
+            while True:
+                try:
+                    ret = communicate_ws(reconnect)
+                    if ret is True:
+                        return
+                finally:
+                    reconnect = True
+
+        thread = threading.Thread(target=ws_main, daemon=True)
         thread.start()
 
         lock.acquire(True)
