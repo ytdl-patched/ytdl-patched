@@ -127,6 +127,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: prepare
     strategy:
+      fail-fast: false
       matrix:
         os: [
           ubuntu-latest,
@@ -164,6 +165,7 @@ jobs:
     runs-on: windows-latest
     needs: prepare
     strategy:
+      fail-fast: false
       matrix:
         icon: [red, white]
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
@@ -441,6 +443,7 @@ jobs:
     runs-on: ${{ matrix.environ.os }}
     continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         environ: [
           { os: "ubuntu-20.04", artifact: linux },
