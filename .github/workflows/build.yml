@@ -149,7 +149,7 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
       - name: Install deps
-        run: pip3 install -U pip build wheel setuptools
+        run: python3 -m pip install -U pip build wheel setuptools
       - name: Build egg
         run: python3 setup.py bdist_egg
       - name: Upload artifacts for the next steps
@@ -182,7 +182,7 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install deps
-        run: pip install --upgrade ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
+        run: pip install -U ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
       - name: Install UPX
         run: choco install upx
       - name: Remove unneeded tests in InfoExtractor
