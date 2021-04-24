@@ -9,6 +9,7 @@ from .dash import DashSegmentsFD
 from .rtsp import RtspFD
 from .ism import IsmFD
 from .youtube_live_chat import YoutubeLiveChatReplayFD
+from .niconico import NiconicoLiveFD
 from .external import (
     get_external_downloader,
     FFmpegFD,
@@ -29,6 +30,7 @@ PROTOCOL_MAP = {
     'ism': IsmFD,
     'youtube_live_chat_replay': YoutubeLiveChatReplayFD,
     'ffmpeg': FFmpegFD,
+    'niconico_live': NiconicoLiveFD,
 }
 
 

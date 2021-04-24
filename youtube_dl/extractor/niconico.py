@@ -34,13 +34,8 @@ from ..utils import (
     unified_timestamp,
     urlencode_postdata,
     update_url_query,
-    to_str,
-    std_headers,
 )
-from ..websocket import (
-    WebSocket,
-    HAVE_WEBSOCKET,
-)
+from ..websocket import HAVE_WEBSOCKET
 
 
 class NiconicoBaseIE(InfoExtractor):
@@ -783,47 +778,19 @@ class NiconicoLiveIE(NiconicoBaseIE):
         if not ws_url:
             raise ExtractorError('the live hasn\'t started yet or already ended', expected=True)
 
-        self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
-        with WebSocket(ws_url, {
-            'Cookie': str(self._get_cookies('https://live2.nicovideo.jp/'))[12:],
-            'Origin': 'https://live2.nicovideo.jp',
-            'Accept': '*/*',
-            'User-Agent': std_headers['User-Agent'],
-        }) as ws:
-            if self._downloader.params.get('verbose', False):
-                self.to_screen('[debug] Sending HLS server request')
-            ws.send(r'{"type":"startWatching","data":{"stream":{"quality":"high","protocol":"hls","latency":"high","chasePlay":false},"room":{"protocol":"webSocket","commentable":true},"reconnect":false}}')
-
-            while True:
-                recv = to_str(ws.recv()).strip()
-                if not recv:
-                    continue
-                data = self._parse_json(recv, video_id, fatal=False)
-                if not data or not isinstance(data, dict):
-                    continue
-                if data.get('type') == 'stream':
-                    if self._downloader.params.get('verbose', False):
-                        self.to_screen('[debug] Goodbye.')
-                    playlist_data = data
-                    break
-                elif self._downloader.params.get('verbose', False):
-                    if len(recv) > 100:
-                        recv = recv[:100] + '...'
-                    self.to_screen('[debug] Server said: %s' % recv)
-
-        if not playlist_data:
-            raise ExtractorError('Unable to fetch HLS playlist info via WebSocket')
-        hls_url = playlist_data['data']['uri']
-
         title = self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)
-        formats = self._extract_m3u8_formats(
-            hls_url, video_id, ext='mp4', m3u8_id='hls', live=True)
-
-        self._sort_formats(formats)
 
         return {
             'id': video_id,
             'title': title,
-            'formats': formats,
+            'formats': [{
+                'url': ws_url,
+                'format_id': 'live',
+                'video_id': video_id,
+                'cookies': str(self._get_cookies('https://live2.nicovideo.jp/'))[12:],
+                'ext': 'mp4',
+                'is_live': True,
+                'protocol': 'niconico_live',
+            }],
             'is_live': True,
         }
