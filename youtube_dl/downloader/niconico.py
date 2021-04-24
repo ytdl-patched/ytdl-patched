@@ -2,6 +2,7 @@ from __future__ import division, unicode_literals
 
 import json
 import threading
+import time
 
 from .external import FFmpegFD
 from .common import FileDownloader
@@ -10,7 +11,9 @@ from ..utils import (
     std_headers,
     to_str,
     DownloadError,
+    try_get,
 )
+from ..compat import compat_str
 from ..websocket import (
     WebSocket,
     HAVE_WEBSOCKET,
@@ -82,6 +85,9 @@ class NiconicoLiveFD(FileDownloader):
                     elif data.get('type') == 'disconnect':
                         print(data)
                         return True
+                    elif data.get('type') == 'error':
+                        message = try_get(data, lambda x: x["body"]["code"], compat_str) or recv
+                        return DownloadError(message)
                     elif self.ydl.params.get('verbose', False):
                         if len(recv) > 100:
                             recv = recv[:100] + '...'
@@ -94,6 +100,14 @@ class NiconicoLiveFD(FileDownloader):
                     ret = communicate_ws(reconnect)
                     if ret is True:
                         return
+                    if isinstance(ret, BaseException):
+                        new_info_dict['error'] = ret
+                        lock.release()
+                        return
+                except BaseException as e:
+                    self.to_screen('[%s] %s: Connection error occured, reconnecting after 10 seconds: %s' % ('niconico:live', video_id, str_or_none(e)))
+                    time.sleep(10)
+                    continue
                 finally:
                     reconnect = True
 
@@ -101,4 +115,7 @@ class NiconicoLiveFD(FileDownloader):
         thread.start()
 
         lock.acquire(True)
+        err = new_info_dict.get('error')
+        if isinstance(err, BaseException):
+            raise err
         return dl.download(filename, new_info_dict)
