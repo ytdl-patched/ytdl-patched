@@ -30,6 +30,7 @@ class NiconicoLiveFD(FileDownloader):
         video_id = info_dict['video_id']
         ws_url = info_dict['url']
         cookies = info_dict.get('cookies')
+        live_quality = info_dict.get('live_quality', 'high')
         dl = FFmpegFD(self.ydl, self.params or {})
         self.to_screen('[%s] %s: Fetching HLS playlist info via WebSocket' % ('niconico:live', video_id))
 
@@ -55,7 +56,7 @@ class NiconicoLiveFD(FileDownloader):
                     "type": "startWatching",
                     "data": {
                         "stream": {
-                            "quality": "high",
+                            "quality": live_quality,
                             "protocol": "hls",
                             "latency": "high",
                             "chasePlay": False
