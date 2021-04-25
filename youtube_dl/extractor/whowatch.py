@@ -38,22 +38,22 @@ class WhoWatchIE(InfoExtractor):
             hls_url, video_id, ext='mp4', entry_protocol='m3u8',
             m3u8_id='hls')
 
-        fmts = int(len(formats) / 2)
-        for v, a in zip(formats[fmts:], formats[:fmts]):
-            formats.append({
-                'url': v['url'],
-                'extra_url': a['url'],  # only ffmpeg accepts this
-                'format_id': 'merged-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
-                'ext': 'mp4',
-                'protocol': 'm3u8',
-                'vcodec': v.get('vcodec'),
-                'acodec': a.get('acodec'),
-                'vbr': v.get('tbr') or v.get('vbr'),
-                'abr': a.get('tbr') or a.get('abr'),
-                'width': v.get('width'),
-                'height': v.get('height'),
-                'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
-            })
+        # fmts = int(len(formats) / 2)
+        # for v, a in zip(formats[fmts:], formats[:fmts]):
+        #     formats.append({
+        #         'url': v['url'],
+        #         'extra_url': a['url'],  # only ffmpeg accepts this
+        #         'format_id': 'merged-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
+        #         'ext': 'mp4',
+        #         'protocol': 'm3u8',
+        #         'vcodec': v.get('vcodec'),
+        #         'acodec': a.get('acodec'),
+        #         'vbr': v.get('tbr') or v.get('vbr'),
+        #         'abr': a.get('tbr') or a.get('abr'),
+        #         'width': v.get('width'),
+        #         'height': v.get('height'),
+        #         'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
+        #     })
 
         for i, fmt in enumerate(streams):
             name = fmt.get('name') or 'source-%d' % i
@@ -67,10 +67,10 @@ class WhoWatchIE(InfoExtractor):
                 'url': rtmp_url,
                 'format_id': 'rtmp-%s' % name,
                 'ext': 'mp4',
-                'protocol': 'rtmp',
+                'protocol': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
                 'vcodec': 'h264',
                 'acodec': 'aac',
-                'external_downloader': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
+                'format_note': fmt.get('label'),
             })
 
         for i, fmt in enumerate(streams):
@@ -97,6 +97,7 @@ class WhoWatchIE(InfoExtractor):
                     'width': v.get('width'),
                     'height': v.get('height'),
                     'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
+                    'format_note': fmt.get('label'),
                 })
 
         self._sort_formats(formats, id_preference_dict={'veryhigh': 3, 'high': 2, 'middle': 1, 'low': 0, 'hls-playlist': -1000})
