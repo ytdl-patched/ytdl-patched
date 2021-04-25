@@ -6,9 +6,7 @@ from ..utils import (
     try_get,
     ExtractorError,
 )
-from ..compat import (
-    compat_str,
-)
+from ..compat import compat_str
 
 
 class WhoWatchIE(InfoExtractor):
@@ -38,69 +36,35 @@ class WhoWatchIE(InfoExtractor):
             hls_url, video_id, ext='mp4', entry_protocol='m3u8',
             m3u8_id='hls')
 
-        # fmts = int(len(formats) / 2)
-        # for v, a in zip(formats[fmts:], formats[:fmts]):
-        #     formats.append({
-        #         'url': v['url'],
-        #         'extra_url': a['url'],  # only ffmpeg accepts this
-        #         'format_id': 'merged-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
-        #         'ext': 'mp4',
-        #         'protocol': 'm3u8',
-        #         'vcodec': v.get('vcodec'),
-        #         'acodec': a.get('acodec'),
-        #         'vbr': v.get('tbr') or v.get('vbr'),
-        #         'abr': a.get('tbr') or a.get('abr'),
-        #         'width': v.get('width'),
-        #         'height': v.get('height'),
-        #         'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
-        #     })
-
         for i, fmt in enumerate(streams):
             name = fmt.get('name') or 'source-%d' % i
+            print(fmt)
             rtmp_url = fmt.get('rtmp_url')
-            if not rtmp_url:
-                continue
-            if fmt.get('audio_only'):
-                # in this case, same url is already added with video stream available
-                continue
-            formats.append({
-                'url': rtmp_url,
-                'format_id': 'rtmp-%s' % name,
-                'ext': 'mp4',
-                'protocol': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
-                'vcodec': 'h264',
-                'acodec': 'aac',
-                'format_note': fmt.get('label'),
-            })
-
-        for i, fmt in enumerate(streams):
             hls_url = fmt.get('hls_url')
-            if not hls_url:
-                continue
-            hls_fmts = self._extract_m3u8_formats(
-                hls_url, video_id, ext='mp4', entry_protocol='m3u8',
-                m3u8_id='hls')
-            formats.extend(hls_fmts)
-            # if len(hls_fmts) == 2:
-            #     self._sort_formats(hls_fmts)
-            #     a, v = hls_fmts
-            #     formats.append({
-            #         'url': v['url'],
-            #         'extra_url': a['url'],  # only ffmpeg accepts this
-            #         'format_id': 'hls-playlist-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
-            #         'ext': 'mp4',
-            #         'protocol': 'm3u8',
-            #         'vcodec': v.get('vcodec'),
-            #         'acodec': a.get('acodec'),
-            #         'vbr': v.get('tbr') or v.get('vbr'),
-            #         'abr': a.get('tbr') or a.get('abr'),
-            #         'width': v.get('width'),
-            #         'height': v.get('height'),
-            #         'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
-            #         'format_note': fmt.get('label'),
-            #     })
 
-        self._sort_formats(formats, id_preference_dict={'veryhigh': 3, 'high': 2, 'middle': 1, 'low': 0, 'hls-playlist': -1000})
+            if hls_url:
+                hls_fmts = self._extract_m3u8_formats(
+                    hls_url, video_id, ext='mp4', entry_protocol='m3u8',
+                    m3u8_id='hls')
+                formats.extend(hls_fmts)
+            else:
+                hls_fmts = []
+
+            if rtmp_url:
+                formats.append({
+                    'url': rtmp_url,
+                    'format_id': 'rtmp-%s' % name,
+                    'ext': 'mp4',
+                    'protocol': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
+                    'vcodec': 'none' if fmt.get('audio_only') else 'h264',
+                    'acodec': 'aac',
+                    'format_note': fmt.get('label'),
+                    # note: HLS and RTMP have same resolution for now, so it's acceptable
+                    'width': try_get(hls_fmts, lambda x: x[0]['width'], int),
+                    'height': try_get(hls_fmts, lambda x: x[0]['height'], int),
+                })
+
+        self._sort_formats(formats)
 
         uploader_id = try_get(metadata, lambda x: x['live']['user']['user_path'], compat_str)
         uploader_id_internal = try_get(metadata, lambda x: x['live']['user']['id'], int)
