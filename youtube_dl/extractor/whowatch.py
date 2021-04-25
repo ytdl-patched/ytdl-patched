@@ -81,24 +81,24 @@ class WhoWatchIE(InfoExtractor):
                 hls_url, video_id, ext='mp4', entry_protocol='m3u8',
                 m3u8_id='hls')
             formats.extend(hls_fmts)
-            if len(hls_fmts) == 2:
-                self._sort_formats(hls_fmts)
-                a, v = hls_fmts
-                formats.append({
-                    'url': v['url'],
-                    'extra_url': a['url'],  # only ffmpeg accepts this
-                    'format_id': 'hls-playlist-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
-                    'ext': 'mp4',
-                    'protocol': 'm3u8',
-                    'vcodec': v.get('vcodec'),
-                    'acodec': a.get('acodec'),
-                    'vbr': v.get('tbr') or v.get('vbr'),
-                    'abr': a.get('tbr') or a.get('abr'),
-                    'width': v.get('width'),
-                    'height': v.get('height'),
-                    'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
-                    'format_note': fmt.get('label'),
-                })
+            # if len(hls_fmts) == 2:
+            #     self._sort_formats(hls_fmts)
+            #     a, v = hls_fmts
+            #     formats.append({
+            #         'url': v['url'],
+            #         'extra_url': a['url'],  # only ffmpeg accepts this
+            #         'format_id': 'hls-playlist-%s-%s' % (v['format_id'][4:], a['format_id'][4:]),
+            #         'ext': 'mp4',
+            #         'protocol': 'm3u8',
+            #         'vcodec': v.get('vcodec'),
+            #         'acodec': a.get('acodec'),
+            #         'vbr': v.get('tbr') or v.get('vbr'),
+            #         'abr': a.get('tbr') or a.get('abr'),
+            #         'width': v.get('width'),
+            #         'height': v.get('height'),
+            #         'input_params': ['-map', '0:v:0', '-map', '1:a:0'],
+            #         'format_note': fmt.get('label'),
+            #     })
 
         self._sort_formats(formats, id_preference_dict={'veryhigh': 3, 'high': 2, 'middle': 1, 'low': 0, 'hls-playlist': -1000})
 
