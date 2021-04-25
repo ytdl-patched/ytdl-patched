@@ -2890,7 +2890,6 @@ instances = {
     "real-escape.jp",
     "realize.be",
     "reallygay.party",
-    "realscience.social",
     "rebeltoot.com",
     "reclaim.technology",
     "recode.macro.tokyo",
