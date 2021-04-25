@@ -38,9 +38,8 @@ class WhoWatchIE(InfoExtractor):
 
         for i, fmt in enumerate(streams):
             name = fmt.get('name') or 'source-%d' % i
-            print(fmt)
-            rtmp_url = fmt.get('rtmp_url')
             hls_url = fmt.get('hls_url')
+            rtmp_url = fmt.get('rtmp_url')
 
             if hls_url:
                 hls_fmts = self._extract_m3u8_formats(
