@@ -761,7 +761,7 @@ class NiconicoSeriesIE(NiconicoBaseIE):
 class NiconicoLiveIE(NiconicoBaseIE):
     IE_NAME = 'niconico:live'
     IE_DESC = 'ニコニコ生放送'
-    _VALID_URL = r'(?:https?://(?:sp\.)?live2?\.nicovideo\.jp/watch/|nico(?:nico|video)?:)(?P<id>lv\d+)'
+    _VALID_URL = r'(?:https?://(?:sp\.)?live2?\.nicovideo\.jp/(?:watch|gate)/|nico(?:nico|video)?:)(?P<id>lv\d+)'
 
     # sort qualities in this order to trick youtube-dl to download highest quality as default
     _KNOWN_QUALITIES = ('abr', 'super_low', 'low', 'normal', 'high', 'super_high')
