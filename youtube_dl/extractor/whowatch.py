@@ -11,7 +11,7 @@ from ..compat import compat_str
 
 class WhoWatchIE(InfoExtractor):
     IE_NAME = 'whowatch'
-    _VALID_URL = r'https?://whowatch\.tv/viewer/(?P<id>\d+)/?'
+    _VALID_URL = r'https?://whowatch\.tv/viewer/(?P<id>\d+)'
     META_API_URL = 'https://api.whowatch.tv/lives/%s'
     LIVE_API_URL = 'https://api.whowatch.tv/lives/%s/play'
 
@@ -30,13 +30,11 @@ class WhoWatchIE(InfoExtractor):
         if not hls_url:
             raise ExtractorError(live_data.get('error_message') or 'The live is offline.', expected=True)
 
-        streams = live_data.get('streams') or []
-
         formats = self._extract_m3u8_formats(
             hls_url, video_id, ext='mp4', entry_protocol='m3u8',
             m3u8_id='hls')
 
-        for i, fmt in enumerate(streams):
+        for i, fmt in enumerate(live_data.get('streams') or []):
             name = fmt.get('name') or 'source-%d' % i
             hls_url = fmt.get('hls_url')
             rtmp_url = fmt.get('rtmp_url')
