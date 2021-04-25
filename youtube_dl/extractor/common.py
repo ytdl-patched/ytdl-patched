@@ -1165,7 +1165,7 @@ class InfoExtractor(object):
         if not isinstance(name, (list, tuple)):
             name = [name]
         if display_name is None:
-            display_name = '%s' % name[0]
+            display_name = ' '.join(name)
         meta_regexes = []
         for p in name:
             meta_regexes.append(self._meta_regex(p))

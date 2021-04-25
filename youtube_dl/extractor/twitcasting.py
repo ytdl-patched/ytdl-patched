@@ -6,6 +6,7 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
+    ExtractorError,
     clean_html,
     float_or_none,
     get_element_by_class,
@@ -75,9 +76,13 @@ class TwitCastingIE(TwitCastingBaseIE):
             })
         webpage = self._download_webpage(url, video_id, data=request_data)
 
-        title = clean_html(get_element_by_id(
-            'movietitle', webpage)) or self._html_search_meta(
-            ['og:title', 'twitter:title'], webpage, fatal=True)
+        title = try_get(
+            webpage,
+            (lambda x: clean_html(get_element_by_id('movietitle', x)),
+             lambda x: self._html_search_meta(['og:title', 'twitter:title'], x, fatal=False)),
+            compat_str)
+        if not title:
+            raise ExtractorError('Failed to extract title')
 
         video_js_data = try_get(
             webpage,
