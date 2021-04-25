@@ -763,6 +763,9 @@ class NiconicoLiveIE(NiconicoBaseIE):
     IE_DESC = 'ニコニコ生放送'
     _VALID_URL = r'(?:https?://(?:sp\.)?live2?\.nicovideo\.jp/watch/|nico(?:nico|video)?:)(?P<id>lv\d+)'
 
+    # sort qualities in this order to trick youtube-dl to download highest quality as default
+    _KNOWN_QUALITIES = ('abr', 'super_low', 'low', 'normal', 'high', 'super_high')
+
     def _real_extract(self, url):
         if not HAVE_WEBSOCKET:
             raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
@@ -789,12 +792,13 @@ class NiconicoLiveIE(NiconicoBaseIE):
             'title': title,
             'formats': [{
                 'url': ws_url,
-                'format_id': 'live',
+                'protocol': 'niconico_live',
+                'format_id': '%s' % quality,
                 'video_id': video_id,
                 'cookies': str(self._get_cookies('https://live2.nicovideo.jp/')).replace('Set-Cookie: ', ''),
                 'ext': 'mp4',
                 'is_live': True,
-                'protocol': 'niconico_live',
-            }],
+                'live_quality': quality,
+            } for quality in self._KNOWN_QUALITIES],
             'is_live': True,
         }
