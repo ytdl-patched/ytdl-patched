@@ -32,7 +32,7 @@ class DamtomoIE(InfoExtractor):
         if handle.url == 'https://www.clubdam.com/sorry/':
             raise ExtractorError('You are rate-limited. Try again later.', expected=True)
         if '<h2>予期せぬエラーが発生しました。</h2>' in webpage:
-            raise ExtractorError('There is a server-side problem. Try again later.', expected=True)
+            raise ExtractorError('There is a error in server-side. Try again later.', expected=True)
 
         # NOTE: there is excessive amount of spaces and line breaks, so ignore spaces around these part
         description = self._search_regex(r'(?m)<div id="public_comment">\s*<p>\s*([^<]*?)\s*</p>', webpage, 'description', default=None)
