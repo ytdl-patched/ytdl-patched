@@ -47,13 +47,14 @@ class WhoWatchIE(InfoExtractor):
             else:
                 hls_fmts = []
 
-            if rtmp_url:
+            # RTMP url for audio_only is same as high format, so skip it
+            if rtmp_url and not fmt.get('audio_only'):
                 formats.append({
                     'url': rtmp_url,
                     'format_id': 'rtmp-%s' % name,
                     'ext': 'mp4',
                     'protocol': 'ffmpeg',  # ffmpeg can, while rtmpdump can't
-                    'vcodec': 'none' if fmt.get('audio_only') else 'h264',
+                    'vcodec': 'h264',
                     'acodec': 'aac',
                     'format_note': fmt.get('label'),
                     # note: HLS and RTMP have same resolution for now, so it's acceptable
