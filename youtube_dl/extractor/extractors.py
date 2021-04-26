@@ -1029,6 +1029,7 @@ from .r7 import (
     R7IE,
     R7ArticleIE,
 )
+from .radiko import RadikoIE
 from .radiocanada import (
     RadioCanadaIE,
     RadioCanadaAudioVideoIE,
