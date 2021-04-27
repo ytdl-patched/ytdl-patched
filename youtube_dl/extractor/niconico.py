@@ -34,6 +34,7 @@ from ..utils import (
     unified_timestamp,
     urlencode_postdata,
     update_url_query,
+    to_str,
 )
 from ..websocket import HAVE_WEBSOCKET
 
@@ -458,6 +459,8 @@ class NiconicoIE(NiconicoBaseIE):
                             except ExtractorError as e:
                                 if isinstance(e.cause, compat_HTTPError):
                                     last_error = 'HTTP Error %s' % e.cause.code
+                                    if self.params.get('verbose'):
+                                        self.to_screen(to_str(e.cause.read()))
                                     if count < retries:
                                         continue
                                 last_error = e
