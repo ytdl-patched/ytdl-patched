@@ -445,9 +445,7 @@ class NiconicoIE(NiconicoBaseIE):
                         continue
                     for protocol in session_api_data['protocols']:
                         retries = self._downloader.params.get('extractor_retries', 3)
-                        count = -1
-                        last_error = None
-                        fmt = None
+                        count, last_error, fmt = -1, None, None
                         while count < retries:
                             count += 1
                             if last_error:
@@ -463,7 +461,8 @@ class NiconicoIE(NiconicoBaseIE):
                                         continue
                                 last_error = e
                         if last_error:
-                            raise last_error
+                            self.report_warning('Skipping %s-%s because of %s' % (video_quality['id'], audio_quality['id'], last_error))
+                            continue
                         if fmt:
                             formats.append(fmt)
 
