@@ -2044,6 +2044,9 @@ class YoutubeDL(object):
                 self.report_error('content too short (expected %s bytes and served %s)' % (err.expected, err.downloaded))
                 self.record_failed_archive(info_dict)
                 return
+            except BaseException:
+                self.record_failed_archive(info_dict)
+                raise
             finally:
                 self.unlock_file(info_dict)
 
@@ -2133,8 +2136,12 @@ class YoutubeDL(object):
                     url, force_generic_extractor=self.params.get('force_generic_extractor', False))
             except UnavailableVideoError:
                 self.report_error('unable to download video')
+                self.record_failed_archive(url)
             except MaxDownloadsReached:
                 self.to_screen('[info] Maximum number of downloaded files reached.')
+                raise
+            except BaseException:
+                self.record_failed_archive(url)
                 raise
             else:
                 if self.params.get('dump_single_json', False):
@@ -2263,11 +2270,14 @@ class YoutubeDL(object):
         with locked_file(fn, 'a', encoding='utf-8') as archive_file:
             archive_file.write(vid_id + '\n')
 
-    def record_failed_archive(self, info_dict):
+    def record_failed_archive(self, info_dict_or_url):
         fn = self.params.get('failed_archive')
         if fn is None:
             return
-        vid_id = info_dict.get('url') or self._make_archive_id(info_dict)
+        if isinstance(info_dict_or_url, compat_str):
+            vid_id = info_dict_or_url
+        else:
+            vid_id = info_dict_or_url.get('url') or self._make_archive_id(info_dict_or_url)
         assert vid_id
         with locked_file(fn, 'a', encoding='utf-8') as archive_file:
             archive_file.write(vid_id + '\n')
