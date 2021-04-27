@@ -281,6 +281,7 @@ class NiconicoIE(NiconicoBaseIE):
         elif dmc_protocol == 'hls':
             protocol = 'm3u8'
             parsed_token = self._parse_json(session_api_data['token'], video_id)
+            encryption = try_get(api_data, lambda x: x['media']['delivery']['encryption'], dict)
             protocol_parameters = {
                 'hls_parameters': {
                     'segment_duration': 6000,
@@ -289,11 +290,11 @@ class NiconicoIE(NiconicoBaseIE):
                     'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
                 }
             }
-            if 'hls_encryption' in parsed_token:
+            if 'hls_encryption' in parsed_token and encryption:
                 protocol_parameters['hls_parameters']['encryption'] = {
                     parsed_token['hls_encryption']: {
-                        'encrypted_key': api_data['media']['delivery']['encryption']['encryptedKey'],
-                        'key_uri': api_data['media']['delivery']['encryption']['keyUri']
+                        'encrypted_key': encryption['encryptedKey'],
+                        'key_uri': encryption['keyUri'],
                     }
                 }
             else:
