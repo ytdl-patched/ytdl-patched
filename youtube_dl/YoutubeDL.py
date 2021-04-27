@@ -2277,7 +2277,7 @@ class YoutubeDL(object):
         if isinstance(info_dict_or_url, compat_str):
             vid_id = info_dict_or_url
         else:
-            vid_id = info_dict_or_url.get('url') or self._make_archive_id(info_dict_or_url)
+            vid_id = info_dict_or_url.get('webpage_url') or self._make_archive_id(info_dict_or_url)
         assert vid_id
         with locked_file(fn, 'a', encoding='utf-8') as archive_file:
             archive_file.write(vid_id + '\n')
