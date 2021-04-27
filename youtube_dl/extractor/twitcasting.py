@@ -74,7 +74,9 @@ class TwitCastingIE(TwitCastingBaseIE):
             request_data = urlencode_postdata({
                 'password': video_password,
             })
-        webpage = self._download_webpage(url, video_id, data=request_data)
+        webpage = self._download_webpage(
+            url, video_id, data=request_data,
+            headers={'Origin': 'https://twitcasting.tv'})
 
         title = try_get(
             webpage,
