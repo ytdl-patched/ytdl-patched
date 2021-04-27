@@ -459,7 +459,7 @@ class NiconicoIE(NiconicoBaseIE):
                             except ExtractorError as e:
                                 if isinstance(e.cause, compat_HTTPError):
                                     last_error = 'HTTP Error %s' % e.cause.code
-                                    if self.params.get('verbose'):
+                                    if self._downloader.params.get('verbose'):
                                         self.to_screen(to_str(e.cause.read()))
                                     if count < retries:
                                         continue
