@@ -444,8 +444,26 @@ class NiconicoIE(NiconicoBaseIE):
                     if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                         continue
                     for protocol in session_api_data['protocols']:
-                        fmt = self._extract_format_for_quality(
-                            api_data, video_id, audio_quality, video_quality, protocol)
+                        retries = self._downloader.params.get('extractor_retries', 3)
+                        count = -1
+                        last_error = None
+                        fmt = None
+                        while count < retries:
+                            count += 1
+                            if last_error:
+                                self.report_warning('%s. Retrying...' % last_error)
+                            try:
+                                fmt = self._extract_format_for_quality(
+                                    api_data, video_id, audio_quality, video_quality, protocol)
+                                break
+                            except ExtractorError as e:
+                                if isinstance(e.cause, compat_HTTPError) and e.cause.code in (500, 503, 404):
+                                    last_error = 'HTTP Error %s' % e.cause.code
+                                    if count < retries:
+                                        continue
+                                last_error = e
+                        if last_error:
+                            raise last_error
                         if fmt:
                             formats.append(fmt)
 
