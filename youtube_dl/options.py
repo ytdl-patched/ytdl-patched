@@ -372,6 +372,10 @@ def parseOpts(overrideArguments=None):
         dest='download_archive',
         help='Download only videos not listed in the archive file. Record the IDs of all downloaded videos in it.')
     selection.add_option(
+        '--failed-archive', metavar='FILE',
+        dest='failed_archive',
+        help='Record the URLs or IDs of all downloading-failed videos in it.')
+    selection.add_option(
         '--include-ads',
         dest='include_ads', action='store_true',
         help='Download advertisements as well (experimental)')
@@ -943,9 +947,6 @@ def parseOpts(overrideArguments=None):
         '--sponskrub-location', metavar='PATH',
         dest='sponskrub_path', default='',
         help='Location of the sponskrub binary; either the path to the binary or its containing directory')
-    sponskrub.add_option(
-        '--sponskrub-args', dest='sponskrub_args', metavar='ARGS',
-        help=optparse.SUPPRESS_HELP)
 
     parser.add_option_group(general)
     parser.add_option_group(network)

@@ -270,7 +270,8 @@ def _real_main(argv=None):
 
     any_getting = opts.geturl or opts.gettitle or opts.getid or opts.getthumbnail or opts.getdescription or opts.getfilename or opts.getformat or opts.getduration or opts.dumpjson or opts.dump_single_json
     any_printing = opts.print_json
-    download_archive_fn = expand_path(opts.download_archive) if opts.download_archive is not None else opts.download_archive
+    download_archive_fn = expand_path(opts.download_archive) if opts.download_archive is not None else None
+    failed_archive_fn = expand_path(opts.failed_archive) if opts.failed_archive is not None else None
 
     # PostProcessors
     postprocessors = []
@@ -322,7 +323,6 @@ def _real_main(argv=None):
         postprocessors.append({
             'key': 'SponSkrub',
             'path': opts.sponskrub_path,
-            'args': opts.sponskrub_args,
             'cut': opts.sponskrub_cut,
             'force': opts.sponskrub_force,
             'ignoreerror': opts.sponskrub is None,
@@ -432,6 +432,7 @@ def _real_main(argv=None):
         'youtube_print_sig_code': opts.youtube_print_sig_code,
         'age_limit': opts.age_limit,
         'download_archive': download_archive_fn,
+        'failed_archive': failed_archive_fn,
         'cookiefile': opts.cookiefile,
         'nocheckcertificate': opts.no_check_certificate,
         'prefer_insecure': opts.prefer_insecure,

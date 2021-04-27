@@ -234,6 +234,7 @@ class YoutubeDL(object):
     download_archive:  File name of a file where all downloads are recorded.
                        Videos already present in the file are not downloaded
                        again.
+    failed_archive:    File name of a file where all failed downloads are recorded.
     cookiefile:        File name where cookies should be read from and dumped to.
     nocheckcertificate:Do not verify SSL certificates
     prefer_insecure:   Use HTTP instead of HTTPS to retrieve information.
@@ -325,6 +326,16 @@ class YoutubeDL(object):
     hls_prefer_native: Use the native HLS downloader instead of ffmpeg/avconv
                        if True, otherwise use ffmpeg/avconv if False, otherwise
                        use downloader suggested by extractor if None.
+    live_download_mkv: If True, live will be recorded in MKV format instead of MP4.
+    printjsontypes:    DO NOT USE THIS. If True, it shows type of each elements in info_dict.
+    check_peertube_instance: If True, generic extractor tests if it's PeerTube instance for
+                             requested domain.
+    check_mastodon_instance: Same as above, but for Mastodon.
+    extractor_retries: Number of retries for known extractor errors. Defaults to 3. Can be "infinite".
+    test_filename:     Use this to filter video file using external executable or regex
+                        (compiled regex or string starting with "re:").
+                       For external executable, return code 0 lets YTDL to start downloading.
+                       For regex, download will begin if re.search matches.
 
     The following parameters are not used by YoutubeDL itself, they are used by
     the downloader (see youtube_dl/downloader/common.py):
@@ -340,6 +351,10 @@ class YoutubeDL(object):
                        to the binary or its containing directory.
     postprocessor_args: A list of additional command-line arguments for the
                         postprocessor.
+    sponskrub:         Enables SponSkrub integration when True. Here's what you're looking for: https://github.com/yt-dlp/SponSkrub
+    sponskrub_cut:     If True, asks SponSkrub to cut out the sponsor sections.
+    sponskrub_force:   If True, runs SponSkrub even if the video was already downloaded.
+    sponskrub_path:    Location of the SponSkrub binary; either the path to the binary or its containing directory.
 
     The following options are used by the extractors:
     youtube_include_dash_manifest: If True (default), DASH manifests and related
@@ -2020,11 +2035,14 @@ class YoutubeDL(object):
                         success = True
             except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
                 self.report_error('unable to download video data: %s' % error_to_compat_str(err))
+                self.record_failed_archive(info_dict)
                 return
             except (OSError, IOError) as err:
+                self.record_failed_archive(info_dict)
                 raise UnavailableVideoError(err)
             except (ContentTooShortError, ) as err:
                 self.report_error('content too short (expected %s bytes and served %s)' % (err.expected, err.downloaded))
+                self.record_failed_archive(info_dict)
                 return
             finally:
                 self.unlock_file(info_dict)
@@ -2241,6 +2259,15 @@ class YoutubeDL(object):
         if fn is None:
             return
         vid_id = self._make_archive_id(info_dict)
+        assert vid_id
+        with locked_file(fn, 'a', encoding='utf-8') as archive_file:
+            archive_file.write(vid_id + '\n')
+
+    def record_failed_archive(self, info_dict):
+        fn = self.params.get('failed_archive')
+        if fn is None:
+            return
+        vid_id = info_dict.get('url') or self._make_archive_id(info_dict)
         assert vid_id
         with locked_file(fn, 'a', encoding='utf-8') as archive_file:
             archive_file.write(vid_id + '\n')
