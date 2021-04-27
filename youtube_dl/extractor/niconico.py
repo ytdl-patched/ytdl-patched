@@ -455,7 +455,7 @@ class NiconicoIE(NiconicoBaseIE):
                                     api_data, video_id, audio_quality, video_quality, protocol)
                                 break
                             except ExtractorError as e:
-                                if isinstance(e.cause, compat_HTTPError) and e.cause.code in (500, 503, 404):
+                                if isinstance(e.cause, compat_HTTPError):
                                     last_error = 'HTTP Error %s' % e.cause.code
                                     if count < retries:
                                         continue
