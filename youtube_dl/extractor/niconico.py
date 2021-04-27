@@ -460,8 +460,10 @@ class NiconicoIE(NiconicoBaseIE):
                                     if count < retries:
                                         continue
                                 last_error = e
+                        if isinstance(last_error, ExtractorError):
+                            last_error = last_error.cause
                         if last_error:
-                            self.report_warning('Skipping %s-%s because of %s' % (video_quality['id'], audio_quality['id'], last_error))
+                            self.report_warning('Skipping %s-%s because of %s' % (video_quality['id'][8:], audio_quality['id'][8:], last_error))
                             continue
                         if fmt:
                             formats.append(fmt)
