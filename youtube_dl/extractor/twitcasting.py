@@ -80,8 +80,7 @@ class TwitCastingIE(TwitCastingBaseIE):
 
         title = try_get(
             webpage,
-            (lambda x: clean_html(get_element_by_id('movietitle', x)),
-             lambda x: self._html_search_meta(['og:title', 'twitter:title'], x, fatal=False)),
+            (lambda x: self._html_search_meta(['og:title', 'twitter:title'], x, fatal=False)),
             compat_str)
         if not title:
             raise ExtractorError('Failed to extract title')
