@@ -133,10 +133,16 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
     --no-color                           Do not emit color codes in output
     --check-mastodon-instance            Always perform online checks for
                                          Mastodon-like URL
+    --check-peertube-instance            Always perform online checks for
+                                         PeerTube-like URL
     --test-filename CMD                  Like --exec option, but used for
                                          testing if downloading should be
                                          started. You can begin with "re:" to
                                          use regex instead of commands
+    --print-infojson-types               DO NOT USE. IT'S MEANINGLESS FOR MOST
+                                         PEOPLE. Prints types of object in info
+                                         json. Use this for extractors that
+                                         --print-json won' work.
 
 ## Network Options:
     --proxy URL                          Use the specified HTTP/HTTPS/SOCKS
@@ -231,6 +237,8 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
     --download-archive FILE              Download only videos not listed in the
                                          archive file. Record the IDs of all
                                          downloaded videos in it.
+    --failed-archive FILE                Record the URLs or IDs of all
+                                         downloading-failed videos in it.
     --include-ads                        Download advertisements as well
                                          (experimental)
 
@@ -411,6 +419,18 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                          possible number of seconds to sleep).
                                          Must only be used along with --min-
                                          sleep-interval.
+    --sleep-before-extract SECONDS       Number of seconds to sleep before each
+                                         extraction when used alone or a lower
+                                         bound of a range for randomized sleep
+                                         before each extraction (minimum
+                                         possible number of seconds to sleep)
+                                         when used along with --max-sleep-
+                                         before-extract.
+    --max-sleep-before-extract SECONDS   Upper bound of a range for randomized
+                                         sleep before each extraction (maximum
+                                         possible number of seconds to sleep).
+                                         Must only be used along with --min-
+                                         sleep-before-extract.
     --escape-long-names                  Split filename longer than 255 bytes
                                          into few path segments. This may create
                                          dumb directories.
@@ -432,6 +452,10 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                          container format. One of mkv, mp4, ogg,
                                          webm, flv. Ignored if no merge is
                                          required
+    --live-download-mkv                  Changes video file format to MKV when
+                                         downloading a live. This is useful if
+                                         the computer could shutdown while
+                                         downloading.
 
 ## Subtitle Options:
     --write-sub                          Write subtitle file
