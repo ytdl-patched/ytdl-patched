@@ -9,9 +9,8 @@ sys.path[:0] = ['.']
 from youtube_dl.utils import int_or_none
 
 
-results = set()
+versions = set()
 
-minimum_version = (88, 0, 0, 0)  # mark 88.0.0.0 as minimum version
 # https://stackoverflow.com/questions/10649814/get-last-git-tag-from-a-remote-repo-without-cloning
 with subprocess.Popen(
         ['git', '-c', 'versionsort.suffix=-', 'ls-remote',
@@ -23,9 +22,13 @@ with subprocess.Popen(
         version_tuple = tuple(int_or_none(x) for x in tag_name.split('.') if x.isdigit())
         if len(version_tuple) < 4:
             continue
-        if version_tuple < minimum_version:
-            continue
-        results.add(tag_name)
+        versions.add((version_tuple, tag_name))
+
+versions = sorted(versions)
+latest_version_major = versions[-1][0][0]
+minimum_version = ((latest_version_major - 3, 0, 0, 0), '')  # automatically choose minimum
+
+results = [x[1] for x in versions if x > minimum_version]
 
 pycode = '''# coding: utf-8
 # AUTOMATICALLY GENERATED FILE. DO NOT EDIT.
@@ -38,7 +41,7 @@ versions = [
 ]
 
 __all__ = ['versions']
-''' % '",\n    "'.join(sorted(results))
+''' % '",\n    "'.join(results)
 
 with open('./youtube_dl/chrome_versions.py', 'w') as w:
     w.write(pycode)
