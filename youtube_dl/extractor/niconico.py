@@ -33,7 +33,6 @@ from ..utils import (
     unified_timestamp,
     urlencode_postdata,
     update_url_query,
-    to_str,
 )
 from ..websocket import HAVE_WEBSOCKET
 
@@ -425,29 +424,7 @@ class NiconicoIE(NiconicoBaseIE):
                     if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                         continue
                     for protocol in session_api_data['protocols']:
-                        retries = self._downloader.params.get('extractor_retries', 3)
-                        count, last_error, fmt = -1, None, None
-                        while count < retries:
-                            count += 1
-                            if last_error:
-                                self.report_warning('%s. Retrying...' % last_error)
-                            try:
-                                fmt = self._extract_format_for_quality(
-                                    api_data, video_id, audio_quality, video_quality, protocol)
-                                break
-                            except ExtractorError as e:
-                                if isinstance(e.cause, compat_HTTPError):
-                                    last_error = 'HTTP Error %s' % e.cause.code
-                                    if self._downloader.params.get('verbose'):
-                                        self.to_screen(to_str(e.cause.read()))
-                                    if count < retries:
-                                        continue
-                                last_error = e
-                        if isinstance(last_error, ExtractorError):
-                            last_error = last_error.cause
-                        if last_error:
-                            self.report_warning('Skipping %s-%s because of %s' % (video_quality['id'][8:], audio_quality['id'][8:], last_error))
-                            continue
+                        fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
                         if fmt:
                             formats.append(fmt)
 
