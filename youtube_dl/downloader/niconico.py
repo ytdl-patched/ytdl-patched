@@ -4,6 +4,7 @@ import json
 import threading
 import time
 
+from ..extractor.niconico import NiconicoIE
 from .external import FFmpegFD
 from .common import FileDownloader
 from ..utils import (
@@ -18,6 +19,58 @@ from ..websocket import (
     WebSocket,
     HAVE_WEBSOCKET,
 )
+
+
+class NiconicoDmcFD(FileDownloader):
+    """
+    Performs niconico DMC request and download it
+    Note that it very differs from yt-dlp one
+    """
+
+    def real_download(self, filename, info_dict):
+        from ..downloader import get_suitable_downloader
+
+        nie = self.ydl.get_info_extractor(NiconicoIE.ie_key())
+
+        format_id = info_dict['format_id']
+        video_id = info_dict['video_id']
+        request_url = info_dict['url']
+        dmc_data = info_dict['dmc_data']
+        session_api_data = info_dict['session_api_data']
+        extract_m3u8 = info_dict['extract_m3u8']
+
+        session_response = nie._download_json(
+            request_url, video_id,
+            query={'_format': 'json'},
+            headers={'Content-Type': 'application/json'},
+            note='Downloading JSON metadata for %s' % format_id,
+            data=json.dumps(dmc_data).encode())
+
+        # get heartbeat info
+        heartbeat_url = session_api_data['urls'][0]['url'] + '/' + session_response['data']['session']['id'] + '?_format=json&_method=PUT'
+        heartbeat_data = json.dumps(session_response['data']).encode()
+        # interval, convert milliseconds to seconds, then halve to make a buffer.
+        heartbeat_interval = session_api_data['heartbeatLifetime'] / 8000
+
+        info_dict.update({
+            'url': session_response['data']['session']['content_uri'],
+            'protocol': info_dict['expected_protocol'],
+            'heartbeat_url': heartbeat_url,
+            'heartbeat_data': heartbeat_data,
+            'heartbeat_interval': heartbeat_interval,
+        })
+
+        if extract_m3u8:
+            try:
+                m3u8_format = nie._extract_m3u8_formats(
+                    info_dict['url'], video_id, ext='mp4', entry_protocol='m3u8_native', note=False)[0]
+            except BaseException:
+                info_dict['protocol'] = 'm3u8'
+            else:
+                del m3u8_format['format_id'], m3u8_format['protocol']
+                info_dict.update(m3u8_format)
+
+        return get_suitable_downloader(info_dict)(self.ydl, self.params or {}).download(filename, info_dict)
 
 
 class NiconicoLiveFD(FileDownloader):
