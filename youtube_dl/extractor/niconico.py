@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import datetime
 import functools
-import json
 import math
 import re
 try:
@@ -34,7 +33,6 @@ from ..utils import (
     unified_timestamp,
     urlencode_postdata,
     update_url_query,
-    to_str,
 )
 from ..websocket import HAVE_WEBSOCKET
 
@@ -304,12 +302,8 @@ class NiconicoIE(NiconicoBaseIE):
         else:
             return None
 
-        session_response = self._download_json(
-            session_api_data['urls'][0]['url'], video_id,
-            query={'_format': 'json'},
-            headers={'Content-Type': 'application/json'},
-            note='Downloading JSON metadata for %s' % format_id,
-            data=json.dumps({
+        if True:  # indent this for mergeability
+            dmc_data = {
                 'session': {
                     'client_info': {
                         'player_id': session_api_data['playerId'],
@@ -354,20 +348,14 @@ class NiconicoIE(NiconicoBaseIE):
                     },
                     'timing_constraint': 'unlimited'
                 }
-            }).encode())
-
-        # get heartbeat info
-        heartbeat_url = session_api_data['urls'][0]['url'] + '/' + session_response['data']['session']['id'] + '?_format=json&_method=PUT'
-        heartbeat_data = json.dumps(session_response['data']).encode()
-        # interval, convert milliseconds to seconds, then halve to make a buffer.
-        heartbeat_interval = session_api_data['heartbeatLifetime'] / 8000
+            }
 
         resolution = video_quality['metadata'].get('resolution', {})
         vid_quality = video_quality['metadata'].get('bitrate')
         is_low = 'low' in video_quality['id']
 
-        ret = {
-            'url': session_response['data']['session']['content_uri'],
+        return {
+            'url': session_api_data['urls'][0]['url'],
             'format_id': format_id,
             'format_note': 'DMC ' + video_quality['metadata']['label'] + ' ' + dmc_protocol.upper(),
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
@@ -380,27 +368,17 @@ class NiconicoIE(NiconicoBaseIE):
             'height': resolution.get('height'),
             'width': resolution.get('width'),
             'quality': -2 if is_low else None,
-            'heartbeat_url': heartbeat_url,
-            'heartbeat_data': heartbeat_data,
-            'heartbeat_interval': heartbeat_interval,
-            'protocol': protocol,
+            'protocol': 'niconico_dmc',
+            'expected_protocol': protocol,
+            'session_api_data': session_api_data,
+            'dmc_data': dmc_data,
+            'video_id': video_id,
+            'extract_m3u8': extract_m3u8,
             'http_headers': {
                 'Origin': 'https://www.nicovideo.jp',
                 'Referer': 'https://www.nicovideo.jp/watch/' + video_id,
             }
         }
-
-        if extract_m3u8:
-            try:
-                m3u8_format = self._extract_m3u8_formats(
-                    ret['url'], video_id, ext='mp4', entry_protocol='m3u8_native', note=False)[0]
-            except BaseException:
-                ret['protocol'] = 'm3u8'
-            else:
-                del m3u8_format['format_id'], m3u8_format['protocol']
-                ret.update(m3u8_format)
-
-        return ret
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -446,29 +424,7 @@ class NiconicoIE(NiconicoBaseIE):
                     if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                         continue
                     for protocol in session_api_data['protocols']:
-                        retries = self._downloader.params.get('extractor_retries', 3)
-                        count, last_error, fmt = -1, None, None
-                        while count < retries:
-                            count += 1
-                            if last_error:
-                                self.report_warning('%s. Retrying...' % last_error)
-                            try:
-                                fmt = self._extract_format_for_quality(
-                                    api_data, video_id, audio_quality, video_quality, protocol)
-                                break
-                            except ExtractorError as e:
-                                if isinstance(e.cause, compat_HTTPError):
-                                    last_error = 'HTTP Error %s' % e.cause.code
-                                    if self._downloader.params.get('verbose'):
-                                        self.to_screen(to_str(e.cause.read()))
-                                    if count < retries:
-                                        continue
-                                last_error = e
-                        if isinstance(last_error, ExtractorError):
-                            last_error = last_error.cause
-                        if last_error:
-                            self.report_warning('Skipping %s-%s because of %s' % (video_quality['id'][8:], audio_quality['id'][8:], last_error))
-                            continue
+                        fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
                         if fmt:
                             formats.append(fmt)
 
