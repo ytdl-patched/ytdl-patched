@@ -1439,7 +1439,8 @@ class InfoExtractor(object):
                 if f.get('ext') in ['f4f', 'f4m']:  # Not yet supported
                     preference -= 0.5
 
-            protocol = f.get('protocol') or determine_protocol(f)
+            # expected_protocol key is only used by NiconicoDmcFD
+            protocol = f.get('expected_protocol') or f.get('protocol') or determine_protocol(f)
             proto_preference = self.PROTOCOL_PREFERENCE.get(protocol, -0.1)
 
             filesize = f.get('filesize') if f.get('filesize') is not None else -1
