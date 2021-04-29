@@ -4326,3 +4326,7 @@ class PrintJsonEncoder(json.JSONEncoder):
                 return None
         else:
             return json.JSONEncoder.default(self, obj)
+
+
+def time_millis():
+    return round(time.time() * 1000)

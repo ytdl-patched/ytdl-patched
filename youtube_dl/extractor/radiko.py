@@ -10,13 +10,14 @@ from ..utils import (
     update_url_query,
     clean_html,
     unified_timestamp,
+    time_millis,
 )
 from ..compat import compat_urllib_parse
 
 
 class RadikoIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www.)?radiko\.jp/#!/ts/(?P<station>[A-Z]+)/(?P<id>\d+)'
-    _PARTIAL_KEY_BASE = b'bcd151073c03b352e1ef2fd66c32209da9ca0afa'
+    _FULL_KEY = None
     _AUTH_CACHE = ()
 
     _TESTS = [{
@@ -126,7 +127,7 @@ class RadikoIE(InfoExtractor):
         auth_token = auth1_header['X-Radiko-AuthToken']
         kl = int(auth1_header['X-Radiko-KeyLength'])
         ko = int(auth1_header['X-Radiko-KeyOffset'])
-        raw_partial_key = self._PARTIAL_KEY_BASE[ko:ko + kl]
+        raw_partial_key = self._extract_full_key()[ko:ko + kl]
         partial_key = base64.b64encode(raw_partial_key).decode()
 
         area_id = self._download_webpage(
@@ -140,3 +141,22 @@ class RadikoIE(InfoExtractor):
 
         self._AUTH_CACHE = (auth_token, area_id)
         return self._AUTH_CACHE
+
+    def _extract_full_key(self):
+        if self._FULL_KEY:
+            return self._FULL_KEY
+
+        jscode = self._download_webpage(
+            'https://radiko.jp/apps/js/playerCommon.js?_=%d' % time_millis(), None,
+            note='Downloading player js code')
+        full_key = self._search_regex(
+            (r"RadikoJSPlayer\([^,]*,\ 'pc_html5',\ '(?P<fullkey>[0-9a-f]+)', {"),
+            jscode, 'full key', fatal=False, group='fullkey')
+
+        if full_key:
+            full_key = full_key.encode()
+        else:  # use known full key ever known
+            full_key = b'bcd151073c03b352e1ef2fd66c32209da9ca0afa'
+
+        self._FULL_KEY = full_key
+        return full_key
