@@ -58,7 +58,7 @@ class DamtomoIE(InfoExtractor):
                 {'d': 'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML'}).text.strip(), compat_str)
             if not m3u8_url or not isinstance(m3u8_url, compat_str):
                 raise ExtractorError('There is no streaming URL')
-        except ValueError:  # Python <= 2
+        except ValueError:  # Python <= 2, ValueError: multi-byte encodings are not supported
             m3u8_url = self._search_regex(r'<streamingUrl>\s*(.+?)\s*</streamingUrl>', stream_xml, 'm3u8 url')
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id,
