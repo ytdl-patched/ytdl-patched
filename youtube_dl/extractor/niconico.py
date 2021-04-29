@@ -222,10 +222,17 @@ class NiconicoIE(NiconicoBaseIE):
             'mail_tel': username,
             'password': password,
         }
+        self._request_webpage(
+            'https://account.nicovideo.jp/login', None,
+            note='Acquiring Login session')
         urlh = self._request_webpage(
-            'https://account.nicovideo.jp/api/v1/login', None,
+            'https://account.nicovideo.jp/login/redirector?show_button_twitter=1&site=niconico&show_button_facebook=1', None,
             note='Logging in', errnote='Unable to log in',
-            data=urlencode_postdata(login_form_strs))
+            data=urlencode_postdata(login_form_strs),
+            headers={
+                'Referer': 'https://account.nicovideo.jp/login',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            })
         if urlh is False:
             login_ok = False
         else:
