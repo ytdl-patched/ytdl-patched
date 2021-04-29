@@ -11,14 +11,13 @@ from ..utils import (
     clean_html,
     unified_timestamp,
 )
-from ..compat import (
-    compat_urllib_parse,
-)
+from ..compat import compat_urllib_parse
 
 
 class RadikoIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www.)?radiko\.jp/#!/ts/(?P<station>[A-Z]+)/(?P<id>\d+)'
     _PARTIAL_KEY_BASE = b'bcd151073c03b352e1ef2fd66c32209da9ca0afa'
+    _AUTH_CACHE = ()
 
     _TESTS = [{
         'url': 'https://radiko.jp/#!/ts/QRR/20210425101300',
@@ -31,30 +30,7 @@ class RadikoIE(InfoExtractor):
         video_id = m.group('id')
         vid_int = unified_timestamp(video_id, False)
 
-        auth1_handle = self._download_webpage_handle(
-            'https://radiko.jp/v2/api/auth1', video_id, 'Authorizing (1)',
-            headers={
-                'x-radiko-app': 'pc_html5',
-                'x-radiko-app-version': '0.0.1',
-                'x-radiko-device': 'pc',
-                'x-radiko-user': 'dummy_user',
-            })[1]  # response body is completely useless
-        auth1_header = auth1_handle.info()
-
-        auth_token = auth1_header['X-Radiko-AuthToken']
-        kl = int(auth1_header['X-Radiko-KeyLength'])
-        ko = int(auth1_header['X-Radiko-KeyOffset'])
-        raw_partial_key = self._PARTIAL_KEY_BASE[ko:ko + kl]
-        partial_key = base64.b64encode(raw_partial_key).decode()
-
-        area_id = self._download_webpage(
-            'https://radiko.jp/v2/api/auth2', video_id, 'Authorizing (2)',
-            headers={
-                'x-radiko-device': 'pc',
-                'x-radiko-user': 'dummy_user',
-                'x-radiko-authtoken': auth_token,
-                'x-radiko-partialkey': partial_key,
-            }).split(',')[0]
+        auth_token, area_id = self._auth_client()
 
         station_program = self._download_xml(
             'https://radiko.jp/v3/program/station/weekly/%s.xml' % station, video_id,
@@ -69,7 +45,7 @@ class RadikoIE(InfoExtractor):
                 prog = p
                 break
         if not prog:
-            raise ExtractorError('Cannot identify program to download!')
+            raise ExtractorError('Cannot identify radio program to download!')
         assert ft, to
 
         title = prog.find('title').text
@@ -132,3 +108,35 @@ class RadikoIE(InfoExtractor):
             'formats': formats,
             'is_live': True,
         }
+
+    def _auth_client(self):
+        if self._AUTH_CACHE:
+            return self._AUTH_CACHE
+
+        auth1_handle = self._download_webpage_handle(
+            'https://radiko.jp/v2/api/auth1', None, 'Authenticating (1)',
+            headers={
+                'x-radiko-app': 'pc_html5',
+                'x-radiko-app-version': '0.0.1',
+                'x-radiko-device': 'pc',
+                'x-radiko-user': 'dummy_user',
+            })[1]  # response body is completely useless
+        auth1_header = auth1_handle.info()
+
+        auth_token = auth1_header['X-Radiko-AuthToken']
+        kl = int(auth1_header['X-Radiko-KeyLength'])
+        ko = int(auth1_header['X-Radiko-KeyOffset'])
+        raw_partial_key = self._PARTIAL_KEY_BASE[ko:ko + kl]
+        partial_key = base64.b64encode(raw_partial_key).decode()
+
+        area_id = self._download_webpage(
+            'https://radiko.jp/v2/api/auth2', None, 'Authenticating (2)',
+            headers={
+                'x-radiko-device': 'pc',
+                'x-radiko-user': 'dummy_user',
+                'x-radiko-authtoken': auth_token,
+                'x-radiko-partialkey': partial_key,
+            }).split(',')[0]
+
+        self._AUTH_CACHE = (auth_token, area_id)
+        return self._AUTH_CACHE
