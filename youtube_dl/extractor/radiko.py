@@ -150,7 +150,7 @@ class RadikoIE(InfoExtractor):
             'https://radiko.jp/apps/js/playerCommon.js?_=%d' % time_millis(), None,
             note='Downloading player js code')
         full_key = self._search_regex(
-            (r"RadikoJSPlayer\([^,]*,\ 'pc_html5',\ '(?P<fullkey>[0-9a-f]+)', {"),
+            (r"RadikoJSPlayer\([^,]*,\s*(['\"])pc_html5\1,\s*(['\"])(?P<fullkey>[0-9a-f]+)\2,\s*{"),
             jscode, 'full key', fatal=False, group='fullkey')
 
         if full_key:
