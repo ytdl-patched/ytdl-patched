@@ -272,8 +272,7 @@ class NiconicoIE(NiconicoBaseIE):
         session_api_data = api_data['media']['delivery']['movie']['session']
 
         format_id = '-'.join(
-            list(map(lambda s: remove_start(s['id'], 'archive_'), [video_quality, audio_quality]))
-            + [dmc_protocol])
+            [remove_start(s['id'], 'archive_') for s in (video_quality, audio_quality)] + [dmc_protocol])
 
         extract_m3u8 = False
         if dmc_protocol == 'http':
