@@ -47,6 +47,7 @@ This is where "patched" is come from.
 - [VIDEO SELECTION](#video-selection)
 - [FAQ](#faq)
 - [DEVELOPER INSTRUCTIONS](#developer-instructions)
+- [BUILDING INSTRUCTIONS](#building-instructions)
 - [EMBEDDING YOUTUBE-DL](#embedding-youtube-dl)
 - [BUGS](#bugs)
 - [COPYRIGHT](#copyright)
@@ -1087,7 +1088,7 @@ youtube-dl is an open-source project manned by too few volunteers, so we'd rathe
 
 # DEVELOPER INSTRUCTIONS
 
-Most users do not need to build youtube-dl and can [download the builds](https://ytdl-org.github.io/youtube-dl/download.html) or get them from their distribution.
+Most users do not need to build youtube-dl and can [download the builds](https://github.com/nao20010128nao/ytdl-patched/releases/latest) or get them from their distribution.
 
 To run youtube-dl as a developer, you don't need to build anything either. Simply execute
 
@@ -1448,6 +1449,58 @@ description = video.get('summary')
 duration = float_or_none(video.get('durationMs'), scale=1000)
 view_count = int_or_none(video.get('views'))
 ```
+
+# BUILDING INSTRUCTIONS
+_Note: Most of you don't have to read this section. Please go to [releases page](https://github.com/nao20010128nao/ytdl-patched/releases/latest) for built binaries. This section is for advanced users._
+
+## Linux/macOS builds
+### Dependencies
+
+- Python 3.x (most distro have this)
+- One of: `zip` or `7z` command. `7z` will be preferred when both available.
+- Optional: If you need to improve compression rate, install `advzip` (included in `advancecomp`)
+- `pandoc` (required to build [`OPTIONS`](#options) section of this README.md)
+
+### Instruction
+Just run:
+
+```bash
+make
+```
+
+To build `youtube-dl` binary:
+
+```bash
+make youtube-dl
+```
+
+You'll find binary at the same directory you run this.
+
+## Windows builds
+### Dependencies
+
+- [Genuine Windows operating system](https://developer.microsoft.com/microsoft-edge/tools/vms/) (Windows 7 or above)
+- Python 3.6 or later (**CAREFULLY READ INDENTED SECTIONS BELOW**)
+    - **DO NOT** install Python from **Windows Store**, uninstall it before building. [This is due to permission errors especially to Windows Store Apps.](https://github.com/pyinstaller/pyinstaller/pull/4702)
+    - [**USE** Python 3.x found at python.org](https://www.python.org/downloads/windows/)
+    - Instead, you can use CI services with Windows support.
+- Install `PyInstaller` to Python above with: `python3 -m pip install pyinstaller`
+    - ytdl-patched doesn't support py2exe.
+
+### Instruction
+_Note: there is no GUI tool to build this._
+
+Open PowerShell, cd to root of this repository, then type:
+
+```powershell
+python3 -m PyInstaller `
+    --onefile --console --distpath . `
+    -n youtube-dl youtube_dl\__main__.py
+```
+
+This command is minimum requirement needed to build. (see [devscripts/build_windows_exe.ps1](https://github.com/nao20010128nao/ytdl-patched/blob/master/devscripts/build_windows_exe.ps1) for current build flags used)
+
+You'll find binary at the same directory you run this.
 
 # EMBEDDING YOUTUBE-DL
 
