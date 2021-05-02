@@ -1696,6 +1696,7 @@ class InfoExtractor(object):
     def _extract_m3u8_formats(self, m3u8_url, video_id, ext=None,
                               entry_protocol='m3u8', preference=None,
                               m3u8_id=None, note=None, errnote=None,
+                              quality=None,
                               fatal=True, live=False, data=None, headers={},
                               query={}):
         res = self._download_webpage_handle(
@@ -1712,11 +1713,11 @@ class InfoExtractor(object):
 
         return self._parse_m3u8_formats(
             m3u8_doc, m3u8_url, ext=ext, entry_protocol=entry_protocol,
-            preference=preference, m3u8_id=m3u8_id, live=live)
+            preference=preference, m3u8_id=m3u8_id, live=live, quality=quality)
 
     def _parse_m3u8_formats(self, m3u8_doc, m3u8_url, ext=None,
                             entry_protocol='m3u8', preference=None,
-                            m3u8_id=None, live=False):
+                            m3u8_id=None, live=False, quality=None):
         if '#EXT-X-FAXS-CM:' in m3u8_doc:  # Adobe Flash Access
             return []
 
@@ -1781,6 +1782,7 @@ class InfoExtractor(object):
                     'ext': ext,
                     'protocol': entry_protocol,
                     'preference': preference,
+                    'quality': quality,
                 }
                 if media_type == 'AUDIO':
                     f['vcodec'] = 'none'
@@ -1840,6 +1842,7 @@ class InfoExtractor(object):
                     'fps': float_or_none(last_stream_inf.get('FRAME-RATE')),
                     'protocol': entry_protocol,
                     'preference': preference,
+                    'quality': quality,
                 }
                 resolution = last_stream_inf.get('RESOLUTION')
                 if resolution:
