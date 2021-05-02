@@ -1,9 +1,10 @@
 # coding: utf-8
+# NOTE: no longer used after 2021/05/02, but keep remained
+#   for future use and reference
 from __future__ import unicode_literals
 
 from ..compat import compat_str
 from ..utils import str_or_none
-from .y2mate import Y2mateIE, Y2mateRushingIE
 
 # keep it sync with extractors.py
 from .youtube import (
@@ -74,7 +75,7 @@ def ___real_extract(self, url):
     return _convert_result(ret, self.PREFIXES[0])
 
 
-for base_ie in (Y2mateIE, Y2mateRushingIE):
+for base_ie in tuple():
     for value in ytie:
         key = value.__name__
         obj = value()
