@@ -12,14 +12,12 @@ from ..compat import compat_str
 class WhoWatchIE(InfoExtractor):
     IE_NAME = 'whowatch'
     _VALID_URL = r'https?://whowatch\.tv/viewer/(?P<id>\d+)'
-    META_API_URL = 'https://api.whowatch.tv/lives/%s'
-    LIVE_API_URL = 'https://api.whowatch.tv/lives/%s/play'
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
         self._download_webpage(url, video_id)
-        metadata = self._download_json(self.META_API_URL % video_id, video_id)
-        live_data = self._download_json(self.LIVE_API_URL % video_id, video_id)
+        metadata = self._download_json('https://api.whowatch.tv/lives/%s' % video_id, video_id)
+        live_data = self._download_json('https://api.whowatch.tv/lives/%s/play' % video_id, video_id)
 
         title = try_get(None, (
             lambda x: live_data['share_info']['live_title'][1:-1],
