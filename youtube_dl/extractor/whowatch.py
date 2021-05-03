@@ -43,7 +43,7 @@ class WhoWatchIE(InfoExtractor):
             hls_url = fmt.get('hls_url')
             rtmp_url = fmt.get('rtmp_url')
             audio_only = fmt.get('audio_only')
-            quality = QUALITIES(fmt.get('quality'))
+            quality = QUALITIES(fmt.get('quality')) if not audio_only else -1
 
             if hls_url:
                 hls_fmts = self._extract_m3u8_formats(
