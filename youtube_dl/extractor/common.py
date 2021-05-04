@@ -398,7 +398,7 @@ class InfoExtractor(object):
     _GEO_IP_BLOCKS = None
     _WORKING = True
     """
-    Feature dependency declaration.
+    Feature dependency declaration. Case sensitive.
 
     Following features are known and recognized:
 
@@ -537,7 +537,7 @@ class InfoExtractor(object):
 
     def extract(self, url):
         """Extracts URL information and returns it in list of dicts."""
-        if not HAVE_WEBSOCKET:
+        if 'websocket' in self._FEATURE_DEPENDENCY and not HAVE_WEBSOCKET:
             raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
 
         try:
