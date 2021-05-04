@@ -19,10 +19,7 @@ from ..utils import (
     to_str,
     std_headers,
 )
-from ..websocket import (
-    WebSocket,
-    HAVE_WEBSOCKET,
-)
+from ..websocket import WebSocket
 
 
 class FC2BaseIE(InfoExtractor):
@@ -225,11 +222,10 @@ class FC2LiveIE(InfoExtractor):
     _VALID_URL = r'^https?://live\.fc2\.com/(?P<id>\d+)'
     IE_NAME = 'fc2:live'
     _WORKING = False
+    _FEATURE_DEPENDENCY = ('websocket', )
 
     # TODO: split this extractor into separate file
     def _real_extract(self, url):
-        if not HAVE_WEBSOCKET:
-            raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
         video_id = self._match_id(url)
         webpage = self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
 

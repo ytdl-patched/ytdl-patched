@@ -34,7 +34,6 @@ from ..utils import (
     urlencode_postdata,
     update_url_query,
 )
-from ..websocket import HAVE_WEBSOCKET
 
 
 class NiconicoBaseIE(InfoExtractor):
@@ -747,14 +746,12 @@ class NiconicoLiveIE(NiconicoBaseIE):
     IE_NAME = 'niconico:live'
     IE_DESC = 'ニコニコ生放送'
     _VALID_URL = r'(?:https?://(?:sp\.)?live2?\.nicovideo\.jp/(?:watch|gate)/|nico(?:nico|video)?:)(?P<id>lv\d+)'
+    _FEATURE_DEPENDENCY = ('websocket', )
 
     # sort qualities in this order to trick youtube-dl to download highest quality as default
     _KNOWN_QUALITIES = ('abr', 'super_low', 'low', 'normal', 'high', 'super_high')
 
     def _real_extract(self, url):
-        if not HAVE_WEBSOCKET:
-            raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
-
         video_id = self._match_id(url)
         webpage = self._download_webpage('https://live2.nicovideo.jp/watch/%s' % video_id, video_id)
 

@@ -82,6 +82,7 @@ from ..utils import (
     xpath_text,
     xpath_with_ns,
 )
+from ..websocket import HAVE_WEBSOCKET
 
 
 class InfoExtractor(object):
@@ -396,6 +397,14 @@ class InfoExtractor(object):
     _GEO_COUNTRIES = None
     _GEO_IP_BLOCKS = None
     _WORKING = True
+    """
+    Feature dependency declaration.
+
+    Following features are known and recognized:
+
+    - websocket - Requires WebSocket-related package/command
+    """
+    _FEATURE_DEPENDENCY = tuple()
 
     def __init__(self, downloader=None):
         """Constructor. Receives an optional downloader."""
@@ -528,6 +537,9 @@ class InfoExtractor(object):
 
     def extract(self, url):
         """Extracts URL information and returns it in list of dicts."""
+        if not HAVE_WEBSOCKET:
+            raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
+
         try:
             for _ in range(2):
                 try:
