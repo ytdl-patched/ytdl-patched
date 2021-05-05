@@ -10,21 +10,21 @@ class WebsocatWrapper():
 
     def __init__(self, url, headers={}):
         self.proc = Popen(
-            'websocat', '-t', *['-H=%s: %s' % kv for kv in headers.items()], url,
+            ['websocat', '-t', *('-H=%s: %s' % kv for kv in headers.items()), url],
             stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        self.buffers = []
 
     def send(self, data):
         if isinstance(data, compat_str):
             data = data.encode('utf-8')
         self.proc.stdin.write(data)
         self.proc.stdin.write(b'\n')
+        self.proc.stdin.flush()
 
     def recv(self):
-        ret = self.proc.stdout.readline().strip()
+        ret = self.proc.stdout.readline()
         if isinstance(ret, bytes):
             ret = ret.decode('utf-8')
-        return ret
+        return ret.strip()
 
     def close(self):
         self.proc.kill()
@@ -37,4 +37,4 @@ class WebsocatWrapper():
         self.close()
 
 
-AVAILABLE = bool(check_executable('websockat', ['-h']))
+AVAILABLE = bool(check_executable('websocat', ['-h']))
