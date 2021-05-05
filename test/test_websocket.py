@@ -27,26 +27,49 @@ logger.addHandler(logging.StreamHandler())
 
 @unittest.skipUnless(HAVE_WEBSOCKET, 'websocket not available')
 class TestWebSocket(unittest.TestCase):
-    @unittest.skipUnless(HAVE_WS_WEBSOCKET_CLIENT, 'websocket_client not installed')
-    def test_websocket_client(self):
-        with WebSocketClientWrapper('wss://ws.kraken.com/') as ws:
+    @staticmethod
+    def __kraken(impl):
+        with impl('wss://ws.kraken.com/') as ws:
             ws.send('{"event":"subscribe", "subscription":{"name":"trade"}, "pair":["XBT/USD","XRP/USD"]}')
             for _ in range(5):
                 print(ws.recv())
+
+    @staticmethod
+    def __echo(impl, url):
+        with impl(url) as ws:
+            for i in range(5):
+                text = 'Hello World %d' % i
+                ws.send(text)
+                recv = ws.recv()
+                print(recv, type(recv))
+                assert text == recv
+
+    @unittest.skipUnless(HAVE_WS_WEBSOCKET_CLIENT, 'websocket_client not installed')
+    def test_websocket_client_echo(self):
+        # self.__echo(WebSocketClientWrapper, 'ws://demos.kaazing.com/echo')
+        self.__echo(WebSocketClientWrapper, 'wss://echo.websocket.org')
 
     @unittest.skipUnless(HAVE_WS_WEBSOCKETS, 'websockets not installed')
-    def test_websockets(self):
-        with WebSocketsWrapper('wss://ws.kraken.com/') as ws:
-            ws.send('{"event":"subscribe", "subscription":{"name":"trade"}, "pair":["XBT/USD","XRP/USD"]}')
-            for _ in range(5):
-                print(ws.recv())
+    def test_websockets_echo(self):
+        # self.__echo(WebSocketsWrapper, 'ws://demos.kaazing.com/echo')
+        self.__echo(WebSocketsWrapper, 'wss://echo.websocket.org')
 
     @unittest.skipUnless(HAVE_WS_WEBSOCAT, 'websocat not installed')
-    def test_websocat(self):
-        with WebsocatWrapper('wss://ws.kraken.com/') as ws:
-            ws.send('{"event":"subscribe", "subscription":{"name":"trade"}, "pair":["XBT/USD","XRP/USD"]}')
-            for _ in range(5):
-                print(ws.recv())
+    def test_websocat_echo(self):
+        # self.__echo(WebsocatWrapper, 'ws://demos.kaazing.com/echo')
+        self.__echo(WebsocatWrapper, 'wss://echo.websocket.org')
+
+    @unittest.skipUnless(HAVE_WS_WEBSOCKET_CLIENT, 'websocket_client not installed')
+    def test_websocket_client_kraken(self):
+        self.__kraken(WebSocketClientWrapper)
+
+    @unittest.skipUnless(HAVE_WS_WEBSOCKETS, 'websockets not installed')
+    def test_websockets_kraken(self):
+        self.__kraken(WebSocketsWrapper)
+
+    @unittest.skipUnless(HAVE_WS_WEBSOCAT, 'websocat not installed')
+    def test_websocat_kraken(self):
+        self.__kraken(WebsocatWrapper)
 
 
 if __name__ == '__main__':

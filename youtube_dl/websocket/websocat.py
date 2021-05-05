@@ -13,6 +13,19 @@ class WebsocatWrapper():
             ['websocat', '-t', *('-H=%s: %s' % kv for kv in headers.items()), url],
             stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
+    def __read_stderr(func):
+        def cback(self, *args):
+            try:
+                return func(self, *args)
+            except BaseException as ex:
+                e = Exception()
+                if self.proc:
+                    e.msg = self.proc.stderr.read()
+                e.cause = ex
+                raise e
+        return cback
+
+    @__read_stderr
     def send(self, data):
         if isinstance(data, compat_str):
             data = data.encode('utf-8')
@@ -20,15 +33,18 @@ class WebsocatWrapper():
         self.proc.stdin.write(b'\n')
         self.proc.stdin.flush()
 
+    @__read_stderr
     def recv(self):
         ret = self.proc.stdout.readline()
         if isinstance(ret, bytes):
             ret = ret.decode('utf-8')
         return ret.strip()
 
+    @__read_stderr
     def close(self):
         self.proc.kill()
         self.proc.terminate()
+        self.proc = None
 
     def __enter__(self):
         return self
