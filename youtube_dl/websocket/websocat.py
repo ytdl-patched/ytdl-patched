@@ -35,10 +35,13 @@ class WebsocatWrapper():
 
     @__read_stderr
     def recv(self):
-        ret = self.proc.stdout.readline()
-        if isinstance(ret, bytes):
-            ret = ret.decode('utf-8')
-        return ret.strip()
+        while True:
+            ret = self.proc.stdout.readline()
+            if isinstance(ret, bytes):
+                ret = ret.decode('utf-8')
+            ret = ret.strip()
+            if ret:
+                return ret
 
     @__read_stderr
     def close(self):
