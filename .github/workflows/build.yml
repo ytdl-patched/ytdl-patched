@@ -169,8 +169,10 @@ jobs:
       matrix:
         icon: [red, white]
         # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
-        builder: [PyInstaller, py2exe]
-        remove_tests: ['-notests', '']  # yes and no
+        # builder: [PyInstaller, py2exe]
+        # remove_tests: ['-notests', '']  # yes and no
+        builder: [PyInstaller]
+        remove_tests: ['']
     steps:
       - uses: actions/checkout@v2
       - name: Download base
