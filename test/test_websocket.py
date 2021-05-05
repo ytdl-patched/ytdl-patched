@@ -46,17 +46,17 @@ class TestWebSocket(unittest.TestCase):
 
     @unittest.skipUnless(HAVE_WS_WEBSOCKET_CLIENT, 'websocket_client not installed')
     def test_websocket_client_echo(self):
-        # self.__echo(WebSocketClientWrapper, 'ws://demos.kaazing.com/echo')
+        self.__echo(WebSocketClientWrapper, 'ws://echo.websocket.org')
         self.__echo(WebSocketClientWrapper, 'wss://echo.websocket.org')
 
     @unittest.skipUnless(HAVE_WS_WEBSOCKETS, 'websockets not installed')
     def test_websockets_echo(self):
-        # self.__echo(WebSocketsWrapper, 'ws://demos.kaazing.com/echo')
+        self.__echo(WebSocketsWrapper, 'ws://echo.websocket.org')
         self.__echo(WebSocketsWrapper, 'wss://echo.websocket.org')
 
     @unittest.skipUnless(HAVE_WS_WEBSOCAT, 'websocat not installed')
     def test_websocat_echo(self):
-        # self.__echo(WebsocatWrapper, 'ws://demos.kaazing.com/echo')
+        self.__echo(WebsocatWrapper, 'ws://echo.websocket.org')
         self.__echo(WebsocatWrapper, 'wss://echo.websocket.org')
 
     @unittest.skipUnless(HAVE_WS_WEBSOCKET_CLIENT, 'websocket_client not installed')
