@@ -13,10 +13,14 @@ from youtube_dl.websocket import (
     HAVE_WS_WEBSOCKET_CLIENT,
     HAVE_WS_WEBSOCKETS,
     HAVE_WS_WEBSOCAT,
+    HAVE_WS_NODEJS_WEBSOCKET_WRAPPER,
+    HAVE_WS_NODEJS_WS_WRAPPER,
 
     WebSocketClientWrapper,
     WebSocketsWrapper,
     WebsocatWrapper,
+    NodeJsWebsocketWrapper,
+    NodeJsWsWrapper,
 )
 
 import logging
@@ -27,15 +31,16 @@ logger.addHandler(logging.StreamHandler())
 
 @unittest.skipUnless(HAVE_WEBSOCKET, 'websocket not available')
 class TestWebSocket(unittest.TestCase):
+
     @staticmethod
-    def __kraken(impl):
+    def _kraken(impl):
         with impl('wss://ws.kraken.com/') as ws:
             ws.send('{"event":"subscribe", "subscription":{"name":"trade"}, "pair":["XBT/USD","XRP/USD"]}')
             for _ in range(5):
                 print(ws.recv())
 
     @staticmethod
-    def __echo(impl, url):
+    def _echo(impl, url):
         with impl(url) as ws:
             for i in range(5):
                 text = 'Hello World %d' % i
@@ -44,33 +49,28 @@ class TestWebSocket(unittest.TestCase):
                 print(recv, type(recv))
                 assert text == recv
 
-    @unittest.skipUnless(HAVE_WS_WEBSOCKET_CLIENT, 'websocket_client not installed')
-    def test_websocket_client_echo(self):
-        self.__echo(WebSocketClientWrapper, 'ws://echo.websocket.org')
-        self.__echo(WebSocketClientWrapper, 'wss://echo.websocket.org')
 
-    @unittest.skipUnless(HAVE_WS_WEBSOCKETS, 'websockets not installed')
-    def test_websockets_echo(self):
-        self.__echo(WebSocketsWrapper, 'ws://echo.websocket.org')
-        self.__echo(WebSocketsWrapper, 'wss://echo.websocket.org')
+for testsuite in ('kraken', 'echo'):
+    for available, impl, name in (
+        (HAVE_WS_WEBSOCKET_CLIENT, WebSocketClientWrapper, 'websocket_client'),
+        (HAVE_WS_WEBSOCKETS, WebSocketsWrapper, 'websockets'),
+        (HAVE_WS_WEBSOCAT, WebsocatWrapper, 'websocat'),
+        (HAVE_WS_NODEJS_WEBSOCKET_WRAPPER, NodeJsWebsocketWrapper, 'nodejs_websocket'),
+        (HAVE_WS_NODEJS_WS_WRAPPER, NodeJsWsWrapper, 'nodejs_ws'),
+    ):
 
-    @unittest.skipUnless(HAVE_WS_WEBSOCAT, 'websocat not installed')
-    def test_websocat_echo(self):
-        self.__echo(WebsocatWrapper, 'ws://echo.websocket.org')
-        self.__echo(WebsocatWrapper, 'wss://echo.websocket.org')
+        def create_function(testsuite, impl, available, name):
+            @unittest.skipUnless(available, '%s not installed' % name)
+            def _runtest(self):
+                if testsuite == 'kraken':
+                    self._kraken(impl)
+                elif testsuite == 'echo':
+                    self._echo(impl, 'ws://echo.websocket.org')
+                    self._echo(impl, 'wss://echo.websocket.org')
 
-    @unittest.skipUnless(HAVE_WS_WEBSOCKET_CLIENT, 'websocket_client not installed')
-    def test_websocket_client_kraken(self):
-        self.__kraken(WebSocketClientWrapper)
+            return _runtest
 
-    @unittest.skipUnless(HAVE_WS_WEBSOCKETS, 'websockets not installed')
-    def test_websockets_kraken(self):
-        self.__kraken(WebSocketsWrapper)
-
-    @unittest.skipUnless(HAVE_WS_WEBSOCAT, 'websocat not installed')
-    def test_websocat_kraken(self):
-        self.__kraken(WebsocatWrapper)
-
+        setattr(TestWebSocket, '_'.join(['test', name, testsuite]), create_function(testsuite, impl, available, name))
 
 if __name__ == '__main__':
     unittest.main()

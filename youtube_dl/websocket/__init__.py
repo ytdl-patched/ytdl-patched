@@ -6,7 +6,7 @@ WebSocket = None
 # WebSocket: (URI, header={'Accept': 'nothing', 'X-Magic-Number': '42'})->WebSocket
 # only send, recv, close are guaranteed to exist
 
-HAVE_WS_WEBSOCKET_CLIENT, HAVE_WS_WEBSOCKETS, HAVE_WS_WEBSOCAT = (False, ) * 3
+HAVE_WS_WEBSOCKET_CLIENT, HAVE_WS_WEBSOCKETS, HAVE_WS_WEBSOCAT, HAVE_WS_NODEJS_WS_WRAPPER, HAVE_WS_NODEJS_WEBSOCKET_WRAPPER = (False, ) * 5
 
 try:
     from websocket import create_connection, WebSocket
@@ -47,4 +47,28 @@ try:
 except (ImportError, ValueError, SyntaxError):
     WebsocatWrapper = None
 
-WebSocket = WebSocketClientWrapper or WebSocketsWrapper or WebsocatWrapper
+try:
+    from .nodejs import NPM_IS_SANE
+
+    if NPM_IS_SANE:
+        from .nodejs import HAVE_NODEJS_WEBSOCKET_WRAPPER, HAVE_NODEJS_WS_WRAPPER
+
+        if HAVE_NODEJS_WEBSOCKET_WRAPPER:
+            from .nodejs import NodeJsWebsocketWrapper
+            HAVE_WS_NODEJS_WEBSOCKET_WRAPPER = True
+            HAVE_WEBSOCKET = True
+        else:
+            NodeJsWebsocketWrapper = None
+
+        if HAVE_NODEJS_WS_WRAPPER:
+            from .nodejs import NodeJsWsWrapper
+            HAVE_WS_NODEJS_WS_WRAPPER = True
+            HAVE_WEBSOCKET = True
+        else:
+            NodeJsWsWrapper = None
+    else:
+        NodeJsWebsocketWrapper, NodeJsWsWrapper = None, None
+except (ImportError, ValueError, SyntaxError):
+    NodeJsWebsocketWrapper, NodeJsWsWrapper = None, None
+
+WebSocket = WebSocketClientWrapper or WebSocketsWrapper or WebsocatWrapper or NodeJsWebsocketWrapper or NodeJsWsWrapper
