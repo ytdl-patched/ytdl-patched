@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from youtube_dl.websocket import (
     HAVE_WEBSOCKET,
     HAVE_WS_WEBSOCKET_CLIENT,
-    # HAVE_WS_WEBSOCKETS,
+    HAVE_WS_WEBSOCKETS,
     HAVE_WS_WEBSOCAT,
 
     WebSocketClientWrapper,
@@ -34,8 +34,7 @@ class TestWebSocket(unittest.TestCase):
             for _ in range(5):
                 print(ws.recv())
 
-    # @unittest.skipUnless(HAVE_WS_WEBSOCKETS, 'websockets not installed')
-    @unittest.skip('websockets has a bug')
+    @unittest.skipUnless(HAVE_WS_WEBSOCKETS, 'websockets not installed')
     def test_websockets(self):
         with WebSocketsWrapper('wss://ws.kraken.com/') as ws:
             ws.send('{"event":"subscribe", "subscription":{"name":"trade"}, "pair":["XBT/USD","XRP/USD"]}')

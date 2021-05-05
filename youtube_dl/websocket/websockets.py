@@ -17,7 +17,6 @@ def run_with_loop(main, loop):
         # asyncio.events.set_event_loop(loop)
         return loop.run_until_complete(main)
     finally:
-        _cancel_all_tasks(loop)
         loop.run_until_complete(loop.shutdown_asyncgens())
         if hasattr(loop, 'shutdown_default_executor'):
             loop.run_until_complete(loop.shutdown_default_executor())
@@ -55,25 +54,18 @@ class WebSocketsWrapper():
             close_timeout=float('inf'), loop=self.loop, ping_timeout=float('inf'))
 
     def __enter__(self):
-        return WebSocketsConnPool(run_with_loop(self.conn.__aenter__(), self.loop), self.loop)
+        self.pool = run_with_loop(self.conn.__aenter__(), self.loop)
+        return self
+
+    def send(self, *args):
+        run_with_loop(self.pool.send(*args), self.loop)
+
+    def recv(self, *args):
+        return run_with_loop(self.pool.recv(*args), self.loop)
 
     def __exit__(self, type, value, traceback):
         try:
             return run_with_loop(self.conn.__aexit__(type, value, traceback), self.loop)
         finally:
             self.loop.close()
-
-
-class WebSocketsConnPool():
-    def __init__(self, impl, loop):
-        self.impl = impl
-        self.loop = loop
-
-    def send(self, *args):
-        run_with_loop(self.impl.send(*args), self.loop)
-
-    def recv(self, *args):
-        return run_with_loop(self.impl.recv(*args), self.loop)
-
-    def __exit__(self, type, value, traceback):
-        run_with_loop(self.impl.__aexit__(type, value, traceback), self.loop)
+            _cancel_all_tasks(self.loop)
