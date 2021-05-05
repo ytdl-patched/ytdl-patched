@@ -26,15 +26,18 @@ else:
 if NPM_IS_SANE:
     def start_node_process(args):
         return Popen(
-            ['node', *args],
+            ['node'] + args,
             stdout=PIPE, stderr=PIPE, stdin=PIPE,
             env={'NODE_PATH': NPM_GLOBAL_PATH})
 
     def test_package_existence(pkg):
-        assert isinstance(pkg, compat_str)
-        p = start_node_process(['-e', 'require("%s")' % pkg])
-        p.wait()
-        return p.returncode == 0
+        try:
+            assert isinstance(pkg, compat_str)
+            p = start_node_process(['-e', 'require("%s")' % pkg])
+            p.wait()
+            return p.returncode == 0
+        except OSError:
+            return False
 
     """
     Details of protocol between Node.js process(N) and NodeJsWrapperBase(P):
