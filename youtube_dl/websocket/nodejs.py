@@ -16,9 +16,10 @@ if check_executable('node', ['-v']) and check_executable('npm', ['-v']):
         ['npm', 'prefix', '-g'],
         stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
-    NPM_GLOBAL_PATH, _ = npm_prefix.communicate()
-    NPM_GLOBAL_PATH = join(NPM_GLOBAL_PATH.decode().strip(), 'lib/node_modules')
-    NPM_IS_SANE = npm_prefix.returncode == 0
+    NPM_GLOBAL_PATH = npm_prefix.communicate()[0].decode().strip()
+    if NPM_GLOBAL_PATH:
+        NPM_GLOBAL_PATH = join(NPM_GLOBAL_PATH, 'lib/node_modules')
+    NPM_IS_SANE = bool(NPM_GLOBAL_PATH)
 else:
     NPM_IS_SANE = False
 
@@ -26,7 +27,7 @@ if NPM_IS_SANE:
     def start_node_process(args):
         return Popen(
             ['node', *args],
-            stdout=PIPE, stderr=None, stdin=PIPE,
+            stdout=PIPE, stderr=PIPE, stdin=PIPE,
             env={'NODE_PATH': NPM_GLOBAL_PATH})
 
     def test_package_existence(pkg):
