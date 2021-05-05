@@ -537,9 +537,9 @@ class InfoExtractor(object):
 
     def extract(self, url):
         """Extracts URL information and returns it in list of dicts."""
-        if 'websocket' in self._FEATURE_DEPENDENCY and not HAVE_WEBSOCKET:
-            raise ExtractorError('Install websockets or websocket_client package via pip, or install websockat program', expected=True)
 
+        if 'websocket' in self._FEATURE_DEPENDENCY and not HAVE_WEBSOCKET:
+            raise ExtractorError('Install websockets or websocket_client package via pip, or websockat command', expected=True)
         try:
             for _ in range(2):
                 try:
