@@ -436,7 +436,6 @@ instances = {
     "renewtube.org",
     "replay.jres.org",
     "repro.video",
-    "rezoter.nohost.me",
     "runtube.re",
     "ruraletv.ovh",
     "rxb.pl",
@@ -833,7 +832,6 @@ instances = {
     "video.nobodyhasthe.biz",
     "video.nogafam.es",
     "video.nondroit.zone",
-    "video.nonewabnormal.com",
     "video.nyentrik.com",
     "video.odayacres.farm",
     "video.oh14.de",
@@ -1018,7 +1016,7 @@ instances = {
     "xxx.noho.st",
     "xxxporn.co.uk",
     "yt.is.nota.live",
-    "yunopeertube.myddns.me"
+    "yunopeertube.myddns.me",
 }
 
 __all__ = ['instances']
