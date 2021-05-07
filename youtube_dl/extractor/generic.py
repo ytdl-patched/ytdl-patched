@@ -30,7 +30,8 @@ from ..utils import (
     orderedSet,
     parse_duration,
     sanitized_Request,
-    smuggle_url, try_get,
+    smuggle_url,
+    try_get,
     unescapeHTML,
     unified_timestamp,
     unsmuggle_url,
@@ -2266,6 +2267,18 @@ class GenericIE(InfoExtractor):
             'add_ie': ['Youtube'],
         },
         {
+            # Pixiv jump URL (1)
+            'url': 'https://www.pixiv.net/jump.php?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DMVpMUgKtds4',
+            'info_dict': {},
+            'add_ie': ['Youtube'],
+        },
+        {
+            # Pixiv jump URL (2)
+            'url': 'https://www.pixiv.net/jump.php?https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DMVpMUgKtds4',
+            'info_dict': {},
+            'add_ie': ['Youtube'],
+        },
+        {
             # Simplecast player embed
             'url': 'https://www.bio.org/podcast',
             'info_dict': {
@@ -2428,12 +2441,13 @@ class GenericIE(InfoExtractor):
                 return self.url_result(default_search + url)
         elif parsed_url.scheme in self._CORRUPTED_SCHEME_CONVERSION_TABLE:
             new_scheme = self._CORRUPTED_SCHEME_CONVERSION_TABLE[parsed_url.scheme]
-            self._downloader.report_warning('scheme seems corrupted, correcting to %s' % new_scheme)
+            self.report_warning('scheme seems corrupted, correcting to %s' % new_scheme)
             fixed_urlp = parsed_url._replace(scheme=new_scheme)
             fixed_url = compat_urlparse.urlunparse(fixed_urlp)
             return self.url_result(fixed_url)
 
         host = parsed_url.netloc
+        path = parsed_url.path
         if ':' in host:
             host = host[:host.index(':')]
         if host[:4] == 'www.':
@@ -2441,10 +2455,23 @@ class GenericIE(InfoExtractor):
         # japan BBS redirect
         if host in ('pinktower.com', 'jump.5ch.net', 'jump.megabbs.info'):
             return self.url_result(parsed_url.query)
+        # Pixiv redirect (usually requires referer to jump)
+        if host in ('pixiv.net', 'www.pixiv.net') and path == '/jump.php':
+            # Following URLs are valid and acceptable:
+            # 1. https://www.pixiv.net/jump.php?url=URL_HERE (found in profile page)
+            # 2. https://www.pixiv.net/jump.php?URL_HERE (found in description in artwork page)
+            # I think I previously saw Pixiv jump URLs with mutation, but I can't find it anymore
+            link = try_get(
+                parsed_url.query,
+                (lambda x: compat_parse_qs(x)['url'][0],
+                 lambda x: compat_urllib_parse_unquote(x)),
+                compat_str)
+            if link:
+                return self.url_result(link)
         # Firebase Dynamic Link
         # https://firebase.google.com/docs/dynamic-links/create-manually
         if host.endswith('.page.link'):
-            link = try_get(compat_parse_qs(parsed_url.query), lambda qs: qs.get('link')[0], compat_str)
+            link = try_get(compat_parse_qs(parsed_url.query), lambda qs: qs['link'][0], compat_str)
             if link:
                 return self.url_result(link)
 
