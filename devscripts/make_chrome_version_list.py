@@ -37,11 +37,11 @@ pycode = '''# coding: utf-8
 from __future__ import unicode_literals
 
 versions = [
-    "%s"
+    %s
 ]
 
 __all__ = ['versions']
-''' % '",\n    "'.join(results)
+''' % '\n'.join('    "%s",' % r for r in sorted(results))
 
 with open('./youtube_dl/chrome_versions.py', 'w') as w:
     w.write(pycode)

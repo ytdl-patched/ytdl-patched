@@ -74,11 +74,11 @@ from __future__ import unicode_literals
 
 instances = {
     # list of instances here
-    "%s"
+    %s
 }
 
 __all__ = ['instances']
-''' % '",\n    "'.join(sorted(results))
+''' % '\n'.join('    "%s",' % r for r in sorted(results))
 
 with open('./youtube_dl/extractor/peertube/instances.py', 'w') as w:
     w.write(pycode)
