@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 
 from .common import InfoExtractor
 from .niconico import NiconicoIE
-from ..utils import lowercase_escape
+from ..utils import (
+    lowercase_escape,
+    try_get,
+)
 from ..compat import (
     compat_parse_qs,
     compat_urllib_parse,
-    # compat_str,
+    compat_str,
 )
 
 
@@ -21,7 +24,7 @@ class NicozonIE(InfoExtractor):
     def _real_extract(self, url):
         # TODO: dig into SWF file if it's possible
         # NOTE: SWF: http://ext.nicovideo.jp/swf/player/thumbwatch.swf?ts=1556178770
-        # NOTE: ActionScript 3.0, which Ruffle cannot support
+        # NOTE: SWF is ActionScript 3.0, which Ruffle cannot support
         import yaml
 
         video_id = self._match_id(url)
@@ -45,28 +48,28 @@ class NicozonIE(InfoExtractor):
 
         url_parsed = compat_urllib_parse.urlparse(video_url)
 
-        # video_tag = try_get(
-        #     compat_parse_qs(url_parsed.query),
-        #     (lambda x: x['v'][0],
-        #      lambda x: x['m'][0],),
-        #     compat_str)
+        video_tag = try_get(
+            compat_parse_qs(url_parsed.query),
+            (lambda x: x['v'][0],
+             lambda x: x['m'][0],),
+            compat_str)
 
         _headers['Referer'] = compat_urllib_parse.urlunparse(url_parsed._replace(
             path='/', params='', query='', fragment=''))
 
         formats = [{
             'format_id': 'flv',
-            'url': video_url.replace('/smile?v=', '/smile?m='),
+            'url': compat_urllib_parse.urlunparse(url_parsed._replace(query='m=%s' % video_tag)),
             'ext': 'flv',
             'http_headers': _headers,
         }, {
             'format_id': 'economy',
-            'url': video_url + 'low',
+            'url': compat_urllib_parse.urlunparse(url_parsed._replace(query='v=%slow' % video_tag)),
             'ext': 'mp4',
             'http_headers': _headers,
         }, {
             'format_id': 'high',
-            'url': video_url,
+            'url': compat_urllib_parse.urlunparse(url_parsed._replace(query='v=%s' % video_tag)),
             'ext': 'mp4',
             'http_headers': _headers,
         }]
