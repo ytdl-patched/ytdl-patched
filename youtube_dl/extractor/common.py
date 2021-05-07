@@ -403,6 +403,7 @@ class InfoExtractor(object):
     Following features are known and recognized:
 
     - websocket - Requires WebSocket-related package/command
+    - yaml - pyyaml package
     """
     _FEATURE_DEPENDENCY = tuple()
 
@@ -539,7 +540,12 @@ class InfoExtractor(object):
         """Extracts URL information and returns it in list of dicts."""
 
         if 'websocket' in self._FEATURE_DEPENDENCY and not HAVE_WEBSOCKET:
-            raise ExtractorError('Install websockets or websocket_client package via pip, or websockat command', expected=True)
+            raise ExtractorError('Please install websockets or websocket_client package via pip, or websockat command', expected=True)
+        try:
+            if 'yaml' in self._FEATURE_DEPENDENCY:
+                __import__('yaml')
+        except ImportError:
+            raise ExtractorError('Please install pyyaml package via pip.', expected=True)
         try:
             for _ in range(2):
                 try:
