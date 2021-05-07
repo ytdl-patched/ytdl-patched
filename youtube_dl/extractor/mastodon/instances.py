@@ -4017,7 +4017,7 @@ instances = {
     "zou.social",
     "zoudon.jp",
     "zuyadon.tk",
-    "zzz.cat"
+    "zzz.cat",
 }
 
 __all__ = ['instances']
