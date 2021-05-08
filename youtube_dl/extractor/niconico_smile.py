@@ -14,17 +14,16 @@ from ..compat import (
 )
 
 
-class NicozonIE(InfoExtractor):
-    IE_NAME = 'nicozon'
+class NiconicoSmileIE(InfoExtractor):
+    IE_NAME = 'niconico:smile'
     _VALID_URL = r'(?:https?://www\.nicozon\.net/downloader\.html\?video_id=|nicozon:(?:%s)?)(?P<id>(?:[a-z]{2})?[0-9]+)' % NiconicoIE._URL_BEFORE_ID_PART
     IE10_USERAGENT = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)'
-    _WORKING = False  # WIP
+    _WORKING = False  # This will never be removed
     _FEATURE_DEPENDENCY = ('yaml', )
 
     def _real_extract(self, url):
-        # TODO: dig into SWF file if it's possible
-        # NOTE: SWF: http://ext.nicovideo.jp/swf/player/thumbwatch.swf?ts=1556178770
-        # NOTE: SWF is ActionScript 3.0, which Ruffle cannot support
+        # NOTE: If you're interested in SWF file and decompiled ActionScript, contact me
+        # NOTE: SWF is ActionScript 3.0, which Ruffle cannot load it
         import yaml
 
         video_id = self._match_id(url)
