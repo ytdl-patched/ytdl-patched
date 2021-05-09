@@ -4330,3 +4330,23 @@ class PrintJsonEncoder(json.JSONEncoder):
 
 def time_millis():
     return round(time.time() * 1000)
+
+
+def traverse_dict(dictn, keys, casesense=True):
+    keys = list(keys)[::-1]
+    while keys:
+        key = keys.pop()
+        if isinstance(dictn, dict):
+            if not casesense:
+                dictn = {k.lower(): v for k, v in dictn.items()}
+                key = key.lower()
+            dictn = dictn.get(key)
+        elif isinstance(dictn, (list, tuple, compat_str)):
+            if ':' in key:
+                key = slice(*map(int_or_none, key.split(':')))
+            else:
+                key = int_or_none(key)
+            dictn = try_get(dictn, lambda x: x[key])
+        else:
+            return None
+    return dictn

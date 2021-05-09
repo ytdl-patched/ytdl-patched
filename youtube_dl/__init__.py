@@ -240,6 +240,9 @@ def _real_main(argv=None):
     if opts.convertsubtitles is not None:
         if opts.convertsubtitles not in ['srt', 'vtt', 'ass', 'lrc']:
             parser.error('invalid subtitle format specified')
+    if opts.convertthumbnails is not None:
+        if opts.convertthumbnails not in ('jpg', ):
+            parser.error('invalid thumbnail format specified')
 
     if opts.date is not None:
         date = DateRange.day(opts.date)
@@ -310,6 +313,11 @@ def _real_main(argv=None):
     if opts.embedsubtitles:
         postprocessors.append({
             'key': 'FFmpegEmbedSubtitle',
+        })
+    if opts.convertthumbnails:
+        postprocessors.append({
+            'key': 'FFmpegThumbnailsConvertor',
+            'format': opts.convertthumbnails,
         })
     if opts.embedthumbnail:
         already_have_thumbnail = opts.writethumbnail or opts.write_all_thumbnails

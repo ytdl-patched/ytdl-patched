@@ -939,6 +939,10 @@ def parseOpts(overrideArguments=None):
         '--convert-subs', '--convert-subtitles',
         metavar='FORMAT', dest='convertsubtitles', default=None,
         help='Convert the subtitles to other format (currently supported: srt|ass|vtt|lrc)')
+    postproc.add_option(
+        '--convert-thumbnails',
+        metavar='FORMAT', dest='convertthumbnails', default=None,
+        help='Convert the thumbnails to another format (currently supported: jpg)')
 
     sponskrub = optparse.OptionGroup(parser, 'SponSkrub (SponsorBlock) Options', description=(
         'SponSkrub (https://github.com/yt-dlp/SponSkrub) is a utility to mark/remove sponsor segments '
