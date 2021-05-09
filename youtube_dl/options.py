@@ -220,7 +220,7 @@ def parseOpts(overrideArguments=None):
         help='DO NOT USE. IT\'S MEANINGLESS FOR MOST PEOPLE. Prints types of object in info json. '
              'Use this for extractors that --print-json won\' work.')
     general.add_option(
-        '---enable-lock',
+        '--enable-lock',
         action='store_true', dest='lock_exclusive',
         default=True,
         help='Locks downloading exclusively. Blocks other ytdl-patched process downloading the same video.')
