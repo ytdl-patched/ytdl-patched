@@ -479,6 +479,7 @@ def _real_main(argv=None):
         'test_filename': opts.test_filename,
         'printjsontypes': opts.printjsontypes,
         'live_download_mkv': opts.live_download_mkv,
+        'lock_exclusive': opts.lock_exclusive,
         # just for deprecation check
         'autonumber': opts.autonumber if opts.autonumber is True else None,
         'usetitle': opts.usetitle if opts.usetitle is True else None,

@@ -2312,6 +2312,8 @@ class YoutubeDL(object):
             archive_file.write(vid_id + '\n')
 
     def lock_file(self, info_dict):
+        if not self.params.get('lock_exclusive', True):
+            return
         vid_id = self._make_archive_id(info_dict)
         if not vid_id:
             return
@@ -2328,6 +2330,8 @@ class YoutubeDL(object):
             pass
 
     def unlock_file(self, info_dict):
+        if not self.params.get('lock_exclusive', True):
+            return
         vid_id = self._make_archive_id(info_dict)
         if not vid_id:
             return
