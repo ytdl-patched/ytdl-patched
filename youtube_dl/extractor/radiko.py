@@ -16,12 +16,15 @@ from ..compat import compat_urllib_parse
 
 
 class RadikoIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www.)?radiko\.jp/#!/ts/(?P<station>[A-Z]+)/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www.)?radiko\.jp/#!/ts/(?P<station>[A-Z-]+)/(?P<id>\d+)'
     _FULL_KEY = None
     _AUTH_CACHE = ()
 
     _TESTS = [{
         'url': 'https://radiko.jp/#!/ts/QRR/20210425101300',
+        'only_matching': True,
+    }, {
+        'url': 'https://radiko.jp/#!/ts/JOAK-FM/20210509090000',
         'only_matching': True,
     }]
 
@@ -42,7 +45,7 @@ class RadikoIE(InfoExtractor):
             ft_str, to_str = p.attrib['ft'], p.attrib['to']
             ft = unified_timestamp(ft_str, False)
             to = unified_timestamp(to_str, False)
-            if ft < vid_int and vid_int < to:
+            if ft <= vid_int and vid_int < to:
                 prog = p
                 break
         if not prog:
@@ -155,7 +158,7 @@ class RadikoIE(InfoExtractor):
 
         if full_key:
             full_key = full_key.encode()
-        else:  # use known full key ever known
+        else:  # use full key ever known
             full_key = b'bcd151073c03b352e1ef2fd66c32209da9ca0afa'
 
         self._FULL_KEY = full_key
