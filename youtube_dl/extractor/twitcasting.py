@@ -90,6 +90,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             lambda x: self._parse_json(self._search_regex(
                 r"data-movie-playlist='([^']+?)'",
                 x, 'movie playlist', default=None), video_id)["2"][0], dict) or {}
+        is_live = 'data-status="online"' in webpage
         m3u8_url = try_get(
             webpage,
             (lambda x: self._search_regex(
@@ -97,13 +98,33 @@ class TwitCastingIE(TwitCastingBaseIE):
                 x, 'm3u8 url', group='url', default=None),
              lambda x: video_js_data['source']['url'],
              lambda x: 'https://twitcasting.tv/%s/metastream.m3u8' % uploader_id
-                if 'data-status="online"' in x else None),
+                if is_live else None),
             compat_str)
 
-        # use `m3u8` entry_protocol until EXT-X-MAP is properly supported by `m3u8_native` entry_protocol
-        formats = self._extract_m3u8_formats(
-            m3u8_url, video_id, 'mp4', m3u8_id='hls')
-        self._sort_formats(formats)
+        if is_live:
+            # use `m3u8` entry_protocol until EXT-X-MAP is properly supported by `m3u8_native` entry_protocol
+            formats = self._extract_m3u8_formats(
+                m3u8_url, video_id, 'mp4', m3u8_id='hls',
+                headers={
+                    'Accept': '*/*',
+                    'Origin': 'https://twitcasting.tv',
+                    'Referer': 'https://twitcasting.tv/',
+                })
+            self._sort_formats(formats)
+        else:
+            # This reduces the download of m3u8 playlist (2 -> 1)
+            formats = [{
+                'url': m3u8_url,
+                'format_id': 'hls',
+                'ext': 'mp4',
+                'protocol': 'm3u8',
+                'http_headers': {
+                    'Accept': '*/*',
+                    'Origin': 'https://twitcasting.tv',
+                    'Referer': 'https://twitcasting.tv/',
+                },
+                'input_params': ['-re'],
+            }]
 
         thumbnail = video_js_data.get('thumbnailUrl') or self._og_search_thumbnail(webpage)
         description = clean_html(get_element_by_id(
