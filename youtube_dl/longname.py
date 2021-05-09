@@ -10,7 +10,7 @@ except ImportError:
     PathLike, fsdecode = None, None
 
 from os import remove, rename, sep, stat, utime, unlink, makedirs
-from os.path import exists, isfile, getsize, normpath, join, basename
+from os.path import exists, isfile, getsize, normpath, join, basename, dirname
 from .compat import compat_str
 from .utils import (
     sanitize_open,
@@ -275,4 +275,9 @@ def escaped_remove(path, *args, **kwargs):
 
 def escaped_basename(path):
     "os.path.basename() that escapes long names"
-    basename(split_longname(path, get_filesystem_encoding()))
+    return basename(split_longname(path, get_filesystem_encoding()))
+
+
+def escaped_dirname(path):
+    "os.path.dirname() that escapes long names"
+    return dirname(split_longname(path, get_filesystem_encoding()))
