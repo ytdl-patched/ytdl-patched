@@ -329,6 +329,9 @@ class YoutubeDL(object):
     geo_bypass_ip_block:
                        IP range in CIDR notation that will be used similarly to
                        geo_bypass_country
+    lock_exclusive:    When True, downloading will be locked exclusively to
+                       this process by creating .lock file.
+                       It'll be removed after download.
 
     The following options determine which downloader is picked:
     external_downloader: Executable of the external downloader to call.
