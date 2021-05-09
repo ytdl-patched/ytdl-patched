@@ -782,43 +782,6 @@ class FFmpegSubtitlesConvertorPP(FFmpegPostProcessor):
         return sub_filenames, info
 
 
-class FFmpegSplitChaptersPP(FFmpegPostProcessor):
-
-    def _prepare_filename(self, number, chapter, info):
-        info = info.copy()
-        info.update({
-            'section_number': number,
-            'section_title': chapter.get('title'),
-            'section_start': chapter.get('start_time'),
-            'section_end': chapter.get('end_time'),
-        })
-        return self._downloader.prepare_filename(info, 'chapter')
-
-    def _ffmpeg_args_for_chapter(self, number, chapter, info):
-        destination = self._prepare_filename(number, chapter, info)
-        if not self._downloader._ensure_dir_exists(encodeFilename(destination)):
-            return
-
-        chapter['filename'] = destination
-        self.to_screen('Chapter %03d; Destination: %s' % (number, destination))
-        return (
-            destination,
-            ['-ss', compat_str(chapter['start_time']),
-             '-t', compat_str(chapter['end_time'] - chapter['start_time'])])
-
-    def run(self, info):
-        chapters = info.get('chapters') or []
-        if not chapters:
-            self.report_warning('Chapter information is unavailable')
-            return [], info
-
-        self.to_screen('Splitting video by chapters; %d chapters found' % len(chapters))
-        for idx, chapter in enumerate(chapters):
-            destination, opts = self._ffmpeg_args_for_chapter(idx + 1, chapter, info)
-            self.real_run_ffmpeg([(info['filepath'], opts)], [(destination, ['-c', 'copy'])])
-        return [], info
-
-
 class FFmpegThumbnailsConvertorPP(FFmpegPostProcessor):
     def __init__(self, downloader=None, format=None):
         super(FFmpegThumbnailsConvertorPP, self).__init__(downloader)
