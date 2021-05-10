@@ -575,4 +575,3 @@ jobs:
               .
           docker push nao20010128nao/ytdl-patched:windowsservercore-ltsc2016
           docker push nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016
-

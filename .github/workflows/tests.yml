@@ -80,4 +80,3 @@ jobs:
         run: pip3 install flake8
       - name: Run flake8 .
         run: flake8 .
-
