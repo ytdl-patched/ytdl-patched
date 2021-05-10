@@ -56,7 +56,6 @@ jobs:
           echo "from __future__ import unicode_literals
           __version__ = '${LATEST_VERSION}'
           " > youtube_dl/version.py
-          python ./devscripts/make_buildconfig.py
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -74,6 +73,8 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-base
+      - name: Create buildconfig.py
+        run: python ./devscripts/make_buildconfig.py
       - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v2
         with:
@@ -180,6 +181,8 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-base
+      - name: Create buildconfig.py
+        run: python ./devscripts/make_buildconfig.py variant=${{ matrix.icon }}
       - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v2
         with:
@@ -242,6 +245,7 @@ jobs:
             | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].bin=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl\",\"${FILEHASH_BIN}\"]" \
             | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].tar=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
             | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].exe=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl-${{ env.windows_icon }}.exe\",\"${FILEHASH_EXE}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"]["exe-${{ env.windows_icon }}"]=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl-${{ env.windows_icon }}.exe\",\"${FILEHASH_EXE}\"]" \
             | tee artifacts/versions.json
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2

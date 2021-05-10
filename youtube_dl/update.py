@@ -13,6 +13,10 @@ from .compat import compat_realpath
 from .utils import encode_compat_str
 
 from .version import __version__
+try:
+    from .build_config import variant
+except ImportError:
+    variant = None
 
 
 def rsa_verify(message, signature, key):
@@ -86,7 +90,7 @@ def update_self(to_screen, verbose, opener):
         to_screen('ERROR: no write permissions on %s' % filename)
         return
 
-    # Py2EXE
+    # PyInstaller
     if hasattr(sys, 'frozen') and os.name == 'nt':
         exe = filename
         directory = os.path.dirname(exe)
@@ -94,8 +98,15 @@ def update_self(to_screen, verbose, opener):
             to_screen('ERROR: no write permissions on %s' % directory)
             return
 
+        version_data = None
+        if variant:
+            version_data = version.get('exe-%s' % variant)
+        if not version_data:
+            version_data = version['exe']
+        assert version_data
+
         try:
-            urlh = opener.open(version['exe'][0])
+            urlh = opener.open(version_data[0])
             newcontent = urlh.read()
             urlh.close()
         except (IOError, OSError):
@@ -105,7 +116,7 @@ def update_self(to_screen, verbose, opener):
             return
 
         newcontent_hash = hashlib.sha256(newcontent).hexdigest()
-        if newcontent_hash != version['exe'][1]:
+        if newcontent_hash != version_data[1]:
             to_screen('ERROR: the downloaded file hash does not match. Aborting.')
             return
 
