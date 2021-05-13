@@ -416,7 +416,7 @@ class NiconicoIE(NiconicoBaseIE):
                     r'(?s)<section\s+class="(?:(?:ErrorMessage|WatchExceptionPage-message)\s*)+">(.+?)</section>',
                     webpage, 'error reason', group=1, default=None)
                 if not error_msg:
-                    raise
+                    raise e
                 else:
                     error_msg = re.sub(r'\s+', ' ', error_msg)
                     raise ExtractorError(error_msg, expected=True)
