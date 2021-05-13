@@ -33,6 +33,7 @@ from ..utils import (
     unified_timestamp,
     urlencode_postdata,
     update_url_query,
+    time_millis,
 )
 
 
@@ -401,19 +402,24 @@ class NiconicoIE(NiconicoBaseIE):
                 'data-api-data="([^"]+)"', webpage,
                 'API data', default='{}'), video_id)
         except ExtractorError as e:
-            if not isinstance(e.cause, compat_HTTPError):
-                raise e
-            else:
-                e = e.cause
-            webpage = e.read().decode('utf-8', 'replace')
-            error_msg = self._html_search_regex(
-                r'(?s)<section\s+class="(?:(?:ErrorMessage|WatchExceptionPage-message)\s*)+">(.+?)</section>',
-                webpage, 'error reason', group=1, default=None)
-            if not error_msg:
-                raise
-            else:
-                error_msg = re.sub(r'\s+', ' ', error_msg)
-                raise ExtractorError(error_msg, expected=True)
+            try:
+                api_data = self._download_json(
+                    'https://www.nicovideo.jp/api/watch/v3/%s?_frontendId=6&_frontendVersion=0&actionTrackId=AAAAAAAAAA_%d' % (video_id, time_millis()), video_id,
+                    note='Downloading API JSON', errnote='Unable to fetch data')['data']
+            except (ExtractorError, KeyError):
+                if not isinstance(e.cause, compat_HTTPError):
+                    raise e
+                else:
+                    e = e.cause
+                webpage = e.read().decode('utf-8', 'replace')
+                error_msg = self._html_search_regex(
+                    r'(?s)<section\s+class="(?:(?:ErrorMessage|WatchExceptionPage-message)\s*)+">(.+?)</section>',
+                    webpage, 'error reason', group=1, default=None)
+                if not error_msg:
+                    raise
+                else:
+                    error_msg = re.sub(r'\s+', ' ', error_msg)
+                    raise ExtractorError(error_msg, expected=True)
 
         formats = []
 
