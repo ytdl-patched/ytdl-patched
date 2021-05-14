@@ -145,6 +145,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             'description': description,
             'thumbnail': thumbnail,
             'timestamp': timestamp,
+            'uploader': uploader_id,
             'uploader_id': uploader_id,
             'duration': duration,
             'view_count': view_count,
