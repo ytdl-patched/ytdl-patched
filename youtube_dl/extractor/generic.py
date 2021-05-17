@@ -2893,7 +2893,7 @@ class GenericIE(InfoExtractor):
         # Look for sibnet embedded player
         sibnet_urls = VKIE._extract_sibnet_urls(webpage)
         if sibnet_urls:
-            return self.playlist_from_matches(sibnet_urls, video_id, video_title)
+            waitlist.append(self.playlist_from_matches(sibnet_urls, video_id, video_title))
 
         # Look for embedded ivi player
         mobj = re.search(r'<embed[^>]+?src=(["\'])(?P<url>https?://(?:www\.)?ivi\.ru/video/player.+?)\1', webpage)
