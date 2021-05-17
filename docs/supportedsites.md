@@ -744,6 +744,7 @@
  - **play.fm**
  - **player.sky.it**
  - **PlayPlusTV**
+ - **PlayStuff**
  - **PlaysTV**
  - **Playtvak**: Playtvak.cz, iDNES.cz and Lidovky.cz
  - **Playvid**

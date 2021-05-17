@@ -343,7 +343,7 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
     --rm-long-name-dir                   Deletes all filename-splitting-related
                                          empty directories in working directory
 
-## Thumbnail images:
+## Thumbnail Options:
     --write-thumbnail                    Write thumbnail image to disk
     --write-all-thumbnails               Write all thumbnail image formats to
                                          disk

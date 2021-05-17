@@ -845,7 +845,7 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='rm_longnamedir',
         help='Deletes all filename-splitting-related empty directories in working directory')
 
-    thumbnail = optparse.OptionGroup(parser, 'Thumbnail images')
+    thumbnail = optparse.OptionGroup(parser, 'Thumbnail Options')
     thumbnail.add_option(
         '--write-thumbnail',
         action='store_true', dest='writethumbnail', default=False,
