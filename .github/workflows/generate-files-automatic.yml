@@ -39,10 +39,13 @@ jobs:
 
     - name: Generate youtube_dl/extractor/mastodon/instances.py
       run: python ./devscripts/make_mastodon_instance_list.py
+      continue-on-error: true
     - name: Generate youtube_dl/extractor/peertube/instances.py
       run: python ./devscripts/make_peertube_instance_list.py
+      continue-on-error: true
     - name: Generate youtube_dl/chrome_versions.py
       run: python ./devscripts/make_chrome_version_list.py
+      continue-on-error: true
 
     - name: Commit youtube_dl/extractor/mastodon/instances.py
       run: git commit -m"[automatic] regenerate youtube_dl/extractor/mastodon/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/mastodon/instances.py
