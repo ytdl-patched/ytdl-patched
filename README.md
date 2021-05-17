@@ -8,6 +8,7 @@
   - manually mirrored at every git push
 - https://codeberg.org/nao20010128nao/ytdl-patched (secondary)
 - [In my Keybase account](https://book.keybase.io/git) (secondary)
+  - spoiler: you can clone it with `git clone keybase://public/nao20010128nao/ytdl-patched`
 - https://ytdl-patched.vercel.app/ (just for fun)
 - https://ytdl-patched.netlify.app/ (just for fun)
 
