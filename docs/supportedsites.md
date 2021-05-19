@@ -639,8 +639,8 @@
  - **niconico:live**: ニコニコ生放送
  - **niconico:playlist**
  - **niconico:series**
+ - **niconico:smile** (Currently broken)
  - **niconico:user**
- - **nicozon** (Currently broken)
  - **Nintendo**
  - **njoy**: N-JOY
  - **njoy:embed**
