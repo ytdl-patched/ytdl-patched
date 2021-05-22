@@ -6,7 +6,7 @@ import subprocess
 
 sys.path[:0] = ['.']
 
-from youtube_dl.utils import int_or_none
+from yt_dlp.utils import int_or_none
 
 
 versions = set()
@@ -44,5 +44,5 @@ versions = [
 __all__ = ['versions']
 '''
 
-with open('./youtube_dl/chrome_versions.py', 'w') as w:
+with open('./yt_dlp/chrome_versions.py', 'w') as w:
     w.write(pycode)

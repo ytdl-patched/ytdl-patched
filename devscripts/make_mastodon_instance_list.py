@@ -7,8 +7,8 @@ import re
 
 sys.path[:0] = ['.']
 
-from youtube_dl.utils import ExtractorError
-from youtube_dl.extractor.common import InfoExtractor
+from yt_dlp.utils import ExtractorError
+from yt_dlp.extractor.common import InfoExtractor
 from test.helper import FakeYDL
 
 
@@ -97,5 +97,5 @@ instances = {{
 __all__ = ['instances']
 '''
 
-with open('./youtube_dl/extractor/mastodon/instances.py', 'w') as w:
+with open('./yt_dlp/extractor/mastodon/instances.py', 'w') as w:
     w.write(pycode)
