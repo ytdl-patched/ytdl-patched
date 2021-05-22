@@ -655,7 +655,13 @@ def _real_main(argv=None):
         'warnings': warnings,
         'compat_opts': compat_opts,
 
+        'check_mastodon_instance': opts.check_mastodon_instance,
+        'check_peertube_instance': opts.check_peertube_instance,
         'escape_long_names': opts.escape_long_names,
+        'test_filename': opts.test_filename,
+        'printjsontypes': opts.printjsontypes,
+        'live_download_mkv': opts.live_download_mkv,
+        'lock_exclusive': opts.lock_exclusive,
         # just for deprecation check
         'autonumber': opts.autonumber or None,
         'usetitle': opts.usetitle or None,

@@ -12,7 +12,9 @@ import re
 import sys
 import time
 import math
+from typing import Optional
 
+from ..YoutubeDL import YoutubeDL
 from ..compat import (
     compat_cookiejar_Cookie,
     compat_cookies_SimpleCookie,
@@ -415,7 +417,7 @@ class InfoExtractor(object):
     """
 
     _ready = False
-    _downloader = None
+    _downloader: Optional[YoutubeDL] = None
     _x_forwarded_for_ip = None
     _GEO_BYPASS = True
     _GEO_COUNTRIES = None
@@ -597,7 +599,7 @@ class InfoExtractor(object):
                 return True
         return False
 
-    def set_downloader(self, downloader):
+    def set_downloader(self, downloader: YoutubeDL):
         """Sets the downloader for this IE."""
         self._downloader = downloader
 

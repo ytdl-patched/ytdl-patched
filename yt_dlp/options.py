@@ -239,6 +239,38 @@ def parseOpts(overrideArguments=None):
             'Options that can help keep compatibility with youtube-dl and youtube-dlc '
             'configurations by reverting some of the changes made in yt-dlp. '
             'See "Differences in default behavior" for details'))
+    general.add_option(
+        '--check-mastodon-instance',
+        action='store_true', dest='check_mastodon_instance',
+        default=False,
+        help='Always perform online checks for Mastodon-like URL')
+    general.add_option(
+        '--check-peertube-instance',
+        action='store_true', dest='check_peertube_instance',
+        default=False,
+        help='Always perform online checks for PeerTube-like URL')
+    general.add_option(
+        '--test-filename',
+        metavar='CMD', dest='test_filename',
+        help='Like --exec option, but used for testing if downloading should be started. '
+             'You can begin with "re:" to use regex instead of commands')
+    general.add_option(
+        '--print-infojson-types',
+        action='store_true', dest='printjsontypes',
+        default=False,
+        help='DO NOT USE. IT\'S MEANINGLESS FOR MOST PEOPLE. Prints types of object in info json. '
+             'Use this for extractors that --print-json won\' work.')
+    general.add_option(
+        '--enable-lock',
+        action='store_true', dest='lock_exclusive',
+        default=True,
+        help='Locks downloading exclusively. Blocks other ytdl-patched process downloading the same video.')
+    general.add_option(
+        '--no-lock',
+        action='store_false', dest='lock_exclusive',
+        default=True,
+        help='Do not lock downloading exclusively. '
+             'Download will start even if other process is working on it.')
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(
