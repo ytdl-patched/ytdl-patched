@@ -35,6 +35,7 @@ from .compat import (
     compat_kwargs,
     compat_numeric_types,
     compat_os_name,
+    compat_shlex_quote,
     compat_str,
     compat_tokenize_tokenize,
     compat_urllib_error,
@@ -44,17 +45,20 @@ from .compat import (
 from .utils import (
     age_restricted,
     args_to_str,
+    compiled_regex_type,
     ContentTooShortError,
     date_from_str,
     DateRange,
     DEFAULT_OUTTMPL,
     determine_ext,
     determine_protocol,
+    dig_object_type,
     DOT_DESKTOP_LINK_TEMPLATE,
     DOT_URL_LINK_TEMPLATE,
     DOT_WEBLOC_LINK_TEMPLATE,
     DownloadError,
     encode_compat_str,
+    encodeArgument,
     encodeFilename,
     EntryNotInPlaylist,
     error_to_compat_str,
@@ -397,6 +401,19 @@ class YoutubeDL(object):
                        geo_bypass_country
     escape_long_names: If True, it splits filename into 255-byte chunks in current locale,
                        to avoid "File name too long" error. Most user don't need this.
+    live_download_mkv: If True, live will be recorded in MKV format instead of MP4.
+    printjsontypes:    DO NOT USE THIS. If True, it shows type of each elements in info_dict.
+    check_peertube_instance: If True, generic extractor tests if it's PeerTube instance for
+                             requested domain.
+    check_mastodon_instance: Same as above, but for Mastodon.
+    extractor_retries: Number of retries for known extractor errors. Defaults to 3. Can be "infinite".
+    test_filename:     Use this to filter video file using external executable or regex
+                        (compiled regex or string starting with "re:").
+                       For external executable, return code 0 lets YTDL to start downloading.
+                       For regex, download will begin if re.search matches.
+    lock_exclusive:    When True, downloading will be locked exclusively to
+                       this process by creating .lock file.
+                       It'll be removed after download.
 
     The following options determine which downloader is picked:
     external_downloader: A dictionary of protocol keys and the executable of the
@@ -2291,6 +2308,9 @@ class YoutubeDL(object):
             self.to_stdout(formatSeconds(info_dict['duration']))
         print_mandatory('format')
 
+        if self.params.get('printjsontypes', False):
+            self.to_stdout('\n'.join(dig_object_type(info_dict)))
+
         if self.params.get('forcejson', False):
             self.post_extract(info_dict)
             self.to_stdout(json.dumps(info_dict, default=repr))
@@ -2339,6 +2359,10 @@ class YoutubeDL(object):
 
         if 'format' not in info_dict:
             info_dict['format'] = info_dict['ext']
+
+        if info_dict.get('ext') == 'mp4' and info_dict.get('is_live', False) and self.params.get('live_download_mkv', False):
+            info_dict['format'] = info_dict['ext'] = 'mkv'
+            info_dict['protocol'] = 'ffmpeg'
 
         if self._match_entry(info_dict, incomplete=False) is not None:
             return
@@ -2530,6 +2554,7 @@ class YoutubeDL(object):
         else:
             # Download
             try:
+                self.lock_file(info_dict)
 
                 def existing_file(*filepaths):
                     ext = info_dict.get('ext')
@@ -2567,38 +2592,10 @@ class YoutubeDL(object):
                             'You have requested merging of multiple formats but ffmpeg is not installed. '
                             'The formats won\'t be merged.')
 
-                    def compatible_formats(formats):
-                        # TODO: some formats actually allow this (mkv, webm, ogg, mp4), but not all of them.
-                        video_formats = [format for format in formats if format.get('vcodec') != 'none']
-                        audio_formats = [format for format in formats if format.get('acodec') != 'none']
-                        if len(video_formats) > 2 or len(audio_formats) > 2:
-                            return False
-
-                        # Check extension
-                        exts = set(format.get('ext') for format in formats)
-                        COMPATIBLE_EXTS = (
-                            set(('mp3', 'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'ismv', 'isma')),
-                            set(('webm',)),
-                        )
-                        for ext_sets in COMPATIBLE_EXTS:
-                            if ext_sets.issuperset(exts):
-                                return True
-                        # TODO: Check acodec/vcodec
-                        return False
-
                     requested_formats = info_dict['requested_formats']
                     old_ext = info_dict['ext']
                     if self.params.get('merge_output_format') is None:
-                        if not compatible_formats(requested_formats):
-                            info_dict['ext'] = 'mkv'
-                            self.report_warning(
-                                'Requested formats are incompatible for merge and will be merged into mkv.')
-                        if (info_dict['ext'] == 'webm'
-                                and self.params.get('writethumbnail', False)
-                                and info_dict.get('thumbnails')):
-                            info_dict['ext'] = 'mkv'
-                            self.report_warning(
-                                'webm doesn\'t support embedding a thumbnail, mkv will be used.')
+                        info_dict['ext'] = 'mkv'
 
                     def correct_ext(filename):
                         filename_real_ext = os.path.splitext(filename)[1][1:]
@@ -2613,7 +2610,10 @@ class YoutubeDL(object):
                     temp_filename = correct_ext(temp_filename)
                     dl_filename = existing_file(full_filename, temp_filename)
                     info_dict['__real_download'] = False
-                    if dl_filename is None:
+                    if not self.test_filename_external(full_filename):
+                        self.to_screen(
+                            '[download] %s has rejected by external test process' % full_filename)
+                    elif dl_filename is None:
                         for f in requested_formats:
                             new_info = dict(info_dict)
                             new_info.update(f)
@@ -2637,9 +2637,13 @@ class YoutubeDL(object):
                 else:
                     # Just a single file
                     dl_filename = existing_file(full_filename, temp_filename)
-                    if dl_filename is None:
+                    tfn_result = self.test_filename_external(full_filename)
+                    if tfn_result and dl_filename is None:
                         success, real_download = self.dl(temp_filename, info_dict)
                         info_dict['__real_download'] = real_download
+                    elif not tfn_result:
+                        self.to_screen(
+                            '[download] %s has rejected by external test process' % full_filename)
 
                 dl_filename = dl_filename or temp_filename
                 info_dict['__finaldir'] = os.path.dirname(os.path.abspath(encodeFilename(full_filename)))
@@ -2652,6 +2656,8 @@ class YoutubeDL(object):
             except (ContentTooShortError, ) as err:
                 self.report_error('content too short (expected %s bytes and served %s)' % (err.expected, err.downloaded))
                 return
+            finally:
+                self.unlock_file(info_dict)
 
             if success and full_filename != '-':
                 # Fixup content
@@ -2880,6 +2886,34 @@ class YoutubeDL(object):
                 return
         return '%s %s' % (extractor.lower(), video_id)
 
+    def test_filename_external(self, filename):
+        cmd = self.params.get('test_filename')
+        if not cmd or not isinstance(cmd, (compat_str, compiled_regex_type)):
+            return True
+
+        if isinstance(cmd, compiled_regex_type) or cmd.startswith('re:'):
+            # allow Patten object or string begins with 're:' to test against regex
+            if isinstance(cmd, compat_str):
+                cmd = cmd[3:]
+            mobj = re.search(cmd, filename)
+            return bool(mobj)
+
+        if '{}' not in cmd:
+            cmd += ' {}'
+
+        cmd = cmd.replace('{}', compat_shlex_quote(filename))
+
+        if self.params.get('verbose'):
+            self.to_screen('[debug] Testing: %s' % cmd)
+        try:
+            # True when retcode==0
+            retCode = subprocess.call(encodeArgument(cmd), shell=True)
+            return retCode == 0
+        except (IOError, OSError):
+            if self.params.get('verbose'):
+                self.to_screen('[debug] Testing: %s' % cmd)
+            return True
+
     def in_download_archive(self, info_dict):
         fn = self.params.get('download_archive')
         if fn is None:
@@ -2900,6 +2934,38 @@ class YoutubeDL(object):
         with locked_file(fn, 'a', encoding='utf-8') as archive_file:
             archive_file.write(vid_id + '\n')
         self.archive.add(vid_id)
+
+    def lock_file(self, info_dict):
+        if not self.params.get('lock_exclusive', True):
+            return
+        vid_id = self._make_archive_id(info_dict)
+        if not vid_id:
+            return
+        vid_id = re.sub(r'[/\\: ]+', '_', vid_id) + '.lock'
+        if self.params.get('verbose'):
+            self.to_screen('[debug] locking %s' % vid_id)
+        try:
+            with locked_file(vid_id, 'w', encoding='utf-8') as w:
+                w.write('%s\n' % vid_id)
+                url = info_dict.get('url')
+                if url:
+                    w.write('%s\n' % url)
+        except IOError:
+            pass
+
+    def unlock_file(self, info_dict):
+        if not self.params.get('lock_exclusive', True):
+            return
+        vid_id = self._make_archive_id(info_dict)
+        if not vid_id:
+            return
+        vid_id = re.sub(r'[/\\: ]', '_', vid_id) + '.lock'
+        if self.params.get('verbose'):
+            self.to_screen('[debug] unlocking %s' % vid_id)
+        try:
+            os.remove(vid_id)
+        except IOError:
+            pass
 
     @staticmethod
     def format_resolution(format, default='unknown'):

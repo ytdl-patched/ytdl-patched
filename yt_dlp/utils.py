@@ -6126,3 +6126,93 @@ def traverse_dict(dictn, keys, casesense=True):
         else:
             return None
     return dictn
+
+
+def bytes_to_scalar(value):
+    if isinstance(value, compat_str):
+        value = value.decode('utf8')
+    result = 0
+    for b in value:
+        result *= 256
+        result += b
+    return result
+
+
+def decode_base(value, digits):
+    # This will convert given base-x string to scalar (long or int)
+    table = {char: index for index, char in enumerate(digits)}
+    result = 0
+    base = len(digits)
+    for chr in value:
+        result *= base
+        result += table[chr]
+    return result
+
+
+def scalar_to_bytes(scalar):
+    if not scalar:
+        return b''
+    array = []
+    while scalar:
+        scalar, idx = divmod(scalar, 256)
+        array.insert(0, idx)
+    return intlist_to_bytes(array)
+
+
+def encode_base(scalar, digits):
+    # This will convert scalar (long or int) to base-x string
+    if not scalar:
+        return ''
+    base = len(digits)
+    result = ''
+    while scalar:
+        scalar, idx = divmod(scalar, base)
+        result = digits[idx] + result
+    return result
+
+
+def char_replace(base, replace, string):
+    # character-by-character replacing
+    if not string:
+        return ''
+    assert len(base) == len(replace)
+    table = {b: r for b, r in zip(base, replace) if b != r}
+    if not table:
+        return string
+    result = ''
+    for i in string:
+        result += table.get(i, i)
+    return result
+
+
+def dig_object_type(obj, prefix='', lines=[]):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            dig_object_type(v, prefix + '.' + str(k), lines)
+    elif isinstance(obj, tuple(x for x in (list, tuple, map, filter) if isinstance(x, type))):
+        for i, v in enumerate(obj):
+            dig_object_type(v, prefix + '[' + str(i) + ']', lines)
+    else:
+        lines.append(prefix + ': ' + str(type(obj)))
+    return lines
+
+
+def to_str(value):
+    if isinstance(value, bytes):
+        value = value.decode(preferredencoding())
+    return value
+
+
+class PrintJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bytes):
+            try:
+                return obj.decode('utf-8')
+            except BaseException:
+                return None
+        else:
+            return json.JSONEncoder.default(self, obj)
+
+
+def time_millis():
+    return round(time.time() * 1000)

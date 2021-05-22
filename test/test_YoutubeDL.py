@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import os
 import sys
 import unittest
+import re
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import copy
@@ -1032,6 +1033,86 @@ class TestYoutubeDL(unittest.TestCase):
         self.assertEqual(downloaded['id'], '2')
         self.assertEqual(downloaded['extractor'], 'Video')
         self.assertEqual(downloaded['extractor_key'], 'Video')
+
+
+class TestFilenameTest(unittest.TestCase):
+    def test_filenames(self):
+        class _YDL(YDL):
+            def __init__(self, *args, **kwargs):
+                super(_YDL, self).__init__(*args, **kwargs)
+
+        ydl = _YDL({
+            'test_filename': 'python3 test/filename_test.py {}',
+        })
+
+        self.assertTrue(ydl.test_filename_external("It's a small world after all"))
+        self.assertTrue(ydl.test_filename_external("It's a small world"))
+        self.assertTrue(ydl.test_filename_external("It's A small world"))
+
+        self.assertFalse(ydl.test_filename_external(''))
+        self.assertFalse(ydl.test_filename_external("Es gibt eine mond"))
+
+    def test_empty_command(self):
+        class _YDL(YDL):
+            def __init__(self, *args, **kwargs):
+                super(_YDL, self).__init__(*args, **kwargs)
+
+        ydl = _YDL({
+            'test_filename': '',
+        })
+
+        self.assertTrue(ydl.test_filename_external("It's a small world after all"))
+        self.assertTrue(ydl.test_filename_external("It's a small world"))
+        self.assertTrue(ydl.test_filename_external("It's A small world"))
+
+        self.assertTrue(ydl.test_filename_external(''))
+        self.assertTrue(ydl.test_filename_external("Es gibt eine mond"))
+
+    def test_unset(self):
+        class _YDL(YDL):
+            def __init__(self, *args, **kwargs):
+                super(_YDL, self).__init__(*args, **kwargs)
+
+        ydl = _YDL({})
+
+        self.assertTrue(ydl.test_filename_external("It's a small world after all"))
+        self.assertTrue(ydl.test_filename_external("It's a small world"))
+        self.assertTrue(ydl.test_filename_external("It's A small world"))
+
+        self.assertTrue(ydl.test_filename_external(''))
+        self.assertTrue(ydl.test_filename_external("Es gibt eine mond"))
+
+    def test_regex_str(self):
+        class _YDL(YDL):
+            def __init__(self, *args, **kwargs):
+                super(_YDL, self).__init__(*args, **kwargs)
+
+        ydl = _YDL({
+            'test_filename': r"re:(?i)It's a small world",
+        })
+
+        self.assertTrue(ydl.test_filename_external("It's a small world after all"))
+        self.assertTrue(ydl.test_filename_external("It's a small world"))
+        self.assertTrue(ydl.test_filename_external("It's A small world"))
+
+        self.assertFalse(ydl.test_filename_external(''))
+        self.assertFalse(ydl.test_filename_external("Es gibt eine mond"))
+
+    def test_compiled_regex(self):
+        class _YDL(YDL):
+            def __init__(self, *args, **kwargs):
+                super(_YDL, self).__init__(*args, **kwargs)
+
+        ydl = _YDL({
+            'test_filename': re.compile(r"(?i)It's a small world"),
+        })
+
+        self.assertTrue(ydl.test_filename_external("It's a small world after all"))
+        self.assertTrue(ydl.test_filename_external("It's a small world"))
+        self.assertTrue(ydl.test_filename_external("It's A small world"))
+
+        self.assertFalse(ydl.test_filename_external(''))
+        self.assertFalse(ydl.test_filename_external("Es gibt eine mond"))
 
 
 if __name__ == '__main__':

@@ -12,9 +12,7 @@ import re
 import sys
 import time
 import math
-from typing import Optional
 
-from ..YoutubeDL import YoutubeDL
 from ..compat import (
     compat_cookiejar_Cookie,
     compat_cookies_SimpleCookie,
@@ -417,7 +415,7 @@ class InfoExtractor(object):
     """
 
     _ready = False
-    _downloader: Optional[YoutubeDL] = None
+    _downloader = None
     _x_forwarded_for_ip = None
     _GEO_BYPASS = True
     _GEO_COUNTRIES = None
@@ -441,21 +439,22 @@ class InfoExtractor(object):
     @classmethod
     def suitable(cls, url):
         """Receives a URL and returns True if suitable for this IE."""
+        return cls._valid_url_re().match(url) is not None
 
+    @classmethod
+    def _match_id(cls, url):
+        m = cls._valid_url_re().match(url)
+        assert m
+        return compat_str(m.group('id'))
+
+    @classmethod
+    def _valid_url_re(cls):
         # This does not use has/getattr intentionally - we want to know whether
         # we have cached the regexp for *this* class, whereas getattr would also
         # match the superclass
         if '_VALID_URL_RE' not in cls.__dict__:
             cls._VALID_URL_RE = re.compile(cls._VALID_URL)
-        return cls._VALID_URL_RE.match(url) is not None
-
-    @classmethod
-    def _match_id(cls, url):
-        if '_VALID_URL_RE' not in cls.__dict__:
-            cls._VALID_URL_RE = re.compile(cls._VALID_URL)
-        m = cls._VALID_URL_RE.match(url)
-        assert m
-        return compat_str(m.group('id'))
+        return cls._VALID_URL_RE
 
     @classmethod
     def working(cls):
@@ -599,7 +598,7 @@ class InfoExtractor(object):
                 return True
         return False
 
-    def set_downloader(self, downloader: YoutubeDL):
+    def set_downloader(self, downloader):
         """Sets the downloader for this IE."""
         self._downloader = downloader
 

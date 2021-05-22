@@ -6,7 +6,6 @@ import time
 import random
 import threading
 
-from ..YoutubeDL import YoutubeDL
 from ..compat import (
     compat_os_name,
     compat_urllib_request,
@@ -64,6 +63,7 @@ class FileDownloader(object):
 
     def __init__(self, ydl, params):
         """Create a FileDownloader object with the given options."""
+        from ..YoutubeDL import YoutubeDL
         self.ydl: YoutubeDL = ydl
         self._progress_hooks = []
         self.params = params

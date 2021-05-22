@@ -577,6 +577,12 @@ def parseOpts(overrideArguments=None):
         '--no-allow-unplayable-formats',
         action='store_false', dest='allow_unplayable_formats',
         help='Do not allow unplayable formats to be listed or downloaded (default)')
+    video_format.add_option(
+        '--live-download-mkv',
+        action='store_true', dest='live_download_mkv', default=False,
+        help=(
+            'Changes video file format to MKV when downloading a live. '
+            'This is useful if the computer could shutdown while downloading.'))
 
     subtitles = optparse.OptionGroup(parser, 'Subtitle Options')
     subtitles.add_option(

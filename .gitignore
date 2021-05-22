@@ -76,6 +76,7 @@ yt-dlp.zip
 *.webp
 *.annotations.xml
 *.description
+*.lock
 
 # Config
 *.conf
@@ -98,3 +99,7 @@ cookies.txt
 ytdlp_plugins/extractor/*
 !ytdlp_plugins/extractor/__init__.py
 !ytdlp_plugins/extractor/sample.py
+
+# Added by GH Codespaces
+pythonenv3.8/
+.venv/
