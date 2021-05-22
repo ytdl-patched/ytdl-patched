@@ -1,23 +1,38 @@
+<h1>THIS BRANCH IS ON DEVELOPMENT AND DO NOT USE. USING THIS BRANCH WILL MAKE YOU CURSED</h1>
+
 <div align="center">
 
-# YT-DLP
+# YTDL-PATCHED
 A command-line program to download videos from YouTube and many other [video platforms](supportedsites.md)
 
-<!-- GHA doesn't have for-the-badge style
-[![CI Status](https://github.com/yt-dlp/yt-dlp/workflows/Core%20Tests/badge.svg?branch=master)](https://github.com/yt-dlp/yt-dlp/actions)
--->
-[![Release version](https://img.shields.io/github/v/release/yt-dlp/yt-dlp?color=brightgreen&label=Release&style=for-the-badge)](https://github.com/yt-dlp/yt-dlp/releases/latest)
-[![License: Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg?style=for-the-badge)](LICENSE)
-[![Doc Status](https://readthedocs.org/projects/yt-dlp/badge/?version=latest&style=for-the-badge)](https://yt-dlp.readthedocs.io)
-[![Discord](https://img.shields.io/discord/807245652072857610?color=blue&label=discord&logo=discord&style=for-the-badge)](https://discord.gg/H5MNcFW63r)
-[![Commits](https://img.shields.io/github/commit-activity/m/yt-dlp/yt-dlp?label=commits&style=for-the-badge)](https://github.com/yt-dlp/yt-dlp/commits)
-[![Last Commit](https://img.shields.io/github/last-commit/yt-dlp/yt-dlp/master?style=for-the-badge)](https://github.com/yt-dlp/yt-dlp/commits)
-[![Downloads](https://img.shields.io/github/downloads/yt-dlp/yt-dlp/total?style=for-the-badge&color=blue)](https://github.com/yt-dlp/yt-dlp/releases/latest)
-[![PyPi Downloads](https://img.shields.io/pypi/dm/yt-dlp?label=PyPi&style=for-the-badge)](https://pypi.org/project/yt-dlp)
+## MIRRORS
+- https://github.com/nao20010128nao/ytdl-patched (primary)
+- https://bitbucket.org/nao20010128nao/ytdl-patched (secondary)
+- https://forge.tedomum.net/nao20010128nao/ytdl-patched (secondary)
+- https://gitlab.com/lesmi_the_goodness/ytdl-patched (secondary)
+- https://gitea.com/nao20010128nao/ytdl-patched (secondary)
+- https://git.sr.ht/~nao20010128nao/ytdl-patched (secondary)
+  - manually mirrored at every git push
+- https://codeberg.org/nao20010128nao/ytdl-patched (secondary)
+- [In my Keybase account](https://book.keybase.io/git) (secondary)
+  - spoiler: you can clone it with `git clone keybase://public/nao20010128nao/ytdl-patched`
+- https://ytdl-patched.vercel.app/ (just for fun)
+- https://ytdl-patched.netlify.app/ (just for fun)
+
+<!-- MARKER BEGIN -->
+
+| Service | Type | Status | Note |
+|:-------:|:----:|:------:|:----:|
+| Travis CI | Tests | [![Build Status](https://travis-ci.org/nao20010128nao/ytdl-patched.svg?branch=master)](https://travis-ci.org/nao20010128nao/ytdl-patched.svg) | Stopped because of lack of credits |
+| GitHub Actions | Tests | ![Run tests](https://github.com/nao20010128nao/ytdl-patched/workflows/Run%20tests/badge.svg) | |
+| GitHub Actions | Build and release | ![Build Patched YTDL](https://github.com/nao20010128nao/ytdl-patched/workflows/Build%20Patched%20YTDL/badge.svg) | |
+| GitHub Actions | Merging commits from upstream | ![Merge upstream](https://github.com/nao20010128nao/ytdl-patched/workflows/Merge%20upstream/badge.svg) | There's conflict if it fails |
+
+<!-- MARKER END -->
 
 </div>
 
-yt-dlp is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork based on the now inactive [youtube-dlc](https://github.com/blackjack4494/yt-dlc). The main focus of this project is adding new features and patches while also keeping up to date with the original project
+ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork based on [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
 * [NEW FEATURES](#new-features)
     * [Differences in default behavior](#differences-in-default-behavior)
@@ -114,7 +129,7 @@ If you are coming from [youtube-dl](https://github.com/ytdl-org/youtube-dl), the
 
 ### Differences in default behavior
 
-Some of yt-dlp's default options are different from that of youtube-dl and youtube-dlc.
+Some of yt-dlp's default options are different from that of youtube-dl and youtube-dlc. (Some of them will be reverted in ytdl-patched)
 
 * The options `--id`, `--auto-number` (`-A`), `--title` (`-t`) and `--literal` (`-l`), no longer work. See [removed options](#Removed) for details
 * `avconv` is not supported as as an alternative to `ffmpeg`
@@ -136,32 +151,40 @@ For ease of use, a few more compat options are available:
 * `--compat-options youtube-dl`: Same as `--compat-options all,-multistreams`
 * `--compat-options youtube-dlc`: Same as `--compat-options all,-no-live-chat,-no-youtube-channel-redirect`
 
+### GOALS
+- keep merging with [`yt-dlp/yt-dlp`](https://github.com/yt-dlp/yt-dlp)
+- implement miscellaneous extractors as possible
+- make `-U` work (yes, really works)
+- do anything best
+
+### NOT TO DO
+- don't change very much from yt-dlp
 
 # INSTALLATION
 yt-dlp is not platform specific. So it should work on your Unix box, on Windows or on macOS
 
 You can install yt-dlp using one of the following methods:
-* Download the binary from the [latest release](https://github.com/yt-dlp/yt-dlp/releases/latest) (recommended method)
-* Use [PyPI package](https://pypi.org/project/yt-dlp): `python3 -m pip install --upgrade yt-dlp`
-* Use pip+git: `python3 -m pip install --upgrade git+https://github.com/yt-dlp/yt-dlp.git@release`
-* Install master branch: `python3 -m pip install --upgrade git+https://github.com/yt-dlp/yt-dlp`
+* Download the binary from the [latest release](https://github.com/nao20010128nao/ytdl-patched/releases/latest) (recommended method)
+* ~~Use [PyPI package](https://pypi.org/project/yt-dlp): `python3 -m pip install --upgrade yt-dlp`~~
+* Use pip+git: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched.git@release`
+* Install master branch: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched`
 
 Note that on some systems, you may need to use `py` or `python` instead of `python3`
 
-UNIX users (Linux, macOS, BSD) can also install the [latest release](https://github.com/yt-dlp/yt-dlp/releases/latest) one of the following ways:
+UNIX users (Linux, macOS, BSD) can also install the [latest release](https://github.com/nao20010128nao/ytdl-patched/releases/latest) one of the following ways:
 
 ```
-sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+sudo curl -L https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -o /usr/local/bin/yt-dlp
 sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
 ```
-sudo wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp
+sudo wget https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -O /usr/local/bin/yt-dlp
 sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
 ```
-sudo aria2c https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+sudo aria2c https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -o /usr/local/bin/yt-dlp
 sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
