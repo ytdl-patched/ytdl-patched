@@ -1,0 +1,42 @@
+name: Merge upstream
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: master
+        fetch-depth: 0
+    - name: Configure git
+      run: |
+        set +e -x
+        git config --global pull.rebase false
+        git config --global core.editor "$(realpath ./devscripts/remove_ci_skip.py)"
+        git config --global user.name nao20010128nao
+        git config --global user.email nao20010128@gmail.com
+        git config --unset  http.https://github.com/.extraheader
+        git config --unset  credential.helper
+        git remote add self https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
+        git remote add upstream https://github.com/ytdl-org/youtube-dl.git
+    - name: Pull from ytdl-org/youtube-dl
+      run: git pull upstream master --log
+    - name: Regenerate docs/supportedsites.md
+      continue-on-error: true
+      run: |
+        python ./devscripts/make_supportedsites.py ./docs/supportedsites.md 
+        git commit -m"[automatic] regenerate docs/supportedsites.md @ $(date +'%Y%m%d')" ./docs/supportedsites.md
+    - name: Push to here
+      run: git push self HEAD:master
+    - name: Create tag
+      continue-on-error: true
+      run: |
+        git push self :refs/tags/youtube-dl || true
+        git tag -f youtube-dl upstream/master || true
+        git push self -f --tags || true

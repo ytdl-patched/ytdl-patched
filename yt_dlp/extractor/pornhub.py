@@ -727,7 +727,7 @@ class PornHubPagedVideoListIE(PornHubPagedPlaylistBaseIE):
     @classmethod
     def suitable(cls, url):
         return (False
-                if PornHubIE.suitable(url) or PornHubUserIE.suitable(url) or PornHubUserVideosUploadIE.suitable(url)
+                if PornHubIE.suitable(url) or PornHubUserIE.suitable(url) or PornHubUserVideosUploadIE.suitable(url) or PornHubUserLiveIE.suitable(url)
                 else super(PornHubPagedVideoListIE, cls).suitable(url))
 
 
@@ -743,3 +743,75 @@ class PornHubUserVideosUploadIE(PornHubPagedPlaylistBaseIE):
         'url': 'https://www.pornhub.com/model/zoe_ph/videos/upload',
         'only_matching': True,
     }]
+
+
+class PornHubUserLiveIE(PornHubBaseIE):
+    _VALID_URL = r'(?P<url>https?://(?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net|org))/live/(?P<id>[^/?#&]+))(?:[?#&]|/(?!videos)|$)'
+    _TESTS = [{
+        'url': 'https://www.pornhub.com/live/sadiejaymes?track=6001',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.pornhub.com/live/sadiejaymes',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.pornhub.com/live/adorablenyan?track=6001',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.pornhub.com/live/adorablenyan',
+        'only_matching': True,
+    }]
+
+    SANITIZED_URL = 'https://www.pornhub.com/live/%s'
+    LIVE_API_URL = 'https://manifest-server.naiadsystems.com/live/s:%s.json?last=load&format=mp4-hls'
+
+    def _real_extract(self, url):
+        user_id = self._match_id(url)
+
+        webpage = self._download_webpage(self.SANITIZED_URL % user_id, user_id)
+        title = self._search_regex(r'<title>(.+?) : Online .+?</title>', webpage, 'title')
+
+        live_response = self._download_json(self.LIVE_API_URL % user_id, user_id)
+        response_formats = live_response.get('formats')
+
+        hls_manifest = response_formats.get('mp4-hls', {}).get('manifest')
+        if hls_manifest:
+            formats = self._extract_m3u8_formats(
+                hls_manifest, user_id,
+                ext='mp4', entry_protocol='m3u8_native',
+                m3u8_id='hls', live=True)
+        else:
+            formats = []
+
+        rtmp_section = response_formats.get('mp4-rtmp')
+        rtmp_vcodec = rtmp_section.get('videoCodec')
+        rtmp_acodec = rtmp_section.get('audioCodec')
+
+        for fmt in rtmp_section.get('encodings'):
+            rtmp_url = fmt.get('location')
+            video_width = fmt.get('videoWidth')
+            video_height = fmt.get('videoHeight')
+            vbr = fmt.get('videoKbps')
+            abr = fmt.get('audioKbps')
+            formats.append({
+                'format_id': 'rtmp-%s' % video_width,
+                'protocol': 'rtmp',
+                'ext': 'mp4',
+                'url': rtmp_url,
+                'width': video_width,
+                'height': video_height,
+                'vcodec': rtmp_vcodec,
+                'acodec': rtmp_acodec,
+                'vbr': vbr,
+                'abr': abr,
+                # 'preference': -1,
+            })
+
+        self._sort_formats(formats)
+        return {
+            'id': user_id,
+            'uploader': user_id,
+            'uploader_id': user_id,
+            'title': title,
+            'formats': formats,
+            'is_live': True,
+        }

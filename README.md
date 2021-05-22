@@ -1,9 +1,11 @@
-<h1>THIS BRANCH IS ON DEVELOPMENT AND DO NOT USE. USING THIS BRANCH WILL MAKE YOU CURSED</h1>
+<h1>THIS BRANCH IS ON DEVELOPMENT. DO NOT USE, OR I WILL CURSE YOU</h1>
 
 <div align="center">
 
 # YTDL-PATCHED
 A command-line program to download videos from YouTube and many other [video platforms](supportedsites.md)
+
+</div>
 
 ## MIRRORS
 - https://github.com/nao20010128nao/ytdl-patched (primary)
@@ -29,8 +31,6 @@ A command-line program to download videos from YouTube and many other [video pla
 | GitHub Actions | Merging commits from upstream | ![Merge upstream](https://github.com/nao20010128nao/ytdl-patched/workflows/Merge%20upstream/badge.svg) | There's conflict if it fails |
 
 <!-- MARKER END -->
-
-</div>
 
 ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork based on [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
@@ -71,7 +71,6 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
 * [PLUGINS](#plugins)
 * [DEPRECATED OPTIONS](#deprecated-options)
 * [MORE](#more)
-</div>
 
 
 # NEW FEATURES

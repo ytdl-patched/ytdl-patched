@@ -1,0 +1,5 @@
+{
+  "*.py": ["flake8"],
+  "*.{js,json}": ["npx prettier --print-width 200 --write"],
+  "*.sh": ["shellcheck"]
+}

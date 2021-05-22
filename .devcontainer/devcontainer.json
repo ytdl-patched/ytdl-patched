@@ -1,0 +1,28 @@
+{
+  "name": "Python 3",
+  "image": "nao20010128nao/ytdl-patched:codespaces",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "python.pythonPath": "/home/lesmi/.linuxbrew/bin/python3.9",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
+    "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
+    "python.formatting.yapfPath": "/usr/local/py-utils/bin/yapf",
+    "python.linting.banditPath": "/usr/local/py-utils/bin/bandit",
+    "python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
+    "python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
+    "python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
+    "python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
+    "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
+    "editor.codeLens": false,
+    "editor.fontSize": 12,
+    "markdown.preview.fontSize": 12
+  },
+  "extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-azuretools.vscode-docker", "eamodio.gitlens", "ms-vscode.powershell"],
+  "remoteUser": "codespace",
+  "overrideCommand": false,
+  "mounts": ["source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"],
+  "runArgs": ["--privileged", "--security-opt", "seccomp=unconfined"],
+  "postCreateCommand": "./devscripts/init_hooks.sh"
+}

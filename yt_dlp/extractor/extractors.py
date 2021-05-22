@@ -85,6 +85,10 @@ from .asiancrush import (
     AsianCrushIE,
     AsianCrushPlaylistIE,
 )
+from .askmona import (
+    AskMonaIE,
+    AskMona3IE,
+)
 from .atresplayer import AtresPlayerIE
 from .atttechchannel import ATTTechChannelIE
 from .atvat import ATVAtIE
@@ -298,6 +302,7 @@ from .dailymotion import (
     DailymotionPlaylistIE,
     DailymotionUserIE,
 )
+from .damtomo import DamtomoIE
 from .daum import (
     DaumIE,
     DaumClipIE,
@@ -351,7 +356,9 @@ from .discoverygo import (
 from .discoverynetworks import DiscoveryNetworksDeIE
 from .discoveryvr import DiscoveryVRIE
 from .disney import DisneyIE
+from .disneychris import DisneyChrisIE
 from .dispeak import DigitallySpeakingIE
+from .dnatube import DnaTubeIE
 from .doodstream import DoodStreamIE
 from .dropbox import DropboxIE
 from .dw import (
@@ -388,10 +395,12 @@ from .espn import (
 )
 from .esri import EsriVideoIE
 from .europa import EuropaIE
+from .evoload import EvoLoadIE
 from .expotv import ExpoTVIE
 from .expressen import ExpressenIE
 from .extremetube import ExtremeTubeIE
 from .eyedotv import EyedoTVIE
+from .eyny import EynyIE
 from .facebook import (
     FacebookIE,
     FacebookPluginsVideoIE,
@@ -516,6 +525,10 @@ from .hungama import (
     HungamaSongIE,
 )
 from .hypem import HypemIE
+from .ichinanalive import (
+    IchinanaLiveIE,
+    IchinanaLiveClipIE,
+)
 from .ign import (
     IGNIE,
     IGNVideoIE,
@@ -557,12 +570,17 @@ from .ivi import (
     IviCompilationIE
 )
 from .ivideon import IvideonIE
-from .iwara import IwaraIE
+from .iwara import (
+    IwaraIE,
+    IwaraUserIE,
+    IwaraUser2IE,
+)
 from .izlesene import IzleseneIE
 from .jamendo import (
     JamendoIE,
     JamendoAlbumIE,
 )
+from .javhub import JavhubIE
 from .jeuxvideo import JeuxVideoIE
 from .jove import JoveIE
 from .joj import JojIE
@@ -686,6 +704,11 @@ from .markiza import (
     MarkizaPageIE,
 )
 from .massengeschmacktv import MassengeschmackTVIE
+from .mastodon import (
+    MastodonIE,
+    MastodonUserIE,
+    MastodonUserNumericIE,
+)
 from .matchtv import MatchTVIE
 from .mdr import MDRIE
 from .medaltv import MedalTVIE
@@ -722,6 +745,10 @@ from .minds import (
 from .ministrygrid import MinistryGridIE
 from .minoto import MinotoIE
 from .miomio import MioMioIE
+from .mirrativ import (
+    MirrativIE,
+    MirrativUserIE,
+)
 from .mit import TechTVMITIE, OCWMITIE
 from .mitele import MiTeleIE
 from .mixcloud import (
@@ -851,7 +878,14 @@ from .nick import (
     NickNightIE,
     NickRuIE,
 )
-from .niconico import NiconicoIE, NiconicoPlaylistIE, NiconicoUserIE
+from .niconico import (
+    NiconicoIE,
+    NiconicoPlaylistIE,
+    NiconicoUserIE,
+    NiconicoSeriesIE,
+    NiconicoLiveIE,
+)
+from .niconico_smile import NiconicoSmileIE
 from .ninecninemedia import NineCNineMediaIE
 from .ninegag import NineGagIE
 from .ninenow import NineNowIE
@@ -923,6 +957,10 @@ from .ooyala import (
     OoyalaIE,
     OoyalaExternalIE,
 )
+from .openrec import (
+    OpenRecIE,
+    OpenRecCaptureIE,
+)
 from .ora import OraTVIE
 from .orf import (
     ORFTVthekIE,
@@ -973,6 +1011,10 @@ from .picarto import (
 )
 from .piksel import PikselIE
 from .pinkbike import PinkbikeIE
+from .pixivsketch import (
+    PixivSketchIE,
+    PixivSketchUserIE,
+)
 from .pinterest import (
     PinterestIE,
     PinterestCollectionIE,
@@ -1025,6 +1067,12 @@ from .presstv import PressTVIE
 from .prosiebensat1 import ProSiebenSat1IE
 from .puls4 import Puls4IE
 from .pyvideo import PyvideoIE
+from .qawebsites import (
+    AskfmIE,
+    MarshmallowQAIE,
+    MottohometeIE,
+    PeingIE,
+)
 from .qqmusic import (
     QQMusicIE,
     QQMusicSingerIE,
@@ -1036,6 +1084,7 @@ from .r7 import (
     R7IE,
     R7ArticleIE,
 )
+from .radiko import RadikoIE
 from .radiocanada import (
     RadioCanadaIE,
     RadioCanadaAudioVideoIE,
@@ -1151,6 +1200,7 @@ from .shared import (
     SharedIE,
     VivoIE,
 )
+from .sharevideos import ShareVideosIE
 from .showroomlive import ShowRoomLiveIE
 from .simplecast import (
     SimplecastIE,
@@ -1333,6 +1383,13 @@ from .toggle import (
     ToggleIE,
     MeWatchIE,
 )
+from .tokyomotion import (
+    TokyoMotionIE,
+    TokyoMotionUserFavsIE,
+    TokyoMotionUserIE,
+    TokyoMotionSearchesIE,
+    TokyoMotionScannerIE,
+)
 from .tonline import TOnlineIE
 from .toongoggles import ToonGogglesIE
 from .toutv import TouTvIE
@@ -1491,6 +1548,7 @@ from .vice import (
 from .vidbit import VidbitIE
 from .viddler import ViddlerIE
 from .videa import VideaIE
+from .videobin import VideobinIE
 from .videodetective import VideoDetectiveIE
 from .videofyme import VideofyMeIE
 from .videomore import (
@@ -1553,6 +1611,10 @@ from .vodlocker import VodlockerIE
 from .vodpl import VODPlIE
 from .vodplatform import VODPlatformIE
 from .voicerepublic import VoiceRepublicIE
+from .voicy import (
+    VoicyIE,
+    VoicyChannelIE,
+)
 from .voot import VootIE
 from .voxmedia import (
     VoxMediaVolumeIE,

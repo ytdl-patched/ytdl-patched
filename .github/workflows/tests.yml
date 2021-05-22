@@ -1,0 +1,82 @@
+name: Run tests
+
+on:
+  push:
+    paths:
+      - youtube_dl/**
+      - test/**
+      - .github/workflows/tests.yml
+      - devscripts/**
+    branches-ignore:
+      - gh-pages
+  workflow_dispatch:
+    inputs: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.ytdl_test_set.may_fail || matrix.python.may_fail }}
+    strategy:
+      matrix:
+        python: [
+          { name: '2.7', may_fail: false, major: 2, special: '' },
+          { name: '3.9', may_fail: false, major: 3, special: '' },
+          { name: '3.8', may_fail: false, major: 3, special: '' },
+          { name: '3.7', may_fail: false, major: 3, special: '' },
+          { name: 'pypy-3.7', may_fail: false, major: 3, special: '' },
+          { name: 'pypy-2.7', may_fail: true, major: 2, special: '' },
+          { name: 'jython', may_fail: true, major: 2, special: 'jython' },
+          # { name: 'ironpython', may_fail: true, major: 2, special: 'iron' },
+        ]
+        ytdl_test_set: [
+          { name: 'download', may_fail: true },
+          { name: 'core', may_fail: false },
+        ]
+    env:
+      YTDL_TEST_SET: ${{ matrix.ytdl_test_set.name }}
+    steps:
+      - uses: actions/checkout@v2
+      # standard CPython provided by GitHub Actions
+      - name: Set up Python ${{ matrix.python.name }}
+        uses: actions/setup-python@v2
+        if: ${{ !matrix.python.special }}
+        with:
+          python-version: ${{ matrix.python.name }}
+      - name: Install deps
+        if: ${{ !matrix.python.special }}
+        run: pip install nose
+      # Jython
+      - name: Install Java
+        if: ${{ matrix.python.special == 'jython' }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Install Jython
+        if: ${{ matrix.python.special == 'jython' }}
+        run: ./devscripts/install_jython.sh
+      # IronPython
+      - name: Install .NET
+        uses: actions/setup-dotnet@v1
+        if: ${{ matrix.python.special == 'iron' }}
+        with:
+          dotnet-version: '3.1.x'
+      - name: Install IronPython
+        if: ${{ matrix.python.special == 'iron' }}
+        run: ./devscripts/install_ironpython.sh
+      # main script
+      - name: Run test
+        continue-on-error: ${{ matrix.ytdl_test_set.may_fail || matrix.python.may_fail }}
+        run: ./devscripts/run_tests.sh
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install deps
+        run: pip3 install flake8
+      - name: Run flake8 .
+        run: flake8 .

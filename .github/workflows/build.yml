@@ -1,177 +1,581 @@
-name: Build
+name: 'URGENT: Please respond #1126012 before stopping Actions!'
+# name: Build Patched YTDL
 
 on:
   push:
-    branches:
-      - release
+    paths:
+      - youtube_dl/**
+      - test/**
+      - docker/**
+      - .github/workflows/build.yml
+      - Makefile
+      - setup.py
+    branches-ignore:
+      - gh-pages
+  pull_request:
+    types: [ opened, synchronize, ready_for_review ]
+  workflow_dispatch:
+    inputs:
+
+env:
+  python_version: 3.9
+  windows_icon: red
+  ZOPFLI_ITERATIONS: 40
 
 jobs:
-  build_unix:
-
+  prepare:
     runs-on: ubuntu-latest
-
     outputs:
-      ytdlp_version: ${{ steps.bump_version.outputs.ytdlp_version }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      sha2_unix: ${{ steps.sha2_file.outputs.sha2_unix }}
-
+      latest_version: ${{ steps.prepare.outputs.latest_version }}
+      latest_version_normalized: ${{ steps.prepare.outputs.latest_version_normalized }}
+      latest_version_numeric: ${{ steps.prepare.outputs.latest_version_numeric }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-          python-version: '3.8'
-    - name: Install packages
-      run: sudo apt-get -y install zip pandoc man
-    - name: Bump version
-      id: bump_version
-      run: python devscripts/update-version.py
-    - name: Print version
-      run: echo "${{ steps.bump_version.outputs.ytdlp_version }}"
-    - name: Run Make
-      run: make
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.bump_version.outputs.ytdlp_version }}
-        release_name: yt-dlp ${{ steps.bump_version.outputs.ytdlp_version }}
-        body: |
-          Changelog:
-          PLACEHOLDER
-        draft: false
-        prerelease: false
-    - name: Upload yt-dlp Unix binary
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./yt-dlp
-        asset_name: yt-dlp
-        asset_content_type: application/octet-stream
-    - name: Get SHA2-256SUMS for yt-dlp
-      id: sha2_file
-      run: echo "::set-output name=sha2_unix::$(sha256sum yt-dlp | awk '{print $1}')"
-    - name: Install dependencies for pypi
-      env:
-        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      if: "env.PYPI_TOKEN != ''"
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish on pypi
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      if: "env.TWINE_PASSWORD != ''"
-      run: |
-        rm -rf dist/*
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Install deps
+        run: |
+          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+          sudo apt update
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y tzdata
+      - name: Prepare files
+        id: prepare
+        run: |
+          mkdir artifacts
+          export NOW_RAW="$(date)"
+          export LATEST_VERSION="$(date --date="${NOW_RAW}" +'%Y.%m.%d.%s')"
+          echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
+          echo "::set-output name=latest_version::${LATEST_VERSION}"
+          echo "::set-output name=latest_version_normalized::$(python3 devscripts/normalize_version.py "${LATEST_VERSION}")"
+          echo "::set-output name=latest_version_numeric::$(date --date="${NOW_RAW}" +'%s')"
 
-  build_windows:
-
+          echo "from __future__ import unicode_literals
+          __version__ = '${LATEST_VERSION}'
+          " > youtube_dl/version.py
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-base
+          path: |
+            youtube_dl/version.py
+            youtube_dl/build_config.py
+            artifacts/
+  build-linux:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download base
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-base
+      - name: Create buildconfig.py
+        run: python ./devscripts/make_buildconfig.py
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Install deps
+        run: |
+          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+          sudo apt update
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y curl zip make git gawk pandoc tzdata p7zip-full
+          brew install advancecomp
+      - name: Build patched YTDL for Linux
+        run: |
+          make youtube-dl youtube-dl.tar.gz
+          mv youtube-dl artifacts/
+          mv youtube-dl.tar.gz artifacts/
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-linux
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            artifacts/
+            README.md
+  build-wheel:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download base
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-base
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Install deps
+        run: pip3 install -U pip build wheel setuptools
+      - name: Build wheel
+        run: python3 -m build
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-wheel
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            dist/
+            README.md
+  # build-eggs:
+  #   runs-on: ${{ matrix.os }}
+  #   needs: prepare
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [
+  #         ubuntu-latest,
+  #         windows-latest,
+  #         macos-latest,
+  #       ]
+  #       python_version: [
+  #         2.7,
+  #         3.5, 3.6, 3.7, 3.8, 3.9
+  #       ]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Download base
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: ytdl-base
+  #     - name: Set up Python ${{ matrix.python_version }}
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: ${{ matrix.python_version }}
+  #     - name: Install deps
+  #       run: python3 -m pip install -U pip build wheel setuptools
+  #     - name: Build egg
+  #       run: python3 setup.py bdist_egg
+  #     - name: Upload artifacts for the next steps
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: ytdl-egg-${{ matrix.python_version }}-${{ runner.os }}
+  #         # README.md (or any other files in the repo) is required
+  #         # to prevent upload-artifacts to find LCA
+  #         path: |
+  #           dist/
+  #           README.md
+  build-windows:
     runs-on: windows-latest
-
-    outputs:
-      sha2_windows: ${{ steps.sha2_file_win.outputs.sha2_windows }}
-
-    needs: build_unix
-
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        icon: [red, white]
+        # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
+        # builder: [PyInstaller, py2exe]
+        # remove_tests: ['-notests', '']  # yes and no
+        builder: [PyInstaller]
+        remove_tests: ['']
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-          python-version: '3.8'
-    - name: Upgrade pip and enable wheel support
-      run: python -m pip install --upgrade pip setuptools wheel
-    - name: Install Requirements
-      run: pip install pyinstaller mutagen pycryptodome
-    - name: Bump version
-      id: bump_version
-      run: python devscripts/update-version.py
-    - name: Print version
-      run: echo "${{ steps.bump_version.outputs.ytdlp_version }}"
-    - name: Run PyInstaller Script
-      run: python pyinst.py 64
-    - name: Upload yt-dlp.exe Windows binary
-      id: upload-release-windows
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.build_unix.outputs.upload_url }}
-        asset_path: ./dist/yt-dlp.exe
-        asset_name: yt-dlp.exe
-        asset_content_type: application/vnd.microsoft.portable-executable
-    - name: Get SHA2-256SUMS for yt-dlp.exe
-      id: sha2_file_win
-      run: echo "::set-output name=sha2_windows::$((Get-FileHash dist\yt-dlp.exe -Algorithm SHA256).Hash.ToLower())"
-
-  build_windows32:
-
-    runs-on: windows-latest
-
+      - uses: actions/checkout@v2
+      - name: Download base
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-base
+      - name: Create buildconfig.py
+        run: python ./devscripts/make_buildconfig.py variant=${{ matrix.icon }}
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Install deps
+        run: pip install -U ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
+      - name: Install UPX
+        run: choco install upx
+      - name: Remove unneeded tests in InfoExtractor
+        shell: bash
+        run: python3 ./devscripts/reduce_code.py youtube_dl/extractor/*.py
+        if: ${{ matrix.remove_tests == '-notests' }}
+      - name: Build patched YTDL for Windows
+        shell: pwsh
+        run: pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}
+      - name: Compress generated EXE
+        run: upx --lzma --best artifacts/youtube-dl.exe
+        if: ${{ matrix.builder == 'PyInstaller' }}
+        continue-on-error: true
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: "ytdl-windows-${{ matrix.icon }}-${{ matrix.builder }}${{ matrix.remove_tests }}"
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            artifacts/
+            README.md
+  prepare-artifacts:
+    runs-on: ubuntu-latest
+    needs: [prepare, build-linux, build-windows]
+    if: ${{ github.ref == 'refs/heads/master' }}
     outputs:
-      sha2_windows32: ${{ steps.sha2_file_win32.outputs.sha2_windows32 }}
-
-    needs: [build_unix, build_windows]
-
+      filehash_bin: ${{ steps.hash-and-versions.outputs.filehash_bin }}
+      filehash_exe: ${{ steps.hash-and-versions.outputs.filehash_exe }}
+      filehash_tar: ${{ steps.hash-and-versions.outputs.filehash_tar }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.4.4 32-Bit
-      uses: actions/setup-python@v2
-      with:
-          python-version: '3.4.4'
-          architecture: 'x86'
-    - name: Upgrade pip and enable wheel support
-      run: python -m pip install pip==19.1.1 setuptools==43.0.0 wheel==0.33.6
-    - name: Install Requirements for 32 Bit
-      run: pip install pyinstaller==3.5 mutagen==1.42.0 pycryptodome==3.9.4 pefile==2019.4.18
-    - name: Bump version
-      id: bump_version
-      run: python devscripts/update-version.py
-    - name: Print version
-      run: echo "${{ steps.bump_version.outputs.ytdlp_version }}"
-    - name: Run PyInstaller Script for 32 Bit
-      run: python pyinst.py 32
-    - name: Upload Executable yt-dlp_x86.exe
-      id: upload-release-windows32
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.build_unix.outputs.upload_url }}
-        asset_path: ./dist/yt-dlp_x86.exe
-        asset_name: yt-dlp_x86.exe
-        asset_content_type: application/vnd.microsoft.portable-executable
-    - name: Get SHA2-256SUMS for yt-dlp_x86.exe
-      id: sha2_file_win32
-      run: echo "::set-output name=sha2_windows32::$((Get-FileHash dist\yt-dlp_x86.exe -Algorithm SHA256).Hash.ToLower())"
-    - name: Make SHA2-256SUMS file
-      env:
-        SHA2_WINDOWS: ${{ needs.build_windows.outputs.sha2_windows }}
-        SHA2_WINDOWS32: ${{ steps.sha2_file_win32.outputs.sha2_windows32 }}
-        SHA2_UNIX: ${{ needs.build_unix.outputs.sha2_unix }}
-        YTDLP_VERSION: ${{ needs.build_unix.outputs.ytdlp_version }}
-      run: |
-        echo "version:${env:YTDLP_VERSION}" >> SHA2-256SUMS
-        echo "yt-dlp.exe:${env:SHA2_WINDOWS}" >> SHA2-256SUMS
-        echo "yt-dlp_x86.exe:${env:SHA2_WINDOWS32}" >> SHA2-256SUMS
-        echo "yt-dlp:${env:SHA2_UNIX}" >> SHA2-256SUMS
+      - name: Download builds for Linux
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-linux
+      - name: Download builds for Windows
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-${{ env.windows_icon }}-PyInstaller
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo env DEBIAN_FRONTEND=noninteractive apt install -y jq
+      - name: Prepare artifacts
+        id: hash-and-versions
+        run: |
+          FILEHASH_BIN="$(sha256sum artifacts/youtube-dl        | awk '{print $1}')"
+          FILEHASH_TAR="$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
+          FILEHASH_EXE="$(sha256sum artifacts/youtube-dl.exe    | awk '{print $1}')"
+          echo "::set-output name=filehash_bin::${FILEHASH_BIN}"
+          echo "::set-output name=filehash_tar::${FILEHASH_TAR}"
+          echo "::set-output name=filehash_exe::${FILEHASH_EXE}"
+          echo '{"versions":{}}' | jq ".latest=\"${{ needs.prepare.outputs.latest_version }}\"" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].bin=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl\",\"${FILEHASH_BIN}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].tar=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].exe=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl-${{ env.windows_icon }}.exe\",\"${FILEHASH_EXE}\"]" \
+            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"][\"exe-${{ env.windows_icon }}\"]=[\"https://github.com/nao20010128nao/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl-${{ env.windows_icon }}.exe\",\"${FILEHASH_EXE}\"]" \
+            | tee artifacts/versions.json
+      - name: Upload artifacts for the next steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: ytdl-artifacts
+          # README.md (or any other files in the repo) is required
+          # to prevent upload-artifacts to find LCA
+          path: |
+            artifacts/
+            README.md
 
-    - name: Upload 256SUMS file
-      id: upload-sums
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.build_unix.outputs.upload_url }}
-        asset_path: ./SHA2-256SUMS
-        asset_name: SHA2-256SUMS
-        asset_content_type: text/plain
+  upload-gh-pages:
+    needs: prepare-artifacts
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: artifacts
+          single-commit: true
+  upload-homebrew:
+    needs: [prepare, prepare-artifacts]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    env:
+      FILEHASH_TAR: ${{ needs.prepare-artifacts.outputs.filehash_tar }}
+      VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
+    steps:
+      - name: Upload to my homebrew repository
+        run: |
+          git config --global user.name nao20010128nao
+          git config --global user.email nao20010128@gmail.com
+          git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
+          cd homebrew-my
+          echo $FILEHASH_TAR $VERSION
+          sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
+          sed -E -i "s/version \".*\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
+          sed -E -i "s^url \".*\"^url \"https://github.com/nao20010128nao/ytdl-patched/releases/download/$VERSION/youtube-dl.tar.gz\"^g" Formula/ytdl-patched.rb
+          git add .
+          git commit -m "ytdl-patched: $VERSION"
+          git push
+  upload-releases:
+    needs: [prepare, prepare-artifacts]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.prepare.outputs.latest_version_numeric }}
+          release_name: ${{ needs.prepare.outputs.latest_version }}
+          draft: false
+          prerelease: false
+          body: |
+            What to download?
+            - for Linux/macOS - `youtube-dl` (requires Python 3.x installed)
+            - for Windows (no Python 3.x required)
+                - red icon - `...-red.exe` (**default** in -U)
+                - white icon - `...-white.exe`
+      - name: Upload bin
+        id: upload-1
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./artifacts/youtube-dl
+          asset_name: youtube-dl
+          asset_content_type: application/zip
+      - name: Upload source tar
+        id: upload-2
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./artifacts/youtube-dl.tar.gz
+          asset_name: youtube-dl.tar.gz
+          asset_content_type: application/gzip
+      - name: Download builds for Windows (red icon)
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-red-PyInstaller
+      - name: Upload exe
+        id: upload-3
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./artifacts/youtube-dl.exe
+          asset_name: youtube-dl-red.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Download builds for Windows (white icon)
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-white-PyInstaller
+      - name: Upload exe
+        id: upload-4
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./artifacts/youtube-dl.exe
+          asset_name: youtube-dl-white.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Download wheel
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-wheel
+      - name: Upload wheel
+        id: upload-5
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
+          asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
+          asset_content_type: application/zip
+      - name: Upload wheel tar
+        id: upload-6
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
+          asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-wheel.tar.gz
+          asset_content_type: application/gzip
+
+  # upload-pull-request:
+  #   needs: prepare-artifacts
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event_name == 'pull_request' }}
+  #   steps:
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: ytdl-artifacts
+  #     - name: Download builds for Windows (red icon)
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: ytdl-windows-red-PyInstaller
+  #     - name: Download builds for Windows (white icon)
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: ytdl-windows-white-PyInstaller
+  #     - name: Download wheel
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: ytdl-wheel
+  #     - uses: actions/github-script@v4
+  #       with:
+  #         github-token: ${{secrets.GITHUB_TOKEN}}
+  #         script: |
+  #           const texts = ['Built binary for this PR can be found here:']
+  #           texts.append(`- Commit hash: \`${context.sha}\``)
+  #           texts.append(`- Sorry, but it's WIP`)
+  #           await github.issues.createComment({
+  #             issue_number: context.issue.number,
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #             body: texts.join('\n'),
+  #           })
+  # pull-request-failed:
+  #   runs-on: ubuntu-latest
+  #   needs: [prepare, prepare-artifacts, build-windows, build-linux]
+  #   if: ${{ github.event_name == 'pull_request' && failure() }}
+  #   steps:
+  #     - uses: actions/github-script@v4
+  #       with:
+  #         github-token: ${{secrets.GITHUB_TOKEN}}
+  #         script: |
+  #           const texts = ['Build Failed!']
+  #           texts.append(`- Commit hash: \`${context.sha}\``)
+  #           await github.issues.createComment({
+  #             issue_number: context.issue.number,
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #             body: texts.join('\n'),
+  #           })
+
+  binary-test:
+    needs: [build-linux, build-windows]
+    runs-on: ${{ matrix.environ.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        environ: [
+          { os: "ubuntu-20.04", artifact: linux },
+          { os: "ubuntu-18.04", artifact: linux },
+
+          # { os: "macos-11.0", artifact: linux },
+          # { os: "macos-10.15", artifact: linux },
+
+          { os: "windows-2016", artifact: windows-white-PyInstaller },
+          # { os: "windows-2016", artifact: windows-white-py2exe },
+          { os: "windows-2019", artifact: windows-white-PyInstaller },
+          # { os: "windows-2019", artifact: windows-white-py2exe },
+        ]
+        python_version: ["3.9", "3.8", "3.7"]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-${{ matrix.environ.artifact }}
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v1
+        if: ${{ startsWith(runner.os, 'ubuntu') || startsWith(runner.os, 'macos') }}
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: youtube-dl --help and --version
+        shell: bash
+        run: |
+          chmod a+x ./artifacts/youtube-dl || true
+          ./artifacts/youtube-dl --help
+          ./artifacts/youtube-dl --version
+      - name: Download some videos
+        shell: bash
+        continue-on-error: true
+        run: |
+          ./artifacts/youtube-dl \
+              https://www.youtube.com/watch?v=XEY7UQJxw-o \
+              https://twitter.com/twetchapp/status/1311686520793829376
+  docker-linux:
+    runs-on: ubuntu-latest
+    needs: [prepare, build-linux]
+    continue-on-error: true
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-linux
+      - run: ls artifacts/
+      - name: Login
+        uses: docker/login-action@v1
+        with:
+          username: nao20010128nao
+          password: ${{ secrets.DHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and Push (alpine)
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/i386,linux/ppc64le
+          file: ./docker/linux.Dockerfile
+          context: .
+          build-args: |
+            base_tag=3-alpine
+          tags: |
+            nao20010128nao/ytdl-patched:latest
+            nao20010128nao/ytdl-patched:alpine
+            nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}
+            nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-alpine
+      - name: Build and Push (slim)
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/i386,linux/ppc64le
+          file: ./docker/linux.Dockerfile
+          context: .
+          build-args: |
+            base_tag=3-slim
+          tags: |
+            nao20010128nao/ytdl-patched:slim
+            nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-slim
+  docker-windows:
+    runs-on: ${{ matrix.windows.os }}
+    needs: [prepare, build-windows]
+    continue-on-error: true
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    strategy:
+      matrix:
+        windows: [
+          {os: windows-2019, tag: '1809'},
+          {os: windows-2016, tag: ltsc2016},
+        ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-windows-${{ env.windows_icon }}-PyInstaller
+      - run: ls artifacts/
+      - name: Login
+        run: docker login --username nao20010128nao --password ${{ secrets.DHUB_TOKEN }}
+      - name: Build and Push (1809)
+        if: ${{ matrix.windows.tag == '1809' }}
+        run: |
+          docker build --build-arg base_tag=3-windowsservercore-1809 `
+              -f ./docker/windows.Dockerfile `
+              -t nao20010128nao/ytdl-patched:latest `
+              -t nao20010128nao/ytdl-patched:windowsservercore-1809 `
+              -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }} `
+              -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809 `
+              .
+          docker push nao20010128nao/ytdl-patched:latest
+          docker push nao20010128nao/ytdl-patched:windowsservercore-1809
+          docker push nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}
+          docker push nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-1809
+      - name: Build and Push (ltsc2016)
+        if: ${{ matrix.windows.tag == 'ltsc2016' }}
+        run: |
+          docker build --build-arg base_tag=3-windowsservercore-ltsc2016 `
+              -f ./docker/windows.Dockerfile `
+              -t nao20010128nao/ytdl-patched:windowsservercore-ltsc2016 `
+              -t nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016 `
+              .
+          docker push nao20010128nao/ytdl-patched:windowsservercore-ltsc2016
+          docker push nao20010128nao/ytdl-patched:${{ needs.prepare.outputs.latest_version_numeric }}-windowsservercore-ltsc2016

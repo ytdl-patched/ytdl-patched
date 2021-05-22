@@ -1,0 +1,29 @@
+name: Docker image for Codespaces
+
+on:
+  push:
+    paths:
+      - docker/codespaces.Dockerfile
+      - .github/workflows/docker-codespaces.yml
+      - .devcontainer/**
+    branches:
+      - master
+  workflow_dispatch:
+    inputs: {}
+  schedule:
+    - cron: "0 4 * * 0"
+
+jobs:
+  docker-codespaces:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.DHUB_TOKEN }}
+      - name: Build and Push
+        run: |
+          docker build -t nao20010128nao/ytdl-patched:codespaces -f ./docker/codespaces.Dockerfile .
+          docker push nao20010128nao/ytdl-patched:codespaces
