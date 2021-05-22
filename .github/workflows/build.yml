@@ -4,7 +4,7 @@ name: 'URGENT: Please respond #1126012 before stopping Actions!'
 on:
   push:
     paths:
-      - youtube_dl/**
+      - yt_dlp/**
       - test/**
       - docker/**
       - .github/workflows/build.yml
@@ -55,14 +55,14 @@ jobs:
 
           echo "from __future__ import unicode_literals
           __version__ = '${LATEST_VERSION}'
-          " > youtube_dl/version.py
+          " > yt_dlp/version.py
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
           name: ytdl-base
           path: |
-            youtube_dl/version.py
-            youtube_dl/build_config.py
+            yt_dlp/version.py
+            yt_dlp/build_config.py
             artifacts/
   build-linux:
     runs-on: ubuntu-latest
@@ -193,7 +193,7 @@ jobs:
         run: choco install upx
       - name: Remove unneeded tests in InfoExtractor
         shell: bash
-        run: python3 ./devscripts/reduce_code.py youtube_dl/extractor/*.py
+        run: python3 ./devscripts/reduce_code.py yt_dlp/extractor/*.py
         if: ${{ matrix.remove_tests == '-notests' }}
       - name: Build patched YTDL for Windows
         shell: pwsh

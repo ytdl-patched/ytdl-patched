@@ -37,24 +37,24 @@ jobs:
         git config --unset  http.https://github.com/.extraheader
         git remote set-url origin https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/ytdl-patched.git
 
-    - name: Generate youtube_dl/extractor/mastodon/instances.py
+    - name: Generate yt_dlp/extractor/mastodon/instances.py
       run: python ./devscripts/make_mastodon_instance_list.py
       continue-on-error: true
-    - name: Generate youtube_dl/extractor/peertube/instances.py
+    - name: Generate yt_dlp/extractor/peertube/instances.py
       run: python ./devscripts/make_peertube_instance_list.py
       continue-on-error: true
-    - name: Generate youtube_dl/chrome_versions.py
+    - name: Generate yt_dlp/chrome_versions.py
       run: python ./devscripts/make_chrome_version_list.py
       continue-on-error: true
 
-    - name: Commit youtube_dl/extractor/mastodon/instances.py
-      run: git commit -m"[automatic] regenerate youtube_dl/extractor/mastodon/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/mastodon/instances.py
+    - name: Commit yt_dlp/extractor/mastodon/instances.py
+      run: git commit -m"[automatic] regenerate yt_dlp/extractor/mastodon/instances.py @ $(date +'%Y%m%d')" yt_dlp/extractor/mastodon/instances.py
       continue-on-error: true
-    - name: Commit youtube_dl/extractor/peertube/instances.py
-      run: git commit -m"[automatic] regenerate youtube_dl/extractor/peertube/instances.py @ $(date +'%Y%m%d')" youtube_dl/extractor/peertube/instances.py
+    - name: Commit yt_dlp/extractor/peertube/instances.py
+      run: git commit -m"[automatic] regenerate yt_dlp/extractor/peertube/instances.py @ $(date +'%Y%m%d')" yt_dlp/extractor/peertube/instances.py
       continue-on-error: true
-    - name: Commit youtube_dl/chrome_versions.py
-      run: git commit -m"[automatic] regenerate youtube_dl/chrome_versions.py @ $(date +'%Y%m%d')" youtube_dl/chrome_versions.py
+    - name: Commit yt_dlp/chrome_versions.py
+      run: git commit -m"[automatic] regenerate yt_dlp/chrome_versions.py @ $(date +'%Y%m%d')" yt_dlp/chrome_versions.py
       continue-on-error: true
 
     - name: Push to here

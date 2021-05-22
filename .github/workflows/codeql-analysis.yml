@@ -9,7 +9,7 @@ on:
   push:
     branches: [master]
     paths:
-      - youtube_dl/**
+      - yt_dlp/**
       - test/**
   workflow_dispatch:
     inputs: {}

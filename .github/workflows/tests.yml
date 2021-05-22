@@ -3,7 +3,7 @@ name: Run tests
 on:
   push:
     paths:
-      - youtube_dl/**
+      - yt_dlp/**
       - test/**
       - .github/workflows/tests.yml
       - devscripts/**
