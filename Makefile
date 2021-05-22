@@ -1,6 +1,7 @@
 all: youtube-dl README.md CONTRIBUTING.md README.txt youtube-dl.1 youtube-dl.bash-completion _youtube-dl youtube-dl.fish supportedsites
 
 clean: clean-test clean-dist clean-cache
+completions: bash-completion fish-completion zsh-completion
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
@@ -127,7 +128,7 @@ _EXTRACTOR_FILES = $(shell find yt_dlp/extractor -iname '*.py' -and -not -iname 
 yt_dlp/extractor/lazy_extractors.py: devscripts/make_lazy_extractors.py devscripts/lazy_load_template.py $(_EXTRACTOR_FILES)
 	$(PYTHON) devscripts/make_lazy_extractors.py $@
 
-youtube-dl.tar.gz: README.md youtube-dl.1 completions Changelog.md AUTHORS
+youtube-dl.tar.gz: youtube-dl README.md youtube-dl.1 completions Changelog.md AUTHORS
 	@tar -czf youtube-dl.tar.gz --transform "s|^|youtube-dl/|" --owner 0 --group 0 \
 		--exclude '*.DS_Store' \
 		--exclude '*.kate-swp' \
