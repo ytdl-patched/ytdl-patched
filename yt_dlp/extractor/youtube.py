@@ -298,7 +298,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     _YT_INNERTUBE_API_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'
     _YT_INITIAL_DATA_RE = r'(?:window\s*\[\s*["\']ytInitialData["\']\s*\]|ytInitialData)\s*=\s*({.+?})\s*;'
     _YT_INITIAL_PLAYER_RESPONSE_RE = r'ytInitialPlayerResponse\s*=\s*({.+?})\s*;'
-    _YT_INITIAL_BOUNDARY_RE = r'(?:var\s+meta|</script|\n)'
+    _YT_INITIAL_BOUNDARY_RE = r'(?:var\s+meta|</script|if\s*\(window\.ytcsi\)|\n)'
 
     def _generate_sapisidhash_header(self):
         sapisid_cookie = self._get_cookies('https://www.youtube.com').get('SAPISID')
@@ -528,6 +528,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             youtu\.be|                                        # just youtu.be/xxxx
                             vid\.plus|                                        # or vid.plus/xxxx
                             zwearz\.com/watch|                                # or zwearz.com/watch/xxxx
+                            i\.ytimg\.com/vi|                                 # or i.ytimg.com/vi/xxx
+                            y2u\.be|                                          # or y2x.be/xxxx
                             %(invidious)s
                          )/
                          |(?:www\.)?cleanvideosearch\.com/media/action/yt/watch\?videoId=
@@ -1356,10 +1358,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         for player_re in cls._PLAYER_INFO_RE:
             id_m = re.search(player_re, player_url)
             if id_m:
-                break
+                return id_m.group('id')
         else:
             raise ExtractorError('Cannot identify player %r' % player_url)
-        return id_m.group('id')
 
     def _extract_signature_function(self, video_id, player_url, example_sig):
         player_id = self._extract_player_info(player_url)
@@ -1922,7 +1923,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'player', {'videoId': video_id}, video_id, api_key=self._extract_api_key(ytcfg))
 
         playability_status = player_response.get('playabilityStatus') or {}
-        if playability_status.get('reason') == 'Sign in to confirm your age':
+        if playability_status.get('reason') in ('Sign in to confirm your age', 'This video may be inappropriate for some users.'):
             pr = self._parse_json(try_get(compat_parse_qs(
                 self._download_webpage(
                     base_url + 'get_video_info', video_id,
@@ -2210,7 +2211,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             video_details.get('lengthSeconds')
             or microformat.get('lengthSeconds')) \
             or parse_duration(search_meta('duration'))
-        is_live = video_details.get('isLive')
+        is_live = bool(video_details.get('isLive'))
         owner_profile_url = microformat.get('ownerProfileUrl')
 
         info = {
@@ -2243,12 +2244,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'is_live': is_live,
             'playable_in_embed': playability_status.get('playableInEmbed'),
             'was_live': video_details.get('isLiveContent'),
+            'subtitles': {},
+            'automatic_captions': {},
         }
 
         pctr = try_get(
             player_response,
             lambda x: x['captions']['playerCaptionsTracklistRenderer'], dict)
-        subtitles = {}
+        subtitles = info['subtitles']
         if pctr:
             def process_language(container, base_url, lang_code, sub_name, query):
                 lang_subs = container.setdefault(lang_code, [])
@@ -2277,7 +2280,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         try_get(caption_track, lambda x: x.get('name').get('simpleText')),
                         {})
                     continue
-                automatic_captions = {}
+                automatic_captions = info['automatic_captions']
                 for translation_language in (pctr.get('translationLanguages') or []):
                     translation_language_code = translation_language.get('languageCode')
                     if not translation_language_code:
@@ -2286,8 +2289,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         automatic_captions, base_url, translation_language_code,
                         try_get(translation_language, lambda x: x['languageName']['simpleText']),
                         {'tlang': translation_language_code})
-                info['automatic_captions'] = automatic_captions
-        info['subtitles'] = subtitles
 
         parsed_url = compat_urllib_parse_urlparse(url)
         for component in [parsed_url.fragment, parsed_url.query]:
