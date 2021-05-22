@@ -92,6 +92,7 @@ from .utils import (
     replace_extension,
     SameFileError,
     sanitize_filename,
+    sanitize_open,
     sanitize_path,
     sanitize_url,
     sanitized_Request,
@@ -134,7 +135,26 @@ from .postprocessor import (
     get_postprocessor,
     MoveFilesAfterDownloadPP,
 )
+from .longname import (
+    escaped_open,
+    escaped_path_exists,
+    escaped_path_getsize,
+    escaped_path_isfile,
+    escaped_sanitize_open,
+    escaped_stat,
+    escaped_unlink,
+    escaped_utime,
+    escaped_rename,
+    escaped_remove,
+    escaped_basename,
+    escaped_dirname,
+    ensure_directory,
+)
 from .version import __version__
+try:
+    from .build_config import git_commit, git_upstream_commit
+except ImportError:
+    git_commit, git_upstream_commit = None, None
 
 if compat_os_name == 'nt':
     import ctypes
@@ -375,6 +395,8 @@ class YoutubeDL(object):
     geo_bypass_ip_block:
                        IP range in CIDR notation that will be used similarly to
                        geo_bypass_country
+    escape_long_names: If True, it splits filename into 255-byte chunks in current locale,
+                       to avoid "File name too long" error. Most user don't need this.
 
     The following options determine which downloader is picked:
     external_downloader: A dictionary of protocol keys and the executable of the
@@ -1408,7 +1430,7 @@ class YoutubeDL(object):
                 else:
                     try:
                         self.to_screen('[info] Writing playlist description to: ' + descfn)
-                        with io.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
+                        with self.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
                             descfile.write(ie_result['description'])
                     except (OSError, IOError):
                         self.report_error('Cannot write playlist description file ' + descfn)
@@ -2358,7 +2380,7 @@ class YoutubeDL(object):
             else:
                 try:
                     self.to_screen('[info] Writing video description to: ' + descfn)
-                    with io.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
+                    with self.open(encodeFilename(descfn), 'w', encoding='utf-8') as descfile:
                         descfile.write(info_dict['description'])
                 except (OSError, IOError):
                     self.report_error('Cannot write description file ' + descfn)
@@ -2375,7 +2397,7 @@ class YoutubeDL(object):
             else:
                 try:
                     self.to_screen('[info] Writing video annotations to: ' + annofn)
-                    with io.open(encodeFilename(annofn), 'w', encoding='utf-8') as annofile:
+                    with self.open(encodeFilename(annofn), 'w', encoding='utf-8') as annofile:
                         annofile.write(info_dict['annotations'])
                 except (KeyError, TypeError):
                     self.report_warning('There are no annotations to write.')
@@ -2406,7 +2428,7 @@ class YoutubeDL(object):
                         try:
                             # Use newline='' to prevent conversion of newline characters
                             # See https://github.com/ytdl-org/youtube-dl/issues/10268
-                            with io.open(encodeFilename(sub_filename), 'w', encoding='utf-8', newline='') as subfile:
+                            with self.open(encodeFilename(sub_filename), 'w', encoding='utf-8', newline='') as subfile:
                                 subfile.write(sub_info['data'])
                             sub_info['filepath'] = sub_filename
                             files_to_move[sub_filename] = sub_filename_final
@@ -2473,7 +2495,7 @@ class YoutubeDL(object):
             else:
                 try:
                     self.to_screen('[info] Writing internet shortcut to: ' + linkfn)
-                    with io.open(encodeFilename(to_high_limit_path(linkfn)), 'w', encoding='utf-8', newline=newline) as linkfile:
+                    with self.open(encodeFilename(to_high_limit_path(linkfn)), 'w', encoding='utf-8', newline=newline) as linkfile:
                         template_vars = {'url': ascii_url}
                         if embed_filename:
                             template_vars['filename'] = linkfn[:-(len(extension) + 1)]
@@ -3237,3 +3259,79 @@ class YoutubeDL(object):
             if ret and not write_all:
                 break
         return ret
+
+    def open(self, filename, open_mode, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_open(filename, open_mode, **kwargs)
+        else:
+            return open(filename, open_mode, **kwargs)
+
+    def sanitize_open(self, filename, open_mode):
+        if self.params.get('escape_long_names', False):
+            return escaped_sanitize_open(filename, open_mode)
+        else:
+            return sanitize_open(filename, open_mode)
+
+    def stat(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_stat(path, *args, **kwargs)
+        else:
+            return os.stat(path, *args, **kwargs)
+
+    def unlink(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_unlink(path, *args, **kwargs)
+        else:
+            os.unlink(path, *args, **kwargs)
+
+    def isfile(self, path):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_isfile(path)
+        else:
+            return os.path.isfile(path)
+
+    def exists(self, path):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_exists(path)
+        else:
+            return os.path.exists(path)
+
+    def getsize(self, filename):
+        if self.params.get('escape_long_names', False):
+            return escaped_path_getsize(filename)
+        else:
+            return os.path.getsize(filename)
+
+    def utime(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_utime(path, *args, **kwargs)
+        else:
+            os.utime(path, *args, **kwargs)
+
+    def rename(self, src, dst, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_rename(src, dst, *args, **kwargs)
+        else:
+            os.rename(src, dst, *args, **kwargs)
+
+    def remove(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_remove(path, *args, **kwargs)
+        else:
+            os.remove(path, *args, **kwargs)
+
+    def basename(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_basename(path)
+        else:
+            return os.path.basename(path)
+
+    def dirname(self, path, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            return escaped_dirname(path)
+        else:
+            return os.path.dirname(path)
+
+    def ensure_directory(self, filename):
+        if self.params.get('escape_long_names', False):
+            ensure_directory(filename)

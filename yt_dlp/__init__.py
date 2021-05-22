@@ -37,6 +37,7 @@ from .utils import (
     setproctitle,
     std_headers,
     write_string,
+    get_filesystem_encoding,
 )
 from .update import update_self
 from .downloader import (
@@ -46,6 +47,7 @@ from .extractor import gen_extractors, list_extractors
 from .extractor.common import InfoExtractor
 from .extractor.adobepass import MSO_INFO
 from .postprocessor.metadatafromfield import MetadataFromFieldPP
+from .longname import DEFAULT_DELIMITER
 from .YoutubeDL import YoutubeDL
 
 
@@ -120,6 +122,17 @@ def _real_main(argv=None):
     if opts.ap_list_mso:
         table = [[mso_id, mso_info['name']] for mso_id, mso_info in MSO_INFO.items()]
         write_string('Supported TV Providers:\n' + render_table(['mso', 'mso name'], table) + '\n', out=sys.stdout)
+        sys.exit(0)
+    if opts.rm_longnamedir:
+        for dirpath, _, _ in os.walk(os.getcwd(), topdown=False):
+            if isinstance(dirpath, bytes):  # Python 2
+                dirpath = dirpath.decode(get_filesystem_encoding())
+            if not dirpath.endswith(DEFAULT_DELIMITER):
+                continue
+            if os.listdir(dirpath):
+                continue
+            write_string('Removing %s\n' % dirpath, out=sys.stdout)
+            os.rmdir(dirpath)
         sys.exit(0)
 
     # Conflicting, missing and erroneous options
@@ -641,6 +654,8 @@ def _real_main(argv=None):
         'geo_bypass_ip_block': opts.geo_bypass_ip_block,
         'warnings': warnings,
         'compat_opts': compat_opts,
+
+        'escape_long_names': opts.escape_long_names,
         # just for deprecation check
         'autonumber': opts.autonumber or None,
         'usetitle': opts.usetitle or None,

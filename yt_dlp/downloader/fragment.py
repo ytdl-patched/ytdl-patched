@@ -1,6 +1,5 @@
 from __future__ import division, unicode_literals
 
-import os
 import time
 import json
 
@@ -9,7 +8,6 @@ from .http import HttpFD
 from ..utils import (
     error_to_compat_str,
     encodeFilename,
-    sanitize_open,
     sanitized_Request,
 )
 
@@ -75,7 +73,7 @@ class FragmentFD(FileDownloader):
 
     def _read_ytdl_file(self, ctx):
         assert 'ytdl_corrupt' not in ctx
-        stream, _ = sanitize_open(self.ytdl_filename(ctx['filename']), 'r')
+        stream, _ = self.ydl.sanitize_open(self.ytdl_filename(ctx['filename']), 'r')
         try:
             ytdl_data = json.loads(stream.read())
             ctx['fragment_index'] = ytdl_data['downloader']['current_fragment']['index']
@@ -87,7 +85,7 @@ class FragmentFD(FileDownloader):
             stream.close()
 
     def _write_ytdl_file(self, ctx):
-        frag_index_stream, _ = sanitize_open(self.ytdl_filename(ctx['filename']), 'w')
+        frag_index_stream, _ = self.ydl.sanitize_open(self.ytdl_filename(ctx['filename']), 'w')
         downloader = {
             'current_fragment': {
                 'index': ctx['fragment_index'],
@@ -112,7 +110,7 @@ class FragmentFD(FileDownloader):
             return False, None
         if fragment_info_dict.get('filetime'):
             ctx['fragment_filetime'] = fragment_info_dict.get('filetime')
-        down, frag_sanitized = sanitize_open(fragment_filename, 'rb')
+        down, frag_sanitized = self.ydl.sanitize_open(fragment_filename, 'rb')
         ctx['fragment_filename_sanitized'] = frag_sanitized
         frag_content = down.read()
         down.close()
@@ -126,7 +124,7 @@ class FragmentFD(FileDownloader):
             if self.__do_ytdl_file(ctx):
                 self._write_ytdl_file(ctx)
             if not self.params.get('keep_fragments', False):
-                os.remove(encodeFilename(ctx['fragment_filename_sanitized']))
+                self.ydl.remove(encodeFilename(ctx['fragment_filename_sanitized']))
             del ctx['fragment_filename_sanitized']
 
     def _prepare_frag_download(self, ctx):
@@ -159,9 +157,9 @@ class FragmentFD(FileDownloader):
         resume_len = 0
 
         # Establish possible resume length
-        if os.path.isfile(encodeFilename(tmpfilename)):
+        if self.ydl.isfile(encodeFilename(tmpfilename)):
             open_mode = 'ab'
-            resume_len = os.path.getsize(encodeFilename(tmpfilename))
+            resume_len = self.ydl.getsize(encodeFilename(tmpfilename))
 
         # Should be initialized before ytdl file check
         ctx.update({
@@ -170,7 +168,7 @@ class FragmentFD(FileDownloader):
         })
 
         if self.__do_ytdl_file(ctx):
-            if os.path.isfile(encodeFilename(self.ytdl_filename(ctx['filename']))):
+            if self.ydl.isfile(encodeFilename(self.ytdl_filename(ctx['filename']))):
                 self._read_ytdl_file(ctx)
                 is_corrupt = ctx.get('ytdl_corrupt') is True
                 is_inconsistent = ctx['fragment_index'] > 0 and resume_len == 0
@@ -188,7 +186,7 @@ class FragmentFD(FileDownloader):
                 self._write_ytdl_file(ctx)
                 assert ctx['fragment_index'] == 0
 
-        dest_stream, tmpfilename = sanitize_open(tmpfilename, open_mode)
+        dest_stream, tmpfilename = self.ydl.sanitize_open(tmpfilename, open_mode)
 
         ctx.update({
             'dl': dl,
@@ -259,8 +257,8 @@ class FragmentFD(FileDownloader):
         ctx['dest_stream'].close()
         if self.__do_ytdl_file(ctx):
             ytdl_filename = encodeFilename(self.ytdl_filename(ctx['filename']))
-            if os.path.isfile(ytdl_filename):
-                os.remove(ytdl_filename)
+            if self.ydl.isfile(ytdl_filename):
+                self.ydl.remove(ytdl_filename)
         elapsed = time.time() - ctx['started']
 
         if ctx['tmpfilename'] == '-':
@@ -271,10 +269,10 @@ class FragmentFD(FileDownloader):
                 filetime = ctx.get('fragment_filetime')
                 if filetime:
                     try:
-                        os.utime(ctx['filename'], (time.time(), filetime))
+                        self.ydl.utime(ctx['filename'], (time.time(), filetime))
                     except Exception:
                         pass
-            downloaded_bytes = os.path.getsize(encodeFilename(ctx['filename']))
+            downloaded_bytes = self.ydl.getsize(encodeFilename(ctx['filename']))
 
         self._hook_progress({
             'downloaded_bytes': downloaded_bytes,
@@ -282,6 +280,7 @@ class FragmentFD(FileDownloader):
             'filename': ctx['filename'],
             'status': 'finished',
             'elapsed': elapsed,
+            'fragment_count': ctx['total_frags'],
         })
 
     def _prepare_external_frag_download(self, ctx):

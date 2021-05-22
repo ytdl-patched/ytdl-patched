@@ -32,6 +32,7 @@ from ..utils import (
     sanitized_Request,
     sanitize_open,
 )
+from ..longname import split_longname
 
 
 class ExternalFD(FileDownloader):
@@ -60,7 +61,7 @@ class ExternalFD(FileDownloader):
                 'elapsed': time.time() - started,
             }
             if filename != '-':
-                fsize = os.path.getsize(encodeFilename(tmpfilename))
+                fsize = self.ydl.getsize(encodeFilename(tmpfilename))
                 self.to_screen('\r[%s] Downloaded %s bytes' % (self.get_basename(), fsize))
                 self.try_rename(tmpfilename, filename)
                 status.update({
@@ -173,9 +174,9 @@ class ExternalFD(FileDownloader):
                     dest.write(fragment_data)
                 src.close()
                 if not self.params.get('keep_fragments', False):
-                    os.remove(encodeFilename(fragment_filename))
+                    self.ydl.remove(encodeFilename(fragment_filename))
             dest.close()
-            os.remove(encodeFilename('%s.frag.urls' % tmpfilename))
+            self.ydl.remove(encodeFilename('%s.frag.urls' % tmpfilename))
         else:
             p = subprocess.Popen(
                 cmd, stderr=subprocess.PIPE)
@@ -296,13 +297,13 @@ class Aria2cFD(ExternalFD):
         # See: https://github.com/yt-dlp/yt-dlp/issues/276
         # https://github.com/ytdl-org/youtube-dl/issues/20312
         # https://github.com/aria2/aria2/issues/1373
-        dn = os.path.dirname(tmpfilename)
+        dn = self.ydl.dirname(tmpfilename)
         if dn:
-            if not os.path.isabs(dn):
-                dn = '.%s%s' % (os.path.sep, dn)
-            cmd += ['--dir', dn + os.path.sep]
+            if not self.ydl.isabs(dn):
+                dn = '.%s%s' % (self.ydl.sep, dn)
+            cmd += ['--dir', dn + self.ydl.sep]
         if 'fragments' not in info_dict:
-            cmd += ['--out', '.%s%s' % (os.path.sep, os.path.basename(tmpfilename))]
+            cmd += ['--out', '.%s%s' % (self.ydl.sep, self.ydl.basename(tmpfilename))]
         cmd += ['--auto-file-renaming=false']
 
         if 'fragments' in info_dict:
@@ -310,7 +311,7 @@ class Aria2cFD(ExternalFD):
             url_list_file = '%s.frag.urls' % tmpfilename
             url_list = []
             for frag_index, fragment in enumerate(info_dict['fragments']):
-                fragment_filename = '%s-Frag%d' % (os.path.basename(tmpfilename), frag_index)
+                fragment_filename = '%s-Frag%d' % (self.ydl.basename(tmpfilename), frag_index)
                 url_list.append('%s\n\tout=%s' % (fragment['url'], fragment_filename))
             stream, _ = sanitize_open(url_list_file, 'wb')
             stream.write('\n'.join(url_list).encode('utf-8'))
@@ -352,6 +353,9 @@ class FFmpegFD(ExternalFD):
             self.report_error('m3u8 download detected but ffmpeg could not be found. Please install')
             return False
         ffpp.check_version()
+
+        if self.ydl.params.get('escape_long_names', False):
+            tmpfilename = split_longname(tmpfilename)
 
         args = [ffpp.executable, '-y']
 
@@ -401,7 +405,7 @@ class FFmpegFD(ExternalFD):
             # http://git.videolan.org/?p=ffmpeg.git;a=commit;h=b4eb1f29ebddd60c41a2eb39f5af701e38e0d3fd)
             # We could switch to the following code if we are able to detect version properly
             # args += ['-http_proxy', proxy]
-            env = os.environ.copy()
+            env = self.ydl.environ.copy()
             compat_setenv('HTTP_PROXY', proxy, env=env)
             compat_setenv('http_proxy', proxy, env=env)
 

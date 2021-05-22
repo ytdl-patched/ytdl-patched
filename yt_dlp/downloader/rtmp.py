@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import os
 import re
 import subprocess
 import time
@@ -182,7 +181,7 @@ class RtmpFD(FileDownloader):
             return False
 
         while retval in (RD_INCOMPLETE, RD_FAILED) and not test and not live:
-            prevsize = os.path.getsize(encodeFilename(tmpfilename))
+            prevsize = self.ydl.getsize(encodeFilename(tmpfilename))
             self.to_screen('[rtmpdump] Downloaded %s bytes' % prevsize)
             time.sleep(5.0)  # This seems to be needed
             args = basic_args + ['--resume']
@@ -190,7 +189,7 @@ class RtmpFD(FileDownloader):
                 args += ['--skip', '1']
             args = [encodeArgument(a) for a in args]
             retval = run_rtmpdump(args)
-            cursize = os.path.getsize(encodeFilename(tmpfilename))
+            cursize = self.ydl.getsize(encodeFilename(tmpfilename))
             if prevsize == cursize and retval == RD_FAILED:
                 break
             # Some rtmp streams seem abort after ~ 99.8%. Don't complain for those
@@ -199,7 +198,7 @@ class RtmpFD(FileDownloader):
                 retval = RD_SUCCESS
                 break
         if retval == RD_SUCCESS or (test and retval == RD_INCOMPLETE):
-            fsize = os.path.getsize(encodeFilename(tmpfilename))
+            fsize = self.ydl.getsize(encodeFilename(tmpfilename))
             self.to_screen('[rtmpdump] Downloaded %s bytes' % fsize)
             self.try_rename(tmpfilename, filename)
             self._hook_progress({

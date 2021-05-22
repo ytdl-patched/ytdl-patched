@@ -760,6 +760,12 @@ def parseOpts(overrideArguments=None):
         '--sleep-subtitles', metavar='SECONDS',
         dest='sleep_interval_subtitles', default=0, type=int,
         help='Number of seconds to sleep before each subtitle download')
+    workarounds.add_option(
+        '--escape-long-names',
+        action='store_true', dest='escape_long_names', default=False,
+        help=(
+            'Split filename longer than 255 bytes into few path segments. '
+            'This may create dumb directories.'))
 
     verbosity = optparse.OptionGroup(parser, 'Verbosity and Simulation Options')
     verbosity.add_option(
@@ -1079,6 +1085,10 @@ def parseOpts(overrideArguments=None):
         '--rm-cache-dir',
         action='store_true', dest='rm_cachedir',
         help='Delete all filesystem cache files')
+    filesystem.add_option(
+        '--rm-long-name-dir',
+        action='store_true', dest='rm_longnamedir',
+        help='Deletes all filename-splitting-related empty directories in working directory')
 
     thumbnail = optparse.OptionGroup(parser, 'Thumbnail Options')
     thumbnail.add_option(

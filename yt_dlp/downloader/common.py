@@ -1,12 +1,16 @@
 from __future__ import division, unicode_literals
 
-import os
 import re
 import sys
 import time
 import random
+import threading
 
-from ..compat import compat_os_name
+from ..YoutubeDL import YoutubeDL
+from ..compat import (
+    compat_os_name,
+    compat_urllib_request,
+)
 from ..utils import (
     decodeArgument,
     encodeFilename,
@@ -47,7 +51,7 @@ class FileDownloader(object):
     xattr_set_filesize: Set ytdl.filesize user xattribute with expected size.
     external_downloader_args:  A list of additional command-line arguments for the
                         external downloader.
-    hls_use_mpegts:     Use the mpegts container for HLS videos.
+    hls_use_mpegts:     Use the mpegts container for HLS videself.ydl.
     http_chunk_size:    Size of a chunk for chunk-based HTTP downloading. May be
                         useful for bypassing bandwidth throttling imposed by
                         a webserver (experimental)
@@ -60,7 +64,7 @@ class FileDownloader(object):
 
     def __init__(self, ydl, params):
         """Create a FileDownloader object with the given options."""
-        self.ydl = ydl
+        self.ydl: YoutubeDL = ydl
         self._progress_hooks = []
         self.params = params
         self.add_progress_hook(self.report_progress)
@@ -186,7 +190,7 @@ class FileDownloader(object):
     def temp_name(self, filename):
         """Returns a temporary filename for the given filename."""
         if self.params.get('nopart', False) or filename == '-' or \
-                (os.path.exists(encodeFilename(filename)) and not os.path.isfile(encodeFilename(filename))):
+                (self.ydl.exists(encodeFilename(filename)) and not self.ydl.isfile(encodeFilename(filename))):
             return filename
         return filename + '.part'
 
@@ -202,7 +206,7 @@ class FileDownloader(object):
         try:
             if old_filename == new_filename:
                 return
-            os.rename(encodeFilename(old_filename), encodeFilename(new_filename))
+            self.ydl.rename(encodeFilename(old_filename), encodeFilename(new_filename))
         except (IOError, OSError) as err:
             self.report_error('unable to rename file: %s' % error_to_compat_str(err))
 
@@ -210,7 +214,7 @@ class FileDownloader(object):
         """Try to set the last-modified time of the given file."""
         if last_modified_hdr is None:
             return
-        if not os.path.isfile(encodeFilename(filename)):
+        if not self.ydl.isfile(encodeFilename(filename)):
             return
         timestr = last_modified_hdr
         if timestr is None:
@@ -222,7 +226,7 @@ class FileDownloader(object):
         if filetime == 0:
             return
         try:
-            os.utime(filename, (time.time(), filetime))
+            self.ydl.utime(filename, (time.time(), filetime))
         except Exception:
             pass
         return filetime
@@ -303,8 +307,12 @@ class FileDownloader(object):
                     msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s (%(_elapsed_str)s)'
                 else:
                     msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s'
+                if s.get('fragment_count') is not None:
+                    msg_template += ' (%(fragment_count)s fragments)'
             else:
                 msg_template = '%(_percent_str)s % at %(_speed_str)s ETA %(_eta_str)s'
+        if s.get('fragment_count') is not None and s.get('fragment_index') is not None:
+            msg_template += ' (%(fragment_index)d fragments of %(fragment_count)d)'
 
         self._report_progress_status(msg_template % s)
 
@@ -342,13 +350,13 @@ class FileDownloader(object):
 
         nooverwrites_and_exists = (
             not self.params.get('overwrites', subtitle)
-            and os.path.exists(encodeFilename(filename))
+            and self.ydl.exists(encodeFilename(filename))
         )
 
         if not hasattr(filename, 'write'):
             continuedl_and_exists = (
                 self.params.get('continuedl', True)
-                and os.path.isfile(encodeFilename(filename))
+                and self.ydl.isfile(encodeFilename(filename))
                 and not self.params.get('nopart', False)
             )
 
@@ -358,7 +366,7 @@ class FileDownloader(object):
                 self._hook_progress({
                     'filename': filename,
                     'status': 'finished',
-                    'total_bytes': os.path.getsize(encodeFilename(filename)),
+                    'total_bytes': self.ydl.getsize(encodeFilename(filename)),
                 })
                 return True, False
 
@@ -381,7 +389,38 @@ class FileDownloader(object):
                     '[download] Sleeping %s seconds ...' % (
                         sleep_interval_sub))
                 time.sleep(sleep_interval_sub)
-        return self.real_download(filename, info_dict), True
+
+        timer = [None]
+        heartbeat_lock = None
+        download_complete = False
+        if 'heartbeat_url' in info_dict:
+            heartbeat_lock = threading.Lock()
+
+            heartbeat_url = info_dict['heartbeat_url']
+            heartbeat_data = info_dict['heartbeat_data']
+            heartbeat_interval = info_dict.get('heartbeat_interval', 30)
+            self.to_screen('[download] Heartbeat with %s second interval...' % heartbeat_interval)
+
+            def heartbeat():
+                try:
+                    compat_urllib_request.urlopen(url=heartbeat_url, data=heartbeat_data)
+                except Exception:
+                    self.to_screen("[download] Heartbeat failed")
+
+                with heartbeat_lock:
+                    if not download_complete:
+                        timer[0] = threading.Timer(heartbeat_interval, heartbeat)
+                        timer[0].start()
+
+            heartbeat()
+
+        try:
+            return self.real_download(filename, info_dict), True
+        finally:
+            if heartbeat_lock:
+                with heartbeat_lock:
+                    timer[0].cancel()
+                    download_complete = True
 
     def real_download(self, filename, info_dict):
         """Real download process. Redefine in subclasses."""
@@ -403,6 +442,6 @@ class FileDownloader(object):
         str_args = [decodeArgument(a) for a in args]
 
         if exe is None:
-            exe = os.path.basename(str_args[0])
+            exe = self.ydl.basename(str_args[0])
 
         self.write_debug('%s command line: %s' % (exe, shell_quote(str_args)))

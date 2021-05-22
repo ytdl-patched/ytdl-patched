@@ -3,11 +3,8 @@ from __future__ import unicode_literals
 
 import re
 
-try:
-    from os import PathLike, fsdecode
-    from typing import Union
-except ImportError:
-    PathLike, fsdecode = None, None
+from os import PathLike, fsdecode
+from typing import Union
 
 from os import remove, rename, sep, stat, utime, unlink, makedirs
 from os.path import exists, isfile, getsize, normpath, join, basename, dirname

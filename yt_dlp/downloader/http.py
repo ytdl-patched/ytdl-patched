@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import errno
-import os
 import socket
 import time
 import random
@@ -16,7 +15,6 @@ from ..utils import (
     ContentTooShortError,
     encodeFilename,
     int_or_none,
-    sanitize_open,
     sanitized_Request,
     write_xattr,
     XAttrMetadataError,
@@ -59,8 +57,8 @@ class HttpFD(FileDownloader):
 
         if self.params.get('continuedl', True):
             # Establish possible resume length
-            if os.path.isfile(encodeFilename(ctx.tmpfilename)):
-                ctx.resume_len = os.path.getsize(
+            if self.ydl.isfile(encodeFilename(ctx.tmpfilename)):
+                ctx.resume_len = self.ydl.getsize(
                     encodeFilename(ctx.tmpfilename))
 
         ctx.is_resume = ctx.resume_len > 0
@@ -230,7 +228,7 @@ class HttpFD(FileDownloader):
                     if not to_stdout:
                         ctx.stream.close()
                     ctx.stream = None
-                ctx.resume_len = byte_counter if to_stdout else os.path.getsize(encodeFilename(ctx.tmpfilename))
+                ctx.resume_len = byte_counter if to_stdout else self.ydl.getsize(encodeFilename(ctx.tmpfilename))
                 raise RetryDownload(e)
 
             while True:
@@ -257,7 +255,7 @@ class HttpFD(FileDownloader):
                 # Open destination file just in time
                 if ctx.stream is None:
                     try:
-                        ctx.stream, ctx.tmpfilename = sanitize_open(
+                        ctx.stream, ctx.tmpfilename = self.ydl.sanitize_open(
                             ctx.tmpfilename, ctx.open_mode)
                         assert ctx.stream is not None
                         ctx.filename = self.undo_temp_name(ctx.tmpfilename)

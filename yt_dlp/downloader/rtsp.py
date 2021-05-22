@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import os
 import subprocess
 
 from .common import FileDownloader
@@ -31,7 +30,7 @@ class RtspFD(FileDownloader):
 
         retval = subprocess.call(args)
         if retval == 0:
-            fsize = os.path.getsize(encodeFilename(tmpfilename))
+            fsize = self.ydl.getsize(encodeFilename(tmpfilename))
             self.to_screen('\r[%s] %s bytes' % (args[0], fsize))
             self.try_rename(tmpfilename, filename)
             self._hook_progress({
