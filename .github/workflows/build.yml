@@ -298,15 +298,16 @@ jobs:
   upload-releases:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/ytdlp') }}
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
           name: ytdl-artifacts
-      - name: Create release
+      - name: Create release (for master)
         id: create_release
         uses: actions/create-release@v1
+        if: ${{ github.ref == 'refs/heads/master' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -320,6 +321,23 @@ jobs:
             - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
+      - name: Create release (for non-master)
+        id: create_release
+        uses: actions/create-release@v1
+        if: ${{ github.ref != 'refs/heads/master' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.prepare.outputs.latest_version_numeric }}
+          release_name: ${{ needs.prepare.outputs.latest_version }}
+          draft: false
+          prerelease: false
+          body: |
+            - **WARNING: DO NOT USE THIS BINARY HERE OR YOUR DATA WILL GET WIPED**
+            - **危険: 絶対に使わないで下さい。開発者向けビルドです。**
+            - `github.ref`: ${{ github.ref }}
+            - `github.sha`: ${{ github.sha }}
+            - expected version: ${{ needs.prepare.outputs.latest_version }}
       - name: Upload bin
         id: upload-1
         uses: actions/upload-release-asset@v1
