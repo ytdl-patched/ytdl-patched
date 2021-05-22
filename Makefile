@@ -1,10 +1,6 @@
 all: youtube-dl README.md CONTRIBUTING.md README.txt youtube-dl.1 youtube-dl.bash-completion _youtube-dl youtube-dl.fish supportedsites
 
-clean:
-	rm -rf youtube-dl.1.temp.md youtube-dl.1 youtube-dl.bash-completion README.txt MANIFEST build/ dist/ .coverage cover/ youtube-dl.tar.gz _youtube-dl youtube-dl.fish yt_dlp/extractor/lazy_extractors.py *.dump *.part* *.ytdl *.info.json *.mp4 *.m4a *.flv *.mp3 *.avi *.mkv *.webm *.3gp *.wav *.ape *.swf *.jpg *.png CONTRIBUTING.md.tmp youtube-dl youtube-dl.exe
-	find . -name "*.pyc" -delete
-	find . -name "*.class" -delete
-	find . -name "*~~" -exec rm -rf {} +
+clean: clean-test clean-dist clean-cache
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
@@ -56,6 +52,13 @@ offlinetest: codetest
 tar: youtube-dl.tar.gz
 
 .PHONY: all clean install test tar bash-completion pypi-files zsh-completion fish-completion ot offlinetest codetest supportedsites
+
+clean-test:
+	rm -rf *.dump *.part* *.ytdl *.info.json *.mp4 *.m4a *.flv *.mp3 *.avi *.mkv *.webm *.3gp *.wav *.ape *.swf *.jpg *.png *.frag *.frag.urls *.frag.aria2
+clean-dist:
+	rm -rf ytdl-patched.1.temp.md ytdl-patched.1 README.txt MANIFEST build/ dist/ .coverage cover/ ytdl-patched.tar.gz completions/ yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp youtube-dl youtube-dl.exe yt_dlp.egg-info/ AUTHORS .mailmap
+clean-cache:
+	find . -name "*.pyc" -o -name "*.class" -delete
 
 pypi-files: youtube-dl.bash-completion README.txt youtube-dl.1 youtube-dl.fish _youtube-dl
 
@@ -124,7 +127,7 @@ _EXTRACTOR_FILES = $(shell find yt_dlp/extractor -iname '*.py' -and -not -iname 
 yt_dlp/extractor/lazy_extractors.py: devscripts/make_lazy_extractors.py devscripts/lazy_load_template.py $(_EXTRACTOR_FILES)
 	$(PYTHON) devscripts/make_lazy_extractors.py $@
 
-youtube-dl.tar.gz: youtube-dl README.md README.txt youtube-dl.1 youtube-dl.bash-completion _youtube-dl youtube-dl.fish
+youtube-dl.tar.gz: README.md youtube-dl.1 completions Changelog.md AUTHORS
 	@tar -czf youtube-dl.tar.gz --transform "s|^|youtube-dl/|" --owner 0 --group 0 \
 		--exclude '*.DS_Store' \
 		--exclude '*.kate-swp' \
@@ -135,9 +138,14 @@ youtube-dl.tar.gz: youtube-dl README.md README.txt youtube-dl.1 youtube-dl.bash-
 		--exclude '.git' \
 		--exclude 'docs/_build' \
 		-- \
-		bin devscripts test yt_dlp docs \
-		LICENSE README.md README.txt \
-		Makefile MANIFEST.in youtube-dl.1 youtube-dl.bash-completion \
-		_youtube-dl youtube-dl.fish setup.py setup.cfg \
-		youtube-dl
+		devscripts test \
+		Changelog.md AUTHORS LICENSE README.md supportedsites.md \
+		Makefile MANIFEST.in youtube-dl.1 completions \
+		setup.py setup.cfg youtube-dl
 	advdef -z -4 -i 30 youtube-dl.tar.gz
+
+AUTHORS: .mailmap
+	git shortlog -s -n | cut -f2 | sort > AUTHORS
+
+.mailmap:
+	git shortlog -s -e -n | awk '!(out[$$NF]++) { $$1="";sub(/^[ \t]+/,""); print}' > .mailmap

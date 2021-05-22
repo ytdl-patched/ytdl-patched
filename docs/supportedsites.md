@@ -928,6 +928,7 @@
  - **Snotr**
  - **Sohu**
  - **SonyLIV**
+ - **SonyLIVSeries**
  - **soundcloud**
  - **soundcloud:playlist**
  - **soundcloud:search**: Soundcloud search
@@ -1006,6 +1007,7 @@
  - **Telecinco**: telecinco.es, cuatro.com and mediaset.es
  - **Telegraaf**
  - **TeleMB**
+ - **Telemundo**
  - **TeleQuebec**
  - **TeleQuebecEmission**
  - **TeleQuebecLive**

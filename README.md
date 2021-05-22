@@ -722,10 +722,10 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
 ## Post-Processing Options:
     -x, --extract-audio              Convert video files to audio-only files
                                      (requires ffmpeg and ffprobe)
-    --audio-format FORMAT            Specify audio format: "best", "aac",
-                                     "flac", "mp3", "m4a", "opus", "vorbis", or
-                                     "wav"; "best" by default; No effect without
-                                     -x
+    --audio-format FORMAT            Specify audio format to convert the audio
+                                     to when -x is used. Currently supported
+                                     formats are: best (default) or one of
+                                     best|aac|flac|mp3|m4a|opus|vorbis|wav
     --audio-quality QUALITY          Specify ffmpeg audio quality, insert a
                                      value between 0 (better) and 9 (worse) for
                                      VBR or a specific bitrate like 128K
@@ -735,12 +735,13 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      |webm|mov|avi|mp3|mka|m4a|ogg|opus). If
                                      target container does not support the
                                      video/audio codec, remuxing will fail. You
-                                     can specify multiple rules; eg.
+                                     can specify multiple rules; Eg.
                                      "aac>m4a/mov>mp4/mkv" will remux aac to
                                      m4a, mov to mp4 and anything else to mkv.
     --recode-video FORMAT            Re-encode the video into another format if
-                                     re-encoding is necessary. The supported
-                                     formats are the same as --remux-video
+                                     re-encoding is necessary. The syntax and
+                                     supported formats are the same as --remux-
+                                     video
     --postprocessor-args NAME:ARGS   Give these arguments to the postprocessors.
                                      Specify the postprocessor/executable name
                                      and the arguments separated by a colon ":"
@@ -801,10 +802,10 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      fields are passed, "%(filepath)s" is
                                      appended to the end of the command
     --convert-subs FORMAT            Convert the subtitles to another format
-                                     (currently supported: srt|ass|vtt|lrc)
+                                     (currently supported: srt|vtt|ass|lrc)
                                      (Alias: --convert-subtitles)
     --convert-thumbnails FORMAT      Convert the thumbnails to another format
-                                     (currently supported: jpg, png)
+                                     (currently supported: jpg|png)
     --split-chapters                 Split video into multiple files based on
                                      internal chapters. The "chapter:" prefix
                                      can be used with "--paths" and "--output"
