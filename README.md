@@ -252,9 +252,9 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      an error. The default value "fixup_error"
                                      repairs broken URLs, but emits an error if
                                      this is not possible instead of searching
-    --ignore-config, --no-config     Disable loading any configuration files
-                                     except the one provided by --config-location.
-                                     When given inside a configuration
+    --ignore-config                  Disable loading any configuration files
+                                     except the one provided by --config-
+                                     location. When given inside a configuration
                                      file, no further configuration files are
                                      loaded. Additionally, (for backward
                                      compatibility) if this option is found
@@ -274,6 +274,24 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      configurations by reverting some of the
                                      changes made in yt-dlp. See "Differences in
                                      default behavior" for details
+    --check-mastodon-instance        Always perform online checks for Mastodon-
+                                     like URL
+    --check-peertube-instance        Always perform online checks for PeerTube-
+                                     like URL
+    --test-filename CMD              Like --exec option, but used for testing if
+                                     downloading should be started. You can
+                                     begin with "re:" to use regex instead of
+                                     commands
+    --print-infojson-types           DO NOT USE. IT'S MEANINGLESS FOR MOST
+                                     PEOPLE. Prints types of object in info
+                                     json. Use this for extractors that --print-
+                                     json won' work.
+    --enable-lock                    Locks downloading exclusively. Blocks other
+                                     ytdl-patched process downloading the same
+                                     video.
+    --no-lock                        Do not lock downloading exclusively.
+                                     Download will start even if other process
+                                     is working on it.
 
 ## Network Options:
     --proxy URL                      Use the specified HTTP/HTTPS/SOCKS proxy.
@@ -325,7 +343,8 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      (e.g. 50k or 44.6m)
     --date DATE                      Download only videos uploaded in this date.
                                      The date can be "YYYYMMDD" or in the format
-                                     "(now|today)[+-][0-9](day|week|month|year)(s)?"
+                                     "(now|today)[+-][0-9](day|week|month|year)(
+                                     s)?"
     --datebefore DATE                Download only videos uploaded on or before
                                      this date. The date formats accepted is the
                                      same as --date
@@ -385,10 +404,11 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      is 10), or "infinite" (DASH, hlsnative and
                                      ISM)
     --skip-unavailable-fragments     Skip unavailable fragments for DASH,
-                                     hlsnative and ISM (default)
-                                     (Alias: --no-abort-on-unavailable-fragment)
-    --abort-on-unavailable-fragment  Abort downloading if a fragment is unavailable
-                                     (Alias: --no-skip-unavailable-fragments)
+                                     hlsnative and ISM (default) (Alias: --no-
+                                     abort-on-unavailable-fragment)
+    --abort-on-unavailable-fragment  Abort downloading if a fragment is
+                                     unavailable (Alias: --no-skip-unavailable-
+                                     fragments)
     --keep-fragments                 Keep downloaded fragments on disk after
                                      downloading is finished
     --no-keep-fragments              Delete downloaded fragments after
@@ -430,13 +450,13 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      example, --downloader aria2c --downloader
                                      "dash,m3u8:native" will use aria2c for
                                      http/ftp downloads, and the native
-                                     downloader for dash/m3u8 downloads
-                                     (Alias: --external-downloader)
+                                     downloader for dash/m3u8 downloads (Alias:
+                                     --external-downloader)
     --downloader-args NAME:ARGS      Give these arguments to the external
                                      downloader. Specify the downloader name and
                                      the arguments separated by a colon ":". You
-                                     can use this option multiple times
-                                     (Alias: --external-downloader-args)
+                                     can use this option multiple times (Alias:
+                                     --external-downloader-args)
 
 ## Filesystem Options:
     -a, --batch-file FILE            File containing URLs to download ('-' for
@@ -498,8 +518,8 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      .annotations.xml file
     --no-write-annotations           Do not write video annotations (default)
     --write-playlist-metafiles       Write playlist metadata in addition to the
-                                     video metadata when using --write-info-json,
-                                     --write-description etc. (default)
+                                     video metadata when using --write-info-
+                                     json, --write-description etc. (default)
     --no-write-playlist-metafiles    Do not write playlist metadata when using
                                      --write-info-json, --write-description etc.
     --clean-infojson                 Remove some private fields such as
@@ -512,8 +532,8 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      without this option if the extraction is
                                      known to be quick (Alias: --get-comments)
     --no-write-comments              Do not retrieve video comments unless the
-                                     extraction is known to be quick
-                                     (Alias: --no-get-comments)
+                                     extraction is known to be quick (Alias:
+                                     --no-get-comments)
     --load-info-json FILE            JSON file containing the video information
                                      (created with the "--write-info-json"
                                      option)
@@ -530,6 +550,8 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      may change
     --no-cache-dir                   Disable filesystem caching
     --rm-cache-dir                   Delete all filesystem cache files
+    --rm-long-name-dir               Deletes all filename-splitting-related
+                                     empty directories in working directory
 
 ## Thumbnail Options:
     --write-thumbnail                Write thumbnail image to disk
@@ -610,16 +632,20 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      when used along with --max-sleep-interval
                                      (Alias: --min-sleep-interval)
     --max-sleep-interval SECONDS     Maximum number of seconds to sleep. Can
-                                     only be used along with --min-sleep-interval
+                                     only be used along with --min-sleep-
+                                     interval
     --sleep-subtitles SECONDS        Number of seconds to sleep before each
                                      subtitle download
+    --escape-long-names              Split filename longer than 255 bytes into
+                                     few path segments. This may create dumb
+                                     directories.
 
 ## Video Format Options:
     -f, --format FORMAT              Video format code, see "FORMAT SELECTION"
                                      for more details
     -S, --format-sort SORTORDER      Sort the formats by the fields given, see
                                      "Sorting Formats" for more details
-    --S-force, --format-sort-force   Force user specified sort order to have
+    --format-sort-force              Force user specified sort order to have
                                      precedence over all fields, see "Sorting
                                      Formats" for more details
     --no-format-sort-force           Some fields have precedence over the user
@@ -652,6 +678,9 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      also be turned off
     --no-allow-unplayable-formats    Do not allow unplayable formats to be
                                      listed or downloaded (default)
+    --live-download-mkv              Changes video file format to MKV when
+                                     downloading a live. This is useful if the
+                                     computer could shutdown while downloading.
 
 ## Subtitle Options:
     --write-subs                     Write subtitle file
@@ -659,7 +688,8 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
     --write-auto-subs                Write automatically generated subtitle file
                                      (Alias: --write-automatic-subs)
     --no-write-auto-subs             Do not write auto-generated subtitles
-                                     (default) (Alias: --no-write-automatic-subs)
+                                     (default) (Alias: --no-write-automatic-
+                                     subs)
     --list-subs                      List all available subtitles for the video
     --sub-format FORMAT              Subtitle format, accepts formats
                                      preference, for example: "srt" or
@@ -784,9 +814,9 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      (default)
 
 ## SponSkrub (SponsorBlock) Options:
-[SponSkrub](https://github.com/yt-dlp/SponSkrub) is a utility to
+    SponSkrub (https://github.com/yt-dlp/SponSkrub) is a utility to
     mark/remove sponsor segments from downloaded YouTube videos using
-    [SponsorBlock API](https://sponsor.ajay.app)
+    SponsorBlock API (https://sponsor.ajay.app)
 
     --sponskrub                      Use sponskrub to mark sponsored sections.
                                      This is enabled by default if the sponskrub
@@ -817,17 +847,17 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      formats at discontinuities such as ad
                                      breaks (default)
     --youtube-include-dash-manifest  Download the DASH manifests and related
-                                     data on YouTube videos (default)
-                                     (Alias: --no-youtube-skip-dash-manifest)
+                                     data on YouTube videos (default) (Alias:
+                                     --no-youtube-skip-dash-manifest)
     --youtube-skip-dash-manifest     Do not download the DASH manifests and
-                                     related data on YouTube videos
-                                     (Alias: --no-youtube-include-dash-manifest)
+                                     related data on YouTube videos (Alias:
+                                     --no-youtube-include-dash-manifest)
     --youtube-include-hls-manifest   Download the HLS manifests and related data
-                                     on YouTube videos (default)
-                                     (Alias: --no-youtube-skip-hls-manifest)
+                                     on YouTube videos (default) (Alias: --no-
+                                     youtube-skip-hls-manifest)
     --youtube-skip-hls-manifest      Do not download the HLS manifests and
-                                     related data on YouTube videos
-                                     (Alias: --no-youtube-include-hls-manifest)
+                                     related data on YouTube videos (Alias:
+                                     --no-youtube-include-hls-manifest)
 
 # CONFIGURATION
 

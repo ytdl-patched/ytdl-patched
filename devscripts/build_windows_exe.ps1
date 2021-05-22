@@ -14,7 +14,7 @@ switch ($BuilderName) {
         python -OO devscripts/pyinstaller_zopfli.py `
             --onefile --console --distpath . `
             @IconArg `
-            -n youtube-dl youtube_dl\__main__.py
+            -n youtube-dl yt_dlp\__main__.py
 
         write-host "Moving built EXE into artifacts/"
         Move-Item youtube-dl.exe artifacts/

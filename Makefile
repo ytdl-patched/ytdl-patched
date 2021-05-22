@@ -107,11 +107,13 @@ youtube-dl.bash-completion: yt_dlp/*.py yt_dlp/*/*.py devscripts/bash-completion
 bash-completion: youtube-dl.bash-completion
 
 _youtube-dl: yt_dlp/*.py yt_dlp/*/*.py devscripts/zsh-completion.in
+	mkdir -p completions/zsh/
 	$(PYTHON) devscripts/zsh-completion.py
 
 zsh-completion: _youtube-dl
 
 youtube-dl.fish: yt_dlp/*.py yt_dlp/*/*.py devscripts/fish-completion.in
+	mkdir -p completions/fish/
 	$(PYTHON) devscripts/fish-completion.py
 
 fish-completion: youtube-dl.fish
