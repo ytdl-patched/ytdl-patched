@@ -8,7 +8,7 @@ import sys
 import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from youtube_dl.longname import (
+from yt_dlp.longname import (
     split_longname_str,
     combine_longname_str,
 )

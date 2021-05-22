@@ -8,7 +8,7 @@ import sys
 import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from youtube_dl.websocket import (
+from yt_dlp.websocket import (
     HAVE_WEBSOCKET,
     HAVE_WS_WEBSOCKET_CLIENT,
     HAVE_WS_WEBSOCKETS,
