@@ -4302,7 +4302,9 @@ def qualities(quality_ids):
 
 
 DEFAULT_OUTTMPL = {
-    'default': '%(title)s [%(id)s].%(ext)s',
+    # reverted to match older version of ytdl-patched behavior.
+    # changing this will trigger disastrous bugs in my local scripts
+    'default': '%(title)s-%(id)s.%(ext)s',
     'chapter': '%(title)s - %(section_number)03d %(section_title)s [%(id)s].%(ext)s',
 }
 OUTTMPL_TYPES = {
