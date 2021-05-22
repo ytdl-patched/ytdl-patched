@@ -65,5 +65,5 @@ def to_string(o):
 for k, v in values.items():
     pycode += f'{k} = {to_string(v)}\n'
 
-with open('./youtube_dl/build_config.py', 'w') as w:
+with open('./yt_dlp/build_config.py', 'w') as w:
     w.write(pycode)
