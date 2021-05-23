@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 from inspect import getsource
 import io
 import os
+import re
 from os.path import dirname as dirn
 import sys
 
@@ -26,7 +27,7 @@ with open('devscripts/lazy_load_template.py', 'rt') as f:
     module_template = f.read()
 
 module_contents = [
-    module_template + '\n' + getsource(InfoExtractor.suitable) + '\n',
+    module_template + '\n' + getsource(InfoExtractor.suitable) + '\n' + getsource(InfoExtractor._valid_url_re) + '\n',
     'class LazyLoadSearchExtractor(LazyLoadExtractor):\n    pass\n']
 
 ie_template = '''
@@ -51,8 +52,26 @@ def get_base_name(base):
         return base.__name__
 
 
+def cleanup_regex(regex_str):
+    if not isinstance(regex_str, (str, bytes)):
+        return regex_str
+    has_extended = re.search(r'\(\?[aiLmsux]*x[aiLmsux]*\)', regex_str)  # something like (?xxs) may match, but (?s) or (?i) won't
+    if not has_extended:
+        return regex_str
+    # remove comments
+    regex_str = re.sub(r'(?m)\s+#.+?$', '', regex_str)
+    # remove spaces and indents
+    regex_str = re.sub(r'\s+', '', regex_str)
+    # remove x (EXTENDED) from all inline flags
+    regex_str = re.sub(r'\(\?([aiLmsux]+)\)', lambda m: '(?%s)' % m.group(1).replace('x', ''), regex_str)
+    regex_str = re.sub(r'\(\?\)', '', regex_str)
+
+    return regex_str
+
+
 def build_lazy_ie(ie, name):
     valid_url = getattr(ie, '_VALID_URL', None)
+    valid_url = cleanup_regex(valid_url)
     s = ie_template.format(
         name=name,
         bases=', '.join(map(get_base_name, ie.__bases__)),
