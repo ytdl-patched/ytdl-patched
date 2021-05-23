@@ -410,7 +410,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
+          asset_path: ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
           asset_name: yt_dlp-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
           asset_content_type: application/zip
       - name: Upload wheel tar
