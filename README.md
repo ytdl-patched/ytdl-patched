@@ -35,6 +35,8 @@ A command-line program to download videos from YouTube and many other [video pla
 ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork based on [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
 * [NEW FEATURES](#new-features)
+    * [NEW FEATURES IN YTDL-PATCHED](#new-features-in-ytdl-patched)
+    * [NEW FEATURES IN YT-DLP](#new-features-in-yt-dlp)
     * [Differences in default behavior](#differences-in-default-behavior)
 * [INSTALLATION](#installation)
     * [Dependencies](#dependencies)
@@ -72,8 +74,8 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
 * [DEPRECATED OPTIONS](#deprecated-options)
 * [MORE](#more)
 
-
-# NEW FEATURES IN YTDL-PATCHED
+# NEW FEATURES
+## NEW FEATURES IN YTDL-PATCHED
 The major new features from the latest release of [yt-dlp](https://github.com/yt-dlp/yt-dlp) are:
 
 * **Long name escaping for Unix systems**: If the filename of downloaded videos can get longer than 255 bytes (in system locale), it'll prevent from exceeding its length by splitting in 255 bytes each. Note that treating splitted names requires special scripts just for that.
@@ -112,7 +114,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `TwitCastingUser`
     * `voicy`, `voicy:channel`
 
-# NEW FEATURES IN YT-DLP
+## NEW FEATURES IN YT-DLP
 The major new features from the latest release of [blackjack4494/yt-dlc](https://github.com/blackjack4494/yt-dlc) are:
 
 * **[SponSkrub Integration](#sponskrub-sponsorblock-options)**: You can use [SponSkrub](https://github.com/yt-dlp/SponSkrub) to mark/remove sponsor sections in youtube videos by utilizing the [SponsorBlock](https://sponsor.ajay.app) API
