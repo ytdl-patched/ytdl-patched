@@ -2148,6 +2148,8 @@ def get_domain(url):
 
 
 def url_basename(url):
+    if not url:
+        return url
     path = compat_urlparse.urlparse(url).path
     return path.strip('/').split('/')[-1]
 

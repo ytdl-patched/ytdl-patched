@@ -1284,8 +1284,8 @@ class YoutubeDL(object):
         elif result_type in ('playlist', 'multi_video'):
             # Protect from infinite recursion due to recursively nested playlists
             # (see https://github.com/ytdl-org/youtube-dl/issues/27833)
-            webpage_url = ie_result['webpage_url']
-            if webpage_url in self._playlist_urls:
+            webpage_url = ie_result.get('webpage_url')
+            if webpage_url and webpage_url in self._playlist_urls:
                 self.to_screen(
                     '[download] Skipping already downloaded playlist: %s'
                     % ie_result.get('title') or ie_result.get('id'))
@@ -1308,7 +1308,7 @@ class YoutubeDL(object):
                 self.add_extra_info(
                     r,
                     {
-                        'extractor': ie_result['extractor'],
+                        'extractor': ie_result.get('extractor'),
                         'webpage_url': ie_result['webpage_url'],
                         'webpage_url_basename': url_basename(ie_result['webpage_url']),
                         'extractor_key': ie_result['extractor_key'],
@@ -1466,7 +1466,7 @@ class YoutubeDL(object):
 
         x_forwarded_for = ie_result.get('__x_forwarded_for_ip')
 
-        self.to_screen('[%s] playlist %s: %s' % (ie_result['extractor'], playlist, msg))
+        self.to_screen('[%s] playlist %s: %s' % (ie_result.get('extractor'), playlist, msg))
         failures = 0
         max_failures = self.params.get('skip_playlist_after_errors') or float('inf')
         for i, entry_tuple in enumerate(entries, 1):
@@ -1488,10 +1488,10 @@ class YoutubeDL(object):
                 'playlist_title': ie_result.get('title'),
                 'playlist_uploader': ie_result.get('uploader'),
                 'playlist_uploader_id': ie_result.get('uploader_id'),
-                'extractor': ie_result['extractor'],
-                'webpage_url': ie_result['webpage_url'],
-                'webpage_url_basename': url_basename(ie_result['webpage_url']),
-                'extractor_key': ie_result['extractor_key'],
+                'extractor': ie_result.get('extractor'),
+                'webpage_url': ie_result.get('webpage_url'),
+                'webpage_url_basename': url_basename(ie_result.get('webpage_url')),
+                'extractor_key': ie_result.get('extractor_key'),
             }
 
             if self._match_entry(entry, incomplete=True) is not None:
