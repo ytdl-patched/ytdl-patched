@@ -304,6 +304,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-artifacts
+
       - name: Create release (for master)
         id: create_release
         uses: actions/create-release@v1
@@ -321,8 +322,10 @@ jobs:
             - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
-      - if: ${{ github.ref == 'refs/heads/master' }}
+      - name: Create release
+        if: ${{ github.ref == 'refs/heads/master' }}
         run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
+  
       - name: Create release (for non-master)
         id: create_release_nm
         uses: actions/create-release@v1
@@ -340,8 +343,9 @@ jobs:
             - `github.ref`: ${{ github.ref }}
             - `github.sha`: ${{ github.sha }}
             - expected version: ${{ needs.prepare.outputs.latest_version }}
-      - if: ${{ github.ref != 'refs/heads/master' }}
-        run: echo "::set-output name=upload_url::${{ steps.create_release2.outputs.upload_url }}"
+      - name: Create release (for non-master)
+        if: ${{ github.ref != 'refs/heads/master' }}
+        run: echo "::set-output name=upload_url::${{ steps.create_release_nm.outputs.upload_url }}"
       - name: Upload bin
         id: upload-1
         uses: actions/upload-release-asset@v1
@@ -352,6 +356,7 @@ jobs:
           asset_path: ./artifacts/youtube-dl
           asset_name: youtube-dl
           asset_content_type: application/zip
+
       - name: Upload source tar
         id: upload-2
         uses: actions/upload-release-asset@v1
