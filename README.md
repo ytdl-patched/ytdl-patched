@@ -73,7 +73,46 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
 * [MORE](#more)
 
 
-# NEW FEATURES
+# NEW FEATURES IN YTDL-PATCHED
+The major new features from the latest release of [yt-dlp](https://github.com/yt-dlp/yt-dlp) are:
+
+* **Long name escaping for Unix systems**: If the filename of downloaded videos can get longer than 255 bytes (in system locale), it'll prevent from exceeding its length by splitting in 255 bytes each. Note that treating splitted names requires special scripts just for that.
+
+* **Generic Extractor will not return at first website match**: Generic Extractor collects matched websites and return it as playlist. It creates nested playlist and may cause infinite loop.
+
+* **Generic Extractor Extended**
+    * Following URLs are resolved and redirect automatically to its destination.
+        * Japanese BBS redirect: `pinktower.com`, `jump.5ch.net`, `jump.megabbs.info`
+        * Pixiv redirect
+            * Looking for test cases for char-mutated URLs
+        * Firebase Dynamic Link: domains ending with `.page.link`
+    * Fediverse support (Mastodon and PeerTube)
+        * For supported fediverses, ytdl-patched contains a big list of instances. But when it meets instances not in the list, you can opt-in for instance check. To opt-in, use these flags: `--check-mastodon-instance`, `--check-peertube-instance`
+
+* **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
+    * `17live`, `17live:clip`
+    * `askmona` and `askmona3` (just scrapes YouTube videos embedded)
+    * `clubdam:damtomo`
+    * `disneychris`
+    * `dnatube`
+    * `fc2:live` (FC2 user-uploaded videos)
+    * `iwara:user` (Iwara user-uploaded videos)
+    * `javhub`
+    * `ask.fm`, `marshmallow-qa`, `marshmallow-qa`, `mottohomete` (scrapes Q&A section and find video URLs in it)
+    * `mastodon`, `mastodon:user`, `mastodon:user:numeric_id`
+    * `mirrativ`, `mirrativ:user`
+    * `niconico:live` (**NO COMMENTS SUPPORTED**)
+    * `niconico:playlist`, `niconico:series`, `niconico:user`
+    * `openrec`, `openrec:capture`
+    * `pixiv:sketch`, `pixiv:sketch:user`
+    * `PornHubUserLive`
+    * `Radiko` (does not have 24-hours limitation!)
+    * `sharevideos`
+    * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
+    * `TwitCastingUser`
+    * `voicy`, `voicy:channel`
+
+# NEW FEATURES IN YT-DLP
 The major new features from the latest release of [blackjack4494/yt-dlc](https://github.com/blackjack4494/yt-dlc) are:
 
 * **[SponSkrub Integration](#sponskrub-sponsorblock-options)**: You can use [SponSkrub](https://github.com/yt-dlp/SponSkrub) to mark/remove sponsor sections in youtube videos by utilizing the [SponsorBlock](https://sponsor.ajay.app) API
