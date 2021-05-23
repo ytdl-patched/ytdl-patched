@@ -336,7 +336,7 @@ jobs:
           tag_name: ${{ needs.prepare.outputs.latest_version_numeric }}
           release_name: ${{ needs.prepare.outputs.latest_version }}
           draft: false
-          prerelease: false
+          prerelease: true
           body: |
             - **WARNING: DO NOT USE THIS BINARY HERE OR YOUR DATA WILL GET WIPED**
             - **危険: 絶対に使わないで下さい。開発者向けビルドです。**
