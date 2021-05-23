@@ -324,7 +324,7 @@ jobs:
                 - white icon - `...-white.exe`
       - name: Create release
         if: ${{ github.ref == 'refs/heads/master' }}
-        run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
+        run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
   
       - name: Create release (for non-master)
         id: create_release_nm
@@ -345,14 +345,15 @@ jobs:
             - expected version: ${{ needs.prepare.outputs.latest_version }}
       - name: Create release (for non-master)
         if: ${{ github.ref != 'refs/heads/master' }}
-        run: echo "::set-output name=upload_url::${{ steps.create_release_nm.outputs.upload_url }}"
+        run: echo "upload_url=${{ steps.create_release_nm.outputs.upload_url }}" >> $GITHUB_ENV
+
       - name: Upload bin
         id: upload-1
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ env.upload_url }} 
           asset_path: ./artifacts/youtube-dl
           asset_name: youtube-dl
           asset_content_type: application/zip
@@ -363,7 +364,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ env.upload_url }} 
           asset_path: ./artifacts/youtube-dl.tar.gz
           asset_name: youtube-dl.tar.gz
           asset_content_type: application/gzip
@@ -377,7 +378,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ env.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-red.exe
           asset_content_type: application/vnd.microsoft.portable-executable
@@ -391,7 +392,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ env.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
@@ -405,7 +406,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ env.upload_url }} 
           asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
           asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
           asset_content_type: application/zip
@@ -415,7 +416,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          upload_url: ${{ env.upload_url }} 
           asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
           asset_name: youtube_dl-${{ needs.prepare.outputs.latest_version }}-wheel.tar.gz
           asset_content_type: application/gzip
