@@ -125,6 +125,9 @@ jobs:
           path: |
             dist/
             README.md
+      - name: Show contents of dist/
+        continue-on-error: true
+        run: ls dist/
   # build-eggs:
   #   runs-on: ${{ matrix.os }}
   #   needs: prepare
