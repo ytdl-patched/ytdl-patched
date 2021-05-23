@@ -125,6 +125,9 @@ jobs:
           path: |
             dist/
             README.md
+      - name: Show contents of dist/
+        continue-on-error: true
+        run: ls dist/
   # build-eggs:
   #   runs-on: ${{ matrix.os }}
   #   needs: prepare
@@ -417,7 +420,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
+          asset_path: ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
           asset_name: yt_dlp-${{ needs.prepare.outputs.latest_version }}-wheel.tar.gz
           asset_content_type: application/gzip
 
