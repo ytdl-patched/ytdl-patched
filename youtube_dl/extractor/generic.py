@@ -2303,6 +2303,10 @@ class GenericIE(InfoExtractor):
         'ttps': 'https',
         'tp': 'http',
         'tps': 'https',
+        'hxp': 'http',
+        'hxps': 'https',
+        'hxxp': 'http',
+        'hxxps': 'https',
     }
 
     def report_following_redirect(self, new_url):
@@ -2446,7 +2450,7 @@ class GenericIE(InfoExtractor):
                     default_search += ':'
                 return self.url_result(default_search + url)
         elif parsed_url.scheme in self._CORRUPTED_SCHEME_CONVERSION_TABLE:
-            new_scheme = self._CORRUPTED_SCHEME_CONVERSION_TABLE[parsed_url.scheme]
+            new_scheme = self._CORRUPTED_SCHEME_CONVERSION_TABLE[parsed_url.scheme.lower()]
             self.report_warning('scheme seems corrupted, correcting to %s' % new_scheme)
             fixed_urlp = parsed_url._replace(scheme=new_scheme)
             fixed_url = compat_urlparse.urlunparse(fixed_urlp)
