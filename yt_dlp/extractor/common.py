@@ -82,6 +82,7 @@ from ..utils import (
     xpath_text,
     xpath_with_ns,
 )
+from ..websocket import HAVE_WEBSOCKET
 
 
 class InfoExtractor(object):
@@ -421,6 +422,13 @@ class InfoExtractor(object):
     _GEO_COUNTRIES = None
     _GEO_IP_BLOCKS = None
     _WORKING = True
+    """
+    Feature dependency declaration. Case sensitive.
+    Following features are known and recognized:
+    - websocket - Requires WebSocket-related package/command
+    - yaml - pyyaml package
+    """
+    _FEATURE_DEPENDENCY = tuple()
 
     _LOGIN_HINTS = {
         'any': 'Use --cookies, --username and --password or --netrc to provide account credentials',
@@ -557,6 +565,14 @@ class InfoExtractor(object):
 
     def extract(self, url):
         """Extracts URL information and returns it in list of dicts."""
+
+        if 'websocket' in self._FEATURE_DEPENDENCY and not HAVE_WEBSOCKET:
+            raise ExtractorError('Please install websockets or websocket_client package via pip, or websockat command', expected=True)
+        try:
+            if 'yaml' in self._FEATURE_DEPENDENCY:
+                __import__('yaml')
+        except ImportError:
+            raise ExtractorError('Please install pyyaml package via pip.', expected=True)
         try:
             for _ in range(2):
                 try:
