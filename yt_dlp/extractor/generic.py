@@ -2460,7 +2460,7 @@ class GenericIE(InfoExtractor):
                 if ':' not in default_search:
                     default_search += ':'
                 return self.url_result(default_search + url)
-        elif parsed_url.scheme in self._CORRUPTED_SCHEME_CONVERSION_TABLE:
+        elif parsed_url.scheme.lower() in self._CORRUPTED_SCHEME_CONVERSION_TABLE:
             new_scheme = self._CORRUPTED_SCHEME_CONVERSION_TABLE[parsed_url.scheme.lower()]
             self.report_warning('scheme seems corrupted, correcting to %s' % new_scheme)
             fixed_urlp = parsed_url._replace(scheme=new_scheme)
