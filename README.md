@@ -114,6 +114,9 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `TwitCastingUser`
     * `voicy`, `voicy:channel`
 
+* **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
+    * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
+
 ## NEW FEATURES IN YT-DLP
 The major new features from the latest release of [blackjack4494/yt-dlc](https://github.com/blackjack4494/yt-dlc) are:
 
