@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-import io
-import json
-import traceback
 import hashlib
+import json
 import os
 import subprocess
 import sys
+import traceback
 from zipimport import zipimporter
 
 from .compat import compat_realpath
@@ -39,6 +38,8 @@ def update_self(to_screen, verbose, opener):
     UPDATE_URL = 'https://ytdl-patched.github.io/ytdl-patched/'
     VERSION_URL = UPDATE_URL + 'LATEST_VERSION'
     JSON_URL = UPDATE_URL + 'versions.json'
+
+    report_error = to_screen
 
     if not isinstance(globals().get('__loader__'), zipimporter) and not hasattr(sys, 'frozen'):
         to_screen('It looks like you installed youtube-dl with a package manager, pip, setup.py or a tarball. Please use that to update.')
@@ -87,16 +88,19 @@ def update_self(to_screen, verbose, opener):
     filename = compat_realpath(sys.executable if hasattr(sys, 'frozen') else sys.argv[0])
 
     if not os.access(filename, os.W_OK):
-        to_screen('ERROR: no write permissions on %s' % filename)
-        return
+        return report_error('no write permissions on %s' % filename, expected=True)
 
     # PyInstaller
     if hasattr(sys, 'frozen') and os.name == 'nt':
         exe = filename
         directory = os.path.dirname(exe)
         if not os.access(directory, os.W_OK):
-            to_screen('ERROR: no write permissions on %s' % directory)
-            return
+            return report_error('no write permissions on %s' % directory, expected=True)
+        try:
+            if os.path.exists(filename + '.old'):
+                os.remove(filename + '.old')
+        except (IOError, OSError):
+            return report_error('unable to remove the old version')
 
         version_data = None
         if variant:
@@ -124,14 +128,11 @@ def update_self(to_screen, verbose, opener):
             with open(exe + '.new', 'wb') as outf:
                 outf.write(newcontent)
         except (IOError, OSError):
-            if verbose:
-                to_screen(encode_compat_str(traceback.format_exc()))
-            to_screen('ERROR: unable to write the new version')
-            return
+            return report_error('unable to write the new version')
 
         try:
             bat = os.path.join(directory, 'youtube-dl-updater.bat')
-            with io.open(bat, 'w') as batfile:
+            with open(bat, 'w') as batfile:
                 batfile.write('''
 @echo off
 echo Waiting for file handle to be closed ...
@@ -144,10 +145,18 @@ start /b "" cmd /c del "%%~f0"&exit /b"
             subprocess.Popen([bat])  # Continues to run in the background
             return  # Do not show premature success messages
         except (IOError, OSError):
-            if verbose:
-                to_screen(encode_compat_str(traceback.format_exc()))
-            to_screen('ERROR: unable to overwrite current version')
+            report_error('unable to overwrite current version')
+            os.rename(exe + '.old', exe)
             return
+        try:
+            # Continues to run in the background
+            subprocess.Popen(
+                'ping 127.0.0.1 -n 5 -w 1000 & del /F "%s.old"' % exe,
+                shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            to_screen('Updated yt-dlp to version %s' % version_id)
+            return True  # Exit app
+        except OSError:
+            report_error('unable to delete old version')
 
     # Zip unix package
     elif isinstance(globals().get('__loader__'), zipimporter):
@@ -170,10 +179,7 @@ start /b "" cmd /c del "%%~f0"&exit /b"
             with open(filename, 'wb') as outf:
                 outf.write(newcontent)
         except (IOError, OSError):
-            if verbose:
-                to_screen(encode_compat_str(traceback.format_exc()))
-            to_screen('ERROR: unable to overwrite current version')
-            return
+            return report_error('unable to overwrite current version')
 
     to_screen('Updated youtube-dl. Restart youtube-dl to use the new version.')
 
