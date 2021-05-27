@@ -10,6 +10,7 @@ from .rtsp import RtspFD
 from .ism import IsmFD
 from .youtube_live_chat import YoutubeLiveChatReplayFD
 from .niconico import NiconicoLiveFD, NiconicoDmcFD
+from .ws import WebSocketFragmentFD
 from .external import (
     get_external_downloader,
     FFmpegFD,
@@ -32,6 +33,7 @@ PROTOCOL_MAP = {
     'ffmpeg': FFmpegFD,
     'niconico_dmc': NiconicoDmcFD,
     'niconico_live': NiconicoLiveFD,
+    'frag_websocket': WebSocketFragmentFD,
 }
 
 

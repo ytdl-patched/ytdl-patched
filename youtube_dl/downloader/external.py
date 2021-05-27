@@ -221,6 +221,10 @@ class FFmpegFD(ExternalFD):
     def available(cls):
         return FFmpegPostProcessor().available
 
+    def on_process_started(self, proc, stdin):
+        """ Override this in subclasses  """
+        pass
+
     def _call_downloader(self, tmpfilename, info_dict):
         url = info_dict['url']
         ffpp = FFmpegPostProcessor(downloader=self)
@@ -355,6 +359,8 @@ class FFmpegFD(ExternalFD):
         self._debug_cmd(args)
 
         proc = subprocess.Popen(args, stdin=subprocess.PIPE, env=env)
+        if url in ('-', 'pipe:'):
+            self.on_process_started(proc, proc.stdin)
         try:
             retval = proc.wait()
         except KeyboardInterrupt:

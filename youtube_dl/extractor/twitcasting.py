@@ -17,8 +17,10 @@ from ..utils import (
     urlencode_postdata,
     try_get,
     urljoin,
+    qualities,
 )
 from ..compat import compat_str
+from ..websocket import HAVE_WEBSOCKET  # WebSocket itself is optional
 
 
 class TwitCastingBaseIE(InfoExtractor):
@@ -90,7 +92,12 @@ class TwitCastingIE(TwitCastingBaseIE):
             lambda x: self._parse_json(self._search_regex(
                 r"data-movie-playlist='([^']+?)'",
                 x, 'movie playlist', default=None), video_id)["2"][0], dict) or {}
-        is_live = 'data-status="online"' in webpage
+
+        stream_server_data = self._download_json(
+            'https://twitcasting.tv/streamserver.php?target=%s&mode=client' % uploader_id, video_id,
+            'Downloading live info', fatal=False)
+
+        is_live = 'data-status="online"' in webpage or try_get(stream_server_data, lambda x: x['movie']['live'], bool)
         m3u8_url = try_get(
             webpage,
             (lambda x: self._search_regex(
@@ -110,6 +117,21 @@ class TwitCastingIE(TwitCastingBaseIE):
                     'Origin': 'https://twitcasting.tv',
                     'Referer': 'https://twitcasting.tv/',
                 })
+
+            if stream_server_data and HAVE_WEBSOCKET:
+                qq = qualities(['base', 'mobilesource', 'main'])
+                for mode, ws_url in stream_server_data['llfmp4']['streams'].items():
+                    formats.append({
+                        'url': ws_url,
+                        'format_id': 'ws-%s' % mode,
+                        'ext': 'mp4',
+                        'preference': -100,
+                        'quality': qq(mode),
+                        'format_note': 'video timestamp have jitter',
+                        # TwitCasting simply sends moof atom directly over WS
+                        'protocol': 'frag_websocket',
+                    })
+
             self._sort_formats(formats)
         else:
             # This reduces the download of m3u8 playlist (2 -> 1)
