@@ -97,7 +97,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             'https://twitcasting.tv/streamserver.php?target=%s&mode=client' % uploader_id, video_id,
             'Downloading live info', fatal=False)
 
-        is_live = 'data-status="online"' in webpage or try_get(stream_server_data, lambda x: x['movie']['live'], bool)
+        is_live = bool('data-status="online"' in webpage or try_get(stream_server_data, lambda x: x['movie']['live'], None))
         m3u8_url = try_get(
             webpage,
             (lambda x: self._search_regex(

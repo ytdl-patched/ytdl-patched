@@ -26,7 +26,7 @@ class LiveStreamSinkBaseFD(FileDownloader):
             finally:
                 stdin.flush()
                 stdin.close()
-                os.kill(proc.pid, signal.SIGINT)
+                os.kill(os.getpid(), signal.SIGINT)
 
         class FFmpegStdinFD(FFmpegFD):
             def on_process_started(self, proc, stdin):

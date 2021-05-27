@@ -369,7 +369,7 @@ class FFmpegFD(ExternalFD):
             # produces a file that is playable (this is mostly useful for live
             # streams). Note that Windows is not affected and produces playable
             # files (see https://github.com/ytdl-org/youtube-dl/issues/8300).
-            if sys.platform != 'win32':
+            if sys.platform != 'win32' and url not in ('-', 'pipe:'):
                 proc.communicate(b'q')
             raise
         return retval
