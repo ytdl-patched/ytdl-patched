@@ -1,6 +1,8 @@
 from __future__ import division, unicode_literals
 
 import threading
+import os
+import signal
 
 from .common import FileDownloader
 from .external import FFmpegFD
@@ -24,7 +26,7 @@ class LiveStreamSinkBaseFD(FileDownloader):
             finally:
                 stdin.flush()
                 stdin.close()
-                proc.kill()
+                os.kill(proc.pid, signal.SIGINT)
 
         class FFmpegStdinFD(FFmpegFD):
             def on_process_started(self, proc, stdin):
