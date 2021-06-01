@@ -67,7 +67,10 @@ from .appletrailers import (
     AppleTrailersSectionIE,
 )
 from .applepodcasts import ApplePodcastsIE
-from .archiveorg import ArchiveOrgIE
+from .archiveorg import (
+    ArchiveOrgIE,
+    YoutubeWebArchiveIE,
+)
 from .arcpublishing import ArcPublishingIE
 from .arkena import ArkenaIE
 from .ard import (
@@ -404,6 +407,7 @@ from .facebook import (
     FacebookIE,
     FacebookPluginsVideoIE,
 )
+from .fancode import FancodeVodIE
 from .faz import FazIE
 from .fc2 import (
     FC2IE,
@@ -508,6 +512,7 @@ from .hotnewhiphop import HotNewHipHopIE
 from .hotstar import (
     HotStarIE,
     HotStarPlaylistIE,
+    HotStarSeriesIE,
 )
 from .howcast import HowcastIE
 from .howstuffworks import HowStuffWorksIE
@@ -1166,6 +1171,7 @@ from .safari import (
     SafariApiIE,
     SafariCourseIE,
 )
+from .saitosan import SaitosanIE
 from .samplefocus import SampleFocusIE
 from .sapo import SapoIE
 from .savefrom import SaveFromIE
@@ -1618,7 +1624,10 @@ from .voicy import (
     VoicyIE,
     VoicyChannelIE,
 )
-from .voot import VootIE
+from .voot import (
+    VootIE,
+    VootSeriesIE,
+)
 from .voxmedia import (
     VoxMediaVolumeIE,
     VoxMediaIE,
