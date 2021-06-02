@@ -117,7 +117,7 @@ def run_update(ydl):
     def version_tuple(version_str):
         return tuple(map(int, version_str.split('.')))
 
-    version_id = version_info['tag_name']
+    version_id = version_info['name']
     if version_tuple(__version__) >= version_tuple(version_id):
         ydl.to_screen('ytdl-patched is up to date (%s)' % __version__)
         return
