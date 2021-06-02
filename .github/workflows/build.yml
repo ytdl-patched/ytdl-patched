@@ -260,23 +260,6 @@ jobs:
             artifacts/
             README.md
 
-  upload-gh-pages:
-    needs: prepare-artifacts
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-artifacts
-      - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@4.1.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: gh-pages
-          folder: artifacts
-          single-commit: true
   upload-homebrew:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
