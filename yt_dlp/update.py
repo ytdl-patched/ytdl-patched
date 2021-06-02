@@ -52,14 +52,27 @@ def update_self(to_screen, verbose, opener):
     return run_update(FakeYDL())
 
 
+# def get_version_info(ydl):
+#     # NOTE: running with -U will update to youtube-dl-based version
+#     JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
+#     version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
+#     return json.loads(version_info)
+
+def get_version_info(ydl):
+    for page_num in range(1, 4):
+        JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases?page=%d' % page_num
+        releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
+        for release in releases:
+            if release.get('prerelease'):
+                return release
+    raise Exception('can\'t find pre-release.')
+
+
 def run_update(ydl):
     """
     Update the program file with the latest version from the repository
     Returns whether the program should terminate
     """
-
-    # NOTE: running -U will update to youtube-dl-based version
-    JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
 
     def report_error(msg, network=False, expected=False, delim=';'):
         if network:
@@ -97,8 +110,7 @@ def run_update(ydl):
 
     # Download and check versions info
     try:
-        version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
-        version_info = json.loads(version_info)
+        version_info = get_version_info(ydl)
     except Exception:
         return report_error('can\'t obtain versions info. Please try again later ', True, delim='or')
 
