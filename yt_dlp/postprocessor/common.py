@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-import os
+from ..longname import split_longname
 
 from ..compat import compat_str
 from ..utils import (
@@ -86,7 +86,7 @@ class PostProcessor(object):
 
     def try_utime(self, path, atime, mtime, errnote='Cannot update utime of file'):
         try:
-            os.utime(encodeFilename(path), (atime, mtime))
+            self._downloader.utime(path, (atime, mtime))
         except Exception:
             self.report_warning(errnote)
 
@@ -102,6 +102,12 @@ class PostProcessor(object):
         return cli_configuration_args(
             self.get_param('postprocessor_args'),
             keys, default, use_compat)
+
+    def encode_filename_fixed(self, path, for_subprocess=False):
+        if self._downloader.params.get('escape_long_names', False):
+            return encodeFilename(split_longname(path), for_subprocess)
+        else:
+            return encodeFilename(path, for_subprocess)
 
 
 class AudioConversionError(PostProcessingError):

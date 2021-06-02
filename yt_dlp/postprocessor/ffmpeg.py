@@ -6,6 +6,7 @@ import subprocess
 import time
 import re
 import json
+from yt_dlp.longname import split_longname_str
 
 
 from .common import AudioConversionError, PostProcessor
@@ -175,7 +176,7 @@ class FFmpegPostProcessor(PostProcessor):
                 cmd = [
                     encodeFilename(self.executable, True),
                     encodeArgument('-i')]
-            cmd.append(encodeFilename(self._ffmpeg_filename_argument(path), True))
+            cmd.append(self._ffmpeg_fn_arg_split(path, True, True))
             self.write_debug('%s command line: %s' % (self.basename, shell_quote(cmd)))
             handle = subprocess.Popen(
                 cmd, stderr=subprocess.PIPE,
@@ -220,7 +221,7 @@ class FFmpegPostProcessor(PostProcessor):
         ]
 
         cmd += opts
-        cmd.append(encodeFilename(self._ffmpeg_filename_argument(path), True))
+        cmd.append(self._ffmpeg_fn_arg_split(path, True, True))
         self.write_debug('ffprobe command line: %s' % shell_quote(cmd))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         stdout, stderr = p.communicate()
@@ -242,7 +243,7 @@ class FFmpegPostProcessor(PostProcessor):
         self.check_version()
 
         oldest_mtime = min(
-            os.stat(encodeFilename(path)).st_mtime for path, _ in input_path_opts)
+            self._downloader.stat(path).st_mtime for path, _ in input_path_opts)
 
         cmd = [encodeFilename(self.executable, True), encodeArgument('-y')]
         # avconv does not have repeat option
@@ -258,7 +259,7 @@ class FFmpegPostProcessor(PostProcessor):
                 args.append('-i')
             return (
                 [encodeArgument(arg) for arg in args]
-                + [encodeFilename(self._ffmpeg_filename_argument(file), True)])
+                + [self._ffmpeg_fn_arg_split(file, True, True)])
 
         for arg_type, path_opts in (('i', input_path_opts), ('o', output_path_opts)):
             cmd += [arg for i, o in enumerate(path_opts)
@@ -287,6 +288,20 @@ class FFmpegPostProcessor(PostProcessor):
         if fn.startswith(('http://', 'https://')):
             return fn
         return 'file:' + fn if fn != '-' else fn
+
+    def _ffmpeg_fn_arg_split(self, fn, encoded=False, for_subproc=False):
+        " Same as self.encode_filename_fixed(self._ffmpeg_filename_argument(path), True) but with split_longname "
+
+        def may_encode(text):
+            if encoded:
+                return encodeFilename(text, for_subproc)
+            else:
+                text
+
+        if fn.startswith(('http://', 'https://')):
+            return may_encode(fn)
+
+        return may_encode('file:' + split_longname_str(fn) if fn != '-' else fn)
 
 
 class FFmpegExtractAudioPP(FFmpegPostProcessor):
@@ -376,7 +391,7 @@ class FFmpegExtractAudioPP(FFmpegPostProcessor):
 
         # If we download foo.mp3 and convert it to... foo.mp3, then don't delete foo.mp3, silly.
         if (new_path == path
-                or (self._nopostoverwrites and os.path.exists(encodeFilename(new_path)))):
+                or (self._nopostoverwrites and self._downloader.exists(new_path))):
             self.to_screen('Post-process file %s exists, skipping' % new_path)
             return [], information
 
@@ -515,8 +530,8 @@ class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
         temp_filename = prepend_extension(filename, 'temp')
         self.to_screen('Embedding subtitles in "%s"' % filename)
         self.run_ffmpeg_multiple_files(input_files, temp_filename, opts)
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.remove(filename)
+        self._downloader.rename(temp_filename, filename)
 
         files_to_delete = [] if self._already_have_subtitle else sub_filenames
         return files_to_delete, information
@@ -618,9 +633,9 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
         self.to_screen('Adding metadata to \'%s\'' % filename)
         self.run_ffmpeg_multiple_files(in_filenames, temp_filename, options)
         if chapters:
-            os.remove(metadata_filename)
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+            self._downloader.remove(metadata_filename)
+        self._downloader.remove(filename)
+        self._downloader.rename(temp_filename, filename)
         return [], info
 
 
@@ -636,7 +651,7 @@ class FFmpegMergerPP(FFmpegPostProcessor):
                 args.extend(['-map', '%u:v:0' % (i)])
         self.to_screen('Merging formats into "%s"' % filename)
         self.run_ffmpeg_multiple_files(info['__files_to_merge'], temp_filename, args)
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.rename(temp_filename, filename)
         return info['__files_to_merge'], info
 
     def can_merge(self):
@@ -669,8 +684,8 @@ class FFmpegFixupStretchedPP(FFmpegPostProcessor):
         self.to_screen('Fixing aspect ratio in "%s"' % filename)
         self.run_ffmpeg(filename, temp_filename, options)
 
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.remove(filename)
+        self._downloader.rename(temp_filename, filename)
 
         return [], info
 
@@ -687,8 +702,8 @@ class FFmpegFixupM4aPP(FFmpegPostProcessor):
         self.to_screen('Correcting container in "%s"' % filename)
         self.run_ffmpeg(filename, temp_filename, options)
 
-        os.remove(encodeFilename(filename))
-        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        self._downloader.remove(filename)
+        self._downloader.rename(temp_filename, filename)
 
         return [], info
 
@@ -703,8 +718,8 @@ class FFmpegFixupM3u8PP(FFmpegPostProcessor):
             self.to_screen('Fixing malformed AAC bitstream in "%s"' % filename)
             self.run_ffmpeg(filename, temp_filename, options)
 
-            os.remove(encodeFilename(filename))
-            os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+            self._downloader.remove(filename)
+            self._downloader.rename(temp_filename, filename)
         return [], info
 
 
@@ -839,9 +854,9 @@ class FFmpegThumbnailsConvertorPP(FFmpegPostProcessor):
             if thumbnail_ext != 'webp' and self.is_webp(thumbnail_filename):
                 self.to_screen('Correcting thumbnail "%s" extension to webp' % thumbnail_filename)
                 webp_filename = replace_extension(thumbnail_filename, 'webp')
-                if os.path.exists(webp_filename):
-                    os.remove(webp_filename)
-                os.rename(encodeFilename(thumbnail_filename), encodeFilename(webp_filename))
+                if self._downloader.exists(webp_filename):
+                    self._downloader.remove(webp_filename)
+                self._downloader.rename(thumbnail_filename, webp_filename)
                 info['thumbnails'][idx]['filepath'] = webp_filename
                 info['__files_to_move'][webp_filename] = replace_extension(
                     info['__files_to_move'].pop(thumbnail_filename), 'webp')

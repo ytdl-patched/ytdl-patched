@@ -154,6 +154,7 @@ from .longname import (
     escaped_basename,
     escaped_dirname,
     ensure_directory,
+    split_longname,
 )
 from .version import __version__
 try:
@@ -1326,6 +1327,8 @@ class YoutubeDL(object):
             raise Exception('Invalid result type: %s' % result_type)
 
     def _ensure_dir_exists(self, path):
+        if self.params.get('escape_long_names', False):
+            path = split_longname(path)
         return make_dir(path, self.report_error)
 
     def __process_playlist(self, ie_result, download):
@@ -2837,7 +2840,7 @@ class YoutubeDL(object):
             for old_filename in set(files_to_delete):
                 self.to_screen('Deleting original file %s (pass -k to keep)' % old_filename)
                 try:
-                    os.remove(encodeFilename(old_filename))
+                    self.remove(encodeFilename(old_filename))
                 except (IOError, OSError):
                     self.report_warning('Unable to remove downloaded original file')
                 if old_filename in infodict['__files_to_move']:
