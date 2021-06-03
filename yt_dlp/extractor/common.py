@@ -1503,8 +1503,10 @@ class InfoExtractor(object):
                        'order': ['av0?1', 'vp0?9.2', 'vp0?9', '[hx]265|he?vc?', '[hx]264|avc', 'vp0?8', 'mp4v|h263', 'theora', '', None, 'none']},
             'acodec': {'type': 'ordered', 'regex': True,
                        'order': ['opus', 'vorbis', 'aac', 'mp?4a?', 'mp3', 'e?a?c-?3', 'dts', '', None, 'none']},
-            'proto': {'type': 'ordered', 'regex': True, 'field': 'protocol',
+            'proto': {'type': 'multiple:ordered', 'regex': True, 'field': ('expected_protocol', 'protocol'),
                       'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', '', 'mms|rtsp', 'none', 'f4']},
+            # 'proto': {'type': 'ordered', 'regex': True, 'field': 'protocol',
+            #           'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', '', 'mms|rtsp', 'none', 'f4']},
             'vext': {'type': 'ordered', 'field': 'video_ext',
                      'order': ('mp4', 'webm', 'flv', '', 'none'),
                      'order_free': ('webm', 'mp4', 'flv', '', 'none')},
@@ -1713,8 +1715,9 @@ class InfoExtractor(object):
         def _calculate_field_preference(self, format, field):
             type = self._get_field_setting(field, 'type')  # extractor, boolean, ordered, field, multiple
             get_value = lambda f: format.get(self._get_field_setting(f, 'field'))
-            if type == 'multiple':
-                type = 'field'  # Only 'field' is allowed in multiple for now
+            multiple_match = re.match(r'multiple(?::([a-z]+))?', type)
+            if multiple_match and multiple_match.group(1):
+                type = multiple_match.group(1) or 'field'
                 actual_fields = self._get_field_setting(field, 'field')
 
                 def wrapped_function(values):
