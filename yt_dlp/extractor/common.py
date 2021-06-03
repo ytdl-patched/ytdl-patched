@@ -1508,7 +1508,8 @@ class InfoExtractor(object):
                        'order': ['opus', 'vorbis', 'aac', 'mp?4a?', 'mp3', 'e?a?c-?3', 'dts', '', None, 'none']},
             # sort with multiple:ordered from "expected_protocol", "protocol" in this order to make DMC formats properly sorted
             'proto': {'type': 'multiple:ordered', 'regex': True, 'field': ('expected_protocol', 'protocol'),
-                      'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', '', 'mms|rtsp', 'none', 'f4']},
+                      'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', '', 'mms|rtsp', 'none', 'f4'],
+                      'function': lambda *x: x[0]},
             'vext': {'type': 'ordered', 'field': 'video_ext',
                      'order': ('mp4', 'webm', 'flv', '', 'none'),
                      'order_free': ('webm', 'mp4', 'flv', '', 'none')},
@@ -1594,7 +1595,7 @@ class InfoExtractor(object):
             conversion = self._get_field_setting(field, 'convert')
             if conversion == 'ignore':
                 return None
-            if conversion == 'string':
+            elif conversion == 'string':
                 return value
             elif conversion == 'float_none':
                 return float_or_none(value)
@@ -1612,7 +1613,7 @@ class InfoExtractor(object):
                     return list_length - empty_pos  # not in list
                 else:  # not regex or  value = None
                     return list_length - (order_list.index(value) if value in order_list else empty_pos)
-            else:
+            elif value is not None:
                 if value.isnumeric():
                     return float(value)
                 else:
@@ -1718,7 +1719,7 @@ class InfoExtractor(object):
             type = self._get_field_setting(field, 'type')  # extractor, boolean, ordered, field, multiple
             get_value = lambda f: format.get(self._get_field_setting(f, 'field'))
             multiple_match = re.match(r'multiple(?::([a-z]+))?', type)
-            if multiple_match and multiple_match.group(1):
+            if multiple_match:
                 type = multiple_match.group(1) or 'field'
                 actual_fields = self._get_field_setting(field, 'field')
 
