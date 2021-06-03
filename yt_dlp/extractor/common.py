@@ -159,6 +159,9 @@ class InfoExtractor(object):
                                  download, lower-case.
                                  "http", "https", "rtsp", "rtmp", "rtmp_ffmpeg", "rtmpe",
                                  "m3u8", "m3u8_native" or "http_dash_segments".
+                    * expected_protocol The protocol that will finally be used.
+                                        Only used by "niconico_dmc" downloader
+                                        to determine actual downloader.
                     * fragment_base_url
                                  Base URL for fragments. Each fragment's path
                                  value (if present) will be relative to
@@ -1503,10 +1506,9 @@ class InfoExtractor(object):
                        'order': ['av0?1', 'vp0?9.2', 'vp0?9', '[hx]265|he?vc?', '[hx]264|avc', 'vp0?8', 'mp4v|h263', 'theora', '', None, 'none']},
             'acodec': {'type': 'ordered', 'regex': True,
                        'order': ['opus', 'vorbis', 'aac', 'mp?4a?', 'mp3', 'e?a?c-?3', 'dts', '', None, 'none']},
+            # sort with multiple:ordered from "expected_protocol", "protocol" in this order to make DMC formats properly sorted
             'proto': {'type': 'multiple:ordered', 'regex': True, 'field': ('expected_protocol', 'protocol'),
                       'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', '', 'mms|rtsp', 'none', 'f4']},
-            # 'proto': {'type': 'ordered', 'regex': True, 'field': 'protocol',
-            #           'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', '', 'mms|rtsp', 'none', 'f4']},
             'vext': {'type': 'ordered', 'field': 'video_ext',
                      'order': ('mp4', 'webm', 'flv', '', 'none'),
                      'order_free': ('webm', 'mp4', 'flv', '', 'none')},
