@@ -1,5 +1,4 @@
-name: 'URGENT: Please respond #1126012 before stopping Actions!'
-# name: Build Patched YTDL
+name: Build Patched YTDL
 
 on:
   push:

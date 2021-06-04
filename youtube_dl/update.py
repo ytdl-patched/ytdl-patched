@@ -36,7 +36,7 @@ def rsa_verify(message, signature, key):
 def update_self(to_screen, verbose, opener):
     """Update the program file with the latest version from the repository"""
 
-    UPDATE_URL = 'https://ytdl-patched.github.io/ytdl-patched/'
+    UPDATE_URL = 'https://nao20010128nao.github.io/ytdl-patched/'
     VERSION_URL = UPDATE_URL + 'LATEST_VERSION'
     JSON_URL = UPDATE_URL + 'versions.json'
 
