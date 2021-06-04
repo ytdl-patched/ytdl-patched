@@ -97,7 +97,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `clubdam:damtomo`
     * `disneychris`
     * `dnatube`
-    * `fc2:live` (FC2 user-uploaded videos)
+    * `fc2:user` (FC2 user-uploaded videos)
     * `iwara:user` (Iwara user-uploaded videos)
     * `javhub`
     * `ask.fm`, `marshmallow-qa`, `marshmallow-qa`, `mottohomete` (scrapes Q&A section and find video URLs in it)
