@@ -21,16 +21,16 @@ class MirrativIE(MirrativBaseIE):
         webpage = self._download_webpage('https://www.mirrativ.com/live/%s' % video_id, video_id)
         live_response = self._download_json(self.LIVE_API_URL % video_id, video_id)
         self.assert_error(live_response)
+        print(live_response)
 
-        hls_url = None
-        is_live = False
         if live_response.get('archive_url_hls'):
             hls_url = live_response['archive_url_hls']
+            is_live = False
         elif live_response.get('streaming_url_hls'):
             hls_url = live_response['streaming_url_hls']
             is_live = True
         else:
-            raise ExtractorError('Live has ended, and has no archive saved', expected=True)
+            raise ExtractorError('Live has ended, and has no archive found', expected=True)
 
         formats = self._extract_m3u8_formats(
             hls_url, video_id,
@@ -41,6 +41,14 @@ class MirrativIE(MirrativBaseIE):
             r'<title>\s*(.+?) - Mirrativ\s*</title>', webpage) or live_response.get('title')
         description = live_response.get('description')
         thumbnail = live_response.get('image_url')
+
+        if live_response.get('started_at') and live_response.get('ended_at'):
+            duration = live_response.get('ended_at') - live_response.get('started_at')
+        else:
+            duration = None
+        view_count = live_response.get('total_viewer_num')
+        release_timestamp = live_response.get('started_at')
+        timestamp = live_response.get('created_at')
 
         owner = live_response.get('owner', {})
         uploader = owner.get('name')
@@ -55,6 +63,11 @@ class MirrativIE(MirrativBaseIE):
             'thumbnail': thumbnail,
             'uploader': uploader,
             'uploader_id': uploader_id,
+            'duration': duration,
+            'view_count': view_count,
+            'release_timestamp': release_timestamp,
+            'timestamp': timestamp,
+            'was_live': None if is_live else True,
         }
 
 
@@ -63,6 +76,14 @@ class MirrativUserIE(MirrativBaseIE):
     _VALID_URL = r'https?://(?:www.)?mirrativ\.com/user/(?P<id>\d+)'
     LIVE_HISTORY_API_URL = 'https://www.mirrativ.com/api/live/live_history?user_id=%s&page=%d'
     USER_INFO_API_URL = 'https://www.mirrativ.com/api/user/profile?user_id=%s'
+
+    _TESTS = [{
+        # Live archive is available up to 3 days
+        # see: https://helpfeel.com/mirrativ/%E9%8C%B2%E7%94%BB-5e26d3ad7b59ef0017fb49ac (Japanese)
+        'url': 'https://www.mirrativ.com/user/110943130',
+        'note': 'multiple archives available',
+        'only_matching': True,
+    }]
 
     def _real_extract(self, url):
         user_id = self._match_id(url)
@@ -87,6 +108,10 @@ class MirrativUserIE(MirrativBaseIE):
             if not lives:
                 break
             for live in lives:
+                if not live.get('is_archive') and not live.get('is_live'):
+                    # neither of archive and live is available, so skip it
+                    # or the service will ban your IP address for a while
+                    continue
                 live_id = live.get('live_id')
                 url = 'https://www.mirrativ.com/live/%s' % live_id
                 entries.append(self.url_result(url, 'Mirrativ', live_id, live.get('title')))
