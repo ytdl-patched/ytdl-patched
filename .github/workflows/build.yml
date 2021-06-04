@@ -268,7 +268,7 @@ jobs:
         with:
           name: ytdl-artifacts
       - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@4.1.1
+        uses: JamesIves/github-pages-deploy-action@4.1.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
