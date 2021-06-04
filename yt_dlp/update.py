@@ -54,13 +54,13 @@ def update_self(to_screen, verbose, opener):
 
 # def get_version_info(ydl):
 #     # NOTE: running with -U will update to youtube-dl-based version
-#     JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
+#     JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases/latest'
 #     version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
 #     return json.loads(version_info)
 
 def get_version_info(ydl):
     for page_num in range(1, 4):
-        JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases?page=%d' % page_num
+        JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases?page=%d' % page_num
         releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
         for release in releases:
             if release.get('prerelease'):
@@ -76,7 +76,7 @@ def run_update(ydl):
 
     def report_error(msg, network=False, expected=False, delim=';'):
         if network:
-            msg += '%s Visit  https://github.com/ytdl-patched/ytdl-patched/releases/latest' % delim
+            msg += '%s Visit  https://github.com/nao20010128nao/ytdl-patched/releases/latest' % delim
         ydl.report_error(msg, tb='' if network or expected else None)
 
     def calc_sha256sum(path):
