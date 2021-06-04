@@ -5,7 +5,7 @@ pycryptodome==3.10.1
 websockets==9.1
 
 # for Python 2.x
-websocket_client==0.59.0
+websocket_client==1.0.1
 
 # building
 zopflipy==1.5
