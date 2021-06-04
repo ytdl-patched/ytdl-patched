@@ -65,6 +65,9 @@ jobs:
         if: ${{ matrix.python.special == 'iron' }}
         run: ./devscripts/install_ironpython.sh
       # main script
+      - name: Install requirements
+        continue-on-error: true
+        run: python -m pip install -r requirements.txt
       - name: Run test
         continue-on-error: ${{ matrix.ytdl_test_set.may_fail || matrix.python.may_fail }}
         run: ./devscripts/run_tests.sh
