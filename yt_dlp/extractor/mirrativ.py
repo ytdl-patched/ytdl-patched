@@ -21,7 +21,6 @@ class MirrativIE(MirrativBaseIE):
         webpage = self._download_webpage('https://www.mirrativ.com/live/%s' % video_id, video_id)
         live_response = self._download_json(self.LIVE_API_URL % video_id, video_id)
         self.assert_error(live_response)
-        print(live_response)
 
         if live_response.get('archive_url_hls'):
             hls_url = live_response['archive_url_hls']
