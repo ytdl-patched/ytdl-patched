@@ -91,25 +91,33 @@ class TwitCastingIE(TwitCastingBaseIE):
             webpage,
             lambda x: self._parse_json(self._search_regex(
                 r"data-movie-playlist='([^']+?)'",
-                x, 'movie playlist', default=None), video_id)["2"][0], dict) or {}
+                x, 'movie playlist', default=None), video_id)["2"], list)
 
         stream_server_data = self._download_json(
             'https://twitcasting.tv/streamserver.php?target=%s&mode=client' % uploader_id, video_id,
             'Downloading live info', fatal=False)
 
-        is_live = bool('data-status="online"' in webpage or try_get(stream_server_data, lambda x: x['movie']['live'], None))
-        m3u8_url = try_get(
-            webpage,
-            (lambda x: self._search_regex(
+        is_live = 'data-status="online"' in webpage
+
+        def find_dmu(x):
+            data_movie_url = self._search_regex(
                 r'data-movie-url=(["\'])(?P<url>(?:(?!\1).)+)\1',
-                x, 'm3u8 url', group='url', default=None),
-             lambda x: video_js_data['source']['url'],
-             lambda x: 'https://twitcasting.tv/%s/metastream.m3u8' % uploader_id
+                x, 'm3u8 url', group='url', default=None)
+            if data_movie_url:
+                return [data_movie_url]
+
+        m3u8_urls = try_get(
+            webpage,
+            (find_dmu,
+             lambda x: [y['source']['url'] for y in video_js_data]
+                if video_js_data else None,
+             lambda x: ['https://twitcasting.tv/%s/metastream.m3u8' % uploader_id]
                 if is_live else None),
-            compat_str)
+            list)
 
         if is_live:
             # use `m3u8` entry_protocol until EXT-X-MAP is properly supported by `m3u8_native` entry_protocol
+            m3u8_url = m3u8_urls[0]
             formats = self._extract_m3u8_formats(
                 m3u8_url, video_id, 'mp4', m3u8_id='hls',
                 headers={
@@ -135,9 +143,11 @@ class TwitCastingIE(TwitCastingBaseIE):
             self._sort_formats(formats)
         else:
             # This reduces the download of m3u8 playlist (2 -> 1)
+            if len(m3u8_urls) > 1:
+                self.report_warning('This archive got split in %d parts; to download each split, please use "-f hls-1".."-f hls-N" option.' % len(m3u8_urls))
             formats = [{
                 'url': m3u8_url,
-                'format_id': 'hls',
+                'format_id': 'hls-%d' % num,
                 'ext': 'mp4',
                 'protocol': 'm3u8',
                 'http_headers': {
@@ -146,15 +156,23 @@ class TwitCastingIE(TwitCastingBaseIE):
                     'Referer': 'https://twitcasting.tv/',
                 },
                 'input_params': ['-re'],
-            }]
+            } for (num, m3u8_url) in enumerate(m3u8_urls)]
+            formats.reverse()
 
-        thumbnail = video_js_data.get('thumbnailUrl') or self._og_search_thumbnail(webpage)
+        thumbnail = try_get(
+            video_js_data,
+            (lambda x: x[0].get('thumbnailUrl'),
+             lambda x: self._og_search_thumbnail(webpage)),
+            compat_str)
         description = clean_html(get_element_by_id(
             'authorcomment', webpage)) or self._html_search_meta(
             ['description', 'og:description', 'twitter:description'], webpage)
-        duration = float_or_none(video_js_data.get(
-            'duration'), 1000) or parse_duration(clean_html(
-                get_element_by_class('tw-player-duration-time', webpage)))
+        duration = try_get(
+            video_js_data,
+            (lambda x: sum(float_or_none(y.get('duration')) for y in x),
+             lambda x: parse_duration(clean_html(
+                 get_element_by_class('tw-player-duration-time', webpage)))),
+            float)
         view_count = str_to_int(self._search_regex(
             r'Total\s*:\s*([\d,]+)\s*Views', webpage, 'views', None))
         timestamp = unified_timestamp(self._search_regex(
