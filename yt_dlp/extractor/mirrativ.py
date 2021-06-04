@@ -16,6 +16,11 @@ class MirrativIE(MirrativBaseIE):
     _VALID_URL = r'https?://(?:www.)?mirrativ\.com/live/(?P<id>[^/?#&]+)'
     LIVE_API_URL = 'https://www.mirrativ.com/api/live/live?live_id=%s'
 
+    TESTS = [{
+        'url': 'https://mirrativ.com/live/POxyuG1KmW2982lqlDTuPw',
+        'only_matching': True,
+    }]
+
     def _real_extract(self, url):
         video_id = self._match_id(url)
         webpage = self._download_webpage('https://www.mirrativ.com/live/%s' % video_id, video_id)
