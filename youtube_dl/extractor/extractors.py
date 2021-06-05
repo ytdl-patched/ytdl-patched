@@ -1644,6 +1644,10 @@ from .xtube import XTubeUserIE, XTubeIE
 from .xuite import XuiteIE
 from .xvideos import XVideosIE
 from .xxxymovies import XXXYMoviesIE
+from .y2mate import (
+    Y2mateIE,
+    Y2mateRushingIE,
+)
 from .yahoo import (
     YahooIE,
     YahooSearchIE,
@@ -1693,6 +1697,35 @@ from .youtube import (
     YoutubeYtBeIE,
     YoutubeYtUserIE,
     YoutubeWatchLaterIE,
+)
+from .youtube_matrix import (
+    Y2mateFavouritesIE,
+    Y2mateHistoryIE,
+    Y2mateTabIE,
+    Y2matePlaylistIE,
+    Y2mateRecommendedIE,
+    Y2mateSearchDateIE,
+    Y2mateSearchIE,
+    Y2mateSubscriptionsIE,
+    Y2mateTruncatedIDIE,
+    Y2mateTruncatedURLIE,
+    Y2mateYtBeIE,
+    Y2mateYtUserIE,
+    Y2mateWatchLaterIE,
+
+    Y2mateRushingFavouritesIE,
+    Y2mateRushingHistoryIE,
+    Y2mateRushingTabIE,
+    Y2mateRushingPlaylistIE,
+    Y2mateRushingRecommendedIE,
+    Y2mateRushingSearchDateIE,
+    Y2mateRushingSearchIE,
+    Y2mateRushingSubscriptionsIE,
+    Y2mateRushingTruncatedIDIE,
+    Y2mateRushingTruncatedURLIE,
+    Y2mateRushingYtBeIE,
+    Y2mateRushingYtUserIE,
+    Y2mateRushingWatchLaterIE,
 )
 from .zapiks import ZapiksIE
 from .zattoo import (
