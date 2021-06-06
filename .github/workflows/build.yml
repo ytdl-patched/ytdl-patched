@@ -187,7 +187,7 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install deps
-        run: pip install -U ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
+        run: pip install -U ${{ matrix.builder }} zopflipy websockets pyyaml python-dateutil
       - name: Install UPX
         run: choco install upx
       - name: Remove unneeded tests in InfoExtractor
