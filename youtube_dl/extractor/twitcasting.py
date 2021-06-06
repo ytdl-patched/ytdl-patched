@@ -155,7 +155,7 @@ class TwitCastingIE(TwitCastingBaseIE):
                     'Origin': 'https://twitcasting.tv',
                     'Referer': 'https://twitcasting.tv/',
                 },
-                # 'input_params': ['-re'],
+                'input_params': ['-re'],
             } for (num, m3u8_url) in enumerate(m3u8_urls)]
             formats.reverse()
 
