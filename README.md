@@ -178,6 +178,7 @@ If you are coming from [youtube-dl](https://github.com/ytdl-org/youtube-dl), the
     - c47bf3a65857e42917772a9ad914a3517ac17d5f
     - 73afcccf49ad0ab778368477d0db254bb4a3addb
     - 400beb0ad168bf31b9bce9b19c5c886c23b4ad51
+- y2mate support
 
 ### Differences in default behavior
 
