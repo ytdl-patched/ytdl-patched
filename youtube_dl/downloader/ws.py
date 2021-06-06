@@ -11,9 +11,7 @@ from ..websocket import WebSocket
 
 
 class LiveStreamSinkBaseFD(FileDownloader):
-    """ Just a sink to ffmpeg for downloading fragments """
-
-    FD_NAME = 'youtube_live_chat_replay'
+    """ Just a sink to ffmpeg for downloading fragments in any form """
 
     def real_download(self, filename, info_dict):
         new_infodict = {}

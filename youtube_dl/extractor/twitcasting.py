@@ -143,8 +143,6 @@ class TwitCastingIE(TwitCastingBaseIE):
             self._sort_formats(formats)
         else:
             # This reduces the download of m3u8 playlist (2 -> 1)
-            if len(m3u8_urls) > 1:
-                self.report_warning('This archive got split in %d parts; to download each split, please use "-f hls-1".."-f hls-N" option.' % len(m3u8_urls))
             formats = [{
                 'url': m3u8_url,
                 'format_id': 'hls-%d' % num,
@@ -157,7 +155,17 @@ class TwitCastingIE(TwitCastingBaseIE):
                 },
                 'input_params': ['-re'],
             } for (num, m3u8_url) in enumerate(m3u8_urls)]
-            formats.reverse()
+
+            if len(m3u8_urls) > 1:
+                self.report_warning('This archive got split in %d parts; to download each split, please use "-f hls-1".."-f hls-N" option.' % len(m3u8_urls))
+                formats.append({
+                    'format_id': 'all',
+                    'url': 'serial:',
+                    'protocol': 'serial',
+                    'items': list(formats),
+                    'ext': 'mp4',
+                })
+                formats.reverse()
 
         thumbnail = try_get(
             video_js_data,
