@@ -156,14 +156,16 @@ class TwitCastingIE(TwitCastingBaseIE):
                 'input_params': ['-re'],
             } for (num, m3u8_url) in enumerate(m3u8_urls)]
 
-            if len(m3u8_urls) > 1:
-                self.report_warning('This archive got split in %d parts; to download each split, please use "-f hls-1".."-f hls-N" option.' % len(m3u8_urls))
+            url_count = len(m3u8_urls)
+            if url_count > 1:
+                self.report_warning('This archive got split in %d parts; to download each split, please use "-f hls-0".."-f hls-%d" option.' % (url_count, url_count - 1))
                 formats.append({
                     'format_id': 'all',
                     'url': 'serial:',
                     'protocol': 'serial',
                     'items': list(formats),
                     'ext': 'mp4',
+                    'format_note': '使うのは自己責任で',
                 })
                 formats.reverse()
 
