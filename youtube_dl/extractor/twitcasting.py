@@ -65,6 +65,15 @@ class TwitCastingIE(TwitCastingBaseIE):
             'skip_download': True,
             'videopassword': 'abc',
         },
+    }, {
+        'note': 'archive is split in 2 parts',
+        'url': 'https://twitcasting.tv/loft_heaven/movie/685979292',
+        'info_dict': {
+            'id': '685979292',
+            'ext': 'mp4',
+            'title': '南波一海のhear_here “ナタリー望月哲さんに聞く編集と「渋谷系狂騒曲」”',
+            'duration': 6964.599334,
+        },
     }]
 
     def _real_extract(self, url):
@@ -179,7 +188,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             ['description', 'og:description', 'twitter:description'], webpage)
         duration = try_get(
             video_js_data,
-            (lambda x: sum(float_or_none(y.get('duration')) for y in x),
+            (lambda x: sum(float_or_none(y.get('duration')) for y in x) / 1000,
              lambda x: parse_duration(clean_html(
                  get_element_by_class('tw-player-duration-time', webpage)))),
             float)
