@@ -3707,6 +3707,7 @@ instances = {
     "tube.xn--krsgw--n73t.com",
     "tuner.1242.com",
     "tupot.pl",
+    "turkum.site",
     "turtleapparel.eu",
     "tusk.schoollibraries.net",
     "tusk.social",
