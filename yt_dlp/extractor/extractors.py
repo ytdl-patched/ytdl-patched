@@ -1484,7 +1484,11 @@ from .tweakers import TweakersIE
 from .twentyfourvideo import TwentyFourVideoIE
 from .twentymin import TwentyMinutenIE
 from .twentythreevideo import TwentyThreeVideoIE
-from .twitcasting import TwitCastingIE
+from .twitcasting import (
+    TwitCastingIE,
+    TwitCastingLiveIE,
+    TwitCastingUserIE,
+)
 from .twitch import (
     TwitchVodIE,
     TwitchCollectionIE,
@@ -1566,7 +1570,11 @@ from .videomore import (
     VideomoreSeasonIE,
 )
 from .videopress import VideoPressIE
-from .vidio import VidioIE
+from .vidio import (
+    VidioIE,
+    VidioPremierIE,
+    VidioLiveIE
+)
 from .vidlii import VidLiiIE
 from .vidme import (
     VidmeIE,

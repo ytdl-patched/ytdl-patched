@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 from __future__ import unicode_literals
@@ -58,7 +58,9 @@ VERSION_FILE = VSVersionInfo(
                     ),
                     StringStruct('OriginalFilename', 'yt-dlp%s.exe' % _x86),
                     StringStruct('ProductName', 'yt-dlp%s' % _x86),
-                    StringStruct('ProductVersion', '%s%s' % (VERSION, _x86)),
+                    StringStruct(
+                        'ProductVersion',
+                        '%s%s on Python %s' % (VERSION, _x86, platform.python_version())),
                 ])]),
         VarFileInfo([VarStruct('Translation', [0, 1200])])
     ]
