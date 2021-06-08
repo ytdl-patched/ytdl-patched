@@ -67,7 +67,9 @@ class DailymotionBaseInfoExtractor(InfoExtractor):
                     token = self._download_json(
                         'https://graphql.api.dailymotion.com/oauth/token',
                         None, 'Downloading Access Token',
-                        data=urlencode_postdata(data))['access_token']
+                        data=urlencode_postdata(data), headers={
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        })['access_token']
                 except ExtractorError as e:
                     if isinstance(e.cause, compat_HTTPError) and e.cause.code == 400:
                         raise ExtractorError(self._parse_json(
