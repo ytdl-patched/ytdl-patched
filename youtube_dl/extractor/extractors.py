@@ -1419,6 +1419,7 @@ from .twentymin import TwentyMinutenIE
 from .twentythreevideo import TwentyThreeVideoIE
 from .twitcasting import (
     TwitCastingIE,
+    TwitCastingLiveIE,
     TwitCastingUserIE,
 )
 from .twitch import (

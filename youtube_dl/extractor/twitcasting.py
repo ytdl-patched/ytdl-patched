@@ -213,53 +213,55 @@ class TwitCastingIE(TwitCastingBaseIE):
         }
 
 
-class TwitCastingUserIE(TwitCastingBaseIE):
-    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)(?:/([a-zA-Z-_][^/]*)?)*$'
+class TwitCastingLiveIE(InfoExtractor):
+    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)/?(?:[#?]|$)'
     _TESTS = [{
         'url': 'https://twitcasting.tv/ivetesangalo',
-        'only_matching': True,
-    }, {
-        'url': 'https://twitcasting.tv/mttbernardini/',
-        'only_matching': True,
-    }, {
-        'url': 'https://twitcasting.tv/noriyukicas',
-        'only_matching': True,
-    }, {
-        'url': 'https://twitcasting.tv/lockedlesmi/',
         'only_matching': True,
     }]
 
     def _real_extract(self, url):
         uploader_id = self._match_id(url)
-        webpage = self._download_webpage(url, uploader_id, note='Looking for current live')
+        self.to_screen(
+            'Downloading live video of user {0}. '
+            'Pass "https://twitcasting.tv/{0}/show" to download the history'.format(uploader_id))
 
+        webpage = self._download_webpage(url, uploader_id)
         current_live = self._search_regex(
             (r'data-type="movie" data-id="(\d+)">',
              r'tw-sound-flag-open-link" data-id="(\d+)" style=',),
             webpage, 'current live ID', default=None)
-        if current_live:
-            self._downloader.report_warning('Redirecting to current live on user %s' % uploader_id)
-            return self.url_result('https://twitcasting.tv/%s/movie/%s' % (uploader_id, current_live))
+        if not current_live:
+            raise ExtractorError('The user is not currently live')
+        return self.url_result('https://twitcasting.tv/%s/movie/%s' % (uploader_id, current_live))
 
-        next_url = 'https://twitcasting.tv/%s/show/' % uploader_id
-        urls = []
-        for index in itertools.count(1):
-            webpage = self._download_webpage(next_url, uploader_id, note='Downloading page %d' % index)
-            for match in re.finditer(r'''(?isx)
-                <a\s+class="tw-movie-thumbnail"\s*href="(?P<url>/[^/]+/movie/\d+)"\s*>
-                .+?</a>
-            ''', webpage):
-                if not re.search(r'<span\s+class="tw-movie-thumbnail-badge"\s*data-status="recorded">', match.group(0)):
-                    continue
-                video_full_url = urljoin(url, match.group('url'))
-                urls.append(self.url_result(video_full_url))
+
+class TwitCastingUserIE(InfoExtractor):
+    _VALID_URL = r'https?://(?:[^/]+\.)?twitcasting\.tv/(?P<id>[^/]+)/show/?(?:[#?]|$)'
+    _TESTS = [{
+        'url': 'https://twitcasting.tv/noriyukicas/show',
+        'only_matching': True,
+    }]
+
+    def _entries(self, uploader_id):
+        base_url = next_url = 'https://twitcasting.tv/%s/show' % uploader_id
+        for page_num in itertools.count(1):
+            webpage = self._download_webpage(
+                next_url, uploader_id, query={'filter': 'watchable'}, note='Downloading page %d' % page_num)
+            matches = re.finditer(
+                r'''(?isx)<a\s+class="tw-movie-thumbnail"\s*href="(?P<url>/[^/]+/movie/\d+)"\s*>.+?</a>''',
+                webpage)
+            for mobj in matches:
+                yield self.url_result(urljoin(base_url, mobj.group('url')))
 
             next_url = self._search_regex(
-                r'<a href="(/%s/show/%d-\d+)">%d</a>' % (re.escape(uploader_id), index, index + 1),
+                r'<a href="(/%s/show/%d-\d+)[?"]' % (re.escape(uploader_id), page_num),
                 webpage, 'next url', default=None)
-            if next_url:
-                next_url = urljoin(url, next_url)
-            else:
-                break
+            next_url = urljoin(base_url, next_url)
+            if not next_url:
+                return
 
-        return self.playlist_result(urls, uploader_id, 'Live archive from %s' % uploader_id)
+    def _real_extract(self, url):
+        uploader_id = self._match_id(url)
+        return self.playlist_result(
+            self._entries(uploader_id), uploader_id, '%s - Live History' % uploader_id)
