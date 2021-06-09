@@ -145,6 +145,21 @@ class TwitCastingIE(TwitCastingBaseIE):
                         'preference': -100,
                         'quality': qq(mode),
                         'format_note': 'video timestamp have jitter',
+                        # works for video, but not for audio
+                        # 'input_params': ['-use_wallclock_as_timestamps', '1'],
+
+                        # dont't work: timestamps are remain unchanged
+                        # 'input_params': ['-fflags', '+genpts'],
+
+                        # don't work with -c copy option
+                        # 'output_params': ['-vf', 'setpts=PTS-STARTPTS'],
+
+                        # requires FFmpeg 4.4 which is not available in Ubuntu
+                        'output_params': [
+                            # needed to strip the first fxxking packet
+                            '-ss', '0.001',
+                            '-bsf', 'setts=ts=TS-STARTPTS', ],
+
                         # TwitCasting simply sends moof atom directly over WS
                         'protocol': 'frag_websocket',
                     })
