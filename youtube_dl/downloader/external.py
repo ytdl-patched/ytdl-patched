@@ -329,7 +329,8 @@ class FFmpegFD(ExternalFD):
                 args += ['-i', u]
         elif isinstance(extra_url, compat_str):
             args += ['-i', extra_url]
-        args += ['-c', 'copy']
+        if info_dict.get('copy', True):
+            args += ['-c', 'copy']
 
         output_params = info_dict.get('output_params')
         if isinstance(output_params, (list, tuple)):
