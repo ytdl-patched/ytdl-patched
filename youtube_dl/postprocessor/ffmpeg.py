@@ -850,3 +850,18 @@ class FFmpegThumbnailsConvertorPP(FFmpegPostProcessor):
         if not has_thumbnail:
             self.to_screen('There aren\'t any thumbnails to convert')
         return files_to_delete, info
+
+
+class FFmpegFixupDurationPP(FFmpegPostProcessor):
+    def run(self, info):
+        filename = info['filepath']
+
+        temp_filename = prepend_extension(filename, 'temp')
+
+        options = ['-c', 'copy']
+        self.to_screen('Fixing video duration in "%s"' % filename)
+        self.run_ffmpeg(filename, temp_filename, options)
+
+        os.remove(encodeFilename(filename))
+        os.rename(encodeFilename(temp_filename), encodeFilename(filename))
+        return [], info

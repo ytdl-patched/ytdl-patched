@@ -481,16 +481,20 @@ class YoutubeDL(object):
             self.add_default_info_extractors()
 
         for pp_def_raw in self.params.get('postprocessors', []):
-            pp_class = get_postprocessor(pp_def_raw['key'])
-            pp_def = dict(pp_def_raw)
-            del pp_def['key']
-            pp = pp_class(self, **compat_kwargs(pp_def))
+            pp = self.instantiate_postprocessor(pp_def_raw)
             self.add_post_processor(pp)
 
         for ph in self.params.get('progress_hooks', []):
             self.add_progress_hook(ph)
 
         register_socks_protocols()
+
+    def instantiate_postprocessor(self, pp_def_raw):
+        pp_class = get_postprocessor(pp_def_raw['key'])
+        pp_def = dict(pp_def_raw)
+        del pp_def['key']
+        pp = pp_class(self, **compat_kwargs(pp_def))
+        return pp
 
     def warn_if_short_id(self, argv):
         # short YouTube ID starting with dash?
@@ -2089,6 +2093,10 @@ class YoutubeDL(object):
                 if fixup_policy is None:
                     fixup_policy = 'detect_or_warn'
 
+                pps = info_dict.setdefault('__postprocessors', [])
+                for i in range(len(pps)):
+                    pps[i] = self.instantiate_postprocessor(pps[i])
+
                 INSTALL_FFMPEG_MESSAGE = 'Install ffmpeg or avconv to fix this automatically.'
 
                 stretched_ratio = info_dict.get('stretched_ratio')
@@ -2099,8 +2107,7 @@ class YoutubeDL(object):
                     elif fixup_policy == 'detect_or_warn':
                         stretched_pp = FFmpegFixupStretchedPP(self)
                         if stretched_pp.available:
-                            info_dict.setdefault('__postprocessors', [])
-                            info_dict['__postprocessors'].append(stretched_pp)
+                            pps.append(stretched_pp)
                         else:
                             self.report_warning(
                                 '%s: Non-uniform pixel ratio (%s). %s'
@@ -2118,8 +2125,7 @@ class YoutubeDL(object):
                     elif fixup_policy == 'detect_or_warn':
                         fixup_pp = FFmpegFixupM4aPP(self)
                         if fixup_pp.available:
-                            info_dict.setdefault('__postprocessors', [])
-                            info_dict['__postprocessors'].append(fixup_pp)
+                            pps.append(fixup_pp)
                         else:
                             self.report_warning(
                                 '%s: writing DASH m4a. '
@@ -2137,8 +2143,7 @@ class YoutubeDL(object):
                     elif fixup_policy == 'detect_or_warn':
                         fixup_pp = FFmpegFixupM3u8PP(self)
                         if fixup_pp.available:
-                            info_dict.setdefault('__postprocessors', [])
-                            info_dict['__postprocessors'].append(fixup_pp)
+                            pps.append(fixup_pp)
                         else:
                             self.report_warning(
                                 '%s: malformed AAC bitstream detected. %s'
