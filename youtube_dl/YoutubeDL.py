@@ -106,6 +106,7 @@ from .extractor import get_info_extractor, gen_extractor_classes, _LAZY_LOADER
 from .extractor.openload import PhantomJSwrapper
 from .downloader import get_suitable_downloader
 from .downloader.rtmp import rtmpdump_version
+from .postprocessor.common import PostProcessor
 from .postprocessor import (
     FFmpegFixupM3u8PP,
     FFmpegFixupM4aPP,
@@ -490,6 +491,9 @@ class YoutubeDL(object):
         register_socks_protocols()
 
     def instantiate_postprocessor(self, pp_def_raw):
+        if isinstance(pp_def_raw, PostProcessor):
+            return pp_def_raw
+
         pp_class = get_postprocessor(pp_def_raw['key'])
         pp_def = dict(pp_def_raw)
         del pp_def['key']
