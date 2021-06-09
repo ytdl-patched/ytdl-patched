@@ -4,6 +4,7 @@ clean: clean-test clean-dist clean-cache
 completions: bash-completion fish-completion zsh-completion
 
 PREFIX ?= /usr/local
+DESTDIR ?= .
 BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/man
 SHAREDIR ?= $(PREFIX)/share
