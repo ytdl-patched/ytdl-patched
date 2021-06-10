@@ -162,6 +162,8 @@ class TwitCastingIE(TwitCastingBaseIE):
                             '-bsf', 'setts=ts=TS-STARTPTS', ],
 
                         '__postprocessors': [{
+                            'key': 'FFmpegFixupTimestamp',
+                        }, {
                             'key': 'FFmpegFixupDuration',
                         }],
 
