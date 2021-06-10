@@ -144,7 +144,6 @@ class TwitCastingIE(TwitCastingBaseIE):
                         'ext': 'mp4',
                         'preference': -100,
                         'quality': qq(mode),
-                        'format_note': 'requires FFmpeg 4.4 or later. most likely you don\'t have this version',
 
                         # works for video, but not for audio
                         # 'input_params': ['-use_wallclock_as_timestamps', '1'],
