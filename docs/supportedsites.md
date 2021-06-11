@@ -1072,6 +1072,7 @@
  - **twitter:amplify**
  - **twitter:broadcast**
  - **twitter:card**
+ - **twitter:spaces** (Currently broken)
  - **udemy**
  - **udemy:course**
  - **UDNEmbed**: 聯合影音
