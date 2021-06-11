@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import re
+import json
 
 from .common import InfoExtractor
 from ..compat import (
@@ -35,6 +36,7 @@ class TwitterBaseIE(InfoExtractor):
     _API_REQUEST_HEADERS = {
         'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DTYfbDKbT3jJPCEVnMYqilB28NHfOPqkca3qaAxGfsyKCs0wRbw',
     }
+    _MAIN_JSCODE = None
 
     def _extract_variant_formats(self, variant, video_id):
         variant_url = variant.get('url')
@@ -97,6 +99,16 @@ class TwitterBaseIE(InfoExtractor):
                     e.cause.read().decode(),
                     video_id)['errors'][0]['message'], expected=True)
             raise
+
+    def _find_query_id(self, purpose):
+        if not self._MAIN_JSCODE:
+            self._MAIN_JSCODE = self._download_webpage(
+                'https://abs.twimg.com/responsive-web/client-web/main.14d1c445.js', None,
+                note='Downloading JavaScript code')
+        query_id = self._search_regex(
+            r'{queryId:"([a-zA-Z0-9_-]+?)",operationName:"%s",operationType:"query"}' % re.escape(purpose),
+            self._MAIN_JSCODE, 'Query ID for %s' % purpose)
+        return query_id
 
 
 class TwitterCardIE(InfoExtractor):
@@ -669,4 +681,69 @@ class TwitterBroadcastIE(TwitterBaseIE, PeriscopeBaseIE):
         state, width, height = self._extract_common_format_info(broadcast)
         info['formats'] = self._extract_pscp_m3u8_formats(
             m3u8_url, broadcast_id, m3u8_id, state, width, height)
+        return info
+
+
+class TwitterSpacesIE(TwitterBaseIE, PeriscopeBaseIE):
+    _WORKING = False
+    IE_NAME = 'twitter:spaces'
+    _VALID_URL = TwitterBaseIE._BASE_REGEX + r'i/spaces/(?P<id>[0-9a-zA-Z]{13})'
+    _API_REQUEST_HEADERS = {
+        'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+        'x-twitter-active-user': 'yes',
+        'x-twitter-auth-type': 'OAuth2Session',
+        'x-twitter-client-language': 'en',
+    }
+
+    _TEST = {
+        # my spaces
+        'url': 'https://twitter.com/i/spaces/1LyxBdNXokMGN',
+        'only_matching': True,
+    }
+
+    def _real_extract(self, url):
+        broadcast_id = self._match_id(url)
+
+        variables = {
+            'id': broadcast_id,
+            'withNonLegacyCard': True,
+            'withTweetResult': True,
+            'withReactions': False,
+            'withSuperFollowsTweetFields': False,
+            'withUserResults': True,
+            'withBirdwatchPivots': False,
+            'withScheduledSpaces': True,
+        }
+
+        spaces_query_id = self._find_query_id('AudioSpaceById')
+
+        broadcast = self._download_json(
+            'https://twitter.com/i/api/graphql/' + spaces_query_id + '/AudioSpaceById', broadcast_id,
+            headers=self._API_REQUEST_HEADERS,
+            query={'variables': json.dumps(variables)})['data']['audioSpace']
+        media_key = broadcast['media_key']
+
+        self._download_webpage(
+            'https://twitter.com/i/api/1.1/oauth/authenticate_periscope.json', None,
+            note='Authenticating Periscope', fatal=False)
+
+        source = self._download_json(
+            'https://twitter.com/i/api/1.1/live_video_stream/status/' + media_key, broadcast_id,
+            headers=self._API_REQUEST_HEADERS)['source']
+        m3u8_url = source.get('noRedirectPlaybackUrl') or source['location']
+
+        m3u8_id = compat_parse_qs(compat_urllib_parse_urlparse(
+            m3u8_url).query).get('type', [None])[0]
+
+        first_admin = try_get(broadcast, lambda x: x['participants']['admins'][0], dict) or {}
+
+        info = {
+            'id': broadcast.get('id') or broadcast_id,
+            'title': broadcast.get('title'),
+            'timestamp': broadcast.get('created_at'),
+            'uploader': first_admin.get('display_name'),
+            'uploader_id': first_admin.get('twitter_screen_name'),
+            'is_live': True,
+            'formats': self._extract_m3u8_formats(m3u8_url, broadcast_id, m3u8_id),
+        }
         return info

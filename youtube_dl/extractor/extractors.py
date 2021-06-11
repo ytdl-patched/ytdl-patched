@@ -1436,6 +1436,7 @@ from .twitter import (
     TwitterIE,
     TwitterAmplifyIE,
     TwitterBroadcastIE,
+    TwitterSpacesIE,
 )
 from .udemy import (
     UdemyIE,
