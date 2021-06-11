@@ -7,7 +7,11 @@ from .external import FFmpegFD
 class SerialFD(FileDownloader):
     """
     Download videos in the order and join later.
-    All formats must have same codec, resolution and fps.
+    Ensure all enclosed formats have same codec, resolution and fps.
+
+    Keys for formats:
+    - "url" -- Must be "serial:". or download will fail.
+    - "items" -- List of formats to download and join. Must have more than one item
     """
 
     def real_download(self, filename, info_dict):
