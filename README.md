@@ -145,6 +145,12 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                          PEOPLE. Prints types of object in info
                                          json. Use this for extractors that
                                          --print-json won' work.
+    --enable-lock                        Locks downloading exclusively. Blocks
+                                         other ytdl-patched process downloading
+                                         the same video.
+    --no-lock                            Do not lock downloading exclusively.
+                                         Download will start even if other
+                                         process is working on it.
 
 ## Network Options:
     --proxy URL                          Use the specified HTTP/HTTPS/SOCKS
@@ -404,7 +410,7 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
     --referer URL                        Specify a custom referer, use if the
                                          video access is restricted to one
                                          domain
-    --add-header FIELD:VALUE             Specify a custom HTTP header and its
+    -H, --add-header FIELD:VALUE         Specify a custom HTTP header and its
                                          value, separated by a colon ':'. You
                                          can use this option multiple times
     --bidi-workaround                    Work around terminals that lack
@@ -555,6 +561,8 @@ Alternatively, refer to the [developer instructions](#developer-instructions) fo
                                          /sdcard/Music/ && rm {}'
     --convert-subs FORMAT                Convert the subtitles to other format
                                          (currently supported: srt|ass|vtt|lrc)
+    --convert-thumbnails FORMAT          Convert the thumbnails to another
+                                         format (currently supported: jpg)
 
 ## SponSkrub (SponsorBlock) Options:
     SponSkrub (https://github.com/yt-dlp/SponSkrub) is a utility to
