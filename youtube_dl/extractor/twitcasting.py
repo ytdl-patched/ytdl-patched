@@ -155,10 +155,11 @@ class TwitCastingIE(TwitCastingBaseIE):
                         # 'output_params': ['-vf', 'setpts=PTS-STARTPTS'],
 
                         # requires FFmpeg 4.4 which is not available in Ubuntu
-                        'output_params': [
-                            # needed to strip the first fxxking packet
-                            '-ss', '0.001',
-                            '-bsf', 'setts=ts=TS-STARTPTS', ],
+                        # moved to FFmpegFixupTimestampPP
+                        # 'output_params': [
+                        #     # needed to strip the first fxxking packet
+                        #     '-ss', '0.001',
+                        #     '-bsf', 'setts=ts=TS-STARTPTS', ],
 
                         '__postprocessors': [{
                             'key': 'FFmpegFixupTimestamp',
