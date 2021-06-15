@@ -196,7 +196,7 @@ class TwitCastingIE(TwitCastingBaseIE):
                     'protocol': 'serial',
                     'items': list(formats),
                     'ext': 'mp4',
-                    'format_note': '使うのは自己責任で',
+                    # 'format_note': '使うのは自己責任で',
                 })
                 formats.reverse()
 
