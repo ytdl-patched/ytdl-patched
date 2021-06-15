@@ -290,7 +290,7 @@ jobs:
           echo $FILEHASH_TAR $VERSION
           sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
           sed -E -i "s/version \".*\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
-          sed -E -i "s^url \".*\"^url \"https://github.com/nao20010128nao/ytdl-patched/releases/download/$VERSION/youtube-dl.tar.gz\"^g" Formula/ytdl-patched.rb
+          sed -E -i "s^url \".*\"^url \"https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/youtube-dl.tar.gz\"^g" Formula/ytdl-patched.rb
           git add .
           git commit -m "ytdl-patched: $VERSION"
           git push
