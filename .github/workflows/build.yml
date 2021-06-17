@@ -281,11 +281,11 @@ jobs:
           folder: artifacts
           single-commit: true
   upload-homebrew:
-    needs: [prepare, prepare-artifacts]
+    needs: [prepare, prepare-artifacts, build-linux]
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     env:
-      FILEHASH_TAR: ${{ needs.prepare-artifacts.outputs.filehash_tar }}
+      FILEHASH_TAR: ${{ needs.build-linux.outputs.filehash_tar }}
       VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
     steps:
       - name: Upload to my homebrew repository
