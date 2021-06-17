@@ -23,7 +23,7 @@ slug = fetch_feed(ie._downloader)["update"]["slug"]
 try:
     versions = ie._download_json(
         f"https://github.com/{slug}/raw/gh-pages/versions.json",
-        script_id, 'Downloading old versions.py')
+        script_id, False)
 except BaseException:
     versions = {
         "versions": {},
