@@ -53,13 +53,28 @@ def update_self(to_screen, verbose, opener):
 
 
 def get_version_info(ydl):
+    slug = fetch_feed(ydl)["update"]["slug"]
     try:
-        JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases/latest'
+        JSON_URL = 'https://api.github.com/repos/%s/releases/latest' % slug
         version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
     except BaseException:
-        JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
+        JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases/latest'
         version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
     return json.loads(version_info)
+
+
+_feed_tmp = [None]  # it's intentionally made it a list
+
+
+def fetch_feed(ydl):
+    if _feed_tmp[0]:
+        return _feed_tmp[0]
+    try:
+        feed = ydl._opener.open('https://bookish-octo-barnacle.vercel.app/api/feed').read().decode('utf-8')
+    except BaseException:  # latest feed as of 2021/06/17 (YYYY/MM/DD)
+        feed = '{"update":{"slug":"ytdl-patched/ytdl-patched","mode":"github"}}'
+    _feed_tmp[0] = json.loads(feed)
+    return _feed_tmp[0]
 
 
 def run_update(ydl):
@@ -68,9 +83,11 @@ def run_update(ydl):
     Returns whether the program should terminate
     """
 
+    slug = fetch_feed(ydl)["update"]["slug"]
+
     def report_error(msg, network=False, expected=False, delim=';'):
         if network:
-            msg += '%s Visit  https://github.com/ytdl-patched/ytdl-patched/releases/latest' % delim
+            msg += '%s Visit  https://github.com/%s/releases/latest' % (delim, slug)
         ydl.report_error(msg, tb='' if network or expected else None)
 
     def calc_sha256sum(path):
