@@ -128,7 +128,7 @@ jobs:
         id: hash
         run: |
           echo "::set-output name=filehash_wheel::$(sha256sum dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl | awk '{print $1}')"
-          echo "::set-output name=filehash_wheel_tar::$(sha256sum dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl | awk '{print $1}')"
+          echo "::set-output name=filehash_wheel_tar::$(sha256sum dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz | awk '{print $1}')"
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -258,6 +258,7 @@ jobs:
     env:
       FILEHASH_TAR: ${{ needs.build-wheel.outputs.filehash_wheel_tar }}
       VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
+      VERSION_NAME: ${{ needs.prepare.outputs.latest_version }}
     steps:
       - name: Upload to my homebrew repository
         run: |
@@ -268,7 +269,7 @@ jobs:
           echo $FILEHASH_TAR $VERSION
           sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
           sed -E -i "s/version \".*\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
-          sed -E -i "s^url \".*\"^url \"https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/youtube_dl-${VERSION}-wheel.tar.gz\"^g" Formula/ytdl-patched.rb
+          sed -E -i "s^url \".*\"^url \"https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/youtube_dl-${VERSION_NAME}-wheel.tar.gz\"^g" Formula/ytdl-patched.rb
           git add .
           git commit -m "ytdl-patched: $VERSION"
           git push
