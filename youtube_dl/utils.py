@@ -1483,7 +1483,7 @@ def unified_timestamp(date_str, day_first=True):
 
 
 def now_formatted(fmt):
-    return datetime.datetime.now(datetime.timezone.utc).strftime(fmt)
+    return datetime.datetime.utcnow().strftime(fmt)
 
 
 def determine_ext(url, default_ext='unknown_video'):
