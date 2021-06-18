@@ -275,8 +275,9 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     _DEFAULT_API_DATA = {
         'context': {
             'client': {
-                'clientName': 'WEB',
-                'clientVersion': '2.20201021.03.00',
+                'gl': 'US',
+                'hl': 'en',
+                'clientVersion': '2.%s.03.00' % now_formatted('%Y%m%d'),
             }
         },
     }
@@ -285,9 +286,10 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     _YT_INITIAL_PLAYER_RESPONSE_RE = r'ytInitialPlayerResponse\s*=\s*({.+?})\s*;'
     _YT_INITIAL_BOUNDARY_RE = r'(?:var\s+meta|</script|if\s*\(window\.ytcsi\)|\n)'
 
-    def _call_api(self, ep, query, video_id, fatal=True):
+    def _call_api(self, ep, query, video_id, fatal=True, embedded=False):
         data = self._DEFAULT_API_DATA.copy()
         data.update(query)
+        data['context']['client']['clientName'] = 'WEB_EMBEDDED_PLAYER' if embedded else 'WEB'
 
         return self._download_json(
             'https://www.youtube.com/youtubei/v1/%s' % ep, video_id=video_id,
@@ -1518,31 +1520,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if webpage:
             player_response = self._extract_yt_initial_variable(
                 webpage, video_id, 'initial player response')
-        if not player_response:
-            player_response = self._call_api(
-                'player', {'videoId': video_id}, video_id)
 
         playability_status = player_response.get('playabilityStatus') or {}
         if playability_status.get('reason') in ('Sign in to confirm your age', 'This video may be inappropriate for some users.'):
-            payload = json.dumps({
-                'videoId': video_id,
-                'context': {
-                    'client': {
-                        'gl': 'US',
-                        'hl': 'en',
-                        # 'clientName': 'WEB_EMBEDDED_PLAYER' if _embed else 'WEB',
-                        # 'clientVersion': f'2.{today}.01.01',
-                        'clientName': 'WEB_EMBEDDED_PLAYER',
-                        'clientVersion': '2.%s.01.01' % now_formatted('%Y%m%d'),
-                    }
-                },
-                'playbackContext': {'contentPlaybackContext': {'signatureTimestamp': 0}}
-            }).encode('utf8')
-            pr = self._download_json(
-                'https://www.youtube-nocookie.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8',
-                video_id, 'Refetching age-gated info webpage', fatal=False, data=payload)
+            pr = self._call_api(
+                'player', {'videoId': video_id}, video_id,
+                fatal=False, embedded=True)
             if pr:
                 player_response = pr
+                playability_status = player_response.get('playabilityStatus') or {}
 
         trailer_video_id = try_get(
             playability_status,
