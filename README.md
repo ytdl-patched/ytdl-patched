@@ -30,6 +30,8 @@ ytdl-patched - download videos from youtube.com or other video platforms
 ytdl-patched is not intended modify heavily, but just to "patch" the ytdl-org one.
 This is where "patched" is come from.
 
+Discord invitation: https://discord.gg/SPd5t3MVYJ
+
 ## GOALS
 - keep merging with [`ytdl-org/youtube-dl`](https://github.com/ytdl-org/youtube-dl)
 - implement miscellaneous extractors as possible
