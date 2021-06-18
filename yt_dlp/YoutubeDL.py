@@ -431,8 +431,9 @@ class YoutubeDL(object):
     compat_opts:       Compatibility options. See "Differences in default behavior".
                        Note that only format-sort, format-spec, no-live-chat,
                        no-attach-info-json, playlist-index, list-formats,
-                       no-direct-merge, no-youtube-channel-redirect,
-                       and no-youtube-unavailable-videos works when used via the API
+                       no-direct-merge, embed-thumbnail-atomicparsley,
+                       no-youtube-unavailable-videos, no-youtube-channel-redirect,
+                       works when used via the API
 
     The following parameters are not used by YoutubeDL itself, they are used by
     the downloader (see yt_dlp/downloader/common.py):
@@ -973,7 +974,7 @@ class YoutubeDL(object):
             fmt = outer_mobj.group('format')
             mobj = re.match(INTERNAL_FORMAT_RE, key)
             if mobj is None:
-                value, default = None, na
+                value, default, mobj = None, na, {'fields': ''}
             else:
                 mobj = mobj.groupdict()
                 default = mobj['default'] if mobj['default'] is not None else na
@@ -983,7 +984,6 @@ class YoutubeDL(object):
                 fmt = '0{:d}d'.format(field_size_compat_map[key])
 
             value = default if value is None else value
-            key += '\0%s' % fmt
 
             if fmt == 'c':
                 value = compat_str(value)
@@ -1001,7 +1001,8 @@ class YoutubeDL(object):
                     # So we convert it to repr first
                     value, fmt = repr(value), '%ss' % fmt[:-1]
                 if fmt[-1] in 'csr':
-                    value = sanitize(key, value)
+                    value = sanitize(mobj['fields'].split('.')[-1], value)
+            key += '\0%s' % fmt
             TMPL_DICT[key] = value
             return '%({key}){fmt}'.format(key=key, fmt=fmt)
 
