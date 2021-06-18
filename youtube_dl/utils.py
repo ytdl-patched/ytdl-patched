@@ -1482,6 +1482,10 @@ def unified_timestamp(date_str, day_first=True):
         return calendar.timegm(timetuple) + pm_delta * 3600
 
 
+def now_formatted(fmt):
+    return datetime.datetime.now(datetime.timezone.utc).strftime(fmt)
+
+
 def determine_ext(url, default_ext='unknown_video'):
     if url is None or '.' not in url:
         return default_ext

@@ -28,6 +28,7 @@ from ..utils import (
     float_or_none,
     int_or_none,
     mimetype2ext,
+    now_formatted,
     parse_codecs,
     parse_duration,
     qualities,
@@ -1523,17 +1524,23 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         playability_status = player_response.get('playabilityStatus') or {}
         if playability_status.get('reason') in ('Sign in to confirm your age', 'This video may be inappropriate for some users.'):
-            pr = self._parse_json(try_get(compat_parse_qs(
-                self._download_webpage(
-                    base_url + 'get_video_info', video_id,
-                    'Refetching age-gated info webpage',
-                    'unable to download video info webpage', query={
-                        'video_id': video_id,
-                        'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-                        'html5': '1',
-                    }, fatal=False)),
-                lambda x: x['player_response'][0],
-                compat_str) or '{}', video_id)
+            payload = json.dumps({
+                'videoId': video_id,
+                'context': {
+                    'client': {
+                        'gl': 'US',
+                        'hl': 'en',
+                        # 'clientName': 'WEB_EMBEDDED_PLAYER' if _embed else 'WEB',
+                        # 'clientVersion': f'2.{today}.01.01',
+                        'clientName': 'WEB_EMBEDDED_PLAYER',
+                        'clientVersion': '2.%s.01.01' % now_formatted('%Y%m%d'),
+                    }
+                },
+                'playbackContext': {'contentPlaybackContext': {'signatureTimestamp': 0}}
+            }).encode('utf8')
+            pr = self._download_json(
+                'https://www.youtube-nocookie.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8',
+                video_id, 'Refetching age-gated info webpage', fatal=False, data=payload)
             if pr:
                 player_response = pr
 
