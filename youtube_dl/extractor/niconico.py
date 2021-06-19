@@ -568,7 +568,8 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
     def _get_video_item(video):
         return video.get('video')
 
-    def _parse_owner(self, item):
+    @staticmethod
+    def _parse_owner(item):
         owner = item.get('owner') or {}
         if owner:
             return {
