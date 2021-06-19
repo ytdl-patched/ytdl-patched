@@ -1522,13 +1522,34 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 webpage, video_id, 'initial player response')
 
         playability_status = player_response.get('playabilityStatus') or {}
-        if playability_status.get('reason') in ('Sign in to confirm your age', 'This video may be inappropriate for some users.'):
+        playability_status_orig = playability_status
+        if playability_status.get('reason') in ('Sign in to confirm your age', 'This video may be inappropriate for some users.', 'Sorry, this content is age-restricted.'):
             pr = self._call_api(
                 'player', {'videoId': video_id}, video_id,
                 fatal=False, embedded=True)
             if pr:
                 player_response = pr
                 playability_status = player_response.get('playabilityStatus') or {}
+
+        if playability_status.get('reason') in ('Sign in to confirm your age', 'This video may be inappropriate for some users.', 'Sorry, this content is age-restricted.'):
+            pr = self._parse_json(try_get(compat_parse_qs(
+                self._download_webpage(
+                    base_url + 'get_video_info', video_id,
+                    'Refetching age-gated info webpage',
+                    'unable to download video info webpage', query={
+                        'video_id': video_id,
+                        'eurl': 'https://youtube.googleapis.com/v/' + video_id,
+                        'html5': 1,
+                        'c': 'TVHTML5',
+                        'cver': '6.20180913',
+                    }, fatal=False)),
+                lambda x: x['player_response'][0],
+                compat_str) or '{}', video_id)
+            if pr:
+                player_response = pr
+                playability_status = player_response.get('playabilityStatus') or {}
+
+        playability_status = playability_status_orig
 
         trailer_video_id = try_get(
             playability_status,
