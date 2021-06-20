@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import urljoin
+from ..utils import parse_duration, urljoin
 
 
 class NhkBaseIE(InfoExtractor):
@@ -176,3 +176,44 @@ class NhkVodProgramIE(NhkBaseIE):
             program_title = entries[0].get('series')
 
         return self.playlist_result(entries, program_id, program_title)
+
+
+# "bangumi" ("番組") means "program" in English (especially, TV program)
+class NhkForSchoolBangumiIE(InfoExtractor):
+    _VALID_URL = r'https?://www2\.nhk\.or\.jp/school/movie/bangumi\.cgi\?das_id=(?P<id>[a-zA-Z0-9_-]+)'
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+
+        webpage = self._download_webpage(
+            'https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id=%s' % video_id, video_id)
+
+        # searches all assignments
+        base_values = {g.group(1): g.group(2) for g in re.finditer(r'var\s+([a-zA-Z_]+)\s*=\s*"([^"]+?)";', webpage)}
+        # and programObj values too
+        program_values = {g.group(1): g.group(2) for g in re.finditer(r'programObj\.([a-zA-Z_]+)\s*=\s*"([^"]+?)";', webpage)}
+        # extract all chapters
+        # WIP
+
+        # this is how player_core.js is actually doing (!)
+        version = base_values.get('r_version') or program_values.get('version')
+        if version:
+            video_id = '%s_%s' % (video_id.split('_')[0], version)
+
+        m3u8_url = 'https://nhks-vh.akamaihd.net/i/das/%s/%s_V_000.f4v/master.m3u8' % (video_id[0:8], video_id)
+        formats = self._extract_m3u8_formats(
+            m3u8_url, video_id, ext='mp4', m3u8_id='hls')
+        self._sort_formats(formats)
+
+        duration = parse_duration(base_values['r_duration'])
+        upload_date = base_values['r_upload'].split('T')[0].replace('-', '')
+
+        title = program_values['name']
+
+        return {
+            'id': video_id,
+            'title': title,
+            'duration': duration,
+            'upload_date': upload_date,
+            'formats': formats,
+        }
