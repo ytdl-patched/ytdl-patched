@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import parse_duration, unescapeHTML, urljoin
+from ..utils import clean_html, parse_duration, unescapeHTML, urljoin
 
 
 class NhkBaseIE(InfoExtractor):
@@ -234,3 +234,96 @@ class NhkForSchoolBangumiIE(InfoExtractor):
             'formats': formats,
             'chapters': chapters,
         }
+
+
+class NhkForSchoolSubjectIE(InfoExtractor):
+    IE_DESC = 'Portal page for each school subjects, like Japanese (kokugo, 国語) or math (sansuu/suugaku or 算数・数学)'
+    KNOWN_SUBJECTS = (
+        # 'path', # japanese, translation
+        'rika',      # 理科      Science
+        'syakai',    # 社会      Social Studies
+        'kokugo',    # 国語      Japanese (primary language)
+        'sansuu',    # 算数・数学 Mathematics
+        'seikatsu',  # 生活      Living Environment Studies
+        'doutoku',   # 道徳      Moral Education
+        'ongaku',    # 音楽      Music
+        'taiiku',    # 体育      Physical Education
+        'zukou',     # 図工      Drawing and Crafts
+        'gijutsu',   # 技術      Technical Arts (*1)
+        'katei',     # 家庭      Home Economics (*1)
+        'sougou',    # 総合      period for Integrated Study (see what it means: https://w.wiki/3Wdd )
+        'eigo',      # 英語      English (1st foreign language)
+        'tokkatsu',  # 特別活動   Special Activities
+        'tokushi',   # 特別支援   "A class for special needs children"
+        'sonota',    # その他 Miscellaneous
+        # (*1): they are combined in real schools and called "技術家庭科" (gijutsu-katei-ka, Technical Arts and Home Economics)
+
+        # translation ref. https://eigolab.net/1576
+        # and https://eikaiwa.dmm.com/uknow/questions/75369/
+        # and https://eikaiwa.dmm.com/uknow/questions/37210/
+        # and https://eikaiwa.dmm.com/uknow/questions/37922/
+        # and https://blog.goo.ne.jp/koji-kouritu-eigo/e/750ba2c137bca159c00bc7e89249b58d
+    )
+    _VALID_URL = r'https?://www\.nhk\.or\.jp/school/(?P<id>%s)' % (
+        '|'.join(re.escape(s) for s in KNOWN_SUBJECTS)
+    )
+
+    _TESTS = [{
+        'url': 'https://www.nhk.or.jp/school/sougou/',
+        'info_dict': {
+            'id': 'sougou',
+            'title': '総合的な学習の時間',
+        },
+        'playlist_mincount': 16,  # as of 2021/06/20
+    }]
+
+    @classmethod
+    def suitable(cls, url):
+        return super(NhkForSchoolSubjectIE, cls).suitable(url) and not NhkForSchoolProgramListIE.suitable(url)
+
+    def _real_extract(self, url):
+        subject_id = self._match_id(url)
+        url = 'https://www.nhk.or.jp/school/%s/' % subject_id
+
+        webpage = self._download_webpage(url, subject_id)
+        programs = [g.group(1) for g in re.finditer(r'href="(/school/%s/[^/]+/")' % re.escape(subject_id), webpage)]
+        title = self._search_regex(r'(?s)<span\s+class="subjectName">(.+?)</span>', webpage, 'title')
+        title = clean_html(title)
+
+        playlist = [self.url_result(urljoin(url, x)) for x in programs]
+        return self.playlist_result(playlist, subject_id, title)
+
+
+class NhkForSchoolProgramListIE(InfoExtractor):
+    _VALID_URL = r'https?://www\.nhk\.or\.jp/school/(?P<id>(?:%s)/[a-zA-Z0-9_-]+)' % (
+        '|'.join(re.escape(s) for s in NhkForSchoolSubjectIE.KNOWN_SUBJECTS)
+    )
+    _TESTS = [{
+        'url': 'https://www.nhk.or.jp/school/sougou/q/',
+        'info_dict': {
+            'id': 'sougou/q',
+            'title': 'Ｑ～こどものための哲学とは？',
+        },
+        'playlist_mincount': 20,  # as of 2021/06/20
+    }]
+
+    def _real_extract(self, url):
+        program_id = self._match_id(url)
+
+        webpage = self._download_webpage('https://www.nhk.or.jp/school/%s/' % program_id, program_id)
+
+        title = self._html_search_regex(r'<h3>([^<]+?)</h3>', webpage, 'title', fatal=False)
+        if not title:
+            # both have format like "番組名 | NHK for School", so we have to strip last part
+            _title = self._og_search_title(webpage) or self._html_extract_title(webpage)
+            title = re.sub(r'\s*\|\s*NHK\s+for\s+School\s*$', '', _title)
+        description = self._html_search_regex(
+            r'(?s)<div\s+class="programDetail\s*">\s*<p>[^<]+</p>',
+            webpage, 'description', fatal=False, group=0)
+
+        bangumi_list = self._download_json(
+            'https://www.nhk.or.jp/school/%s/meta/program.json' % program_id, program_id)
+        # they're always bangumi
+        bangumis = [self.url_result('https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id=' + x['part-video-dasid']) for x in bangumi_list['part']]
+
+        return self.playlist_result(bangumis, program_id, title, description)
