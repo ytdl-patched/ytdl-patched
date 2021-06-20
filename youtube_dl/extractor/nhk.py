@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import parse_duration, urljoin
+from ..utils import parse_duration, unescapeHTML, urljoin
 
 
 class NhkBaseIE(InfoExtractor):
@@ -181,6 +181,10 @@ class NhkVodProgramIE(NhkBaseIE):
 # "bangumi" ("番組") means "program" in English (especially, TV program)
 class NhkForSchoolBangumiIE(InfoExtractor):
     _VALID_URL = r'https?://www2\.nhk\.or\.jp/school/movie/bangumi\.cgi\?das_id=(?P<id>[a-zA-Z0-9_-]+)'
+    _TESTS = [{
+        'url': 'https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id=D0005150191_00000',
+        'only_matching': True,
+    }]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -193,7 +197,8 @@ class NhkForSchoolBangumiIE(InfoExtractor):
         # and programObj values too
         program_values = {g.group(1): g.group(2) for g in re.finditer(r'programObj\.([a-zA-Z_]+)\s*=\s*"([^"]+?)";', webpage)}
         # extract all chapters
-        # WIP
+        chapter_durations = [parse_duration(g.group(1)) for g in re.finditer(r'chapterTime\.push\(\'([0-9:]+)\'\);', webpage)]
+        chapter_titles = [('%s %s' % (g.group(1) or '', unescapeHTML(g.group(2)))).strip() for g in re.finditer(r'<div class="cpTitle"><span>(scene\s*\d+)?</span>([^<]+?)</div>', webpage)]
 
         # this is how player_core.js is actually doing (!)
         version = base_values.get('r_version') or program_values.get('version')
@@ -205,10 +210,21 @@ class NhkForSchoolBangumiIE(InfoExtractor):
             m3u8_url, video_id, ext='mp4', m3u8_id='hls')
         self._sort_formats(formats)
 
+        title = program_values['name']
         duration = parse_duration(base_values['r_duration'])
         upload_date = base_values['r_upload'].split('T')[0].replace('-', '')
 
-        title = program_values['name']
+        chapters = None
+        if chapter_durations and chapter_titles and len(chapter_durations) == len(chapter_titles):
+            start_time = chapter_durations
+            end_time = chapter_durations[1:] + [duration]
+            chapters = []
+            for (s, e, t) in zip(start_time, end_time, chapter_titles):
+                chapters.append({
+                    'start_time': s,
+                    'end_time': e,
+                    'title': t,
+                })
 
         return {
             'id': video_id,
@@ -216,4 +232,5 @@ class NhkForSchoolBangumiIE(InfoExtractor):
             'duration': duration,
             'upload_date': upload_date,
             'formats': formats,
+            'chapters': chapters,
         }
