@@ -180,22 +180,22 @@ class NhkVodProgramIE(NhkBaseIE):
 
 # "bangumi" ("番組") means "program" in English (especially, TV program)
 class NhkForSchoolBangumiIE(InfoExtractor):
-    _VALID_URL = r'https?://www2\.nhk\.or\.jp/school/movie/bangumi\.cgi\?das_id=(?P<id>[a-zA-Z0-9_-]+)'
+    _VALID_URL = r'https?://www2\.nhk\.or\.jp/school/movie/(?P<type>bangumi|clip)\.cgi\?das_id=(?P<id>[a-zA-Z0-9_-]+)'
     _TESTS = [{
         'url': 'https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id=D0005150191_00000',
         'only_matching': True,
     }]
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
+        program_type, video_id = re.match(self._valid_url_re(), url).groups()
 
         webpage = self._download_webpage(
-            'https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id=%s' % video_id, video_id)
+            'https://www2.nhk.or.jp/school/movie/%s.cgi?das_id=%s' % (program_type, video_id), video_id)
 
         # searches all assignments
         base_values = {g.group(1): g.group(2) for g in re.finditer(r'var\s+([a-zA-Z_]+)\s*=\s*"([^"]+?)";', webpage)}
         # and programObj values too
-        program_values = {g.group(1): g.group(2) for g in re.finditer(r'programObj\.([a-zA-Z_]+)\s*=\s*"([^"]+?)";', webpage)}
+        program_values = {g.group(1): g.group(3) for g in re.finditer(r'(?:program|clip)Obj\.([a-zA-Z_]+)\s*=\s*(["\'])([^"]+?)\2;', webpage)}
         # extract all chapters
         chapter_durations = [parse_duration(g.group(1)) for g in re.finditer(r'chapterTime\.push\(\'([0-9:]+)\'\);', webpage)]
         chapter_titles = [('%s %s' % (g.group(1) or '', unescapeHTML(g.group(2)))).strip() for g in re.finditer(r'<div class="cpTitle"><span>(scene\s*\d+)?</span>([^<]+?)</div>', webpage)]
