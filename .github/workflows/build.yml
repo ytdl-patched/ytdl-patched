@@ -247,7 +247,7 @@ jobs:
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           branch: gh-pages
           folder: artifacts
           single-commit: true
@@ -286,7 +286,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           tag_name: ${{ needs.prepare.outputs.latest_version_numeric }}
           release_name: ${{ needs.prepare.outputs.latest_version }}
@@ -302,7 +302,7 @@ jobs:
         id: upload-1
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl
@@ -312,7 +312,7 @@ jobs:
         id: upload-2
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl.tar.gz
@@ -326,7 +326,7 @@ jobs:
         id: upload-3
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
@@ -340,7 +340,7 @@ jobs:
         id: upload-4
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./artifacts/youtube-dl.exe
@@ -354,7 +354,7 @@ jobs:
         id: upload-5
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
@@ -364,7 +364,7 @@ jobs:
         id: upload-6
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
