@@ -86,7 +86,6 @@ from .jwplatform import JWPlatformIE
 from .digiteka import DigitekaIE
 from .arkena import ArkenaIE
 from .instagram import InstagramIE
-from .liveleak import LiveLeakIE
 from .threeqsdn import ThreeQSDNIE
 from .theplatform import ThePlatformIE
 from .kaltura import KalturaIE
@@ -1635,31 +1634,6 @@ class GenericIE(InfoExtractor):
                 'description': 'md5:e3a0e8868ed7303ed509b9e3af2b870d',
                 'upload_date': '20160409',
             },
-        },
-        # LiveLeak embed
-        {
-            'url': 'http://www.wykop.pl/link/3088787/',
-            'md5': '7619da8c820e835bef21a1efa2a0fc71',
-            'info_dict': {
-                'id': '874_1459135191',
-                'ext': 'mp4',
-                'title': 'Man shows poor quality of new apartment building',
-                'description': 'The wall is like a sand pile.',
-                'uploader': 'Lake8737',
-            },
-            'add_ie': [LiveLeakIE.ie_key()],
-        },
-        # Another LiveLeak embed pattern (#13336)
-        {
-            'url': 'https://milo.yiannopoulos.net/2017/06/concealed-carry-robbery/',
-            'info_dict': {
-                'id': '2eb_1496309988',
-                'ext': 'mp4',
-                'title': 'Thief robs place where everyone was armed',
-                'description': 'md5:694d73ee79e535953cf2488562288eee',
-                'uploader': 'brazilwtf',
-            },
-            'add_ie': [LiveLeakIE.ie_key()],
         },
         # Duplicated embedded video URLs
         {
@@ -3289,11 +3263,6 @@ class GenericIE(InfoExtractor):
         if instagram_embed_url is not None:
             waitlist.append(self.url_result(
                 self._proto_relative_url(instagram_embed_url), InstagramIE.ie_key()))
-
-        # Look for LiveLeak embeds
-        liveleak_urls = LiveLeakIE._extract_urls(webpage)
-        if liveleak_urls:
-            waitlist.append(self.playlist_from_matches(liveleak_urls, video_id, video_title))
 
         # Look for 3Q SDN embeds
         threeqsdn_url = ThreeQSDNIE._extract_url(webpage)
