@@ -276,6 +276,13 @@ class NhkForSchoolSubjectIE(InfoExtractor):
             'title': '総合的な学習の時間',
         },
         'playlist_mincount': 16,  # as of 2021/06/20
+    }, {
+        'url': 'https://www.nhk.or.jp/school/rika/',
+        'info_dict': {
+            'id': 'rika',
+            'title': '理科',
+        },
+        'playlist_mincount': 15,  # as of 2021/06/25
     }]
 
     @classmethod
@@ -287,7 +294,7 @@ class NhkForSchoolSubjectIE(InfoExtractor):
         url = 'https://www.nhk.or.jp/school/%s/' % subject_id
 
         webpage = self._download_webpage(url, subject_id)
-        programs = [g.group(1) for g in re.finditer(r'href="(/school/%s/[^/]+/")' % re.escape(subject_id), webpage)]
+        programs = [g.group(1) for g in re.finditer(r'href="((?:https?://www\.nhk\.or\.jp)?/school/%s/[^/]+/")' % re.escape(subject_id), webpage)]
         title = self._search_regex(r'(?s)<span\s+class="subjectName">(.+?)</span>', webpage, 'title')
         title = clean_html(title)
 
