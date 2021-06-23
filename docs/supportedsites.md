@@ -485,8 +485,6 @@
  - **LinuxAcademy**
  - **LiTV**
  - **LiveJournal**
- - **LiveLeak**
- - **LiveLeakEmbed**
  - **livestream**
  - **livestream:original**
  - **LnkGo**
@@ -627,6 +625,9 @@
  - **NexxEmbed**
  - **nfl.com** (Currently broken)
  - **nfl.com:article** (Currently broken)
+ - **NhkForSchoolBangumi**
+ - **NhkForSchoolProgramList**
+ - **NhkForSchoolSubject**: Portal page for each school subjects, like Japanese (kokugo, 国語) or math (sansuu/suugaku or 算数・数学)
  - **NhkVod**
  - **NhkVodProgram**
  - **nhl.com**
