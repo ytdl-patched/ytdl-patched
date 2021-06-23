@@ -24,7 +24,8 @@ from .rtsp import RtspFD
 from .ism import IsmFD
 from .mhtml import MhtmlFD
 from .niconico import NiconicoDmcFD, NiconicoLiveFD
-from .youtube_live_chat import YoutubeLiveChatReplayFD
+from .websocket import WebSocketFragmentFD
+from .youtube_live_chat import YoutubeLiveChatFD
 from .external import (
     get_external_downloader,
     FFmpegFD,
@@ -43,7 +44,9 @@ PROTOCOL_MAP = {
     'mhtml': MhtmlFD,
     'niconico_dmc': NiconicoDmcFD,
     'niconico_live': NiconicoLiveFD,
-    'youtube_live_chat_replay': YoutubeLiveChatReplayFD,
+    'websocket_frag': WebSocketFragmentFD,
+    'youtube_live_chat': YoutubeLiveChatFD,
+    'youtube_live_chat_replay': YoutubeLiveChatFD,
 }
 
 
@@ -53,6 +56,7 @@ def shorten_protocol_name(proto, simplify=False):
         'rtmp_ffmpeg': 'rtmp_f',
         'http_dash_segments': 'dash',
         'niconico_dmc': 'dmc',
+        'websocket_frag': 'WSfrag',
     }
     if simplify:
         short_protocol_names.update({

@@ -1510,9 +1510,10 @@ class InfoExtractor(object):
                        'order': ['av0?1', 'vp0?9.2', 'vp0?9', '[hx]265|he?vc?', '[hx]264|avc', 'vp0?8', 'mp4v|h263', 'theora', '', None, 'none']},
             'acodec': {'type': 'ordered', 'regex': True,
                        'order': ['opus', 'vorbis', 'aac', 'mp?4a?', 'mp3', 'e?a?c-?3', 'dts', '', None, 'none']},
+
             # sort with multiple:ordered from "expected_protocol", "protocol" in this order to make DMC formats properly sorted
             'proto': {'type': 'multiple:ordered', 'regex': True, 'field': ('expected_protocol', 'protocol'),
-                      'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', '', 'mms|rtsp', 'none', 'f4'],
+                      'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', 'ws|websocket', '', 'mms|rtsp', 'none', 'f4'],
                       'function': lambda *x: x[0]},
             'vext': {'type': 'ordered', 'field': 'video_ext',
                      'order': ('mp4', 'webm', 'flv', '', 'none'),
