@@ -70,6 +70,7 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
     * [Format Selection examples](#format-selection-examples)
 * [MODIFYING METADATA](#modifying-metadata)
     * [Modifying metadata examples](#modifying-metadata-examples)
+* [EXTRACTOR ARGUMENTS](#extractor-arguments)
 * [PLUGINS](#plugins)
 * [DEPRECATED OPTIONS](#deprecated-options)
 * [MORE](#more)
@@ -529,8 +530,9 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
     --downloader-args NAME:ARGS      Give these arguments to the external
                                      downloader. Specify the downloader name and
                                      the arguments separated by a colon ":". You
-                                     can use this option multiple times (Alias:
-                                     --external-downloader-args)
+                                     can use this option multiple times to give
+                                     different arguments to different downloaders
+                                     (Alias: --external-downloader-args)
 
 ## Filesystem Options:
     -a, --batch-file FILE            File containing URLs to download ('-' for
@@ -922,18 +924,10 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
     --no-hls-split-discontinuity     Do not split HLS playlists to different
                                      formats at discontinuities such as ad
                                      breaks (default)
-    --youtube-include-dash-manifest  Download the DASH manifests and related
-                                     data on YouTube videos (default) (Alias:
-                                     --no-youtube-skip-dash-manifest)
-    --youtube-skip-dash-manifest     Do not download the DASH manifests and
-                                     related data on YouTube videos (Alias:
-                                     --no-youtube-include-dash-manifest)
-    --youtube-include-hls-manifest   Download the HLS manifests and related data
-                                     on YouTube videos (default) (Alias: --no-
-                                     youtube-skip-hls-manifest)
-    --youtube-skip-hls-manifest      Do not download the HLS manifests and
-                                     related data on YouTube videos (Alias:
-                                     --no-youtube-include-hls-manifest)
+    --extractor-args KEY:ARGS        Pass these arguments to the extractor. See
+                                     "EXTRACTOR ARGUMENTS" for details. You can
+                                     use this option multiple times to give
+                                     different arguments to different extractors
 
 # CONFIGURATION
 
@@ -1437,6 +1431,14 @@ $ yt-dlp --parse-metadata 'description:(?s)(?P<meta_comment>.+)' --add-metadata
 
 ```
 
+# EXTRACTOR ARGUMENTS
+
+Some extractors accept additional arguments which can be passed using `--extractor-args KEY:ARGS`. `ARGS` is a `;` (colon) seperated string of `ARG=VAL1,VAL2`. Eg: `--extractor-args youtube:skip=dash,hls`
+
+The following extractors use this feature:
+* **youtube**
+    * `skip`: `hls` or `dash` (or both) to skip download of the respective manifests
+
 # PLUGINS
 
 Plugins are loaded from `<root-dir>/ytdlp_plugins/<type>/__init__.py`. Currently only `extractor` plugins are supported. Support for `downloader` and `postprocessor` plugins may be added in the future. See [ytdlp_plugins](ytdlp_plugins) for example.
@@ -1468,6 +1470,10 @@ While these options still work, their use is not recommended since there are oth
     --list-formats-old               --compat-options list-formats (Alias: --no-list-formats-as-table)
     --list-formats-as-table          --compat-options -list-formats [Default] (Alias: --no-list-formats-old)
     --sponskrub-args ARGS            --ppa "sponskrub:ARGS"
+    --youtube-skip-dash-manifest     --extractor-args "youtube:skip=dash" (Alias: --no-youtube-include-dash-manifest)
+    --youtube-skip-hls-manifest      --extractor-args "youtube:skip=hls" (Alias: --no-youtube-include-hls-manifest)
+    --youtube-include-dash-manifest  Default (Alias: --no-youtube-skip-dash-manifest)
+    --youtube-include-hls-manifest   Default (Alias: --no-youtube-skip-hls-manifest)
     --test                           Used by developers for testing extractors. Not intended for the end user
     --youtube-print-sig-code         Used for testing youtube signatures
 
