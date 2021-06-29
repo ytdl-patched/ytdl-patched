@@ -189,8 +189,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.python_version }}
+      - name: Upgrade pip and enable wheel support
+        run: python -m pip install --upgrade pip setuptools wheel
       - name: Install deps
-        run: pip install -U ${{ matrix.builder }} zopflipy websocket_client pyyaml python-dateutil
+        run: pip install -U ${{ matrix.builder }} zopflipy websockets pyyaml python-dateutil mutagen pycryptodome websockets
       - name: Install UPX
         run: choco install upx
       - name: Remove unneeded tests in InfoExtractor
