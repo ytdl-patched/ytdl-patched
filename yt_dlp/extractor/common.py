@@ -696,6 +696,12 @@ class InfoExtractor(object):
                 url_or_request = update_url_query(url_or_request, query)
             if data is not None or headers:
                 url_or_request = sanitized_Request(url_or_request, data, headers)
+        if self._downloader.params.get('verbose', False):
+            if isinstance(url_or_request, compat_urllib_request.Request):
+                url = url_or_request.get_full_url()
+            else:
+                url = url_or_request
+            self.to_screen('[debug] Fetching webpage from %s' % url)
         try:
             return self._downloader.urlopen(url_or_request)
         except network_exceptions as err:
