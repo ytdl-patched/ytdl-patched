@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import datetime
 import functools
+import itertools
 import math
 import re
 try:
@@ -426,18 +427,15 @@ class NiconicoIE(NiconicoBaseIE):
         def get_video_info(items):
             return dict_get(api_data['video'], items)
 
-        # dmc_info = api_data['video'].get('dmcInfo')
         quality_info = api_data['media']['delivery']['movie']
-        session_api_data = api_data['media']['delivery']['movie']['session']
+        session_api_data = quality_info['session']
         if quality_info:  # "New" HTML5 videos
-            for audio_quality in quality_info['audios']:
-                for video_quality in quality_info['videos']:
-                    if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
-                        continue
-                    for protocol in session_api_data['protocols']:
-                        fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
-                        if fmt:
-                            formats.append(fmt)
+            for (audio_quality, video_quality, protocol) in itertools.product(quality_info['audios'], quality_info['videos'], session_api_data['protocols']):
+                if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
+                    continue
+                fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
+                if fmt:
+                    formats.append(fmt)
 
             self._sort_formats(formats)
         else:
