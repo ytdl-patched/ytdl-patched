@@ -810,6 +810,21 @@ def parseOpts(overrideArguments=None):
         dest='sleep_interval_subtitles', default=0, type=int,
         help='Number of seconds to sleep before each subtitle download')
     workarounds.add_option(
+        '--sleep-before-extract', '--min-sleep-before-extract', metavar='SECONDS',
+        dest='sleep_before_extract', type=float,
+        help=(
+            'Number of seconds to sleep before each extraction when used alone '
+            'or a lower bound of a range for randomized sleep before each extraction '
+            '(minimum possible number of seconds to sleep) when used along with '
+            '--max-sleep-before-extract.'))
+    workarounds.add_option(
+        '--max-sleep-before-extract', metavar='SECONDS',
+        dest='max_sleep_before_extract', type=float,
+        help=(
+            'Upper bound of a range for randomized sleep before each extraction '
+            '(maximum possible number of seconds to sleep). Must only be used '
+            'along with --min-sleep-before-extract.'))
+    workarounds.add_option(
         '--escape-long-names',
         action='store_true', dest='escape_long_names', default=False,
         help=(

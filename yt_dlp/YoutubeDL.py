@@ -387,6 +387,16 @@ class YoutubeDL(object):
                        Must only be used along with sleep_interval.
                        Actual sleep time will be a random float from range
                        [sleep_interval; max_sleep_interval].
+    sleep_before_extract: Number of seconds to sleep before each extraction when
+                          used alone or a lower bound of a range for randomized
+                          sleep before each extraction (minimum possible number
+                          of seconds to sleep) when used along with
+                          max_sleep_before_extract.
+    max_sleep_before_extract: Upper bound of a range for randomized sleep before each
+                              extraction (maximum possible number of seconds to sleep).
+                              Must only be used along with sleep_before_extract.
+                              Actual sleep time will be a random float from range
+                              [sleep_before_extract; max_sleep_before_extract].
     sleep_interval_subtitles: Number of seconds to sleep before each subtitle download
     listformats:       Print an overview of available video formats and exit.
     list_thumbnails:   Print a table of all thumbnails and exit.
@@ -1206,6 +1216,16 @@ class YoutubeDL(object):
 
     @__handle_extraction_exceptions
     def __extract_info(self, url, ie, download, extra_info, process):
+        min_sleep_interval = self.params.get('sleep_before_extract')
+        if min_sleep_interval:
+            max_sleep_interval = self.params.get('max_sleep_before_extract') or min_sleep_interval
+            sleep_interval = random.uniform(min_sleep_interval, max_sleep_interval)
+            self.to_screen(
+                '[extraction] Sleeping %s seconds...' % (
+                    int(sleep_interval) if sleep_interval.is_integer()
+                    else '%.2f' % sleep_interval))
+            time.sleep(sleep_interval)
+
         ie_result = ie.extract(url)
         if ie_result is None:  # Finished already (backwards compatibility; listformats and friends should be moved here)
             return

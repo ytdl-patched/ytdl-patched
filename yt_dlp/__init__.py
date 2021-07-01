@@ -659,6 +659,8 @@ def _real_main(argv=None):
         'sleep_interval_requests': opts.sleep_interval_requests,
         'sleep_interval': opts.sleep_interval,
         'max_sleep_interval': opts.max_sleep_interval,
+        'sleep_before_extract': opts.sleep_before_extract,
+        'max_sleep_before_extract': opts.max_sleep_before_extract,
         'sleep_interval_subtitles': opts.sleep_interval_subtitles,
         'external_downloader': opts.external_downloader,
         'list_thumbnails': opts.list_thumbnails,
