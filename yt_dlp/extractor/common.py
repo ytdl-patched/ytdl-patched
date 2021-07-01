@@ -1600,6 +1600,8 @@ class InfoExtractor(object):
                 if not convertNone:
                     return None
             else:
+                if isinstance(value, (list, tuple)):
+                    value = value[0]
                 value = value.lower()
             conversion = self._get_field_setting(field, 'convert')
             if conversion == 'ignore':
