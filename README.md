@@ -1,5 +1,3 @@
-<h1>THIS BRANCH IS ON DEVELOPMENT. DO NOT USE, OR I WILL CURSE YOU</h1>
-
 <div align="center">
 
 # YTDL-PATCHED
