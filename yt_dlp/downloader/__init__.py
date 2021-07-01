@@ -26,6 +26,7 @@ from .mhtml import MhtmlFD
 from .niconico import NiconicoDmcFD, NiconicoLiveFD
 from .websocket import WebSocketFragmentFD
 from .youtube_live_chat import YoutubeLiveChatFD
+from .serial import SerialFD
 from .external import (
     get_external_downloader,
     FFmpegFD,
@@ -45,6 +46,7 @@ PROTOCOL_MAP = {
     'niconico_dmc': NiconicoDmcFD,
     'niconico_live': NiconicoLiveFD,
     'websocket_frag': WebSocketFragmentFD,
+    'serial': SerialFD,
     'youtube_live_chat': YoutubeLiveChatFD,
     'youtube_live_chat_replay': YoutubeLiveChatFD,
 }
