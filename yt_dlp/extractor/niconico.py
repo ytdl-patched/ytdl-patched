@@ -307,6 +307,7 @@ class NiconicoIE(NiconicoBaseIE):
                 protocol = 'm3u8_native'
                 extract_m3u8 = True
         else:
+            self.report_warning(f'Unknown protocol "{dmc_protocol}" found. Please let us know about this with video ID "{video_id}"')
             return None
 
         if True:  # indent this for mergeability
