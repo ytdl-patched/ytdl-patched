@@ -68,9 +68,6 @@ class WhoWatchIE(InfoExtractor):
                     'height': try_get(hls_fmts, lambda x: x[0]['height'], int),
                 })
 
-        # This contains the same formats as the above manifests and is used only as a fallback
-        formats.extend(self._extract_m3u8_formats(
-            hls_url, video_id, ext='mp4', m3u8_id='hls'))
         self._remove_duplicate_formats(formats)
         self._sort_formats(formats)
 
