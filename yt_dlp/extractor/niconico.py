@@ -318,7 +318,7 @@ class NiconicoIE(NiconicoBaseIE):
                         'player_id': session_api_data['playerId'],
                     },
                     'content_auth': {
-                        'auth_type': session_api_data['authTypes'][session_api_data['protocols'][0]],
+                        'auth_type': session_api_data['authTypes'][dmc_protocol],
                         'content_key_timeout': session_api_data['contentKeyTimeout'],
                         'service_id': 'nicovideo',
                         'service_user_id': session_api_data['serviceUserId']
