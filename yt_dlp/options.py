@@ -612,7 +612,7 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='allsubtitles', default=False,
         help=optparse.SUPPRESS_HELP)
     subtitles.add_option(
-        '--list-subs',
+        '--list-subs', '--list-subtitles',
         action='store_true', dest='listsubtitles', default=False,
         help='List all available subtitles for the video')
     subtitles.add_option(
