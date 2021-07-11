@@ -1,3 +1,7 @@
+# NOTICE
+youtube-dl based version is now under maintenance phase.
+No new features are added. Please check #1 for details.
+
 ## MIRRORS
 - ~~https://github.com/nao20010128nao/ytdl-patched (passed away)~~
 - https://github.com/ytdl-patched/ytdl-patched (primary)
