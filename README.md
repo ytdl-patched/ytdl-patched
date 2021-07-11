@@ -93,7 +93,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
     * `17live`, `17live:clip`
-    * `askmona` and `askmona3` (just scrapes YouTube videos embedded)
+    * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
     * `clubdam:damtomo`
     * `disneychris`
     * `dnatube`
@@ -111,7 +111,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `Radiko` (does not have 24-hours limitation!)
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
-    * `TwitCastingUser`
     * `voicy`, `voicy:channel`
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
 
