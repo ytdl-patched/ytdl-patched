@@ -103,7 +103,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `ask.fm`, `marshmallow-qa`, `marshmallow-qa`, `mottohomete` (scrapes Q&A section and find video URLs in it)
     * `mastodon`, `mastodon:user`, `mastodon:user:numeric_id`
     * `mirrativ`, `mirrativ:user`
-    * `niconico:live` (**NO COMMENTS SUPPORTED**)
+    * `niconico:live` (**COMMENTS ARE NOT SUPPORTED**)
     * `niconico:playlist`, `niconico:series`, `niconico:user`
     * `openrec`, `openrec:capture`
     * `pixiv:sketch`, `pixiv:sketch:user`
@@ -113,6 +113,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `TwitCastingUser`
     * `voicy`, `voicy:channel`
+    * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
