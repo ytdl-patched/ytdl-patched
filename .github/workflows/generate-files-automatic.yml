@@ -8,7 +8,7 @@ on:
       - devscripts/make_peertube_instance_list.py
       - devscripts/make_chrome_version_list.py
     branches:
-      - master
+      - ytdlp
   schedule:
     - cron: "0 2 * * 0"
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: master
+        ref: ytdlp
         fetch-depth: 0
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
@@ -58,4 +58,4 @@ jobs:
       continue-on-error: true
 
     - name: Push to here
-      run: git push origin HEAD:master
+      run: git push origin HEAD:ytdlp

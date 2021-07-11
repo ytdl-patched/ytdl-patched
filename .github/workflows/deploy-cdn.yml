@@ -3,7 +3,7 @@ name: Deploy repository to CDNs
 on:
   push:
     branches:
-      - master
+      - yt-dlp
   workflow_dispatch:
     inputs: {}
 

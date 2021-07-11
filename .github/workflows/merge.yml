@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: master
+        ref: ytdlp
         fetch-depth: 0
     - name: Configure git
       run: |
@@ -33,10 +33,10 @@ jobs:
         python ./devscripts/make_supportedsites.py ./docs/supportedsites.md 
         git commit -m"[automatic] regenerate docs/supportedsites.md @ $(date +'%Y%m%d')" ./docs/supportedsites.md
     - name: Push to here
-      run: git push self HEAD:master
+      run: git push self HEAD:ytdlp
     - name: Create tag
       continue-on-error: true
       run: |
-        git push self :refs/tags/youtube-dl || true
-        git tag -f youtube-dl upstream/master || true
+        git push self :refs/tags/yt-dlp || true
+        git tag -f yt-dlp upstream/master || true
         git push self -f --tags || true

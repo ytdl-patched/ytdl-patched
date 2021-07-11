@@ -7,7 +7,7 @@ on:
       - .github/workflows/docker-codespaces.yml
       - .devcontainer/**
     branches:
-      - master
+      - yt-dlp
   workflow_dispatch:
     inputs: {}
   schedule:
