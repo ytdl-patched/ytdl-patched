@@ -6,7 +6,8 @@ A command-line program to download videos from YouTube and many other [video pla
 </div>
 
 ## MIRRORS
-- https://github.com/nao20010128nao/ytdl-patched (primary)
+- ~~https://github.com/nao20010128nao/ytdl-patched (passed away)~~
+- https://github.com/ytdl-patched/ytdl-patched (primary)
 - https://bitbucket.org/nao20010128nao/ytdl-patched (secondary)
 - https://forge.tedomum.net/nao20010128nao/ytdl-patched (secondary)
 - https://gitlab.com/lesmi_the_goodness/ytdl-patched (secondary)
@@ -16,8 +17,8 @@ A command-line program to download videos from YouTube and many other [video pla
 - https://codeberg.org/nao20010128nao/ytdl-patched (secondary)
 - [In my Keybase account](https://book.keybase.io/git) (secondary)
   - spoiler: you can clone it with `git clone keybase://public/nao20010128nao/ytdl-patched`
-- https://ytdl-patched.vercel.app/ (just for fun)
-- https://ytdl-patched.netlify.app/ (just for fun)
+- https://ytdl-patched.vercel.app/ (just for fun, no longer synced)
+- https://ytdl-patched.netlify.app/ (just for fun, no longer synced)
 
 <!-- MARKER BEGIN -->
 
