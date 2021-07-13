@@ -1,3 +1,5 @@
 mutagen
 pycryptodome
 websockets
+# https://github.com/m13253/danmaku2ass does not have setup.py
+git+https://github.com/ytdl-patched/danmaku2ass

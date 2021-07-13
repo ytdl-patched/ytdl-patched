@@ -6,12 +6,21 @@ import functools
 import itertools
 import math
 import re
+import json
+import io
 try:
     import dateutil.parser
     HAVE_DATEUTIL = True
 except (ImportError, SyntaxError):
     # dateutil is optional
     HAVE_DATEUTIL = False
+
+try:
+    import danmaku2ass
+    HAVE_DANMAKU2ASS = True
+except (ImportError, SyntaxError, RuntimeError):
+    # danmaku2ass is also optional
+    HAVE_DANMAKU2ASS = False
 
 from .common import InfoExtractor
 from ..compat import (
@@ -532,7 +541,7 @@ class NiconicoIE(NiconicoBaseIE):
             if try_get(watch_request_response, lambda x: x['meta']['status'], int) != 200:
                 self.report_warning('Failed to acquire permission for playing video. Video download may fail.')
 
-        return {
+        info = {
             'id': video_id,
             'title': title,
             'formats': formats,
@@ -548,6 +557,99 @@ class NiconicoIE(NiconicoBaseIE):
             'duration': duration,
             'webpage_url': webpage_url,
         }
+
+        if self._downloader.params.get('getcomments', False) or self._downloader.params.get('writesubtitles', False):
+            thread_ids = list(set(re.findall(r'threadIds&quot;:\[{&quot;id&quot;:([0-9]*)', webpage)))
+            raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0)
+            raw_danmaku = json.dumps(raw_danmaku)
+
+            info['subtitles'] = {
+                'jpn': [{
+                    'ext': 'json',
+                    'data': raw_danmaku,
+                }],
+            }
+
+            if HAVE_DANMAKU2ASS:
+                danmaku = NiconicoIE.CreateDanmaku(raw_danmaku)
+                info['subtitles']['jpn'].append({
+                    'ext': 'ass',
+                    'data': danmaku
+                })
+            else:
+                self.report_warning(
+                    'Comments are only provided in raw Danmaku format. '
+                    'To get comments as an subtitle, please install danmaku2ass with: '
+                    'pip3 install -U git+https://github.com/ytdl-patched/danmaku2ass')
+
+        return info
+
+    @staticmethod
+    def CreateDanmaku(raw_comments_list, commentType='NiconicoJson', x=640, y=360):
+        temp_io = io.StringIO()
+        comment_io = io.StringIO(raw_comments_list)
+        danmaku2ass.Danmaku2ASS([comment_io], commentType, temp_io, x, y)
+        danmaku_content = temp_io.getvalue()
+
+        temp_io.close()
+        comment_io.close()
+
+        return danmaku_content
+
+    def _extract_all_comments(self, video_id, thread_ids, language_id):
+        i = 0
+        raw_json = []
+
+        for thread_id in thread_ids:
+            i += 1
+            raw_json += self._download_json(
+                'https://nmsg.nicovideo.jp/api.json/',
+                video_id,
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; rv:68.0) Gecko/20100101 Firefox/68.0',
+                    'Accept': '*/*',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
+                    'Content-Type': 'text/plain;charset=UTF-8',
+                    'Origin': 'https://www.nicovideo.jp',
+                    'Connection': 'keep-alive'
+                },
+                data=json.dumps([
+                    {"ping": {"content": "rs:0"}},
+                    {"ping": {"content": "ps:0"}},
+                    {"thread": {
+                        "thread": thread_id,
+                        "version": "20090904",
+                        "fork": 0,
+                        "language": 0,
+                        "user_id": "",
+                        "with_global": 0,
+                        "scores": 1,
+                        "nicoru": 3
+                    }},
+                    {"ping": {"content": "pf:0"}},
+                    {"ping": {"content": "ps:1"}},
+                    {"thread_leaves": {
+                        "thread": thread_id,
+                        "language": language_id,
+                        "user_id": "",
+                        # format is "<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments"
+                        # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
+                        "content": "0-999999:999999,999999",
+                        "scores": 1,
+                        "nicoru": 3
+                    }},
+                    {"ping": {"content": "pf:1"}},
+                    {"ping": {"content": "rf:0"}}
+                ]).encode(),
+                note='Downloading comments from thread %s/%s (%s)' % (
+                    i, len(thread_ids), 'en' if language_id == 1 else
+                    'jp' if language_id == 0 else
+                    'cn' if language_id == 2 else
+                    'unknown'))
+
+        return raw_json
 
 
 class NiconicoPlaylistBaseIE(NiconicoBaseIE):
