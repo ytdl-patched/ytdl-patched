@@ -603,7 +603,7 @@ class NiconicoIE(NiconicoBaseIE):
         for thread_id in thread_ids:
             i += 1
             raw_json += self._download_json(
-                'https://nmsg.nicovideo.jp/api.json/',
+                'https://nmsg.nicovideo.jp/api.json',
                 video_id,
                 headers={
                     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; rv:68.0) Gecko/20100101 Firefox/68.0',
@@ -624,7 +624,7 @@ class NiconicoIE(NiconicoBaseIE):
                         "fork": 0,
                         "language": 0,
                         "user_id": "",
-                        "with_global": 0,
+                        "with_global": 1,
                         "scores": 1,
                         "nicoru": 3
                     }},
@@ -636,7 +636,7 @@ class NiconicoIE(NiconicoBaseIE):
                         "user_id": "",
                         # format is "<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments"
                         # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
-                        "content": "0-999999:999999,999999",
+                        "content": "0-999999:999999,999999,nicoru:999999",
                         "scores": 1,
                         "nicoru": 3
                     }},
