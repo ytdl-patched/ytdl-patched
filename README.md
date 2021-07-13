@@ -91,6 +91,11 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * Fediverse support (Mastodon and PeerTube)
         * For supported fediverses, ytdl-patched contains a huge list of instances. But you can opt-in for instance checking, in case of undiscovered instance.  To opt-in, use these flags: `--check-mastodon-instance`, `--check-peertube-instance`
 
+* **NicoNico comments as subtitles**: Now you can download NicoNico comments as a subtitle.
+    * Note that you have to install `danmaku2ass` in order to work: `pip3 install -U git+https://github.com/ytdl-patched/danmaku2ass`
+    * Minimum flags: `--sub-format ass --write-subs`
+    * To embed comments without problems: `--sub-format ass --write-subs --embed-subs --remux-video mkv`
+
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
     * `17live`, `17live:clip`
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
@@ -126,7 +131,7 @@ The major new features from the latest release of [blackjack4494/yt-dlc](https:/
 
 * **Merged with youtube-dl [commit/379f52a](https://github.com/ytdl-org/youtube-dl/commit/379f52a4954013767219d25099cce9e0f9401961)**: (v2021.06.06) You get all the latest features and patches of [youtube-dl](https://github.com/ytdl-org/youtube-dl) in addition to all the features of [youtube-dlc](https://github.com/blackjack4494/yt-dlc)
 
-* **Merged with animelover1984/youtube-dl**: You get most of the features and improvements from [animelover1984/youtube-dl](https://github.com/animelover1984/youtube-dl) including `--write-comments`, `BiliBiliSearch`, `BilibiliChannel`, Embedding thumbnail in mp4/ogg/opus, playlist infojson etc. Note that the NicoNico improvements are not available. See [#31](https://github.com/yt-dlp/yt-dlp/pull/31) for details.
+* **Merged with animelover1984/youtube-dl**: You get most of the features and improvements from [animelover1984/youtube-dl](https://github.com/animelover1984/youtube-dl) including `--write-comments`, `BiliBiliSearch`, `BilibiliChannel`, Embedding thumbnail in mp4/ogg/opus, playlist infojson etc. ~~Note that the NicoNico improvements are not available. See [#31](https://github.com/yt-dlp/yt-dlp/pull/31) for details.~~
 
 * **Youtube improvements**:
     * All Feeds (`:ytfav`, `:ytwatchlater`, `:ytsubs`, `:ythistory`, `:ytrec`) supports downloading multiple pages of content
