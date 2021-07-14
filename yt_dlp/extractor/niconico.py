@@ -845,7 +845,7 @@ class NiconicoSeriesIE(NiconicoBaseIE):
         if title:
             title = unescapeHTML(title)
         playlist = []
-        for match in re.finditer(r'<a href="/watch/([a-z0-9]+)" data-href="/watch/\1', webpage):
+        for match in re.finditer(r'href="/watch/([a-z0-9]+)" data-href="/watch/\1', webpage):
             playlist.append(self.url_result('https://www.nicovideo.jp/watch/%s' % match.group(1), video_id=match.group(1)))
         return self.playlist_result(playlist, list_id, title)
 
