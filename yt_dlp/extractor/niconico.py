@@ -571,7 +571,7 @@ class NiconicoIE(NiconicoBaseIE):
             }
 
             if HAVE_DANMAKU2ASS:
-                danmaku = NiconicoIE.CreateDanmaku(raw_danmaku)
+                danmaku = NiconicoIE._convert_danmaku_to_ass(raw_danmaku)
                 info['subtitles']['jpn'].append({
                     'ext': 'ass',
                     'data': danmaku
@@ -585,16 +585,13 @@ class NiconicoIE(NiconicoBaseIE):
         return info
 
     @staticmethod
-    def CreateDanmaku(raw_comments_list, commentType='NiconicoJson', x=640, y=360):
-        temp_io = io.StringIO()
-        comment_io = io.StringIO(raw_comments_list)
-        danmaku2ass.Danmaku2ASS([comment_io], commentType, temp_io, x, y)
-        danmaku_content = temp_io.getvalue()
+    def _convert_danmaku_to_ass(raw_comments_list, commentType='NiconicoJson', x=640, y=360):
+        assert HAVE_DANMAKU2ASS, 'Please install danmaku2ass with: pip3 install -U git+https://github.com/ytdl-patched/danmaku2ass'
 
-        temp_io.close()
-        comment_io.close()
-
-        return danmaku_content
+        with io.StringIO() as temp_io:
+            with io.StringIO(raw_comments_list) as comment_io:
+                danmaku2ass.Danmaku2ASS([comment_io], commentType, temp_io, x, y)
+            return temp_io.getvalue()
 
     def _extract_all_comments(self, video_id, thread_ids, language_id):
         i = 0
