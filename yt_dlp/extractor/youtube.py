@@ -40,6 +40,7 @@ from ..utils import (
     intlist_to_bytes,
     mimetype2ext,
     parse_codecs,
+    parse_count,
     parse_duration,
     qualities,
     remove_start,
@@ -643,6 +644,28 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     def _extract_and_report_alerts(self, data, *args, **kwargs):
         return self._report_alerts(self._extract_alerts(data), *args, **kwargs)
+
+    def _extract_badges(self, renderer: dict):
+        badges = set()
+        for badge in try_get(renderer, lambda x: x['badges'], list) or []:
+            label = try_get(badge, lambda x: x['metadataBadgeRenderer']['label'], compat_str)
+            if label:
+                badges.add(label.lower())
+        return badges
+
+    @staticmethod
+    def _join_text_entries(runs):
+        text = None
+        for run in runs:
+            if not isinstance(run, dict):
+                continue
+            sub_text = try_get(run, lambda x: x['text'], compat_str)
+            if sub_text:
+                if not text:
+                    text = sub_text
+                    continue
+                text += sub_text
+        return text
 
     def _extract_response(self, item_id, query, note='Downloading API JSON', headers=None,
                           ytcfg=None, check_get_keys=None, ep='browse', fatal=True, api_hostname=None,
@@ -1971,20 +1994,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if len(time_text_split) >= 3:
             return datetime_from_str('now-%s%s' % (time_text_split[0], time_text_split[1]), precision='auto')
 
-    @staticmethod
-    def _join_text_entries(runs):
-        text = None
-        for run in runs:
-            if not isinstance(run, dict):
-                continue
-            sub_text = try_get(run, lambda x: x['text'], compat_str)
-            if sub_text:
-                if not text:
-                    text = sub_text
-                    continue
-                text += sub_text
-        return text
-
     def _extract_comment(self, comment_renderer, parent=None):
         comment_id = comment_renderer.get('commentId')
         if not comment_id:
@@ -1993,12 +2002,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         text = self._join_text_entries(comment_text_runs) or ''
         comment_time_text = try_get(comment_renderer, lambda x: x['publishedTimeText']['runs']) or []
         time_text = self._join_text_entries(comment_time_text)
+        # note: timestamp is an estimate calculated from the current time and time_text
         timestamp = calendar.timegm(self.parse_time_text(time_text).timetuple())
         author = try_get(comment_renderer, lambda x: x['authorText']['simpleText'], compat_str)
         author_id = try_get(comment_renderer,
                             lambda x: x['authorEndpoint']['browseEndpoint']['browseId'], compat_str)
-        votes = str_to_int(try_get(comment_renderer, (lambda x: x['voteCount']['simpleText'],
-                                                      lambda x: x['likeCount']), compat_str)) or 0
+        votes = parse_count(try_get(comment_renderer, (lambda x: x['voteCount']['simpleText'],
+                                                       lambda x: x['likeCount']), compat_str)) or 0
         author_thumbnail = try_get(comment_renderer,
                                    lambda x: x['authorThumbnail']['thumbnails'][-1]['url'], compat_str)
 
@@ -2250,14 +2260,24 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         }
 
     @staticmethod
-    def _get_video_info_params(video_id):
-        return {
+    def _get_video_info_params(video_id, client='TVHTML5'):
+        GVI_CLIENTS = {
+            'ANDROID': {
+                'c': 'ANDROID',
+                'cver': '16.20',
+            },
+            'TVHTML5': {
+                'c': 'TVHTML5',
+                'cver': '6.20180913',
+            }
+        }
+        query = {
             'video_id': video_id,
             'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-            'html5': '1',
-            'c': 'TVHTML5',
-            'cver': '6.20180913',
+            'html5': '1'
         }
+        query.update(GVI_CLIENTS.get(client))
+        return query
 
     def _real_extract(self, url):
         url, smuggled_data = unsmuggle_url(url, {})
@@ -2279,8 +2299,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         player_client = self._configuration_arg('player_client', [''])[0]
         if player_client not in ('web', 'android', ''):
-            self.report_warning(f'Invalid player_client {player_client} given. Falling back to WEB')
-        force_mobile_client = player_client == 'android'
+            self.report_warning(f'Invalid player_client {player_client} given. Falling back to android client.')
+        force_mobile_client = player_client != 'web'
         player_skip = self._configuration_arg('player_skip')
 
         def get_text(x):
@@ -2309,7 +2329,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 # Android client already has signature descrambled
                 # See: https://github.com/TeamNewPipe/NewPipeExtractor/issues/562
                 if not sts:
-                    self.report_warning('Falling back to mobile remix client for player API.')
+                    self.report_warning('Falling back to android remix client for player API.')
                 ytm_client = 'ANDROID_MUSIC'
                 ytm_cfg = {}
 
@@ -2323,7 +2343,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 item_id=video_id, ep='player', query=ytm_query,
                 ytcfg=ytm_cfg, headers=ytm_headers, fatal=False,
                 default_client=ytm_client,
-                note='Downloading %sremix player API JSON' % ('mobile ' if force_mobile_client else ''))
+                note='Downloading %sremix player API JSON' % ('android ' if force_mobile_client else ''))
             ytm_streaming_data = try_get(ytm_player_response, lambda x: x['streamingData'], dict) or {}
 
         player_response = None
@@ -2341,7 +2361,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 # Android client already has signature descrambled
                 # See: https://github.com/TeamNewPipe/NewPipeExtractor/issues/562
                 if not sts:
-                    self.report_warning('Falling back to mobile client for player API.')
+                    self.report_warning('Falling back to android client for player API.')
                 yt_client = 'ANDROID'
                 ytpcfg = {}
                 ytp_headers = self._generate_api_headers(ytpcfg, identity_token, syncid, yt_client)
@@ -2352,19 +2372,24 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 item_id=video_id, ep='player', query=yt_query,
                 ytcfg=ytpcfg, headers=ytp_headers, fatal=False,
                 default_client=yt_client,
-                note='Downloading %splayer API JSON' % ('mobile ' if force_mobile_client else '')
-            )
+                note='Downloading %splayer API JSON' % ('android ' if force_mobile_client else '')
+            ) or player_response
 
         # Age-gate workarounds
         playability_status = player_response.get('playabilityStatus') or {}
         if playability_status.get('reason') in self._AGE_GATE_REASONS:
-            pr = self._parse_json(try_get(compat_parse_qs(
-                self._download_webpage(
-                    base_url + 'get_video_info', video_id,
-                    'Refetching age-gated info webpage', 'unable to download video info webpage',
-                    query=self._get_video_info_params(video_id), fatal=False)),
-                lambda x: x['player_response'][0],
-                compat_str) or '{}', video_id)
+            gvi_clients = ('ANDROID', 'TVHTML5') if force_mobile_client else ('TVHTML5', 'ANDROID')
+            for gvi_client in gvi_clients:
+                pr = self._parse_json(try_get(compat_parse_qs(
+                    self._download_webpage(
+                        base_url + 'get_video_info', video_id,
+                        'Refetching age-gated %s info webpage' % gvi_client.lower(),
+                        'unable to download video info webpage', fatal=False,
+                        query=self._get_video_info_params(video_id, client=gvi_client))),
+                    lambda x: x['player_response'][0],
+                    compat_str) or '{}', video_id)
+                if pr:
+                    break
             if not pr:
                 self.report_warning('Falling back to embedded-only age-gate workaround.')
                 embed_webpage = None
@@ -2387,7 +2412,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         # See: https://github.com/TeamNewPipe/NewPipeExtractor/issues/562
                         if not sts:
                             self.report_warning(
-                                'Falling back to mobile embedded client for player API (note: some formats may be missing).')
+                                'Falling back to android embedded client for player API (note: some formats may be missing).')
                         yt_client = 'ANDROID_EMBEDDED_PLAYER'
                         ytcfg_age = {}
 
@@ -2399,7 +2424,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         item_id=video_id, ep='player', query=yt_age_query,
                         ytcfg=ytcfg_age, headers=ytage_headers, fatal=False,
                         default_client=yt_client,
-                        note='Downloading %sage-gated player API JSON' % ('mobile ' if force_mobile_client else '')
+                        note='Downloading %sage-gated player API JSON' % ('android ' if force_mobile_client else '')
                     ) or {}
 
             if pr:
@@ -2943,21 +2968,20 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if initial_data and is_private is not None:
             is_membersonly = False
             is_premium = False
-            contents = try_get(initial_data, lambda x: x['contents']['twoColumnWatchNextResults']['results']['results']['contents'], list)
-            for content in contents or []:
-                badges = try_get(content, lambda x: x['videoPrimaryInfoRenderer']['badges'], list)
-                for badge in badges or []:
-                    label = try_get(badge, lambda x: x['metadataBadgeRenderer']['label']) or ''
-                    if label.lower() == 'members only':
-                        is_membersonly = True
-                        break
-                    elif label.lower() == 'premium':
-                        is_premium = True
-                        break
-                if is_membersonly or is_premium:
-                    break
+            contents = try_get(initial_data, lambda x: x['contents']['twoColumnWatchNextResults']['results']['results']['contents'], list) or []
+            badge_labels = set()
+            for content in contents:
+                if not isinstance(content, dict):
+                    continue
+                badge_labels.update(self._extract_badges(content.get('videoPrimaryInfoRenderer')))
+            for badge_label in badge_labels:
+                if badge_label.lower() == 'members only':
+                    is_membersonly = True
+                elif badge_label.lower() == 'premium':
+                    is_premium = True
+                elif badge_label.lower() == 'unlisted':
+                    is_unlisted = True
 
-        # TODO: Add this for playlists
         info['availability'] = self._availability(
             is_private=is_private,
             needs_premium=is_premium,
@@ -3431,6 +3455,17 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             'title': 'Album - Royalty Free Music Library V2 (50 Songs)',
         },
         'playlist_count': 50,
+    }, {
+        'note': 'unlisted single video playlist',
+        'url': 'https://www.youtube.com/playlist?list=PLwL24UFy54GrB3s2KMMfjZscDi1x5Dajf',
+        'info_dict': {
+            'uploader_id': 'UC9zHu_mHU96r19o-wV5Qs1Q',
+            'uploader': 'colethedj',
+            'id': 'PLwL24UFy54GrB3s2KMMfjZscDi1x5Dajf',
+            'title': 'yt-dlp unlisted playlist test',
+            'availability': 'unlisted'
+        },
+        'playlist_count': 1,
     }]
 
     @classmethod
@@ -3752,27 +3787,19 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         else:
             raise ExtractorError('Unable to find selected tab')
 
-    @staticmethod
-    def _extract_uploader(data):
+    @classmethod
+    def _extract_uploader(cls, data):
         uploader = {}
-        sidebar_renderer = try_get(
-            data, lambda x: x['sidebar']['playlistSidebarRenderer']['items'], list)
-        if sidebar_renderer:
-            for item in sidebar_renderer:
-                if not isinstance(item, dict):
-                    continue
-                renderer = item.get('playlistSidebarSecondaryInfoRenderer')
-                if not isinstance(renderer, dict):
-                    continue
-                owner = try_get(
-                    renderer, lambda x: x['videoOwner']['videoOwnerRenderer']['title']['runs'][0], dict)
-                if owner:
-                    uploader['uploader'] = owner.get('text')
-                    uploader['uploader_id'] = try_get(
-                        owner, lambda x: x['navigationEndpoint']['browseEndpoint']['browseId'], compat_str)
-                    uploader['uploader_url'] = urljoin(
-                        'https://www.youtube.com/',
-                        try_get(owner, lambda x: x['navigationEndpoint']['browseEndpoint']['canonicalBaseUrl'], compat_str))
+        renderer = cls._extract_sidebar_info_renderer(data, 'playlistSidebarSecondaryInfoRenderer') or {}
+        owner = try_get(
+            renderer, lambda x: x['videoOwner']['videoOwnerRenderer']['title']['runs'][0], dict)
+        if owner:
+            uploader['uploader'] = owner.get('text')
+            uploader['uploader_id'] = try_get(
+                owner, lambda x: x['navigationEndpoint']['browseEndpoint']['browseId'], compat_str)
+            uploader['uploader_url'] = urljoin(
+                'https://www.youtube.com/',
+                try_get(owner, lambda x: x['navigationEndpoint']['browseEndpoint']['canonicalBaseUrl'], compat_str))
         return {k: v for k, v in uploader.items() if v is not None}
 
     def _extract_from_tabs(self, item_id, webpage, data, tabs):
@@ -3798,8 +3825,8 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             thumbnails_list = (
                 try_get(renderer, lambda x: x['avatar']['thumbnails'], list)
                 or try_get(
-                    data,
-                    lambda x: x['sidebar']['playlistSidebarRenderer']['items'][0]['playlistSidebarPrimaryInfoRenderer']['thumbnailRenderer']['playlistVideoThumbnailRenderer']['thumbnail']['thumbnails'],
+                    self._extract_sidebar_info_renderer(data, 'playlistSidebarPrimaryInfoRenderer'),
+                    lambda x: x['thumbnailRenderer']['playlistVideoThumbnailRenderer']['thumbnail']['thumbnails'],
                     list)
                 or [])
 
@@ -3823,7 +3850,6 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
                 or playlist_id)
         title += format_field(selected_tab, 'title', ' - %s')
         title += format_field(selected_tab, 'expandedText', ' - %s')
-
         metadata = {
             'playlist_id': playlist_id,
             'playlist_title': title,
@@ -3834,6 +3860,9 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             'thumbnails': thumbnails,
             'tags': tags,
         }
+        availability = self._extract_availability(data)
+        if availability:
+            metadata['availability'] = availability
         if not channel_id:
             metadata.update(self._extract_uploader(data))
         metadata.update({
@@ -3905,49 +3934,86 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
             self._extract_mix_playlist(playlist, playlist_id, data, webpage),
             playlist_id=playlist_id, playlist_title=title)
 
+    def _extract_availability(self, data):
+        """
+        Gets the availability of a given playlist/tab.
+        Note: Unless YouTube tells us explicitly, we do not assume it is public
+        @param data: response
+        """
+        is_private = is_unlisted = None
+        renderer = self._extract_sidebar_info_renderer(data, 'playlistSidebarPrimaryInfoRenderer') or {}
+        badge_labels = self._extract_badges(renderer)
+
+        # Personal playlists, when authenticated, have a dropdown visibility selector instead of a badge
+        privacy_dropdown_entries = try_get(
+            renderer, lambda x: x['privacyForm']['dropdownFormFieldRenderer']['dropdown']['dropdownRenderer']['entries'], list) or []
+        for renderer_dict in privacy_dropdown_entries:
+            is_selected = try_get(
+                renderer_dict, lambda x: x['privacyDropdownItemRenderer']['isSelected'], bool) or False
+            if not is_selected:
+                continue
+            label = self._join_text_entries(
+                try_get(renderer_dict, lambda x: x['privacyDropdownItemRenderer']['label']['runs'], list) or [])
+            if label:
+                badge_labels.add(label.lower())
+                break
+
+        for badge_label in badge_labels:
+            if badge_label == 'unlisted':
+                is_unlisted = True
+            elif badge_label == 'private':
+                is_private = True
+            elif badge_label == 'public':
+                is_unlisted = is_private = False
+        return self._availability(is_private, False, False, False, is_unlisted)
+
+    @staticmethod
+    def _extract_sidebar_info_renderer(data, info_renderer, expected_type=dict):
+        sidebar_renderer = try_get(
+            data, lambda x: x['sidebar']['playlistSidebarRenderer']['items'], list) or []
+        for item in sidebar_renderer:
+            renderer = try_get(item, lambda x: x[info_renderer], expected_type)
+            if renderer:
+                return renderer
+
     def _reload_with_unavailable_videos(self, item_id, data, webpage):
         """
         Get playlist with unavailable videos if the 'show unavailable videos' button exists.
         """
-        sidebar_renderer = try_get(
-            data, lambda x: x['sidebar']['playlistSidebarRenderer']['items'], list)
-        if not sidebar_renderer:
-            return
         browse_id = params = None
-        for item in sidebar_renderer:
-            if not isinstance(item, dict):
+        renderer = self._extract_sidebar_info_renderer(data, 'playlistSidebarPrimaryInfoRenderer')
+        if not renderer:
+            return
+        menu_renderer = try_get(
+            renderer, lambda x: x['menu']['menuRenderer']['items'], list) or []
+        for menu_item in menu_renderer:
+            if not isinstance(menu_item, dict):
                 continue
-            renderer = item.get('playlistSidebarPrimaryInfoRenderer')
-            menu_renderer = try_get(
-                renderer, lambda x: x['menu']['menuRenderer']['items'], list) or []
-            for menu_item in menu_renderer:
-                if not isinstance(menu_item, dict):
-                    continue
-                nav_item_renderer = menu_item.get('menuNavigationItemRenderer')
-                text = try_get(
-                    nav_item_renderer, lambda x: x['text']['simpleText'], compat_str)
-                if not text or text.lower() != 'show unavailable videos':
-                    continue
-                browse_endpoint = try_get(
-                    nav_item_renderer, lambda x: x['navigationEndpoint']['browseEndpoint'], dict) or {}
-                browse_id = browse_endpoint.get('browseId')
-                params = browse_endpoint.get('params')
-                break
+            nav_item_renderer = menu_item.get('menuNavigationItemRenderer')
+            text = try_get(
+                nav_item_renderer, lambda x: x['text']['simpleText'], compat_str)
+            if not text or text.lower() != 'show unavailable videos':
+                continue
+            browse_endpoint = try_get(
+                nav_item_renderer, lambda x: x['navigationEndpoint']['browseEndpoint'], dict) or {}
+            browse_id = browse_endpoint.get('browseId')
+            params = browse_endpoint.get('params')
+            break
 
-            ytcfg = self._extract_ytcfg(item_id, webpage)
-            headers = self._generate_api_headers(
-                ytcfg, account_syncid=self._extract_account_syncid(ytcfg),
-                identity_token=self._extract_identity_token(webpage, item_id=item_id),
-                visitor_data=try_get(
-                    self._extract_context(ytcfg), lambda x: x['client']['visitorData'], compat_str))
-            query = {
-                'params': params or 'wgYCCAA=',
-                'browseId': browse_id or 'VL%s' % item_id
-            }
-            return self._extract_response(
-                item_id=item_id, headers=headers, query=query,
-                check_get_keys='contents', fatal=False,
-                note='Downloading API JSON with unavailable videos')
+        ytcfg = self._extract_ytcfg(item_id, webpage)
+        headers = self._generate_api_headers(
+            ytcfg, account_syncid=self._extract_account_syncid(ytcfg),
+            identity_token=self._extract_identity_token(webpage, item_id=item_id),
+            visitor_data=try_get(
+                self._extract_context(ytcfg), lambda x: x['client']['visitorData'], compat_str))
+        query = {
+            'params': params or 'wgYCCAA=',
+            'browseId': browse_id or 'VL%s' % item_id
+        }
+        return self._extract_response(
+            item_id=item_id, headers=headers, query=query,
+            check_get_keys='contents', fatal=False,
+            note='Downloading API JSON with unavailable videos')
 
     def _extract_webpage(self, url, item_id):
         retries = self.get_param('extractor_retries', 3)
@@ -4084,7 +4150,6 @@ class YoutubeTabIE(YoutubeBaseInfoExtractor):
         if 'no-youtube-unavailable-videos' not in compat_opts:
             data = self._reload_with_unavailable_videos(item_id, data, webpage) or data
         self._extract_and_report_alerts(data)
-
         tabs = try_get(
             data, lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'], list)
         if tabs:
