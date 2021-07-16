@@ -2641,6 +2641,8 @@ class YoutubeDL(object):
 
                     requested_formats = info_dict['requested_formats']
                     old_ext = info_dict['ext']
+
+                    # merge to mkv without --merge-output-format no matter what
                     if self.params.get('merge_output_format') is None:
                         info_dict['ext'] = 'mkv'
 
