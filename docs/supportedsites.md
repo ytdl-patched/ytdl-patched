@@ -231,8 +231,7 @@
  - **Culturebox**
  - **CultureUnplugged**
  - **curiositystream**
- - **curiositystream:collections**
- - **curiositystream:series**
+ - **curiositystream:collection**
  - **CWTV**
  - **DagelijkseKost**: dagelijksekost.een.be
  - **DailyMail**
@@ -315,6 +314,8 @@
  - **EyedoTV**
  - **facebook**
  - **FacebookPluginsVideo**
+ - **fancode:live**
+ - **fancode:vod**
  - **faz.net**
  - **fc2**
  - **fc2:embed**
@@ -350,6 +351,8 @@
  - **FrontendMastersCourse**
  - **FrontendMastersLesson**
  - **Funimation**
+ - **funimation:page**
+ - **funimation:show**
  - **Funk**
  - **Fusion**
  - **Fux**
@@ -399,6 +402,7 @@
  - **HotNewHipHop**
  - **hotstar**
  - **hotstar:playlist**
+ - **hotstar:series**
  - **Howcast**
  - **HowStuffWorks**
  - **hrfernsehen**
@@ -504,8 +508,6 @@
  - **LinuxAcademy**
  - **LiTV**
  - **LiveJournal**
- - **LiveLeak**
- - **LiveLeakEmbed**
  - **livestream**
  - **livestream:original**
  - **LnkGo**
@@ -834,6 +836,8 @@
  - **RCS**
  - **RCSEmbeds**
  - **RCSVarious**
+ - **RCTIPlus**
+ - **RCTIPlusSeries**
  - **RDS**: RDS.ca
  - **RedBull**
  - **RedBullEmbed**
@@ -884,6 +888,7 @@
  - **safari**: safaribooksonline.com online video
  - **safari:api**
  - **safari:course**: safaribooksonline.com online courses
+ - **Saitosan**
  - **SAKTV**
  - **SaltTV**
  - **SampleFocus**
@@ -909,6 +914,7 @@
  - **ShahidShow**
  - **Shared**: shared.sx
  - **sharevideos**
+ - **ShemarooMe**
  - **ShowRoomLive**
  - **simplecast**
  - **simplecast:episode**
@@ -1095,6 +1101,8 @@
  - **TVPlayHome**
  - **Tweakers**
  - **TwitCasting**
+ - **TwitCastingLive**
+ - **TwitCastingUser**
  - **twitch:clips**
  - **twitch:stream**
  - **twitch:vod**
@@ -1156,6 +1164,8 @@
  - **videomore:video**
  - **VideoPress**
  - **Vidio**
+ - **VidioLive**
+ - **VidioPremier**
  - **VidLii**
  - **vidme**
  - **vidme:user**
@@ -1197,6 +1207,7 @@
  - **voicy**
  - **voicy:channel**
  - **Voot**
+ - **VootSeries**
  - **VoxMedia**
  - **VoxMediaVolume**
  - **vpro**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
@@ -1226,6 +1237,7 @@
  - **wdr:mobile**
  - **WDRElefant**
  - **WDRPage**
+ - **web.archive:youtube**: web.archive.org saved youtube videos
  - **Webcaster**
  - **WebcasterFeed**
  - **WebOfStories**
@@ -1262,6 +1274,8 @@
  - **Xuite**: 隨意窩Xuite影音
  - **XVideos**
  - **XXXYMovies**
+ - **y2mate**
+ - **y2mate:rushing**
  - **Yahoo**: Yahoo screen and movies
  - **yahoo:gyao**
  - **yahoo:gyao:player**
