@@ -7,7 +7,7 @@ from os import PathLike, fsdecode
 from typing import Union
 
 from os import remove, rename, sep, stat, utime, unlink, makedirs
-from os.path import exists, isfile, getsize, normpath, join, basename, dirname
+from os.path import exists, isfile, getsize, normpath, join, basename, dirname, isabs
 from .compat import compat_str
 from .utils import (
     sanitize_open,
@@ -278,3 +278,8 @@ def escaped_basename(path):
 def escaped_dirname(path):
     "os.path.dirname() that escapes long names"
     return dirname(split_longname(path, get_filesystem_encoding()))
+
+
+def escaped_isabs(path):
+    "os.path.isabs() that escapes long names"
+    return isabs(split_longname(path, get_filesystem_encoding()))

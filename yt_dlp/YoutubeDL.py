@@ -157,6 +157,7 @@ from .longname import (
     escaped_remove,
     escaped_basename,
     escaped_dirname,
+    escaped_isabs,
     ensure_directory,
     split_longname,
 )
@@ -1069,7 +1070,7 @@ class YoutubeDL(object):
                 pass
             elif filename == '-':
                 self.report_warning('--paths is ignored when an outputting to stdout')
-            elif os.path.isabs(filename):
+            elif self.isabs(filename):
                 self.report_warning('--paths is ignored since an absolute path is given in output template')
             self.__prepare_filename_warned = True
         if filename == '-' or not filename:
@@ -3471,6 +3472,12 @@ class YoutubeDL(object):
             return escaped_dirname(path)
         else:
             return os.path.dirname(path)
+
+    def isabs(self, filename):
+        if self.params.get('escape_long_names', False):
+            return escaped_isabs(filename)
+        else:
+            return os.path.isabs(filename)
 
     def ensure_directory(self, filename):
         if self.params.get('escape_long_names', False):
