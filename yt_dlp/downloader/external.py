@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import os
 import os.path
 import re
 import subprocess
@@ -302,10 +303,10 @@ class Aria2cFD(ExternalFD):
         dn = self.ydl.dirname(tmpfilename)
         if dn:
             if not self.ydl.isabs(dn):
-                dn = '.%s%s' % (self.ydl.sep, dn)
-            cmd += ['--dir', dn + self.ydl.sep]
+                dn = '.%s%s' % (os.path.sep, dn)
+            cmd += ['--dir', dn + os.path.sep]
         if 'fragments' not in info_dict:
-            cmd += ['--out', '.%s%s' % (self.ydl.sep, self.ydl.basename(tmpfilename))]
+            cmd += ['--out', '.%s%s' % (os.path.sep, self.ydl.basename(tmpfilename))]
         cmd += ['--auto-file-renaming=false']
 
         if 'fragments' in info_dict:
@@ -411,7 +412,7 @@ class FFmpegFD(ExternalFD):
             # http://git.videolan.org/?p=ffmpeg.git;a=commit;h=b4eb1f29ebddd60c41a2eb39f5af701e38e0d3fd)
             # We could switch to the following code if we are able to detect version properly
             # args += ['-http_proxy', proxy]
-            env = self.ydl.environ.copy()
+            env = os.environ.copy()
             compat_setenv('HTTP_PROXY', proxy, env=env)
             compat_setenv('http_proxy', proxy, env=env)
 
