@@ -22,9 +22,9 @@ for arg in sys.argv[1:]:
     else:
         raise Exception(f'Unknown or occupied key: {key}')
 
-# git rev-parse --short master
+# git rev-parse --short ytdlp
 sp = subprocess.Popen(
-    ['git', 'rev-parse', '--short', 'master'],
+    ['git', 'rev-parse', '--short', 'ytdlp'],
     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     cwd=os.path.dirname(os.path.abspath(__file__)))
 out, err = sp.communicate()
@@ -34,9 +34,9 @@ if re.match('[0-9a-f]+', out):
     values['git_commit'] = out
 
 
-# git rev-parse --short youtube-dl
+# git rev-parse --short yt-dlp
 sp = subprocess.Popen(
-    ['git', 'rev-parse', '--short', 'youtube-dl'],
+    ['git', 'rev-parse', '--short', 'yt-dlp'],
     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     cwd=os.path.dirname(os.path.abspath(__file__)))
 out, err = sp.communicate()

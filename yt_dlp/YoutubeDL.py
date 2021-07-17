@@ -3225,6 +3225,10 @@ class YoutubeDL(object):
             else '(source)' if os.path.basename(sys.argv[0]) == '__main__.py'
             else '')
         self._write_string('[debug] yt-dlp version %s %s\n' % (__version__, source))
+        if git_commit:
+            self._write_string('[debug]        from commit %s\n' % git_commit)
+        if git_upstream_commit:
+            self._write_string('[debug]           based on %s\n' % git_upstream_commit)
         if _LAZY_LOADER:
             self._write_string('[debug] Lazy loading extractors enabled\n')
         if _PLUGIN_CLASSES:
