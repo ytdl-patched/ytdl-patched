@@ -7,20 +7,12 @@ import itertools
 import math
 import re
 import json
-import io
 try:
     import dateutil.parser
     HAVE_DATEUTIL = True
 except (ImportError, SyntaxError):
     # dateutil is optional
     HAVE_DATEUTIL = False
-
-try:
-    import danmaku2ass
-    HAVE_DANMAKU2ASS = True
-except (ImportError, SyntaxError, RuntimeError):
-    # danmaku2ass is also optional
-    HAVE_DANMAKU2ASS = False
 
 from .common import InfoExtractor
 from ..compat import (
@@ -29,6 +21,7 @@ from ..compat import (
     compat_urllib_parse_urlparse,
     compat_HTTPError,
 )
+from ..neonippori import load_comments
 from ..utils import (
     dict_get,
     ExtractorError,
@@ -562,43 +555,23 @@ class NiconicoIE(NiconicoBaseIE):
             thread_ids = list(set(re.findall(r'threadIds&quot;:\[{&quot;id&quot;:([0-9]*)', webpage)))
             raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0)
             raw_danmaku = json.dumps(raw_danmaku)
+            danmaku = load_comments(raw_danmaku, 'NiconicoJson', 640, 360, report_warning=self.report_warning)
 
             info['subtitles'] = {
                 'jpn': [{
                     'ext': 'json',
                     'data': raw_danmaku,
-                }],
-            }
-
-            if HAVE_DANMAKU2ASS:
-                danmaku = NiconicoIE._convert_danmaku_to_ass(raw_danmaku)
-                info['subtitles']['jpn'].append({
+                }, {
                     'ext': 'ass',
                     'data': danmaku
-                })
-            else:
-                self.report_warning(
-                    'Comments are only provided in raw Danmaku format. '
-                    'To get comments as an subtitle, please install danmaku2ass with: '
-                    'pip3 install -U git+https://github.com/ytdl-patched/danmaku2ass')
-
+                }],
+            }
         return info
 
-    @staticmethod
-    def _convert_danmaku_to_ass(raw_comments_list, commentType='NiconicoJson', x=640, y=360):
-        assert HAVE_DANMAKU2ASS, 'Please install danmaku2ass with: pip3 install -U git+https://github.com/ytdl-patched/danmaku2ass'
-
-        with io.StringIO() as temp_io:
-            with io.StringIO(raw_comments_list) as comment_io:
-                danmaku2ass.Danmaku2ASS([comment_io], commentType, temp_io, x, y)
-            return temp_io.getvalue()
-
     def _extract_all_comments(self, video_id, thread_ids, language_id):
-        i = 0
         raw_json = []
 
-        for thread_id in thread_ids:
-            i += 1
+        for i, thread_id in enumerate(thread_ids):
             raw_json += self._download_json(
                 'https://nmsg.nicovideo.jp/api.json',
                 video_id,
@@ -641,7 +614,7 @@ class NiconicoIE(NiconicoBaseIE):
                     {"ping": {"content": "rf:0"}}
                 ]).encode(),
                 note='Downloading comments from thread %s/%s (%s)' % (
-                    i, len(thread_ids), 'en' if language_id == 1 else
+                    i + 1, len(thread_ids), 'en' if language_id == 1 else
                     'jp' if language_id == 0 else
                     'cn' if language_id == 2 else
                     'unknown'))
