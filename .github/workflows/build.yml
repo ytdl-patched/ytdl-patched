@@ -149,10 +149,6 @@ jobs:
       fail-fast: false
       matrix:
         icon: [red, white]
-        # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
-        # builder: [PyInstaller, py2exe]
-        # remove_tests: ['-notests', '']  # yes and no
-        builder: [PyInstaller]
         remove_tests: ['']
     steps:
       - uses: actions/checkout@v2
@@ -167,7 +163,7 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Install deps
-        run: pip install -U ${{ matrix.builder }} zopflipy websockets pyyaml python-dateutil
+        run: pip install -U PyInstaller==4.3 zopflipy websockets pyyaml python-dateutil
       - name: Install UPX
         run: choco install upx
       - name: Remove unneeded tests in InfoExtractor
@@ -176,10 +172,9 @@ jobs:
         if: ${{ matrix.remove_tests == '-notests' }}
       - name: Build patched YTDL for Windows
         shell: pwsh
-        run: pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}
+        run: pwsh ./devscripts/build_windows_exe.ps1 PyInstaller ${{ matrix.icon }}
       - name: Compress generated EXE
         run: upx --lzma --best artifacts/youtube-dl.exe
-        if: ${{ matrix.builder == 'PyInstaller' }}
         continue-on-error: true
       - name: Calculate hash
         id: hash
@@ -187,7 +182,7 @@ jobs:
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: "ytdl-windows-${{ matrix.icon }}-${{ matrix.builder }}${{ matrix.remove_tests }}"
+          name: "ytdl-windows-${{ matrix.icon }}-PyInstaller${{ matrix.remove_tests }}"
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
