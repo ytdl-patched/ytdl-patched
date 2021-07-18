@@ -110,7 +110,6 @@ def parse_bilibili_comment_section(
         comment, i, fontsize, time_scale,
         min_length,
         type_id, time_id, timestamp_id, color_id, size_id):
-    CONVERSION = {k: v for k, v in enumerate('1456')}
 
     p = str(comment.getAttribute('p')).split(',')
     assert len(p) >= min_length
@@ -121,7 +120,7 @@ def parse_bilibili_comment_section(
     if p[type_id] in ('1', '4', '5', '6'):
         c = str(comment.childNodes[time_id].wholeText).replace('/n', '\n')
         size = int(p[size_id]) * fontsize / 25.0
-        return (time, int(p[timestamp_id]), i, c, CONVERSION[p[type_id]], int(p[color_id]), size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
+        return (time, int(p[timestamp_id]), i, c, '1456'.index(p[type_id]), int(p[color_id]), size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
     elif p[type_id] == '7':  # positioned comment
         c = str(comment.childNodes[time_id].wholeText)
         yield (time, int(p[timestamp_id]), i, c, 'bilipos', int(p[color_id]), int(p[size_id]), 0, 0)
