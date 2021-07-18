@@ -90,7 +90,7 @@ def parse_comments_nnxml(f: str, fontsize: float, report_warning):
 
 
 def parse_comments_nnjson(f: str, fontsize: float, report_warning):
-    for comment_dom in json.load(f):
+    for comment_dom in json.loads(f):
         comment = None
 
         if 'chat' in comment_dom:
