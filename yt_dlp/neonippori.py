@@ -12,25 +12,6 @@ import xml.dom.minidom
 from typing import Dict, Tuple
 
 
-def ensure_file_at_beggining(func):
-    def decorator(f):
-        f.seek(0)
-        try:
-            return func(f)
-        finally:
-            f.seek(0)
-    return decorator
-
-
-def ignore_eof_error(func):
-    def decorator(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except EOFError:
-            return None
-    return decorator
-
-
 def noop(*a, **b):
     return
 
@@ -62,6 +43,7 @@ NICONICO_COLOR_MAPPINGS = {
 
 
 def parse_comments_nnxml(f: str, fontsize: float, report_warning):
+    """ (timeline, timestamp, no, comment, pos, color, size, height, width) """
     dom = xml.dom.minidom.parse(f)
     comment_element = dom.getElementsByTagName('chat')
     for comment in comment_element:
@@ -124,25 +106,37 @@ def parse_comments_nnjson(f: str, fontsize: float, report_warning):
             continue
 
 
+def parse_bilibili_comment_section(
+        comment, i, fontsize, time_scale,
+        min_length,
+        type_id, time_id, timestamp_id, color_id, size_id):
+    CONVERSION = {k: v for k, v in enumerate('1456')}
+
+    p = str(comment.getAttribute('p')).split(',')
+    assert len(p) >= min_length
+    assert p[type_id] in ('1', '4', '5', '6', '7', '8')
+    if comment.childNodes.length <= 0:
+        return
+    time = float(p[time_id]) / time_scale
+    if p[type_id] in ('1', '4', '5', '6'):
+        c = str(comment.childNodes[time_id].wholeText).replace('/n', '\n')
+        size = int(p[size_id]) * fontsize / 25.0
+        return (time, int(p[timestamp_id]), i, c, CONVERSION[p[type_id]], int(p[color_id]), size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
+    elif p[type_id] == '7':  # positioned comment
+        c = str(comment.childNodes[time_id].wholeText)
+        yield (time, int(p[timestamp_id]), i, c, 'bilipos', int(p[color_id]), int(p[size_id]), 0, 0)
+    elif p[type_id] == '8':
+        return  # ignore scripted comment
+
+
 def parse_comments_bilibili(f: str, fontsize: float, report_warning):
     dom = xml.dom.minidom.parse(f)
     comment_element = dom.getElementsByTagName('d')
     for i, comment in enumerate(comment_element):
         try:
-            p = str(comment.getAttribute('p')).split(',')
-            assert len(p) >= 5
-            assert p[1] in ('1', '4', '5', '6', '7', '8')
-            if comment.childNodes.length <= 0:
-                continue
-            if p[1] in ('1', '4', '5', '6'):
-                c = str(comment.childNodes[0].wholeText).replace('/n', '\n')
-                size = int(p[2]) * fontsize / 25.0
-                yield (float(p[0]), int(p[4]), i, c, {'1': 0, '4': 2, '5': 1, '6': 3}[p[1]], int(p[3]), size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
-            elif p[1] == '7':  # positioned comment
-                c = str(comment.childNodes[0].wholeText)
-                yield (float(p[0]), int(p[4]), i, c, 'bilipos', int(p[3]), int(p[2]), 0, 0)
-            elif p[1] == '8':
-                pass  # ignore scripted comment
+            yield from parse_bilibili_comment_section(
+                comment, i, fontsize, 1, 5,
+                1, 0, 4, 3, 2)
         except (AssertionError, AttributeError, IndexError, TypeError, ValueError):
             report_warning('Invalid comment: %s' % comment.toxml())
             continue
@@ -153,21 +147,9 @@ def parse_comments_bilibili2(f: str, fontsize: float, report_warning):
     comment_element = dom.getElementsByTagName('d')
     for i, comment in enumerate(comment_element):
         try:
-            p = str(comment.getAttribute('p')).split(',')
-            assert len(p) >= 7
-            assert p[3] in ('1', '4', '5', '6', '7', '8')
-            if comment.childNodes.length <= 0:
-                continue
-            time = float(p[2]) / 1000.0
-            if p[3] in ('1', '4', '5', '6'):
-                c = str(comment.childNodes[0].wholeText).replace('/n', '\n')
-                size = int(p[4]) * fontsize / 25.0
-                yield (time, int(p[6]), i, c, {'1': 0, '4': 2, '5': 1, '6': 3}[p[3]], int(p[5]), size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
-            elif p[3] == '7':  # positioned comment
-                c = str(comment.childNodes[0].wholeText)
-                yield (time, int(p[6]), i, c, 'bilipos', int(p[5]), int(p[4]), 0, 0)
-            elif p[3] == '8':
-                pass  # ignore scripted comment
+            yield from parse_bilibili_comment_section(
+                comment, i, fontsize, 1000, 7,
+                3, 2, 6, 5, 4)
         except (AssertionError, AttributeError, IndexError, TypeError, ValueError):
             report_warning('Invalid comment: %s' % comment.toxml())
             continue
