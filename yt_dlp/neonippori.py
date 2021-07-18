@@ -500,15 +500,6 @@ def convert_type2(row, height, bottomReserved):
     return height - bottomReserved - row
 
 
-def open_file(filename_or_file, *args, **kwargs):
-    if isinstance(filename_or_file, bytes):
-        filename_or_file = str(bytes(filename_or_file).decode('utf-8', 'replace'))
-    if isinstance(filename_or_file, str):
-        return open(filename_or_file, *args, **kwargs)
-    else:
-        return filename_or_file
-
-
 def filter_badchars(f):
     return re.sub('[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f]', '\ufffd', f)
 
@@ -521,14 +512,6 @@ class safe_list(list):
             return default
 
 
-def load_comments(input_text, input_format, stage_width, stage_height, reserve_blank=0, font_face='sans-serif', font_size=25.0, text_opacity=1.0, duration_marquee=5.0, duration_still=5.0, report_warning=noop):
-    filters_regex = []
-    comments = parse_comments(input_text, input_format, font_size, report_warning)
-    with io.StringIO() as fo:
-        process_comments(comments, fo, stage_width, stage_height, reserve_blank, font_face, font_size, text_opacity, duration_marquee, duration_still, filters_regex)
-        return fo.getvalue()
-
-
 def parse_comments(input_text, input_format, font_size=25.0, report_warning=noop):
     processor = PROCESSORS.get(input_format)
     if not processor:
@@ -536,6 +519,14 @@ def parse_comments(input_text, input_format, font_size=25.0, report_warning=noop
     comments = list(processor(filter_badchars(input_text), font_size, report_warning))
     comments.sort()
     return comments
+
+
+def load_comments(input_text, input_format, stage_width, stage_height, reserve_blank=0, font_face='sans-serif', font_size=25.0, text_opacity=1.0, duration_marquee=5.0, duration_still=5.0, report_warning=noop):
+    filters_regex = []
+    comments = parse_comments(input_text, input_format, font_size, report_warning)
+    with io.StringIO() as fo:
+        process_comments(comments, fo, stage_width, stage_height, reserve_blank, font_face, font_size, text_opacity, duration_marquee, duration_still, filters_regex)
+        return fo.getvalue()
 
 
 __all__ = [
