@@ -875,6 +875,9 @@ from .nfl import (
 from .nhk import (
     NhkVodIE,
     NhkVodProgramIE,
+    NhkForSchoolBangumiIE,
+    NhkForSchoolSubjectIE,
+    NhkForSchoolProgramListIE,
 )
 from .nhl import NHLIE
 from .nick import (
