@@ -77,18 +77,21 @@ def parse_comments_nnjson(f: str, fontsize: float, report_warning):
 
         if 'chat' in comment_dom:
             comment = comment_dom['chat']
-        elif 'mail' in comment_dom:
+        elif 'content' in comment_dom:
             comment = comment_dom
         else:
             continue
 
         try:
+            if 'deleted' in comment:
+                continue
+
             c = comment['content']
 
             pos = 0
             color = 0xffffff
             size = fontsize
-            for mailstyle in comment['mail'].split():
+            for mailstyle in comment.get('mail', '').split():
                 if mailstyle == 'ue':
                     pos = 1
                 elif mailstyle == 'shita':
