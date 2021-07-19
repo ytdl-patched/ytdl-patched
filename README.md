@@ -92,7 +92,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
         * For supported fediverses, ytdl-patched contains a huge list of instances. But you can opt-in for instance checking, in case of undiscovered instance.  To opt-in, use these flags: `--check-mastodon-instance`, `--check-peertube-instance`
 
 * **NicoNico comments as subtitles**: Now you can download NicoNico comments as a subtitle.
-    * Note that you have to install `danmaku2ass` in order to work: `pip3 install -U git+https://github.com/ytdl-patched/danmaku2ass`
+    * No dependency required. Just use ytdl-patched.
     * Minimum flags: `--sub-format ass --write-subs`
     * To embed comments without problems: `--sub-format ass --write-subs --embed-subs --remux-video mkv`
 
