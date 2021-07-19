@@ -1783,14 +1783,10 @@ class YoutubeDL(object):
             the_only_video = video_fmts[0] if len(video_fmts) == 1 else None
             the_only_audio = audio_fmts[0] if len(audio_fmts) == 1 else None
 
-            output_ext = self.params.get('merge_output_format')
-            if not output_ext:
-                if the_only_video:
-                    output_ext = the_only_video['ext']
-                elif the_only_audio and not video_fmts:
-                    output_ext = the_only_audio['ext']
-                else:
-                    output_ext = 'mkv'
+            # if the merge was requested, force it to merge info MKV
+            # when --merge-output-format is not given
+            # because this is the behavior what I want
+            output_ext = self.params.get('merge_output_format') or 'mkv'
 
             new_dict = {
                 'requested_formats': formats_info,
