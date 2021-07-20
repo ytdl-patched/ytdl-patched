@@ -235,6 +235,9 @@ class YoutubeDL(object):
                        into a single file
     allow_multiple_audio_streams:   Allow multiple audio streams to be merged
                        into a single file
+    check_formats      Whether to test if the formats are downloadable.
+                       Can be True (check all), False (check none)
+                       or None (check only if requested by extractor)
     paths:             Dictionary of output paths. The allowed keys are 'home'
                        'temp' and the keys of OUTTMPL_TYPES (in utils.py)
     outtmpl:           Dictionary of templates for output names. Allowed keys
@@ -2003,15 +2006,27 @@ class YoutubeDL(object):
                 t.get('id') if t.get('id') is not None else '',
                 t.get('url')))
 
-            def test_thumbnail(t):
-                self.to_screen('[info] Testing thumbnail %s' % t['id'])
-                try:
-                    self.urlopen(HEADRequest(t['url']))
-                except network_exceptions as err:
-                    self.to_screen('[info] Unable to connect to thumbnail %s URL "%s" - %s. Skipping...' % (
-                        t['id'], t['url'], error_to_compat_str(err)))
-                    return False
-                return True
+            def thumbnail_tester():
+                if self.params.get('check_formats'):
+                    test_all = True
+                    to_screen = lambda msg: self.to_screen(f'[info] {msg}')
+                else:
+                    test_all = False
+                    to_screen = self.write_debug
+
+                def test_thumbnail(t):
+                    if not test_all and not t.get('_test_url'):
+                        return True
+                    to_screen('Testing thumbnail %s' % t['id'])
+                    try:
+                        self.urlopen(HEADRequest(t['url']))
+                    except network_exceptions as err:
+                        to_screen('Unable to connect to thumbnail %s URL "%s" - %s. Skipping...' % (
+                            t['id'], t['url'], error_to_compat_str(err)))
+                        return False
+                    return True
+
+                return test_thumbnail
 
             for i, t in enumerate(thumbnails):
                 if t.get('id') is None:
@@ -2019,8 +2034,11 @@ class YoutubeDL(object):
                 if t.get('width') and t.get('height'):
                     t['resolution'] = '%dx%d' % (t['width'], t['height'])
                 t['url'] = sanitize_url(t['url'])
-            if self.params.get('check_formats'):
-                info_dict['thumbnails'] = LazyList(filter(test_thumbnail, thumbnails[::-1])).reverse()
+
+            if self.params.get('check_formats') is not False:
+                info_dict['thumbnails'] = LazyList(filter(thumbnail_tester(), thumbnails[::-1])).reverse()
+            else:
+                info_dict['thumbnails'] = thumbnails
 
     def process_video_result(self, info_dict, download=True):
         assert info_dict.get('_type', 'video') == 'video'
@@ -3107,17 +3125,6 @@ class YoutubeDL(object):
             res += '~' + format_bytes(fdict['filesize_approx'])
         return res
 
-    def _format_note_table(self, f):
-        def join_fields(*vargs):
-            return ', '.join((val for val in vargs if val != ''))
-
-        return join_fields(
-            'UNSUPPORTED' if f.get('ext') in ('f4f', 'f4m') else '',
-            format_field(f, 'language', '[%s]'),
-            format_field(f, 'format_note'),
-            format_field(f, 'container', ignore=(None, f.get('ext'))),
-            format_field(f, 'asr', '%5dHz'))
-
     def list_formats(self, info_dict):
         formats = info_dict.get('formats', [info_dict])
         new_format = (
@@ -3140,11 +3147,15 @@ class YoutubeDL(object):
                     format_field(f, 'acodec', default='unknown').replace('none', ''),
                     format_field(f, 'abr', '%3dk'),
                     format_field(f, 'asr', '%5dHz'),
-                    self._format_note_table(f)]
-                for f in formats
-                if f.get('preference') is None or f['preference'] >= -1000]
+                    ', '.join(filter(None, (
+                        'UNSUPPORTED' if f.get('ext') in ('f4f', 'f4m') else '',
+                        format_field(f, 'language', '[%s]'),
+                        format_field(f, 'format_note'),
+                        format_field(f, 'container', ignore=(None, f.get('ext'))),
+                        format_field(f, 'asr', '%5dHz')))),
+                ] for f in formats if f.get('preference') is None or f['preference'] >= -1000]
             header_line = ['ID', 'EXT', 'RESOLUTION', 'FPS', '|', ' FILESIZE', '  TBR', 'PROTO',
-                           '|', 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'NOTE']
+                           '|', 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'MORE INFO']
         else:
             table = [
                 [
