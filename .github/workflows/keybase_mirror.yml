@@ -1,0 +1,34 @@
+name: Merge upstream
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  push:
+    branches-ignore:
+      - gh-pages
+  workflow_dispatch:
+    inputs:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Install Keybase
+      run: |
+        wget https://prerelease.keybase.io/keybase_amd64.deb -O keybase.deb
+        sudo apt install -y ./keybase.deb && sudo apt install -fy
+    - name: Configure git
+      run: |
+        git remote add keybase keybase://public/nao20010128nao/ytdl-patched
+        git remote set-url --add keybase keybase://private/nao20010128nao/ytdl-patched
+        git branch -d gh-pages
+    - name: Configure Keybase
+      run: |
+        keybase oneshot --username nao20010128nao --paperkey "${{ secrets.KEYBASE_PAPER_KEY }}"
+    - name: Push to Keybase
+      run: |
+        git push --all  keybase
+        git push --tags keybase
