@@ -1,4 +1,4 @@
-name: Merge upstream
+name: Push to Keybase
 
 on:
   schedule:
