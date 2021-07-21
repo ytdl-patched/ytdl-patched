@@ -65,7 +65,7 @@ class RtmpFD(FileDownloader):
                             'eta': eta,
                             'elapsed': time_now - start,
                             'speed': speed,
-                        })
+                        }, info_dict)
                         cursor_in_new_line = False
                     else:
                         # no percent for live streams
@@ -81,7 +81,7 @@ class RtmpFD(FileDownloader):
                                 'status': 'downloading',
                                 'elapsed': time_now - start,
                                 'speed': speed,
-                            })
+                            }, info_dict)
                             cursor_in_new_line = False
                         elif self.params.get('verbose', False):
                             if not cursor_in_new_line:
@@ -207,7 +207,7 @@ class RtmpFD(FileDownloader):
                 'filename': filename,
                 'status': 'finished',
                 'elapsed': time.time() - started,
-            })
+            }, info_dict)
             return True
         else:
             self.to_stderr('\n')

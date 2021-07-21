@@ -1,5 +1,6 @@
 from __future__ import division, unicode_literals
 
+import copy
 import re
 import sys
 import time
@@ -370,7 +371,7 @@ class FileDownloader(object):
                     'filename': filename,
                     'status': 'finished',
                     'total_bytes': self.ydl.getsize(encodeFilename(filename)),
-                })
+                }, info_dict)
                 return True, False
 
         if subtitle is False:
@@ -429,9 +430,14 @@ class FileDownloader(object):
         """Real download process. Redefine in subclasses."""
         raise NotImplementedError('This method must be implemented by subclasses')
 
-    def _hook_progress(self, status):
+    def _hook_progress(self, status, info_dict):
+        if not self._progress_hooks:
+            return
+        info_dict = dict(info_dict)
+        for key in ('__original_infodict', '__postprocessors'):
+            info_dict.pop(key, None)
         for ph in self._progress_hooks:
-            ph(status)
+            ph({**status, 'info_dict': copy.deepcopy(info_dict)})
 
     def add_progress_hook(self, ph):
         # See YoutubeDl.py (search for progress_hooks) for a description of

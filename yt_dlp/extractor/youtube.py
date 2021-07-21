@@ -39,10 +39,12 @@ from ..utils import (
     int_or_none,
     intlist_to_bytes,
     mimetype2ext,
+    network_exceptions,
     orderedSet,
     parse_codecs,
     parse_count,
     parse_duration,
+    parse_iso8601,
     qualities,
     remove_start,
     smuggle_url,
@@ -98,7 +100,9 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             self.report_warning(message)
 
         # username+password login is broken
-        if self._LOGIN_REQUIRED and self.get_param('cookiefile') is None:
+        if (self._LOGIN_REQUIRED
+                and self.get_param('cookiefile') is None
+                and self.get_param('cookiesfrombrowser') is None):
             self.raise_login_required(
                 'Login details are needed to download this content', method='cookies')
         username, password = self._get_login_info()
@@ -517,13 +521,15 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         yt_cookies = self._get_cookies('https://www.youtube.com')
         sapisid_cookie = dict_get(
             yt_cookies, ('__Secure-3PAPISID', 'SAPISID'))
-        if sapisid_cookie is None:
+        if sapisid_cookie is None or not sapisid_cookie.value:
             return
         time_now = round(time.time())
         # SAPISID cookie is required if not already present
         if not yt_cookies.get('SAPISID'):
+            self.write_debug('Copying __Secure-3PAPISID cookie to SAPISID cookie', only_once=True)
             self._set_cookie(
                 '.youtube.com', 'SAPISID', sapisid_cookie.value, secure=True, expire_time=time_now + 3600)
+        self.write_debug('Extracted SAPISID cookie', only_once=True)
         # SAPISIDHASH algorithm from https://stackoverflow.com/a/32065323
         sapisidhash = hashlib.sha1(
             f'{time_now} {sapisid_cookie.value} {origin}'.encode('utf-8')).hexdigest()
@@ -755,12 +761,15 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
                     api_hostname=api_hostname, default_client=default_client,
                     note='%s%s' % (note, ' (retry #%d)' % count if count else ''))
             except ExtractorError as e:
-                if isinstance(e.cause, compat_HTTPError) and e.cause.code in (500, 503, 404):
+                if isinstance(e.cause, network_exceptions):
                     # Downloading page may result in intermittent 5xx HTTP error
                     # Sometimes a 404 is also recieved. See: https://github.com/ytdl-org/youtube-dl/issues/28289
-                    last_error = 'HTTP Error %s' % e.cause.code
-                    if count < retries:
-                        continue
+                    # We also want to catch all other network exceptions since errors in later pages can be troublesome
+                    # See https://github.com/yt-dlp/yt-dlp/issues/507#issuecomment-880188210
+                    if not isinstance(e.cause, compat_HTTPError) or e.cause.code not in (403, 429):
+                        last_error = error_to_compat_str(e.cause or e)
+                        if count < retries:
+                            continue
                 if fatal:
                     raise
                 else:
@@ -1930,10 +1939,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         return sts
 
     def _mark_watched(self, video_id, player_responses):
-        playback_url = url_or_none((traverse_obj(
-            player_responses, ('playbackTracking', 'videostatsPlaybackUrl', 'baseUrl'),
-            expected_type=str) or [None])[0])
+        playback_url = traverse_obj(
+            player_responses, (..., 'playbackTracking', 'videostatsPlaybackUrl', 'baseUrl'),
+            expected_type=url_or_none, get_all=False)
         if not playback_url:
+            self.report_warning('Unable to mark watched')
             return
         parsed_playback_url = compat_urlparse.urlparse(playback_url)
         qs = compat_urlparse.parse_qs(parsed_playback_url.query)
@@ -2607,8 +2617,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             self._get_requested_clients(url, smuggled_data),
             video_id, webpage, master_ytcfg, player_url, identity_token))
 
-        get_first = lambda obj, keys, **kwargs: (
-            traverse_obj(obj, (..., *variadic(keys)), **kwargs) or [None])[0]
+        get_first = lambda obj, keys, **kwargs: traverse_obj(obj, (..., *variadic(keys)), **kwargs, get_all=False)
 
         playability_statuses = traverse_obj(
             player_responses, (..., 'playabilityStatus'), expected_type=dict, default=[])
@@ -2679,17 +2688,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             else:
                 self.to_screen('Downloading just video %s because of --no-playlist' % video_id)
 
-        category = get_first(microformats, 'category') or search_meta('genre')
-        channel_id = get_first(video_details, 'channelId') \
-            or get_first(microformats, 'externalChannelId') \
-            or search_meta('channelId')
-        duration = int_or_none(
-            get_first(video_details, 'lengthSeconds')
-            or get_first(microformats, 'lengthSeconds')) \
-            or parse_duration(search_meta('duration'))
+        live_broadcast_details = traverse_obj(microformats, (..., 'liveBroadcastDetails'))
         is_live = get_first(video_details, 'isLive')
-        is_upcoming = get_first(video_details, 'isUpcoming')
-        owner_profile_url = get_first(microformats, 'ownerProfileUrl')
+        if is_live is None:
+            is_live = get_first(live_broadcast_details, 'isLiveNow')
 
         streaming_data = traverse_obj(player_responses, (..., 'streamingData'), default=[])
         formats = list(self._extract_formats(streaming_data, video_id, player_url, is_live))
@@ -2768,6 +2770,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # See: https://github.com/ytdl-org/youtube-dl/issues/29049, https://github.com/yt-dlp/yt-dlp/issues/340
         # List of possible thumbnails - Ref: <https://stackoverflow.com/a/20542029>
         hq_thumbnail_names = ['maxresdefault', 'hq720', 'sddefault', 'sd1', 'sd2', 'sd3']
+        # TODO: Test them also? - For some videos, even these don't exist
         guaranteed_thumbnail_names = [
             'hqdefault', 'hq1', 'hq2', 'hq3', '0',
             'mqdefault', 'mq1', 'mq2', 'mq3',
@@ -2786,6 +2789,29 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             i = next((i for i, t in enumerate(thumbnail_names) if f'/{video_id}/{t}' in thumb['url']), n_thumbnail_names)
             thumb['preference'] = (0 if '.webp' in thumb['url'] else -1) - (2 * i)
         self._remove_duplicate_formats(thumbnails)
+
+        category = get_first(microformats, 'category') or search_meta('genre')
+        channel_id = str_or_none(
+            get_first(video_details, 'channelId')
+            or get_first(microformats, 'externalChannelId')
+            or search_meta('channelId'))
+        duration = int_or_none(
+            get_first(video_details, 'lengthSeconds')
+            or get_first(microformats, 'lengthSeconds')
+            or parse_duration(search_meta('duration'))) or None
+        owner_profile_url = get_first(microformats, 'ownerProfileUrl')
+
+        live_content = get_first(video_details, 'isLiveContent')
+        is_upcoming = get_first(video_details, 'isUpcoming')
+        if is_live is None:
+            if is_upcoming or live_content is False:
+                is_live = False
+        if is_upcoming is None and (live_content or is_live):
+            is_upcoming = False
+        live_starttime = parse_iso8601(get_first(live_broadcast_details, 'startTimestamp'))
+        live_endtime = parse_iso8601(get_first(live_broadcast_details, 'endTimestamp'))
+        if not duration and live_endtime and live_starttime:
+            duration = live_endtime - live_starttime
 
         info = {
             'id': video_id,
@@ -2813,9 +2839,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'webpage_url': webpage_url,
             'categories': [category] if category else None,
             'tags': keywords,
-            'is_live': is_live,
             'playable_in_embed': get_first(playability_statuses, 'playableInEmbed'),
-            'was_live': get_first(video_details, 'isLiveContent'),
+            'is_live': is_live,
+            'was_live': (False if is_live or is_upcoming or live_content is False
+                         else None if is_live is None or is_upcoming is None
+                         else live_content),
+            'live_status': 'is_upcoming' if is_upcoming else None,  # rest will be set by YoutubeDL
+            'release_timestamp': live_starttime,
         }
 
         pctr = get_first(player_responses, ('captions', 'playerCaptionsTracklistRenderer'), expected_type=dict)
