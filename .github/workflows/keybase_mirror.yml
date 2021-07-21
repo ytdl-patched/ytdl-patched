@@ -16,6 +16,9 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+    - name: Pull all bracnhes
+      run: git push --all origin
+      continue-on-error: true
     - name: Install Keybase
       run: |
         wget https://prerelease.keybase.io/keybase_amd64.deb -O keybase.deb
