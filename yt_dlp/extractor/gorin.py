@@ -57,7 +57,6 @@ class GorinVideoIE(InfoExtractor):
             r'data-json="(.+?)"', webpage, 'details', group=1)
         rdet = unescapeHTML(rdet)
         details = self._parse_json(rdet, video_id)
-        print(details)
 
         # all uses this account
         p_id = '4774017240001'
