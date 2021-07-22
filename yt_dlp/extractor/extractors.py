@@ -500,6 +500,7 @@ from .googlepodcasts import (
     GooglePodcastsFeedIE,
 )
 from .googlesearch import GoogleSearchIE
+from .gorin import GorinIE
 from .goshgay import GoshgayIE
 from .gputechconf import GPUTechConfIE
 from .groupon import GrouponIE
