@@ -2,10 +2,7 @@
 from __future__ import unicode_literals
 
 from .common import InfoExtractor
-from ..utils import (
-    smuggle_url,
-    unescapeHTML,
-)
+from ..utils import unescapeHTML
 
 
 class GorinLiveIE(InfoExtractor):
@@ -29,9 +26,7 @@ class GorinLiveIE(InfoExtractor):
         # all uses this account
         p_id = '4774017240001'
         r_id = live['video_id']
-        bc_url = smuggle_url(
-            self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id),
-            {'geo_countries': ['JP']})
+        bc_url = self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id)
 
         return {
             '_type': 'url_transparent',
@@ -61,9 +56,7 @@ class GorinVideoIE(InfoExtractor):
         # all uses this account
         p_id = '4774017240001'
         r_id = details.get('video_id') or video_id
-        bc_url = smuggle_url(
-            self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id),
-            {'geo_countries': ['JP']})
+        bc_url = self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id)
 
         return {
             '_type': 'url_transparent',
