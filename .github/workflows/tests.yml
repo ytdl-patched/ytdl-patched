@@ -45,7 +45,7 @@ jobs:
       # main script
       - name: Run test
         continue-on-error: ${{ matrix.ytdl_test_set.may_fail || matrix.python.may_fail }}
-        run: ./devscripts/run_tests.sh
+        run: ./devscripts/run_tests.sh ${{ matrix.ytdl_test_set.name }}
   flake8:
     runs-on: ubuntu-latest
     steps:
