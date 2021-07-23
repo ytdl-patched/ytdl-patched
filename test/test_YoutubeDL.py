@@ -1108,7 +1108,7 @@ class TestFilenameTest(unittest.TestCase):
                 super(_YDL, self).__init__(*args, **kwargs)
 
         ydl = _YDL({
-            'test_filename': 'python3 test/filename_test.py {}',
+            'test_filename': 'python3 test/testdata/fntest/exc.py {}',
         })
 
         self.assertTrue(ydl.test_filename_external("It's a small world after all"))
