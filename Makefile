@@ -3,6 +3,8 @@ all: youtube-dl README.md CONTRIBUTING.md README.txt youtube-dl.1 youtube-dl.bas
 clean: clean-test clean-dist clean-cache
 completions: bash-completion fish-completion zsh-completion
 
+lazy-extractors: yt_dlp/extractor/lazy_extractors.py
+
 PREFIX ?= /usr/local
 DESTDIR ?= .
 BINDIR ?= $(PREFIX)/bin
@@ -32,24 +34,13 @@ codetest:
 	flake8 .
 
 test:
-	#nosetests --with-coverage --cover-package=yt_dlp --cover-html --verbose --processes 4 test
-	nosetests --verbose test
+	$(PYTHON) -m pytest
 	$(MAKE) codetest
 
 ot: offlinetest
 
-# Keep this list in sync with devscripts/run_tests.sh
 offlinetest: codetest
-	$(PYTHON) -m nose --verbose test \
-		--exclude test_age_restriction.py \
-		--exclude test_download.py \
-		--exclude test_iqiyi_sdk_interpreter.py \
-		--exclude test_socks.py \
-		--exclude test_subtitles.py \
-		--exclude test_write_annotations.py \
-		--exclude test_youtube_lists.py \
-		--exclude test_youtube_signature.py \
-		--exclude test_websocket.py
+	$(PYTHON) -m pytest -k "not download"
 
 tar: youtube-dl.tar.gz
 

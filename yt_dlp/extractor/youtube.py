@@ -2344,7 +2344,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'playbackContext': {
                 'contentPlaybackContext': context
             },
-            'contentCheckOk': True
+            'contentCheckOk': True,
+            'racyCheckOk': True
         }
 
     @staticmethod
@@ -2390,21 +2391,22 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         ) or None
 
     def _extract_age_gated_player_response(self, client, video_id, ytcfg, identity_token, player_url, initial_pr):
-        gvi_client = self._YT_CLIENTS.get(f'_{client}_agegate')
-        if not gvi_client:
+        # get_video_info endpoint seems to be completely dead
+        gvi_client = None  # self._YT_CLIENTS.get(f'_{client}_agegate')
+        if gvi_client:
+            pr = self._parse_json(traverse_obj(
+                compat_parse_qs(self._download_webpage(
+                    self.http_scheme() + '//www.youtube.com/get_video_info', video_id,
+                    'Refetching age-gated %s info webpage' % gvi_client.lower(),
+                    'unable to download video info webpage', fatal=False,
+                    query=self._get_video_info_params(video_id, client=gvi_client))),
+                ('player_response', 0), expected_type=str) or '{}', video_id)
+            if pr:
+                return pr
+            self.report_warning('Falling back to embedded-only age-gate workaround')
+
+        if not self._YT_CLIENTS.get(f'_{client}_embedded'):
             return
-
-        pr = self._parse_json(traverse_obj(
-            compat_parse_qs(self._download_webpage(
-                self.http_scheme() + '//www.youtube.com/get_video_info', video_id,
-                'Refetching age-gated %s info webpage' % gvi_client.lower(),
-                'unable to download video info webpage', fatal=False,
-                query=self._get_video_info_params(video_id, client=gvi_client))),
-            ('player_response', 0), expected_type=str) or '{}', video_id)
-        if pr:
-            return pr
-
-        self.report_warning('Falling back to embedded-only age-gate workaround')
         embed_webpage = None
         if client == 'web' and 'configs' not in self._configuration_arg('player_skip'):
             embed_webpage = self._download_webpage(
@@ -2443,12 +2445,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 webpage, self._YT_INITIAL_PLAYER_RESPONSE_RE,
                 video_id, 'initial player response')
 
-        age_gated = False
         for client in clients:
             player_ytcfg = master_ytcfg if client == 'web' else {}
-            if age_gated:
-                pr = None
-            elif client == 'web' and initial_pr:
+            if client == 'web' and initial_pr:
                 pr = initial_pr
             else:
                 if client == 'web_music' and 'configs' not in self._configuration_arg('player_skip'):
@@ -2460,8 +2459,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     client, video_id, player_ytcfg or master_ytcfg, player_ytcfg, identity_token, player_url, initial_pr)
             if pr:
                 yield pr
-            if age_gated or traverse_obj(pr, ('playabilityStatus', 'reason')) in self._AGE_GATE_REASONS:
-                age_gated = True
+            if traverse_obj(pr, ('playabilityStatus', 'reason')) in self._AGE_GATE_REASONS:
                 pr = self._extract_age_gated_player_response(
                     client, video_id, player_ytcfg or master_ytcfg, identity_token, player_url, initial_pr)
                 if pr:
@@ -2848,7 +2846,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'release_timestamp': live_starttime,
         }
 
-        pctr = get_first(player_responses, ('captions', 'playerCaptionsTracklistRenderer'), expected_type=dict)
+        pctr = traverse_obj(player_responses, (..., 'captions', 'playerCaptionsTracklistRenderer'), expected_type=dict)
+        # Converted into dicts to remove duplicates
+        captions = {
+            sub.get('baseUrl'): sub
+            for sub in traverse_obj(pctr, (..., 'captionTracks', ...), default=[])}
+        translation_languages = {
+            lang.get('languageCode'): lang.get('languageName')
+            for lang in traverse_obj(pctr, (..., 'translationLanguages', ...), default=[])}
         subtitles = {}
         if pctr:
             def process_language(container, base_url, lang_code, sub_name, query):
@@ -2863,8 +2868,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         'name': sub_name,
                     })
 
-            for caption_track in (pctr.get('captionTracks') or []):
-                base_url = caption_track.get('baseUrl')
+            for base_url, caption_track in captions.items():
                 if not base_url:
                     continue
                 if caption_track.get('kind') != 'asr':
@@ -2875,18 +2879,19 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         continue
                     process_language(
                         subtitles, base_url, lang_code,
-                        try_get(caption_track, lambda x: x['name']['simpleText']),
+                        traverse_obj(caption_track, ('name', 'simpleText')),
                         {})
                     continue
-                automatic_captions = info['automatic_captions']
-                for translation_language in (pctr.get('translationLanguages') or []):
-                    translation_language_code = translation_language.get('languageCode')
-                    if not translation_language_code:
+                automatic_captions = {}
+                for trans_code, trans_name in translation_languages.items():
+                    if not trans_code:
                         continue
                     process_language(
-                        automatic_captions, base_url, translation_language_code,
-                        self._get_text(translation_language.get('languageName'), max_runs=1),
-                        {'tlang': translation_language_code})
+                        automatic_captions, base_url, trans_code,
+                        self._get_text(trans_name, max_runs=1),
+                        {'tlang': trans_code})
+                info['automatic_captions'] = automatic_captions
+        info['subtitles'] = subtitles
 
         parsed_url = compat_urllib_parse_urlparse(url)
         for component in [parsed_url.fragment, parsed_url.query]:
