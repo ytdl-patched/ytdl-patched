@@ -19,11 +19,12 @@ jobs:
     strategy:
       matrix:
         python: [
+          { name: '3.10-dev', may_fail: false, major: 3, special: '' },
           { name: '3.9', may_fail: false, major: 3, special: '' },
           { name: '3.8', may_fail: false, major: 3, special: '' },
           { name: '3.7', may_fail: false, major: 3, special: '' },
           { name: 'pypy-3.7', may_fail: false, major: 3, special: '' },
-          { name: 'jython', may_fail: true, major: 2, special: 'jython' },
+          # { name: 'jython', may_fail: true, major: 2, special: 'jython' },
           # { name: 'ironpython', may_fail: true, major: 2, special: 'iron' },
         ]
         ytdl_test_set: [
