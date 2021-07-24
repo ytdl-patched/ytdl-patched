@@ -3,9 +3,6 @@ name: Push to Keybase
 on:
   schedule:
     - cron: "0 */6 * * *"
-  push:
-    branches-ignore:
-      - gh-pages
   workflow_dispatch:
     inputs:
 
