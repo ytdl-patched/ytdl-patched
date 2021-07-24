@@ -246,7 +246,10 @@ class NiconicoIE(NiconicoBaseIE):
             self._downloader.report_warning('unable to log in: bad username or password')
         return login_ok
 
-    def _extract_format_for_quality(self, api_data, video_id, audio_quality, video_quality, dmc_protocol):
+    def _extract_format_for_quality(
+            self, api_data, video_id,
+            audio_quality, video_quality,
+            dmc_protocol, segment_duration=6000):
         def yesno(boolean):
             return 'yes' if boolean else 'no'
 
@@ -292,7 +295,7 @@ class NiconicoIE(NiconicoBaseIE):
             encryption = try_get(api_data, lambda x: x['media']['delivery']['encryption'], dict)
             protocol_parameters = {
                 'hls_parameters': {
-                    'segment_duration': 6000,
+                    'segment_duration': segment_duration,
                     'transfer_preset': '',
                     'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
                     'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
@@ -431,13 +434,19 @@ class NiconicoIE(NiconicoBaseIE):
         def get_video_info(items):
             return dict_get(api_data['video'], items)
 
+        # --extractor-args niconico:segment_duration=TIME
+        # TIME is in milliseconds. should not be changed unless you're an experienced NicoNico investigator
+        segment_duration = try_get(self._configuration_arg('segment_duration'), lambda x: int(x[0]), int) or 6000
         quality_info = api_data['media']['delivery']['movie']
         session_api_data = quality_info['session']
         if quality_info:  # "New" HTML5 videos
             for (audio_quality, video_quality, protocol) in itertools.product(quality_info['audios'], quality_info['videos'], session_api_data['protocols']):
                 if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
                     continue
-                fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
+                fmt = self._extract_format_for_quality(
+                    api_data, video_id,
+                    audio_quality, video_quality,
+                    protocol, segment_duration)
                 if fmt:
                     formats.append(fmt)
 
