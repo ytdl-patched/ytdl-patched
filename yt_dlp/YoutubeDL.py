@@ -3166,6 +3166,14 @@ class YoutubeDL(object):
             'list-formats' not in self.params.get('compat_opts', [])
             and self.params.get('listformats_table', True) is not False)
         if new_format:
+            def format_protocol(f):
+                proto = shorten_protocol_name(f.get('protocol', '').replace("native", "n"))
+                exp_proto = shorten_protocol_name(f.get('expected_protocol', '').replace("native", "n"))
+                if exp_proto:
+                    return f'{exp_proto} ({proto})'
+                else:
+                    return proto
+
             table = [
                 [
                     format_field(f, 'format_id'),
@@ -3175,7 +3183,7 @@ class YoutubeDL(object):
                     '|',
                     format_field(f, 'filesize', ' %s', func=format_bytes) + format_field(f, 'filesize_approx', '~%s', func=format_bytes),
                     format_field(f, 'tbr', '%4dk'),
-                    shorten_protocol_name(f.get('protocol', '').replace("native", "n")),
+                    format_protocol(f),
                     '|',
                     format_field(f, 'vcodec', default='unknown').replace('none', ''),
                     format_field(f, 'vbr', '%4dk'),
