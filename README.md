@@ -17,7 +17,7 @@ A command-line program to download videos from YouTube and many other [video pla
 - https://codeberg.org/nao20010128nao/ytdl-patched (secondary)
 - [In my Keybase account](https://book.keybase.io/git) (secondary)
   - spoiler: you can clone it with `git clone keybase://public/nao20010128nao/ytdl-patched`
-- https://ytdl-patched.vercel.app/ (just for fun, no longer synced)
+- https://bookish-octo-barnacle.vercel.app/ (just for fun, no longer synced)
 - https://ytdl-patched.netlify.app/ (just for fun, no longer synced)
 
 <!-- MARKER BEGIN -->
@@ -122,6 +122,15 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
 
+* **New extractor arguments**: Some extractor arguments are added.
+
+| Name | Extractor | Working? | Recommended? | Description |
+|---|---|---|---|---|
+| `segment_duration` | `niconico` | Yes | No *1 | Changes segment duration (in **milliseconds**) for DMC formats.<br>Only have effects for HLS formats. |
+| `mode` | `y2mate` | No | No | Changes mode for extraction.<br>One of `normal` and `rush`.<br>Defaults to `normal`.<br>`rush` mode is broken.  |
+
+*1: **READ CAREFULLY**: Using it will make non-standard DMC request(s). You may be being banned of your account or IP address by using it. Use it at your own risk. <!-- It's better to use this option with `-N` if you really don't mind. -->
+
 ## NEW FEATURES IN YT-DLP
 The major new features from the latest release of [blackjack4494/yt-dlc](https://github.com/blackjack4494/yt-dlc) are:
 
@@ -184,7 +193,7 @@ Some of yt-dlp's default options are different from that of youtube-dl and youtu
 
 * The options `--id`, `--auto-number` (`-A`), `--title` (`-t`) and `--literal` (`-l`), no longer work. See [removed options](#Removed) for details
 * `avconv` is not supported as as an alternative to `ffmpeg`
-* The default [output template](#output-template) is `%(title)s [%(id)s].%(ext)s`. There is no real reason for this change. This was changed before yt-dlp was ever made public and now there are no plans to change it back to `%(title)s.%(id)s.%(ext)s`. Instead, you may use `--compat-options filename`
+* ~~The default [output template](#output-template) is `%(title)s [%(id)s].%(ext)s`. There is no real reason for this change. This was changed before yt-dlp was ever made public and now there are no plans to change it back to `%(title)s.%(id)s.%(ext)s`. Instead, you may use `--compat-options filename`~~ **This is reverted in ytdl-patched to keep consistent with old versions. See above.**
 * The default [format sorting](sorting-formats) is different from youtube-dl and prefers higher resolution and better codecs rather than higher bitrates. You can use the `--format-sort` option to change this to any order you prefer, or use `--compat-options format-sort` to use youtube-dl's sorting order
 * The default format selector is `bv*+ba/b`. This means that if a combined video + audio format that is better than the best video-only format is found, the former will be prefered. Use `-f bv+ba/b` or `--compat-options format-spec` to revert this
 * Unlike youtube-dlc, yt-dlp does not allow merging multiple audio/video streams into one file by default (since this conflicts with the use of `-f bv*+ba`). If needed, this feature must be enabled using `--audio-multistreams` and `--video-multistreams`. You can also use `--compat-options multistreams` to enable both
@@ -219,26 +228,26 @@ yt-dlp is not platform specific. So it should work on your Unix box, on Windows 
 
 You can install yt-dlp using one of the following methods:
 * Download the binary from the [latest release](https://github.com/nao20010128nao/ytdl-patched/releases/latest) (recommended method)
-* ~~Use [PyPI package](https://pypi.org/project/yt-dlp): `python3 -m pip install --upgrade yt-dlp`~~
+* ~~Use [PyPI package](https://pypi.org/project/yt-dlp): `python3 -m pip install --upgrade yt-dlp`~~ Not available.
 * Use pip+git: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched.git@release`
-* Install master branch: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched`
+* Install ytdlp branch: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched.git@ytdlp`
 
 Note that on some systems, you may need to use `py` or `python` instead of `python3`
 
 UNIX users (Linux, macOS, BSD) can also install the [latest release](https://github.com/nao20010128nao/ytdl-patched/releases/latest) one of the following ways:
 
 ```
-sudo curl -L https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -o /usr/local/bin/yt-dlp
+sudo curl -L https://bookish-octo-barnacle.vercel.app/api/release/latest/youtube-dl -o /usr/local/bin/yt-dlp
 sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
 ```
-sudo wget https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -O /usr/local/bin/yt-dlp
+sudo wget https://bookish-octo-barnacle.vercel.app/api/release/latest/youtube-dl -O /usr/local/bin/yt-dlp
 sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
 ```
-sudo aria2c https://ytdl-patched.vercel.app/api/release/latest/youtube-dl -o /usr/local/bin/yt-dlp
+sudo aria2c https://bookish-octo-barnacle.vercel.app/api/release/latest/youtube-dl -o /usr/local/bin/yt-dlp
 sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
