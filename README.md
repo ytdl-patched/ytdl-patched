@@ -178,16 +178,6 @@ See [changelog](Changelog.md) or [commits](https://github.com/yt-dlp/yt-dlp/comm
 
 If you are coming from [youtube-dl](https://github.com/ytdl-org/youtube-dl), the amount of changes are very large. Compare [options](#options) and [supported sites](supportedsites.md) with youtube-dl's to get an idea of the massive number of features/patches [youtube-dlc](https://github.com/blackjack4494/yt-dlc) has accumulated.
 
-## TODO
-- Codespaces Docker
-    - daff59506ea6593adcfbeff895b09eb462ff9079
-    - 23fe6624906622d7674856be73b151c99432a229
-- TwitCasting
-    - c47bf3a65857e42917772a9ad914a3517ac17d5f
-    - 73afcccf49ad0ab778368477d0db254bb4a3addb
-    - 400beb0ad168bf31b9bce9b19c5c886c23b4ad51
-- y2mate support
-
 ### Differences in default behavior
 
 Some of yt-dlp's default options are different from that of youtube-dl and youtube-dlc. (Some of them will be reverted in ytdl-patched)
