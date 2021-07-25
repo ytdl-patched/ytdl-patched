@@ -12,7 +12,7 @@ from test.helper import try_rm
 
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-download_file = join(root_dir, 'test.webm')
+download_file = join(root_dir, 'test.mkv')
 
 
 class TestOverwrites(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestOverwrites(unittest.TestCase):
         outp = subprocess.Popen(
             [
                 sys.executable, 'yt_dlp/__main__.py',
-                '-o', 'test.webm',
+                '-o', 'test.mkv',
                 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
             ], cwd=root_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         sout, serr = outp.communicate()
@@ -36,7 +36,7 @@ class TestOverwrites(unittest.TestCase):
         outp = subprocess.Popen(
             [
                 sys.executable, 'yt_dlp/__main__.py', '--yes-overwrites',
-                '-o', 'test.webm',
+                '-o', 'test.mkv',
                 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
             ], cwd=root_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         sout, serr = outp.communicate()
@@ -45,7 +45,7 @@ class TestOverwrites(unittest.TestCase):
         self.assertTrue(os.path.getsize(download_file) > 1)
 
     def tearDown(self):
-        try_rm(join(root_dir, 'test.webm'))
+        try_rm(download_file)
 
 
 if __name__ == '__main__':
