@@ -53,6 +53,7 @@ class Y2mateIE(Y2mateBaseIE):
             mode = 'normal'
 
         if mode == 'rush':
+            self.report_warning('Please run again without rush mode')
             return self._real_extract_rush(url)
         else:
             return self._real_extract_normal(url)
@@ -115,6 +116,7 @@ class Y2mateIE(Y2mateBaseIE):
             if not video_url:
                 continue
 
+            preference = int_or_none(self._search_regex(r'(\d+)p?', format_name, 'video size', group=1, default=None))
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
@@ -123,7 +125,8 @@ class Y2mateIE(Y2mateBaseIE):
                 'url': video_url,
                 'vcodec': 'unknown',
                 'acodec': 'unknown',
-                'preference': int_or_none(self._search_regex(r'(\d+)p?', format_name, 'video size', group=1, default=None)),
+                'preference': preference,
+                'quality': preference,
             })
 
         for rows in re.finditer(r'''(?x)<tr>\s*
@@ -170,6 +173,7 @@ class Y2mateIE(Y2mateBaseIE):
                 'vcodec': 'none',
                 'acodec': 'unknown',
                 'preference': -1,
+                'quality': -1,
             })
 
         self._sort_formats(formats)
