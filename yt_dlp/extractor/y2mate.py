@@ -3,12 +3,13 @@ from __future__ import unicode_literals
 
 import re
 
-from ..compat import compat_urllib_parse_urlencode
+from ..compat import compat_urllib_parse_urlencode, compat_str
 from ..utils import (
     ExtractorError,
     int_or_none,
     parse_filesize,
     urlencode_postdata,
+    try_get,
 )
 from .common import InfoExtractor
 from .youtube import YoutubeIE
@@ -35,15 +36,29 @@ class Y2mateBaseIE(InfoExtractor):
         return False
 
 
-class Y2mateRushingBaseIE(Y2mateBaseIE):
-    PREFIXES = ('y2r:', 'y2mater:', 'y2materush:')
-
-
 class Y2mateIE(Y2mateBaseIE):
     BASE_IE = YoutubeIE
     IE_NAME = 'y2mate'
+    RUSH_PREFIXES = ('y2r:', 'y2mater:', 'y2materush:')
 
     def _real_extract(self, url):
+        mode = try_get(self._configuration_arg('mode'), lambda x: x[0], compat_str)
+        if not mode:
+            # backward compatibility
+            for p in self.RUSH_PREFIXES:
+                if url.startswith(p):
+                    mode = 'rush'
+                    break
+        if not mode:
+            mode = 'normal'
+
+        if mode == 'rush':
+            self.report_warning('"rush" mode is currently broken, and there\'s no plan to be fixed.')
+            return self._real_extract_rush(url)
+        else:
+            return self._real_extract_normal(url)
+
+    def _real_extract_normal(self, url):
         video_id = self.BASE_IE._match_id(self.remove_prefix(url))
         self._download_webpage('https://www.y2mate.com/youtube/%s' % video_id, video_id)
         common_headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
@@ -165,12 +180,7 @@ class Y2mateIE(Y2mateBaseIE):
             'formats': formats,
         }
 
-
-class Y2mateRushingIE(Y2mateRushingBaseIE):
-    BASE_IE = YoutubeIE
-    IE_NAME = 'y2mate:rushing'
-
-    def _real_extract(self, url):
+    def _real_extract_rush(self, url):
         video_id = self.BASE_IE._match_id(self.remove_prefix(url))
         info_data = self._download_json('https://bookish-octo-barnacle.vercel.app/api/y2mate/youtube?id=%s' % video_id, video_id)
 

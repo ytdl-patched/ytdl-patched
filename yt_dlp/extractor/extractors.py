@@ -1738,10 +1738,7 @@ from .xtube import XTubeUserIE, XTubeIE
 from .xuite import XuiteIE
 from .xvideos import XVideosIE
 from .xxxymovies import XXXYMoviesIE
-from .y2mate import (
-    Y2mateIE,
-    Y2mateRushingIE,
-)
+from .y2mate import Y2mateIE
 from .yahoo import (
     YahooIE,
     YahooSearchIE,
