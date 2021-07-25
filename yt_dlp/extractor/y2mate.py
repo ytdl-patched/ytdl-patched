@@ -53,7 +53,6 @@ class Y2mateIE(Y2mateBaseIE):
             mode = 'normal'
 
         if mode == 'rush':
-            self.report_warning('"rush" mode is currently broken, and there\'s no plan to be fixed.')
             return self._real_extract_rush(url)
         else:
             return self._real_extract_normal(url)
