@@ -9,6 +9,7 @@ import math
 import random
 import re
 import xml.dom.minidom
+import xml.etree.ElementTree as ET
 from typing import Dict, Tuple
 
 
@@ -155,6 +156,49 @@ def parse_comments_bilibili2(f: str, fontsize: float, report_warning):
         except (AssertionError, AttributeError, IndexError, TypeError, ValueError):
             report_warning('Invalid comment: %s' % comment.toxml())
             continue
+
+
+def _subelem(parent, tag, text: str = None, **extra: dict):
+    extra = {k: str(v) for k, v in extra.items()}
+    e = ET.SubElement(parent, tag, **extra)
+    if text:
+        e.text = text
+
+
+def convert_niconico_json_to_xml(data: str) -> str:
+    # https://github.com/Hayao-H/Niconicome/blob/master/Niconicome/Models/Domain/Niconico/Download/Comment/CommentConverter.cs
+    # https://github.com/Hayao-H/Niconicome/blob/master/Niconicome/Models/Domain/Niconico/Net/Xml/Comment/Comment.cs
+    packet = ET.Element("packet")
+    for item in json.loads(data):
+        if 'chat' in item or 'content' in item:
+            comment = item.get('chat') or item
+            if 'deleted' in comment:
+                continue
+            _subelem(
+                packet, "chat",
+                text=comment.get('content'),
+                thread=comment.get('thread') or '',
+                no=comment.get('no'),
+                vpos=comment.get('vpos'),
+                date=comment.get('date'),
+                anonymity=comment.get('anonymity') or 0,
+                user_id=comment.get('user_id'),
+                mail=comment.get('mail'),
+                premium=comment.get('premium') or 1,
+            )
+        elif 'thread' in item:
+            thread = item.get('thread')
+            _subelem(
+                packet, "thread",
+                resultcode=thread.get('resultcode') or 0,
+                thread=thread.get('thread') or '',
+                server_time=thread.get('server_time') or 0,
+                last_res=thread.get('last_res') or 0,
+                ticket=thread.get('ticket') or '',
+                revision=thread.get('revision') or 0,
+            )
+
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(packet, encoding='utf-8').decode('utf-8')
 
 
 PROCESSORS = {
@@ -515,4 +559,5 @@ def load_comments(input_text, input_format, stage_width, stage_height, reserve_b
 
 __all__ = [
     'load_comments',
+    'convert_niconico_json_to_xml',
 ]

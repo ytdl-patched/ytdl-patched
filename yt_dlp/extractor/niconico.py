@@ -21,7 +21,10 @@ from ..compat import (
     compat_urllib_parse_urlparse,
     compat_HTTPError,
 )
-from ..neonippori import load_comments
+from ..neonippori import (
+    load_comments,
+    convert_niconico_json_to_xml,
+)
 from ..utils import (
     dict_get,
     ExtractorError,
@@ -565,11 +568,15 @@ class NiconicoIE(NiconicoBaseIE):
             raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0)
             raw_danmaku = json.dumps(raw_danmaku)
             danmaku = load_comments(raw_danmaku, 'NiconicoJson', 640, 360, report_warning=self.report_warning)
+            xml_danmaku = convert_niconico_json_to_xml(raw_danmaku)
 
             info['subtitles'] = {
                 'jpn': [{
                     'ext': 'json',
                     'data': raw_danmaku,
+                }, {
+                    'ext': 'xml',
+                    'data': xml_danmaku,
                 }, {
                     'ext': 'ass',
                     'data': danmaku
