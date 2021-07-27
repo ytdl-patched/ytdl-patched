@@ -679,7 +679,7 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
                 continue
             count = video.get('count') or {}
             get_count = lambda x: int_or_none(count.get(x))
-            info = {
+            yield {
                 '_type': 'url',
                 'id': video_id,
                 'title': video.get('title'),
@@ -689,9 +689,8 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
                 'view_count': get_count('view'),
                 'comment_count': get_count('comment'),
                 'ie_key': NiconicoIE.ie_key(),
+                **self._parse_owner(video),
             }
-            info.update(self._parse_owner(video))
-            yield info
 
 
 class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
@@ -727,7 +726,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         entries = InAdvancePagedList(
             functools.partial(self._fetch_page, list_id),
             math.ceil(mylist['totalItemCount'] / self._PAGE_SIZE),
-            self._PAGE_SIZE)
+            self._PAGE_SIZE).getslice()
         result = self.playlist_result(
             entries, list_id, mylist.get('name'), mylist.get('description'))
         result.update(self._parse_owner(mylist))
@@ -789,7 +788,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         entries = InAdvancePagedList(
             functools.partial(self._fetch_page, list_id),
             math.ceil(mylist['totalCount'] / self._PAGE_SIZE),
-            self._PAGE_SIZE)
+            self._PAGE_SIZE).getslice()
         result = self.playlist_result(
             entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
         result.update(self._parse_owner(mylist))
