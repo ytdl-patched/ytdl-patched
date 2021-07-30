@@ -2494,7 +2494,8 @@ class YoutubeDL(object):
 
         if info_dict.get('ext') == 'mp4' and info_dict.get('is_live', False) and self.params.get('live_download_mkv', False):
             info_dict['format'] = info_dict['ext'] = 'mkv'
-            info_dict['protocol'] = 'ffmpeg'
+            if info_dict.get('protocol') not in ('ffmpeg', 'streamlink', 'websocket_frag'):
+                info_dict['protocol'] = 'ffmpeg'
 
         if self._match_entry(info_dict) is not None:
             return
