@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 import os.path
 import re
+from signal import signal
 import subprocess
 import sys
 import time
@@ -495,7 +496,7 @@ class FFmpegFD(ExternalFD):
             if isinstance(e, KeyboardInterrupt) and sys.platform != 'win32' and url not in ('-', 'pipe:'):
                 process_communicate_or_kill(proc, b'q')
             else:
-                proc.kill()
+                os.kill(proc.pid, signal.SIGINT)
                 proc.wait()
             raise
         return retval
