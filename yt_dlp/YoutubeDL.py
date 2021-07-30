@@ -2859,7 +2859,7 @@ class YoutubeDL(object):
                                   if 'protocol' in info_dict else None)
                     ffmpeg_fixup(downloader == 'HlsFD', 'malformed AAC bitstream detected', FFmpegFixupM3u8PP)
                     ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'malformed timestamps detected', FFmpegFixupTimestampPP)
-                    ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'malformed duration detected', FFmpegFixupDurationPP)
+                    ffmpeg_fixup(downloader in ('WebSocketFragmentFD', 'SteamlinkFD'), 'malformed duration detected', FFmpegFixupDurationPP)
 
                 fixup()
                 try:
