@@ -41,7 +41,6 @@ class YtdlHandler(logging.Handler):
 
 # Extractors in yt-dlp and ytdl-patched must take precedence over plugins in Streamlink
 # ... but GenericIE
-# so should be tested in "All extractors except Generic and Streamlink" -> Streamlink -> GenericIE
 class StreamlinkIE(InfoExtractor):
     _IE_DESC = 'Streamlink integration. Requires Streamlink installed via pip'
     _TESTS = [{
