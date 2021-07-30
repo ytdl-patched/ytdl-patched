@@ -52,6 +52,22 @@ class NiconicoBaseIE(InfoExtractor):
         'Origin': 'https://www.nicovideo.jp',
     }
 
+    _KNOWN_PLAYER_SIZE = {
+        '16:9': (640, 360),
+        '4:3': (480, 360),
+    }
+
+    def _parse_player_size(self, spec):
+        if not spec:
+            return 640, 360
+        if spec in self._KNOWN_PLAYER_SIZE:
+            return self._KNOWN_PLAYER_SIZE[spec]
+        if 'x' in spec:
+            w, h = tuple(int_or_none(x) for x in spec.split('x'))
+            if w and h:
+                return w, h
+        return 640, 360
+
 
 class NiconicoIE(NiconicoBaseIE):
     IE_NAME = 'niconico'
@@ -561,10 +577,13 @@ class NiconicoIE(NiconicoBaseIE):
         }
 
         if self._downloader.params.get('getcomments', False) or self._downloader.params.get('writesubtitles', False):
+            player_size = try_get(self._configuration_arg('player_size'), lambda x: x[0], compat_str)
+            w, h = self._parse_player_size(player_size)
+
             thread_ids = list(set(re.findall(r'threadIds&quot;:\[{&quot;id&quot;:([0-9]*)', webpage)))
             raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0)
             raw_danmaku = json.dumps(raw_danmaku)
-            danmaku = load_comments(raw_danmaku, 'NiconicoJson', 640, 360, report_warning=self.report_warning)
+            danmaku = load_comments(raw_danmaku, 'NiconicoJson', w, h, report_warning=self.report_warning)
             xml_danmaku = convert_niconico_json_to_xml(raw_danmaku)
 
             info['subtitles'] = {

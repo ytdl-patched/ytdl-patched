@@ -127,6 +127,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 | Name | Extractor | Working? | Recommended? | Description |
 |---|---|---|---|---|
 | `segment_duration` | `niconico` | Yes | No *1 | Changes segment duration (in **milliseconds**) for DMC formats.<br>Only have effects for HLS formats. |
+| `player_size` | `niconico` | Yes | No | Modifies the simulated size of player, needed to convert comments to subtitles. |
 | `mode` | `y2mate` | No | No | Changes mode for extraction.<br>One of `normal` and `rush`.<br>Defaults to `normal`.  |
 
 *1: **READ CAREFULLY**: Using it will make non-standard DMC request(s). You may be being banned of your account or IP address by using it. Use it at your own risk. <!-- It's better to use this option with `-N` if you really don't mind. -->
