@@ -2871,8 +2871,8 @@ OUTTMPL_TYPES = {
 # As of [1] format syntax is:
 #  %[mapping_key][conversion_flags][minimum_width][.precision][length_modifier]type
 # 1. https://docs.python.org/2/library/stdtypes.html#string-formatting
-STR_FORMAT_RE = r'''(?x)
-    (?<!%)
+STR_FORMAT_RE_TMPL = r'''(?x)
+    (?<!%)(?P<prefix>(?:%%)*)
     %
     (?P<has_key>\((?P<key>{0})\))?  # mapping key
     (?P<format>
@@ -2880,9 +2880,12 @@ STR_FORMAT_RE = r'''(?x)
         (?:\d+)?  # minimum field width (optional)
         (?:\.\d+)?  # precision (optional)
         [hlL]?  # length modifier (optional)
-        [diouxXeEfFgGcrs]  # conversion type
+        {1}  # conversion type
     )
 '''
+
+
+STR_FORMAT_TYPES = 'diouxXeEfFgGcrs'
 
 
 def limit_length(s, length):
