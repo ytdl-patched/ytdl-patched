@@ -46,7 +46,7 @@ for dirname, files in files_spec:
 params = {
     'data_files': data_files,
 }
-params['entry_points'] = {'console_scripts': ['yt-dlp = yt_dlp:main']}
+params['entry_points'] = {'console_scripts': ['youtube-dl = yt_dlp:main']}
 
 
 class build_lazy_extractors(Command):
