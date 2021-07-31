@@ -172,7 +172,7 @@ def parseOpts(overrideArguments=None):
         action='help',
         help='Print this help text and exit')
     general.add_option(
-        '--version',
+        '-V', '--version',
         action='version',
         help='Print program version and exit')
     general.add_option(
