@@ -118,6 +118,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `voicy`, `voicy:channel`
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
+    * `streamlink` (See below)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
@@ -131,6 +132,12 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 | `mode` | `y2mate` | No | No | Changes mode for extraction.<br>One of `normal` and `rush`.<br>Defaults to `normal`.  |
 
 *1: **READ CAREFULLY**: Using it will make non-standard DMC request(s). You may be being banned of your account or IP address by using it. Use it at your own risk. <!-- It's better to use this option with `-N` if you really don't mind. -->
+
+* **Streamlink integration**: You can download video sites that ytdl-patched don't support but Streamlink do. Currently works with Streamlink 2.3.0.
+    * **You have to install Streamlink via pip: `pip install -U streamlink`**
+    * ytdl-patched's extractor **takes precedence** even if Streamlink has appropriate plugin for the input URLs. To force Streamlink, prefix URL with `streamlink:`
+    * Format selections, extracting titles don't work at all due to limitation of Streamlink. Formats are sorted by Streamlink, and ytdl-patched is just providing it as returned. Filenames are automatically guessed from URLs.
+
 
 ## NEW FEATURES IN YT-DLP
 The major new features from the latest release of [blackjack4494/yt-dlc](https://github.com/blackjack4494/yt-dlc) are:
