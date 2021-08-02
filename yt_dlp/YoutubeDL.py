@@ -107,7 +107,6 @@ from .utils import (
     str_or_none,
     strftime_or_none,
     subtitles_filename,
-    ThrottledDownload,
     ReextractRequested,
     to_high_limit_path,
     traverse_obj,
@@ -1237,9 +1236,9 @@ class YoutubeDL(object):
                 self.report_error(msg)
             except ExtractorError as e:  # An error we somewhat expected
                 self.report_error(compat_str(e), e.format_traceback())
-            except (ThrottledDownload, ReextractRequested):
+            except (ReextractRequested, ) as e:
                 self.to_stderr('\r')
-                self.report_warning('The download speed is below throttle limit. Re-extracting data')
+                self.report_warning('%s Re-extracting data' % e.msg)
                 return wrapper(self, *args, **kwargs)
             except (MaxDownloadsReached, ExistingVideoReached, RejectedVideoReached):
                 raise
@@ -2924,7 +2923,7 @@ class YoutubeDL(object):
             info = self.filter_requested_info(json.loads('\n'.join(f)), self.params.get('clean_infojson', True))
         try:
             self.process_ie_result(info, download=True)
-        except (DownloadError, EntryNotInPlaylist, ThrottledDownload, ReextractRequested):
+        except (DownloadError, EntryNotInPlaylist, ReextractRequested):
             webpage_url = info.get('webpage_url')
             if webpage_url is not None:
                 self.report_warning('The info failed to download, trying with "%s"' % webpage_url)

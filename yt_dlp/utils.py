@@ -933,14 +933,16 @@ class RejectedVideoReached(YoutubeDLError):
     pass
 
 
-class ThrottledDownload(YoutubeDLError):
-    """ Download speed below --throttled-rate. """
-    pass
-
-
 class ReextractRequested(YoutubeDLError):
     """ Request re-extraction. """
-    pass
+    def __init__(self, msg='Re-extraction requested.') -> None:
+        super().__init__(msg)
+
+
+class ThrottledDownload(ReextractRequested):
+    """ Download speed below --throttled-rate. """
+    def __init__(self) -> None:
+        super().__init__('The download speed is below throttle limit.')
 
 
 class MaxDownloadsReached(YoutubeDLError):
