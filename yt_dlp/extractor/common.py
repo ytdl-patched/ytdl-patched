@@ -12,6 +12,10 @@ import re
 import sys
 import time
 import math
+try:
+    from typing import Generator, Iterator
+except ImportError:
+    from collections.abc import Generator, Iterator
 
 from ..compat import (
     compat_cookiejar_Cookie,
@@ -1608,9 +1612,10 @@ class InfoExtractor(object):
                 if not convertNone:
                     return None
             else:
-                if isinstance(value, (list, tuple)):
-                    value = value[0]
-                value = value.lower()
+                if isinstance(value, (list, tuple, Iterator, Generator)):
+                    value = next((x for x in value if x is not None), None)
+                if isinstance(value, compat_str):
+                    value = value.lower()
             conversion = self._get_field_setting(field, 'convert')
             if conversion == 'ignore':
                 return None
