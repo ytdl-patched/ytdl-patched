@@ -211,23 +211,16 @@ class NiconicoIE(NiconicoBaseIE):
     }, {
         'url': 'nicovideo:sm25182253',
         'only_matching': True,
-    }, {
-        'note': '11 chars long, but accepted by this IE',
-        'url': 'nico:sm8753',
-        'only_matching': True,
     }]
 
     _URL_BEFORE_ID_PART = r'(?:https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/|nico(?:nico|video)?:)'
-    _VALID_URL = r'(?:%s)?(?P<id>(?P<alphabet>[a-z]{2})?[0-9]+)' % _URL_BEFORE_ID_PART
+    _VALID_URL = r'%s(?P<id>(?P<alphabet>[a-z]{2})?[0-9]+)' % _URL_BEFORE_ID_PART
     _NETRC_MACHINE = 'niconico'
 
     @classmethod
     def suitable(cls, url):
         m = cls._valid_url_re().match(url)
         if not m:
-            return False
-        if len(url) == 11 and ':' not in url:
-            # this could be YouTube's video ID starting with "sm" but rest is number
             return False
         if m.group('alphabet') == 'lv':
             # niconico:live should take place

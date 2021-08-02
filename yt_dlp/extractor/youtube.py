@@ -1825,11 +1825,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'params': {
                 'extractor_args': {'youtube': {'player_skip': ['configs']}},
             },
-        },
-        {
-            'note': 'should be handled by this IE but NicoNicoIE',
-            'url': 'sm123456789',
-            'only_matching': True,
         }
     ]
 
