@@ -938,6 +938,11 @@ class ThrottledDownload(YoutubeDLError):
     pass
 
 
+class ReextractRequested(YoutubeDLError):
+    """ Request re-extraction. """
+    pass
+
+
 class MaxDownloadsReached(YoutubeDLError):
     """ --max-downloads limit has been reached. """
     pass
