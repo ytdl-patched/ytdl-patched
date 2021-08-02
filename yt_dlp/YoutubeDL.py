@@ -2689,6 +2689,10 @@ class YoutubeDL(object):
             info_dict = self.run_pp(MoveFilesAfterDownloadPP(self, False), info_dict)
         else:
             # Download
+            if not self.test_filename_external(full_filename):
+                self.to_screen(
+                    '[download] %s has rejected by external test process' % full_filename)
+                return
             try:
                 self.lock_file(info_dict)
 
@@ -2744,10 +2748,7 @@ class YoutubeDL(object):
                     if len(_protocols) == 1:  # All requested formats have same protocol
                         info_dict['protocol'] = _protocols.pop()
                     directly_mergable = FFmpegFD.can_merge_formats(info_dict)
-                    if not self.test_filename_external(full_filename):
-                        self.to_screen(
-                            '[download] %s has rejected by external test process' % full_filename)
-                    elif dl_filename is not None:
+                    if dl_filename is not None:
                         pass
                     elif (directly_mergable and get_suitable_downloader(
                             info_dict, self.params, to_stdout=(temp_filename == '-')) == FFmpegFD):
@@ -2798,13 +2799,9 @@ class YoutubeDL(object):
                 else:
                     # Just a single file
                     dl_filename = existing_file(full_filename, temp_filename)
-                    tfn_result = self.test_filename_external(full_filename)
-                    if tfn_result and dl_filename is None:
+                    if dl_filename is None:
                         success, real_download = self.dl(temp_filename, info_dict)
                         info_dict['__real_download'] = real_download
-                    elif not tfn_result:
-                        self.to_screen(
-                            '[download] %s has rejected by external test process' % full_filename)
 
                 dl_filename = dl_filename or temp_filename
                 info_dict['__finaldir'] = os.path.dirname(os.path.abspath(encodeFilename(full_filename)))
