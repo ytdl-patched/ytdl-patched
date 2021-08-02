@@ -4,9 +4,10 @@ import json
 import threading
 import time
 
+from .common import FileDownloader
+from ..downloader import get_suitable_downloader
 from ..extractor.niconico import NiconicoIE
 from .external import FFmpegFD
-from .common import FileDownloader
 from ..utils import (
     str_or_none,
     std_headers,
@@ -23,13 +24,11 @@ from ..websocket import (
 
 class NiconicoDmcFD(FileDownloader):
     """
-    Performs niconico DMC request and download it \n
-    Note that it very differs from upstream one
+    Performs niconico DMC request and download the video \n
+    Note that this FD very differs from upstream one
     """
 
     def real_download(self, filename, info_dict):
-        from ..downloader import get_suitable_downloader
-
         nie = self.ydl.get_info_extractor(NiconicoIE.ie_key())
 
         video_id = info_dict['video_id']
@@ -67,7 +66,7 @@ class NiconicoDmcFD(FileDownloader):
                 del m3u8_format['format_id'], m3u8_format['protocol']
                 new_info_dict.update(m3u8_format)
 
-        return get_suitable_downloader(new_info_dict)(self.ydl, self.params or {}).download(filename, new_info_dict)
+        return get_suitable_downloader(info_dict, params=self.params)(self.ydl, self.params).download(filename, new_info_dict)
 
 
 class NiconicoLiveFD(FileDownloader):

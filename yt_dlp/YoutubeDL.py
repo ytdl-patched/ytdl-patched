@@ -130,6 +130,7 @@ from .extractor import (
 )
 from .extractor.openload import PhantomJSwrapper
 from .downloader import (
+    FFmpegFD,
     get_suitable_downloader,
     shorten_protocol_name
 )
@@ -453,7 +454,8 @@ class YoutubeDL(object):
     compat_opts:       Compatibility options. See "Differences in default behavior".
                        The following options do not work when used through the API:
                        filename, abort-on-error, multistreams, no-live-chat,
-                       no-playlist-metafiles. Refer __init__.py for their implementation
+                       no-clean-infojson, no-playlist-metafiles.
+                       Refer __init__.py for their implementation
 
     The following parameters are not used by YoutubeDL itself, they are used by
     the downloader (see yt_dlp/downloader/common.py):
@@ -1817,6 +1819,7 @@ class YoutubeDL(object):
                         if not allow_multiple_streams[aud_vid] and fmt_info.get(aud_vid[0] + 'codec') != 'none':
                             if get_no_more[aud_vid]:
                                 formats_info.pop(i)
+                                break
                             get_no_more[aud_vid] = True
 
             if len(formats_info) == 1:
@@ -2463,7 +2466,7 @@ class YoutubeDL(object):
             }
         else:
             params = self.params
-        fd = get_suitable_downloader(info, params)(self, params)
+        fd = get_suitable_downloader(info, params, to_stdout=(name == '-'))(self, params)
         if not test:
             for ph in self._progress_hooks:
                 fd.add_progress_hook(ph)
@@ -2721,6 +2724,8 @@ class YoutubeDL(object):
                         info_dict['ext'] = 'mkv'
 
                     def correct_ext(filename):
+                        if filename == '-':
+                            return filename
                         filename_real_ext = os.path.splitext(filename)[1][1:]
                         filename_wo_ext = (
                             os.path.splitext(filename)[0]
@@ -2735,20 +2740,19 @@ class YoutubeDL(object):
                     info_dict['__real_download'] = False
 
                     _protocols = set(determine_protocol(f) for f in requested_formats)
-                    if len(_protocols) == 1:
+                    if len(_protocols) == 1:  # All requested formats have same protocol
                         info_dict['protocol'] = _protocols.pop()
-                    directly_mergable = (
-                        'no-direct-merge' not in self.params.get('compat_opts', [])
-                        and info_dict.get('protocol') is not None  # All requested formats have same protocol
-                        and not self.params.get('allow_unplayable_formats')
-                        and get_suitable_downloader(info_dict, self.params).__name__ == 'FFmpegFD')
-                    if directly_mergable:
-                        info_dict['url'] = requested_formats[0]['url']
-                        # Treat it as a single download
-                        dl_filename = existing_file(full_filename, temp_filename)
-                        if dl_filename is None:
-                            success, real_download = self.dl(temp_filename, info_dict)
-                            info_dict['__real_download'] = real_download
+                    directly_mergable = FFmpegFD.can_merge_formats(info_dict)
+                    if not self.test_filename_external(full_filename):
+                        self.to_screen(
+                            '[download] %s has rejected by external test process' % full_filename)
+                    elif dl_filename is not None:
+                        pass
+                    elif (directly_mergable and get_suitable_downloader(
+                            info_dict, self.params, to_stdout=(temp_filename == '-')) == FFmpegFD):
+                        info_dict['url'] = '\n'.join(f['url'] for f in requested_formats)
+                        success, real_download = self.dl(temp_filename, info_dict)
+                        info_dict['__real_download'] = real_download
                     else:
                         downloaded = []
                         merger = FFmpegMergerPP(self)
@@ -2762,32 +2766,34 @@ class YoutubeDL(object):
                                 'You have requested merging of multiple formats but ffmpeg is not installed. '
                                 'The formats won\'t be merged.')
 
-                        if not self.test_filename_external(full_filename):
-                            self.to_screen(
-                                '[download] %s has rejected by external test process' % full_filename)
-                        elif dl_filename is None:
-                            for f in requested_formats:
-                                new_info = dict(info_dict)
-                                del new_info['requested_formats']
-                                new_info.update(f)
-                                fname = prepend_extension(
-                                    self.prepare_filename(new_info, 'temp'),
-                                    'f%s' % f['format_id'], new_info['ext'])
+                        if temp_filename == '-':
+                            reason = ('using a downloader other than ffmpeg' if directly_mergable
+                                      else 'but the formats are incompatible for simultaneous download' if merger.available
+                                      else 'but ffmpeg is not installed')
+                            self.report_warning(
+                                f'You have requested downloading multiple formats to stdout {reason}. '
+                                'The formats will be streamed one after the other')
+                            fname = temp_filename
+                        for f in requested_formats:
+                            new_info = dict(info_dict)
+                            del new_info['requested_formats']
+                            new_info.update(f)
+                            if temp_filename != '-':
+                                fname = prepend_extension(temp_filename, 'f%s' % f['format_id'], new_info['ext'])
                                 if not self._ensure_dir_exists(fname):
                                     return
                                 downloaded.append(fname)
-                                partial_success, real_download = self.dl(fname, new_info)
-                                info_dict['__real_download'] = info_dict['__real_download'] or real_download
-                                success = success and partial_success
-                            if merger.available and not self.params.get('allow_unplayable_formats'):
-                                info_dict['__postprocessors'].append(merger)
-                                info_dict['__files_to_merge'] = downloaded
-                                # Even if there were no downloads, it is being merged only now
-                                info_dict['__real_download'] = True
-                            else:
-                                for file in downloaded:
-                                    files_to_move[file] = None
-
+                            partial_success, real_download = self.dl(fname, new_info)
+                            info_dict['__real_download'] = info_dict['__real_download'] or real_download
+                            success = success and partial_success
+                        if merger.available and not self.params.get('allow_unplayable_formats'):
+                            info_dict['__postprocessors'].append(merger)
+                            info_dict['__files_to_merge'] = downloaded
+                            # Even if there were no downloads, it is being merged only now
+                            info_dict['__real_download'] = True
+                        else:
+                            for file in downloaded:
+                                files_to_move[file] = None
                 else:
                     # Just a single file
                     dl_filename = existing_file(full_filename, temp_filename)

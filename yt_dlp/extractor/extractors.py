@@ -206,7 +206,10 @@ from .cbc import (
     CBCWatchIE,
     CBCOlympicsIE,
 )
-from .cbs import CBSIE
+from .cbs import (
+    CBSIE,
+    ParamountPlusSeriesIE,
+)
 from .cbslocal import (
     CBSLocalIE,
     CBSLocalArticleIE,
