@@ -66,7 +66,7 @@ class NiconicoDmcFD(FileDownloader):
                 del m3u8_format['format_id'], m3u8_format['protocol']
                 new_info_dict.update(m3u8_format)
 
-        return get_suitable_downloader(info_dict, params=self.params)(self.ydl, self.params).download(filename, new_info_dict)
+        return get_suitable_downloader(new_info_dict, params=self.params)(self.ydl, self.params).download(filename, new_info_dict)
 
 
 class NiconicoLiveFD(FileDownloader):
