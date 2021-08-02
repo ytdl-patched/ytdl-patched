@@ -4,6 +4,16 @@ import json
 import operator
 import re
 
+try:
+    import js2py
+    import js2py.base
+    # craft these classes to make python code work as expected
+    js2py.base.PyJsArray.CONVERT_TO_PY_PRIMITIVES = True
+    js2py.base.PyJsObject.CONVERT_TO_PY_PRIMITIVES = True
+    HAVE_JS2PY = True
+except ImportError:
+    HAVE_JS2PY = False
+
 from .utils import (
     ExtractorError,
     remove_quotes,
@@ -27,7 +37,7 @@ _ASSIGN_OPERATORS.append(('=', lambda cur, right: right))
 _NAME_RE = r'[a-zA-Z_$][a-zA-Z_$0-9]*'
 
 
-class JSInterpreter(object):
+class JSInterpreterSimple(object):
     def __init__(self, code, objects=None):
         if objects is None:
             objects = {}
@@ -260,3 +270,59 @@ class JSInterpreter(object):
                     break
             return res
         return resf
+
+
+class JSInterpreterJs2py(object):
+    def __init__(self, code, objects=None):
+        if objects is None:
+            objects = {}
+        self.code = code
+        self._context = js2py.EvalJs(objects)
+        self._context.execute(code)
+
+    def interpret_statement(self, stmt, local_vars, allow_recursion=None):
+        lvar_entries = local_vars.items()
+        lvar_names = [x[0] for x in lvar_entries]
+        lvar_values = [x[1] for x in lvar_entries]
+
+        """ The code will look like this:
+        >>> interpret_statement("value + 42 * 49", {'value': 39, 'honey': 82})
+        function(value, honey) {
+            return eval("value + 42 * 49");
+        }
+        """
+        eval_code = 'function('
+        eval_code += ', '.join(lvar_names)
+        eval_code += ') { return eval('
+        eval_code += json.dumps(stmt)
+        eval_code += ') }'
+
+        return self._context.eval(eval_code)(*lvar_values)
+
+    def interpret_expression(self, expr, local_vars, allow_recursion):
+        return self.interpret_statement(expr, local_vars)
+
+    def extract_object(self, objname):
+        return getattr(self._context, objname)
+
+    def extract_function(self, funcname):
+        return getattr(self._context, funcname)
+
+    def call_function(self, funcname, *args):
+        return getattr(self._context, funcname)(*args)
+
+    def build_function(self, argnames, code):
+        # https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Function/Function
+        func_code = 'new Function('
+        for argn in argnames:
+            func_code += json.dumps(argn)
+            func_code += ', '
+        func_code += json.dumps(code)
+        func_code += ')'
+        return self._context.eval(func_code)
+
+
+if HAVE_JS2PY:
+    JSInterpreter = JSInterpreterJs2py
+else:
+    JSInterpreter = JSInterpreterSimple
