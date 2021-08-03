@@ -13,6 +13,7 @@ from ..compat import (
 )
 from ..utils import (
     ContentTooShortError,
+    UnrecoverableHttpError,
     encodeFilename,
     int_or_none,
     sanitized_Request,
@@ -27,6 +28,7 @@ class HttpFD(FileDownloader):
     def real_download(self, filename, info_dict):
         url = info_dict['url']
         request_data = info_dict.get('request_data', None)
+        bad_status_code = info_dict.get('unrecoverable_http_error') or tuple()
 
         class DownloadContext(dict):
             __getattr__ = dict.get
@@ -147,7 +149,9 @@ class HttpFD(FileDownloader):
                 ctx.data_len = int_or_none(ctx.data.info().get('Content-length', None))
                 return
             except (compat_urllib_error.HTTPError, ) as err:
-                if err.code == 416:
+                if err.code in bad_status_code:
+                    raise UnrecoverableHttpError()
+                elif err.code == 416:
                     # Unable to resume (requested range not satisfiable)
                     try:
                         # Open the connection again without the range header

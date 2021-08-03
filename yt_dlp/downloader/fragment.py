@@ -23,6 +23,7 @@ from ..compat import (
 )
 from ..utils import (
     DownloadError,
+    UnrecoverableHttpError,
     error_to_compat_str,
     encodeFilename,
     sanitized_Request,
@@ -328,6 +329,7 @@ class FragmentFD(FileDownloader):
 
     def download_and_append_fragments(self, ctx, fragments, info_dict, pack_func=None):
         fragment_retries = self.params.get('fragment_retries', 0)
+        bad_status_code = info_dict.get('unrecoverable_http_error') or tuple()
         is_fatal = (lambda idx: idx == 0) if self.params.get('skip_unavailable_fragments', True) else (lambda _: True)
         if not pack_func:
             pack_func = lambda frag_content, _: frag_content
@@ -349,6 +351,8 @@ class FragmentFD(FileDownloader):
                         return False, frag_index
                     break
                 except compat_urllib_error.HTTPError as err:
+                    if err.code in bad_status_code:
+                        raise UnrecoverableHttpError()
                     # Unavailable (possibly temporary) fragments may be served.
                     # First we try to retry then either skip or abort.
                     # See https://github.com/ytdl-org/youtube-dl/issues/10165,

@@ -407,6 +407,8 @@ class NiconicoIE(NiconicoBaseIE):
             'dmc_data': dmc_data,
             'video_id': video_id,
             'extract_m3u8': extract_m3u8,
+            # re-extract when you once got 403 error; happens when -N is used
+            'unrecoverable_http_error': (403, ),
             'http_headers': {
                 'Origin': 'https://www.nicovideo.jp',
                 'Referer': 'https://www.nicovideo.jp/watch/' + video_id,
