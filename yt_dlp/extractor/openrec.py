@@ -80,11 +80,11 @@ class OpenRecCaptureIE(OpenRecBaseIE):
     }, {
         'url': 'https://www.openrec.tv/capture/mldjr82p7qk',
         'info_dict': {
-            "id": "mldjr82p7qk",
-            "title": "たいじの恥ずかしい英語力",
-            "uploader": "たいちゃんねる",
-            "uploader_id": "Yaritaiji",
-            "upload_date": "20210803",
+            'id': 'mldjr82p7qk',
+            'title': 'たいじの恥ずかしい英語力',
+            'uploader': 'たいちゃんねる',
+            'uploader_id': 'Yaritaiji',
+            'upload_date': '20210803',
         },
     }]
 
