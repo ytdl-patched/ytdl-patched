@@ -608,14 +608,7 @@ class NiconicoIE(NiconicoBaseIE):
                 'https://nmsg.nicovideo.jp/api.json',
                 video_id,
                 headers={
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; rv:68.0) Gecko/20100101 Firefox/68.0',
-                    'Accept': '*/*',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                    'Accept-Encoding': 'gzip, deflate',
                     'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
-                    'Content-Type': 'text/plain;charset=UTF-8',
-                    'Origin': 'https://www.nicovideo.jp',
-                    'Connection': 'keep-alive'
                 },
                 data=json.dumps([
                     {"ping": {"content": "rs:0"}},
