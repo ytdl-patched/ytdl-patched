@@ -1,8 +1,8 @@
 # coding: utf-8
-from __future__ import unicode_literals, with_statement
+from __future__ import unicode_literals
 
 from .common import InfoExtractor
-from ..utils import unified_strdate
+from ..utils import ExtractorError, try_get, unified_strdate
 
 
 class OpenRecBaseIE(InfoExtractor):
@@ -15,6 +15,9 @@ class OpenRecIE(OpenRecBaseIE):
     _TESTS = [{
         'url': 'https://www.openrec.tv/live/2p8v31qe4zy',
         'only_matching': True,
+    }, {
+        'url': 'https://www.openrec.tv/live/wez93eqvjzl',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
@@ -22,25 +25,36 @@ class OpenRecIE(OpenRecBaseIE):
         webpage = self._download_webpage('https://www.openrec.tv/live/%s' % video_id, video_id)
 
         window_stores = self._parse_json(
-            self._search_regex(r'(?m)window\.stores\s*=\s*(\{.+?\});$', webpage, 'window.stores'), video_id)
-        movie_store = window_stores['moviePageStore']['movieStore']
+            self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.stores'), video_id)
+        movie_store = try_get(
+            window_stores,
+            (lambda x: x['v8']['state']['movie'], lambda x: x['v8']['movie']), None)
+        if not movie_store:
+            raise ExtractorError('Failed to extract live info')
 
-        title = movie_store['title']
-        description = movie_store['introduction']
-        thumbnail = movie_store['thumbnailUrl']
-        uploader = movie_store['channel']['name']
-        uploader_id = movie_store['channel']['id']
-        upload_date = unified_strdate(movie_store['createdAt'])
+        title = movie_store.get('title')
+        description = movie_store.get('introduction')
+        thumbnail = movie_store.get('thumbnailUrl')
 
-        m3u8_playlists = movie_store['media']
+        channel_user = movie_store.get('channel', {}).get('user')
+        if channel_user:
+            uploader = channel_user['name']
+            uploader_id = channel_user['id']
+        else:
+            self.report_warning('Failed to extract uploader information')
+            uploader = channel_user.get('name')
+            uploader_id = channel_user.get('id')
+
+        timestamp = movie_store.get('startedAt', {}).get('time')
+
+        m3u8_playlists = movie_store.get('media')
         formats = []
         for (name, m3u8_url) in m3u8_playlists.items():
             if not m3u8_url:
                 continue
-            fmt_list = self._extract_m3u8_formats(
+            formats.extend(self._extract_m3u8_formats(
                 m3u8_url, video_id, ext='mp4', entry_protocol='m3u8',
-                m3u8_id='hls-%s' % name, live=True)
-            formats.extend(fmt_list)
+                m3u8_id='hls-%s' % name, live=True))
 
         self._sort_formats(formats)
 
@@ -52,7 +66,7 @@ class OpenRecIE(OpenRecBaseIE):
             'formats': formats,
             'uploader': uploader,
             'uploader_id': uploader_id,
-            'upload_date': upload_date,
+            'timestamp': timestamp,
             'is_live': True,
         }
 
@@ -63,6 +77,15 @@ class OpenRecCaptureIE(OpenRecBaseIE):
     _TESTS = [{
         'url': 'https://www.openrec.tv/capture/l9nk2x4gn14',
         'only_matching': True,
+    }, {
+        'url': 'https://www.openrec.tv/capture/mldjr82p7qk',
+        'info_dict': {
+            "id": "mldjr82p7qk",
+            "title": "たいじの恥ずかしい英語力",
+            "uploader": "たいちゃんねる",
+            "uploader_id": "Yaritaiji",
+            "upload_date": "20210803",
+        },
     }]
 
     def _real_extract(self, url):
@@ -70,20 +93,25 @@ class OpenRecCaptureIE(OpenRecBaseIE):
         webpage = self._download_webpage('https://www.openrec.tv/capture/%s' % video_id, video_id)
 
         window_stores = self._parse_json(
-            self._search_regex(r'(?m)window\.stores\s*=\s*(\{.+?\});$', webpage, 'window.stores'), video_id)
-        movie_store = window_stores['moviePageStore']['movieStore']
-        capture_data = window_stores['capturePlayPageStore']['capture']
-        channel_info = window_stores['capturePlayPageStore']['movie']['channel']
+            self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.stores'), video_id)
+        movie_store = window_stores.get('movie')
 
-        title = capture_data['title']
-        thumbnail = movie_store['thumbnailUrl']
-        uploader = channel_info['name']
-        uploader_id = channel_info['id']
-        upload_date = unified_strdate(capture_data['createdAt'])
+        capture_data = window_stores.get('capture')
+        if not capture_data:
+            raise ExtractorError('Cannot extract title')
+        title = capture_data.get('title')
+        thumbnail = capture_data.get('thumbnailUrl')
+        upload_date = unified_strdate(capture_data.get('createdAt'))
 
-        m3u8_url = capture_data['source']
+        channel_info = movie_store.get('channel') or {}
+        uploader = channel_info.get('name')
+        uploader_id = channel_info.get('id')
+
+        m3u8_url = capture_data.get('source')
+        if not m3u8_url:
+            raise ExtractorError('Cannot extract m3u8 url')
         formats = self._extract_m3u8_formats(
-            m3u8_url, video_id, ext='mp4', entry_protocol='m3u8',
+            m3u8_url, video_id, ext='mp4', entry_protocol='m3u8_native',
             m3u8_id='hls')
 
         self._sort_formats(formats)
