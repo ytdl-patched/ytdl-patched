@@ -25,9 +25,9 @@ A command-line program to download videos from YouTube and many other [video pla
 | Service | Type | Status | Note |
 |:-------:|:----:|:------:|:----:|
 | Travis CI | Tests | [![Build Status](https://travis-ci.org/nao20010128nao/ytdl-patched.svg?branch=master)](https://travis-ci.org/nao20010128nao/ytdl-patched.svg) | Stopped because of lack of credits |
-| GitHub Actions | Tests | ![Run tests](https://github.com/nao20010128nao/ytdl-patched/workflows/Run%20tests/badge.svg) | |
-| GitHub Actions | Build and release | ![Build Patched YTDL](https://github.com/nao20010128nao/ytdl-patched/workflows/Build%20Patched%20YTDL/badge.svg) | |
-| GitHub Actions | Merging commits from upstream | ![Merge upstream](https://github.com/nao20010128nao/ytdl-patched/workflows/Merge%20upstream/badge.svg) | There's conflict if it fails |
+| GitHub Actions | Tests | [![Run tests](https://github.com/ytdl-patched/ytdl-patched/actions/workflows/tests.yml/badge.svg?branch=ytdlp)](https://github.com/ytdl-patched/ytdl-patched/actions/workflows/tests.yml) | |
+| GitHub Actions | Build and release | [![Build Patched YTDL](https://github.com/ytdl-patched/ytdl-patched/actions/workflows/build.yml/badge.svg?branch=ytdlp)](https://github.com/ytdl-patched/ytdl-patched/actions/workflows/build.yml) | |
+| GitHub Actions | Merging commits from upstream | [![Merge upstream](https://github.com/ytdl-patched/ytdl-patched/actions/workflows/merge.yml/badge.svg?branch=ytdlp)](https://github.com/ytdl-patched/ytdl-patched/actions/workflows/merge.yml) | There's conflict if it fails |
 
 <!-- MARKER END -->
 
