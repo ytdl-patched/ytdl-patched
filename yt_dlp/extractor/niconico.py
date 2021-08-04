@@ -489,8 +489,6 @@ class NiconicoIE(NiconicoBaseIE):
 
         thumbnail = (
             self._html_search_regex(r'<meta property="og:image" content="([^"]+)">', webpage, 'thumbnail data', default=None)
-            or api_data['video'].get('largeThumbnailURL')
-            or api_data['video'].get('thumbnailURL')
             or get_video_info(['largeThumbnailURL', 'thumbnail_url', 'thumbnailURL'])
             or self._html_search_meta('image', webpage, 'thumbnail', default=None))
 
@@ -507,10 +505,7 @@ class NiconicoIE(NiconicoBaseIE):
 
         view_count = int_or_none(api_data['video']['count'].get('view'))
 
-        description = (
-            api_data['video'].get('description')
-            # this cannot be checked before the JSON API check as on community videos the description is simply "community"
-            or get_video_info('description'))
+        description = get_video_info('description')
 
         if not timestamp:
             timestamp = (parse_iso8601(get_video_info('first_retrieve'))
@@ -524,10 +519,12 @@ class NiconicoIE(NiconicoBaseIE):
                 video_detail['postedAt'].replace('/', '-'),
                 delimiter=' ', timezone=datetime.timedelta(hours=9))
 
-        comment_count = (
-            api_data['video']['count'].get('comment')
-            or try_get(api_data, lambda x: x['thread']['commentCount']))
-        if not comment_count:
+        comment_count = traverse_obj(
+            api_data,
+            ('video', 'count', 'comment'),
+            ('thread', 'commentCount'),
+            expected_type=int)
+        if comment_count is None:
             match = self._html_search_regex(
                 r'>Comments: <strong[^>]*>([^<]+)</strong>',
                 webpage, 'comment count', default=None)
@@ -549,7 +546,7 @@ class NiconicoIE(NiconicoBaseIE):
         uploader_id = get_video_info(['ch_id', 'user_id']) or owner.get('id')
         uploader = get_video_info(['ch_name', 'user_nickname']) or owner.get('nickname')
 
-        tags = api_data['video'].get('tags') or []
+        tags = get_video_info('tags') or []
         genre = get_video_info('genre')
 
         tracking_id = try_get(api_data, lambda x: x['media']['delivery']['trackingId'], compat_str)
@@ -562,7 +559,32 @@ class NiconicoIE(NiconicoBaseIE):
             if try_get(watch_request_response, lambda x: x['meta']['status'], int) != 200:
                 self.report_warning('Failed to acquire permission for playing video. Video download may fail.')
 
-        info = {
+        if self._downloader.params.get('getcomments', False) or self._downloader.params.get('writesubtitles', False):
+            player_size = try_get(self._configuration_arg('player_size'), lambda x: x[0], compat_str)
+            w, h = self._parse_player_size(player_size)
+
+            thread_ids = list(set(re.findall(r'threadIds&quot;:\[{&quot;id&quot;:([0-9]*)', webpage)))
+            raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0)
+            raw_danmaku = json.dumps(raw_danmaku)
+            danmaku = load_comments(raw_danmaku, 'NiconicoJson', w, h, report_warning=self.report_warning)
+            xml_danmaku = convert_niconico_json_to_xml(raw_danmaku)
+
+            subtitles = {
+                'jpn': [{
+                    'ext': 'json',
+                    'data': raw_danmaku,
+                }, {
+                    'ext': 'xml',
+                    'data': xml_danmaku,
+                }, {
+                    'ext': 'ass',
+                    'data': danmaku
+                }],
+            }
+        else:
+            subtitles = None
+
+        return {
             'id': video_id,
             'title': title,
             'formats': formats,
@@ -577,31 +599,8 @@ class NiconicoIE(NiconicoBaseIE):
             'comment_count': comment_count,
             'duration': duration,
             'webpage_url': webpage_url,
+            'subtitles': subtitles,
         }
-
-        if self._downloader.params.get('getcomments', False) or self._downloader.params.get('writesubtitles', False):
-            player_size = try_get(self._configuration_arg('player_size'), lambda x: x[0], compat_str)
-            w, h = self._parse_player_size(player_size)
-
-            thread_ids = list(set(re.findall(r'threadIds&quot;:\[{&quot;id&quot;:([0-9]*)', webpage)))
-            raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0)
-            raw_danmaku = json.dumps(raw_danmaku)
-            danmaku = load_comments(raw_danmaku, 'NiconicoJson', w, h, report_warning=self.report_warning)
-            xml_danmaku = convert_niconico_json_to_xml(raw_danmaku)
-
-            info['subtitles'] = {
-                'jpn': [{
-                    'ext': 'json',
-                    'data': raw_danmaku,
-                }, {
-                    'ext': 'xml',
-                    'data': xml_danmaku,
-                }, {
-                    'ext': 'ass',
-                    'data': danmaku
-                }],
-            }
-        return info
 
     def _extract_all_comments(self, video_id, thread_ids, language_id):
         raw_json = []
@@ -843,7 +842,7 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:history'
     IE_DESC = 'NicoNico user history. Requires cookies.'
     # actual url of history page is "https://www.nicovideo.jp/my/history/video", but /video is omitted to widen matches
-    _VALID_URL = r'https?://(?:www\.|sp\.)nicovideo\.jp/my/history'
+    _VALID_URL = r'https?://(?:www\.|sp\.)?nicovideo\.jp/my/history'
 
     _TESTS = [{
         'note': 'PC page, with /video',
