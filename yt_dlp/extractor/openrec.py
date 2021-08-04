@@ -2,14 +2,16 @@
 from __future__ import unicode_literals
 
 from .common import InfoExtractor
-from ..utils import ExtractorError, try_get, unified_strdate
+from ..utils import (
+    ExtractorError,
+    traverse_obj,
+    try_get,
+    unified_strdate
+)
+from ..compat import compat_str
 
 
-class OpenRecBaseIE(InfoExtractor):
-    pass
-
-
-class OpenRecIE(OpenRecBaseIE):
+class OpenRecIE(InfoExtractor):
     IE_NAME = 'openrec'
     _VALID_URL = r'https?://(?:www\.)?openrec\.tv/live/(?P<id>[^/]+)'
     _TESTS = [{
@@ -26,9 +28,11 @@ class OpenRecIE(OpenRecBaseIE):
 
         window_stores = self._parse_json(
             self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.pageStore'), video_id)
-        movie_store = try_get(
+        movie_store = traverse_obj(
             window_stores,
-            (lambda x: x['v8']['state']['movie'], lambda x: x['v8']['movie']), None)
+            ('v8', 'state', 'movie'),
+            ('v8', 'movie'),
+            expected_type=dict)
         if not movie_store:
             raise ExtractorError('Failed to extract live info')
 
@@ -37,15 +41,10 @@ class OpenRecIE(OpenRecBaseIE):
         thumbnail = movie_store.get('thumbnailUrl')
 
         channel_user = movie_store.get('channel', {}).get('user')
-        if channel_user:
-            uploader = channel_user['name']
-            uploader_id = channel_user['id']
-        else:
-            self.report_warning('Failed to extract uploader information')
-            uploader = channel_user.get('name')
-            uploader_id = channel_user.get('id')
+        uploader = try_get(channel_user, lambda x: x['name'], compat_str)
+        uploader_id = try_get(channel_user, lambda x: x['id'], compat_str)
 
-        timestamp = movie_store.get('startedAt', {}).get('time')
+        timestamp = traverse_obj(movie_store, ('startedAt', 'time'), expected_type=int)
 
         m3u8_playlists = movie_store.get('media')
         formats = []
@@ -71,7 +70,7 @@ class OpenRecIE(OpenRecBaseIE):
         }
 
 
-class OpenRecCaptureIE(OpenRecBaseIE):
+class OpenRecCaptureIE(InfoExtractor):
     IE_NAME = 'openrec:capture'
     _VALID_URL = r'https?://(?:www\.)?openrec\.tv/capture/(?P<id>[^/]+)'
     _TESTS = [{
