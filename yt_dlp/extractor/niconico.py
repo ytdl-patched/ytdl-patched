@@ -846,6 +846,51 @@ class NiconicoSeriesIE(NiconicoBaseIE):
         return self.playlist_result(playlist, list_id, title)
 
 
+class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
+    IE_NAME = 'niconico:history'
+    IE_DESC = 'NicoNico user history. Requires cookies.'
+    # actual url of history page is "https://www.nicovideo.jp/my/history/video", but /video is omitted to widen matches
+    _VALID_URL = r'https?://(?:www\.|sp\.)nicovideo\.jp/my/history'
+
+    _TESTS = [{
+        'note': 'PC page, with /video',
+        'url': 'https://www.nicovideo.jp/my/history/video',
+        'only_matching': True,
+    }, {
+        'note': 'PC page, without /video',
+        'url': 'https://www.nicovideo.jp/my/history',
+        'only_matching': True,
+    }, {
+        'note': 'mobile page, with /video',
+        'url': 'https://sp.nicovideo.jp/my/history/video',
+        'only_matching': True,
+    }, {
+        'note': 'mobile page, without /video',
+        'url': 'https://sp.nicovideo.jp/my/history',
+        'only_matching': True,
+    }]
+
+    def _call_api(self, list_id, resource, query):
+        return self._download_json(
+            'https://nvapi.nicovideo.jp/v1/users/me/watch/history', 'history',
+            'Downloading %s' % resource, query=query,
+            headers=self._API_HEADERS)['data']
+
+    def _real_extract(self, url):
+        list_id = 'history'
+        mylist = self._call_api(list_id, 'list', {
+            'pageSize': 1,
+        })
+        entries = InAdvancePagedList(
+            functools.partial(self._fetch_page, list_id),
+            math.ceil(mylist['totalCount'] / self._PAGE_SIZE),
+            self._PAGE_SIZE).getslice()
+        result = self.playlist_result(
+            entries, list_id, mylist.get('name'))
+        result.update(self._parse_owner(mylist))
+        return result
+
+
 class NiconicoLiveIE(NiconicoBaseIE):
     IE_NAME = 'niconico:live'
     IE_DESC = 'ニコニコ生放送'

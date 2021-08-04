@@ -901,6 +901,7 @@ from .niconico import (
     NiconicoPlaylistIE,
     NiconicoUserIE,
     NiconicoSeriesIE,
+    NiconicoHistoryIE,
     NiconicoLiveIE,
 )
 from .niconico_smile import NiconicoSmileIE
