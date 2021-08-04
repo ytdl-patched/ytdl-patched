@@ -25,7 +25,7 @@ class OpenRecIE(OpenRecBaseIE):
         webpage = self._download_webpage('https://www.openrec.tv/live/%s' % video_id, video_id)
 
         window_stores = self._parse_json(
-            self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.stores'), video_id)
+            self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.pageStore'), video_id)
         movie_store = try_get(
             window_stores,
             (lambda x: x['v8']['state']['movie'], lambda x: x['v8']['movie']), None)
@@ -93,7 +93,7 @@ class OpenRecCaptureIE(OpenRecBaseIE):
         webpage = self._download_webpage('https://www.openrec.tv/capture/%s' % video_id, video_id)
 
         window_stores = self._parse_json(
-            self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.stores'), video_id)
+            self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.pageStore'), video_id)
         movie_store = window_stores.get('movie')
 
         capture_data = window_stores.get('capture')
