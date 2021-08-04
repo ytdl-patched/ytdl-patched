@@ -6,11 +6,12 @@ from ..compat import compat_str
 from ..utils import (
     ExtractorError,
     smuggle_url,
+    traverse_obj,
     try_get,
     unsmuggle_url,
+    unified_strdate,
 )
 
-from datetime import datetime
 import itertools
 
 
@@ -18,10 +19,11 @@ class VoicyBaseIE(InfoExtractor):
     # every queries are assumed to be a playlist
     def _extract_from_playlist_data(self, value):
         voice_id = compat_str(value['PlaylistId'])
-        upload_date = datetime.strptime(value['Published'], "%Y-%m-%dT%H:%M:%SZ").strftime('%Y%m%d')
+        upload_date = unified_strdate(value['Published'], False)
         items = [self._extract_single_article(voice_data) for voice_data in value['VoiceData']]
-        result = self.playlist_result(items)
-        result.update({
+        return {
+            '_type': 'playlist',
+            'entries': items,
             'id': voice_id,
             'title': compat_str(value['PlaylistName']),
             'uploader': value['SpeakerName'],
@@ -29,8 +31,7 @@ class VoicyBaseIE(InfoExtractor):
             'channel': value['ChannelName'],
             'channel_id': compat_str(value['ChannelId']),
             'upload_date': upload_date,
-        })
-        return result
+        }
 
     # NOTE: "article" in voicy = "track" in CDs = "chapter" in DVDs
     def _extract_single_article(self, entry):
@@ -59,12 +60,9 @@ class VoicyBaseIE(InfoExtractor):
     def _call_api(self, url, video_id, **kwargs):
         response = self._download_json(url, video_id, **kwargs)
         if response['Status'] != 0:
-            message = try_get(
-                response,
-                (lambda x: x['Value']['Error']['Message'],
-                 lambda x: 'There was a error in the response: %d' % x['Status'],
-                 lambda x: 'There was a error in the response'),
-                compat_str)
+            message = traverse_obj(response, ('Value', 'Error', 'Message'), expected_type=compat_str)
+            if not message:
+                message = 'There was a error in the response: %d' % response['Status']
             raise ExtractorError(message, expected=False)
         return response['Value']
 
@@ -131,8 +129,8 @@ class VoicyChannelIE(VoicyBaseIE):
         title = try_get(
             articles[0],
             (lambda x: x['ChannelName'],
-             lambda x: 'Uploaded from ' % x['SpeakerName'],
-             lambda x: 'Channel ID: %s' % channel_id), compat_str)
+             lambda x: 'Uploads from %s' % x['SpeakerName'],
+             lambda x: 'Uploads from channel ID %s' % channel_id), compat_str)
 
         urls = [smuggle_url('https://voicy.jp/channel/%s/%d' % (channel_id, value['PlaylistId']), value) for value in articles]
         playlist = [self.url_result(url_, VoicyIE.ie_key()) for url_ in urls]
