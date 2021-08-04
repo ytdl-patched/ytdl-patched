@@ -34,6 +34,7 @@ from ..utils import (
     parse_duration,
     parse_iso8601,
     remove_start,
+    traverse_obj,
     try_get,
     unescapeHTML,
     unified_timestamp,
@@ -663,10 +664,6 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
         pass
 
     @staticmethod
-    def _get_video_item(video):
-        return video.get('video')
-
-    @staticmethod
     def _parse_owner(item):
         owner = item.get('owner') or {}
         if owner:
@@ -684,7 +681,7 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
         })['items']
         for video in items:
             # this is needed to support both mylist and user
-            video = self._get_video_item(video)
+            video = traverse_obj(video, ('video',), (), expected_type=dict)
             video_id = video.get('id')
             if not video_id:
                 continue
@@ -779,10 +776,6 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
             'https://nvapi.nicovideo.jp/v1/users/%s/videos' % list_id, list_id,
             'Downloading %s' % resource, query=query,
             headers=self._API_HEADERS)['data']
-
-    @staticmethod
-    def _get_video_item(video):
-        return video
 
     def _real_extract(self, url):
         list_id = self._match_id(url)
@@ -885,8 +878,7 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
             functools.partial(self._fetch_page, list_id),
             math.ceil(mylist['totalCount'] / self._PAGE_SIZE),
             self._PAGE_SIZE).getslice()
-        result = self.playlist_result(
-            entries, list_id, mylist.get('name'))
+        result = self.playlist_result(entries, list_id)
         result.update(self._parse_owner(mylist))
         return result
 
