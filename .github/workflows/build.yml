@@ -194,7 +194,8 @@ jobs:
       - name: Install deps
         run: pip install -U ${{ matrix.builder }} zopflipy websockets python-dateutil mutagen pycryptodome
       - name: Install UPX
-        run: choco install upx
+        shell: pwsh
+        run: pwsh ./devscripts/install_upx.ps1
       - name: Remove unneeded tests in InfoExtractor
         shell: bash
         run: python3 ./devscripts/reduce_code.py yt_dlp/extractor/*.py
