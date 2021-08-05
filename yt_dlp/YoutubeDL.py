@@ -2726,16 +2726,17 @@ class YoutubeDL(object):
                     # merge to mkv without --merge-output-format no matter what
                     if self.params.get('merge_output_format') is None:
                         info_dict['ext'] = 'mkv'
+                    new_ext = info_dict['ext']
 
-                    def correct_ext(filename):
+                    def correct_ext(filename, ext=new_ext):
                         if filename == '-':
                             return filename
                         filename_real_ext = os.path.splitext(filename)[1][1:]
                         filename_wo_ext = (
                             os.path.splitext(filename)[0]
-                            if filename_real_ext == old_ext
+                            if filename_real_ext in (old_ext, new_ext)
                             else filename)
-                        return '%s.%s' % (filename_wo_ext, info_dict['ext'])
+                        return '%s.%s' % (filename_wo_ext, ext)
 
                     # Ensure filename always has a correct extension for successful merge
                     full_filename = correct_ext(full_filename)
@@ -2780,7 +2781,9 @@ class YoutubeDL(object):
                             del new_info['requested_formats']
                             new_info.update(f)
                             if temp_filename != '-':
-                                fname = prepend_extension(temp_filename, 'f%s' % f['format_id'], new_info['ext'])
+                                fname = prepend_extension(
+                                    correct_ext(temp_filename, new_info['ext']),
+                                    'f%s' % f['format_id'], new_info['ext'])
                                 if not self._ensure_dir_exists(fname):
                                     return
                                 downloaded.append(fname)
