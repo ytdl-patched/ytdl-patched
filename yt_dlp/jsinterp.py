@@ -322,7 +322,7 @@ class JSInterpreterJs2py(object):
         return self._context.eval(func_code)
 
 
-if HAVE_JS2PY:
+if HAVE_JS2PY and 0 == 1:
     JSInterpreter = JSInterpreterJs2py
 else:
     JSInterpreter = JSInterpreterSimple
