@@ -607,10 +607,11 @@ class NiconicoIE(NiconicoBaseIE):
 
         for i, thread_id in enumerate(thread_ids):
             raw_json += self._download_json(
-                'https://nmsg.nicovideo.jp/api.json',
+                'https://nvcomment.nicovideo.jp/legacy/api.json',
                 video_id,
                 headers={
                     'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
+                    'Origin': 'https://www.nicovideo.jp',
                 },
                 data=json.dumps([
                     {"ping": {"content": "rs:0"}},
