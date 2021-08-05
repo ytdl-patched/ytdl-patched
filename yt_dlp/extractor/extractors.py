@@ -1132,6 +1132,7 @@ from .rcs import (
 from .rcti import (
     RCTIPlusIE,
     RCTIPlusSeriesIE,
+    RCTIPlusTVIE,
 )
 from .rds import RDSIE
 from .redbulltv import (

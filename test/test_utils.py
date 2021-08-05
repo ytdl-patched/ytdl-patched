@@ -1207,35 +1207,12 @@ ffmpeg version 2.4.4 Copyright (c) 2000-2014 the FFmpeg ...'''), '2.4.4')
             '9999 51')
 
     def test_match_str(self):
-        self.assertRaises(ValueError, match_str, 'xy>foobar', {})
+        # Unary
         self.assertFalse(match_str('xy', {'x': 1200}))
         self.assertTrue(match_str('!xy', {'x': 1200}))
         self.assertTrue(match_str('x', {'x': 1200}))
         self.assertFalse(match_str('!x', {'x': 1200}))
         self.assertTrue(match_str('x', {'x': 0}))
-        self.assertFalse(match_str('x>0', {'x': 0}))
-        self.assertFalse(match_str('x>0', {}))
-        self.assertTrue(match_str('x>?0', {}))
-        self.assertTrue(match_str('x>1K', {'x': 1200}))
-        self.assertFalse(match_str('x>2K', {'x': 1200}))
-        self.assertTrue(match_str('x>=1200 & x < 1300', {'x': 1200}))
-        self.assertFalse(match_str('x>=1100 & x < 1200', {'x': 1200}))
-        self.assertFalse(match_str('y=a212', {'y': 'foobar42'}))
-        self.assertTrue(match_str('y=foobar42', {'y': 'foobar42'}))
-        self.assertFalse(match_str('y!=foobar42', {'y': 'foobar42'}))
-        self.assertTrue(match_str('y!=foobar2', {'y': 'foobar42'}))
-        self.assertFalse(match_str(
-            'like_count > 100 & dislike_count <? 50 & description',
-            {'like_count': 90, 'description': 'foo'}))
-        self.assertTrue(match_str(
-            'like_count > 100 & dislike_count <? 50 & description',
-            {'like_count': 190, 'description': 'foo'}))
-        self.assertFalse(match_str(
-            'like_count > 100 & dislike_count <? 50 & description',
-            {'like_count': 190, 'dislike_count': 60, 'description': 'foo'}))
-        self.assertFalse(match_str(
-            'like_count > 100 & dislike_count <? 50 & description',
-            {'like_count': 190, 'dislike_count': 10}))
         self.assertTrue(match_str('is_live', {'is_live': True}))
         self.assertFalse(match_str('is_live', {'is_live': False}))
         self.assertFalse(match_str('is_live', {'is_live': None}))
@@ -1248,6 +1225,69 @@ ffmpeg version 2.4.4 Copyright (c) 2000-2014 the FFmpeg ...'''), '2.4.4')
         self.assertTrue(match_str('title', {'title': ''}))
         self.assertFalse(match_str('!title', {'title': 'abc'}))
         self.assertFalse(match_str('!title', {'title': ''}))
+
+        # Numeric
+        self.assertFalse(match_str('x>0', {'x': 0}))
+        self.assertFalse(match_str('x>0', {}))
+        self.assertTrue(match_str('x>?0', {}))
+        self.assertTrue(match_str('x>1K', {'x': 1200}))
+        self.assertFalse(match_str('x>2K', {'x': 1200}))
+        self.assertTrue(match_str('x>=1200 & x < 1300', {'x': 1200}))
+        self.assertFalse(match_str('x>=1100 & x < 1200', {'x': 1200}))
+
+        # String
+        self.assertFalse(match_str('y=a212', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y=foobar42', {'y': 'foobar42'}))
+        self.assertFalse(match_str('y!=foobar42', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y!=foobar2', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y^=foo', {'y': 'foobar42'}))
+        self.assertFalse(match_str('y!^=foo', {'y': 'foobar42'}))
+        self.assertFalse(match_str('y^=bar', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y!^=bar', {'y': 'foobar42'}))
+        self.assertRaises(ValueError, match_str, 'x^=42', {'x': 42})
+        self.assertTrue(match_str('y*=bar', {'y': 'foobar42'}))
+        self.assertFalse(match_str('y!*=bar', {'y': 'foobar42'}))
+        self.assertFalse(match_str('y*=baz', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y!*=baz', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y$=42', {'y': 'foobar42'}))
+        self.assertFalse(match_str('y$=43', {'y': 'foobar42'}))
+
+        # And
+        self.assertFalse(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 90, 'description': 'foo'}))
+        self.assertTrue(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 190, 'description': 'foo'}))
+        self.assertFalse(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 190, 'dislike_count': 60, 'description': 'foo'}))
+        self.assertFalse(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 190, 'dislike_count': 10}))
+
+        # Regex
+        self.assertTrue(match_str(r'x~=\bbar', {'x': 'foo bar'}))
+        self.assertFalse(match_str(r'x~=\bbar.+', {'x': 'foo bar'}))
+        self.assertFalse(match_str(r'x~=^FOO', {'x': 'foo bar'}))
+        self.assertTrue(match_str(r'x~=(?i)^FOO', {'x': 'foo bar'}))
+
+        # Quotes
+        self.assertTrue(match_str(r'x^="foo"', {'x': 'foo "bar"'}))
+        self.assertFalse(match_str(r'x^="foo  "', {'x': 'foo "bar"'}))
+        self.assertFalse(match_str(r'x$="bar"', {'x': 'foo "bar"'}))
+        self.assertTrue(match_str(r'x$=" \"bar\""', {'x': 'foo "bar"'}))
+
+        # Escaping &
+        self.assertFalse(match_str(r'x=foo & bar', {'x': 'foo & bar'}))
+        self.assertTrue(match_str(r'x=foo \& bar', {'x': 'foo & bar'}))
+        self.assertTrue(match_str(r'x=foo \& bar & x^=foo', {'x': 'foo & bar'}))
+        self.assertTrue(match_str(r'x="foo \& bar" & x^=foo', {'x': 'foo & bar'}))
+
+        # Example from docs
+        self.assertTrue(
+            r'!is_live & like_count>?100 & description~=\'(?i)\bcats \& dogs\b\'',
+            {'description': 'Raining Cats & Dogs'})
 
     def test_parse_dfxp_time_expr(self):
         self.assertEqual(parse_dfxp_time_expr(None), None)

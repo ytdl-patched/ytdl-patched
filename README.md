@@ -439,25 +439,24 @@ Then simply run `make`. You can also run `make yt-dlp` instead to compile only t
                                      COUNT views
     --max-views COUNT                Do not download any videos with more than
                                      COUNT views
-    --match-filter FILTER            Generic video filter. Specify any key (see
-                                     "OUTPUT TEMPLATE" for a list of available
-                                     keys) to match if the key is present, !key
-                                     to check if the key is not present,
-                                     key>NUMBER (like "view_count > 12", also
-                                     works with >=, <, <=, !=, =) to compare
-                                     against a number, key = 'LITERAL' (like
-                                     "uploader = 'Mike Smith'", also works with
-                                     !=) to match against a string literal and &
-                                     to require multiple matches. Values which
-                                     are not known are excluded unless you put a
-                                     question mark (?) after the operator. For
-                                     example, to only match videos that have
-                                     been liked more than 100 times and disliked
-                                     less than 50 times (or the dislike
-                                     functionality is not available at the given
-                                     service), but who also have a description,
-                                     use --match-filter "like_count > 100 &
-                                     dislike_count <? 50 & description"
+    --match-filter FILTER            Generic video filter. Any field (see
+                                     "OUTPUT TEMPLATE") can be compared with a
+                                     number or a string using the operators
+                                     defined in "Filtering formats". You can
+                                     also simply specify a field to match if the
+                                     field is present and "!field" to check if
+                                     the field is not present. In addition,
+                                     Python style regular expression matching
+                                     can be done using "~=", and multiple
+                                     filters can be checked with "&". Use a "\"
+                                     to escape "&" or quotes if needed. Eg:
+                                     --match-filter "!is_live & like_count>?100
+                                     & description~=\'(?i)\bcats \& dogs\b\'"
+                                     matches only videos that are not live, has
+                                     a like count more than 100 (or the like
+                                     field is not available), and also has a
+                                     description that contains the phrase "cats
+                                     & dogs" (ignoring case)
     --no-match-filter                Do not use generic video filter (default)
     --no-playlist                    Download only the video, if the URL refers
                                      to a video and a playlist
@@ -1072,7 +1071,7 @@ The available fields are:
  - `average_rating` (numeric): Average rating give by users, the scale used depends on the webpage
  - `comment_count` (numeric): Number of comments on the video (For some extractors, comments are only downloaded at the end, and so this field cannot be used)
  - `age_limit` (numeric): Age restriction for the video (years)
- - `live_status` (string): One of 'is_live', 'was_live', 'upcoming', 'not_live'
+ - `live_status` (string): One of 'is_live', 'was_live', 'is_upcoming', 'not_live'
  - `is_live` (boolean): Whether this video is a live stream or a fixed-length video
  - `was_live` (boolean): Whether this video was originally a live stream
  - `playable_in_embed` (string): Whether this video is allowed to play in embedded players on other sites
