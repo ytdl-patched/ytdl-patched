@@ -74,7 +74,7 @@ VERSION_FILE = VSVersionInfo(
                     StringStruct('InternalName', 'ytdl-patched%s' % _x86),
                     StringStruct(
                         'LegalCopyright',
-                        'pukkandan.ytdlp@gmail.com | UNLICENSE',
+                        'nao20010128@gmail.com | UNLICENSE',
                     ),
                     StringStruct('OriginalFilename', 'ytdl-patched%s.exe' % _x86),
                     StringStruct('ProductName', 'ytdl-patched%s' % _x86),
