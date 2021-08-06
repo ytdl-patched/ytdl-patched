@@ -91,7 +91,7 @@ excluded_modules = ['test', 'ytdlp_plugins', 'youtube-dl', 'youtube-dlc']
 
 PyInstaller.__main__.run([
     '--name=youtube-dl%s' % _x86,
-    '--onefile', '--console', '--distpath', '.'
+    '--onefile', '--console', '--distpath', '.',
     f'--icon=icons\\youtube_social_squircle_{icon}.ico',
     *[f'--exclude-module={module}' for module in excluded_modules],
     *[f'--hidden-import={module}' for module in dependancies],
