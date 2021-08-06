@@ -6,12 +6,8 @@ $ErrorActionPreference = "Stop"
 
 switch ($BuilderName) {
     "PyInstaller" {
-        $IconArg = @()
-        if ($IconName) {
-            $IconArg = "--icon", "icons\youtube_social_squircle_${IconName}.ico"
-        }
         write-host "Building an EXE using PyInstaller"
-        python -OO pyinst.py
+        python -OO pyinst.py 64 "${IconName}"
 
         write-host "Moving built EXE into artifacts/"
         Move-Item youtube-dl.exe artifacts/

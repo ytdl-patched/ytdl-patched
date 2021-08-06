@@ -32,8 +32,9 @@ zlib.compress = zlib_compress
 
 
 arch = sys.argv[1] if len(sys.argv) > 1 else platform.architecture()[0][:2]
+icon = sys.argv[2] if len(sys.argv) > 2 else 'red'
 assert arch in ('32', '64')
-print('Building %sbit version' % arch)
+print('Building %s %sbit version' % (icon, arch))
 _x86 = '_x86' if arch == '32' else ''
 
 FILE_DESCRIPTION = 'ytdl-patched%s' % (' (32 Bit)' if _x86 else '')
@@ -91,7 +92,7 @@ excluded_modules = ['test', 'ytdlp_plugins', 'youtube-dl', 'youtube-dlc']
 PyInstaller.__main__.run([
     '--name=youtube-dl%s' % _x86,
     '--onefile', '--console', '--distpath', '.'
-    '--icon=devscripts/logo.ico',
+    f'--icon=icons\\youtube_social_squircle_{icon}.ico',
     *[f'--exclude-module={module}' for module in excluded_modules],
     *[f'--hidden-import={module}' for module in dependancies],
     '--upx-exclude=vcruntime140.dll',
