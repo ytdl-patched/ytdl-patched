@@ -39,7 +39,6 @@ from ..downloader.f4m import (
     remove_encrypted_media,
 )
 from ..utils import (
-    NO_DEFAULT,
     age_restricted,
     base_url,
     bug_reports_message,
@@ -49,10 +48,11 @@ from ..utils import (
     determine_protocol,
     dict_get,
     error_to_compat_str,
-    ExtractorError,
     extract_attributes,
+    ExtractorError,
     fix_xml_ampersands,
     float_or_none,
+    format_field,
     GeoRestrictedError,
     GeoUtils,
     int_or_none,
@@ -60,6 +60,7 @@ from ..utils import (
     JSON_LD_RE,
     mimetype2ext,
     network_exceptions,
+    NO_DEFAULT,
     orderedSet,
     parse_bitrate,
     parse_codecs,
@@ -68,8 +69,8 @@ from ..utils import (
     parse_m3u8_attributes,
     parse_resolution,
     RegexNotFoundError,
-    sanitized_Request,
     sanitize_filename,
+    sanitized_Request,
     str_or_none,
     str_to_int,
     strip_or_none,
@@ -79,9 +80,9 @@ from ..utils import (
     unified_timestamp,
     update_Request,
     update_url_query,
-    urljoin,
     url_basename,
     url_or_none,
+    urljoin,
     variadic,
     xpath_element,
     xpath_text,
@@ -457,6 +458,7 @@ class InfoExtractor(object):
         """Constructor. Receives an optional downloader."""
         self._ready = False
         self._x_forwarded_for_ip = None
+        self._printed_messages = set()
         self.set_downloader(downloader)
 
     @classmethod
@@ -486,6 +488,7 @@ class InfoExtractor(object):
 
     def initialize(self):
         """Initializes an instance (authentication, etc)."""
+        self._printed_messages = set()
         self._initialize_geo_bypass({
             'countries': self._GEO_COUNTRIES,
             'ip_blocks': self._GEO_IP_BLOCKS,
@@ -1029,10 +1032,14 @@ class InfoExtractor(object):
             expected_status=expected_status)
         return res if res is False else res[0]
 
-    def report_warning(self, msg, video_id=None, *args, **kwargs):
-        idstr = '' if video_id is None else '%s: ' % video_id
-        self._downloader.report_warning(
-            '[%s] %s%s' % (self.IE_NAME, idstr, msg), *args, **kwargs)
+    def report_warning(self, msg, video_id=None, *args, only_once=False, **kwargs):
+        idstr = format_field(video_id, template='%s: ')
+        msg = f'[{self.IE_NAME}] {idstr}{msg}'
+        if only_once:
+            if f'WARNING: {msg}' in self._printed_messages:
+                return
+            self._printed_messages.add(f'WARNING: {msg}')
+        self._downloader.report_warning(msg, *args, **kwargs)
 
     def to_screen(self, msg, *args, **kwargs):
         """Print msg to screen, prefixing it with '[ie_name]'"""
@@ -1988,7 +1995,7 @@ class InfoExtractor(object):
             self.report_warning(bug_reports_message(
                 "Ignoring subtitle tracks found in the HLS manifest; "
                 "if any subtitle tracks are missing,"
-            ))
+            ), only_once=True)
         return fmts
 
     def _extract_m3u8_formats_and_subtitles(
@@ -2271,7 +2278,7 @@ class InfoExtractor(object):
             self.report_warning(bug_reports_message(
                 "Ignoring subtitle tracks found in the SMIL manifest; "
                 "if any subtitle tracks are missing,"
-            ))
+            ), only_once=True)
         return fmts
 
     def _extract_smil_info(self, smil_url, video_id, fatal=True, f4m_params=None):
@@ -2497,7 +2504,7 @@ class InfoExtractor(object):
             self.report_warning(bug_reports_message(
                 "Ignoring subtitle tracks found in the DASH manifest; "
                 "if any subtitle tracks are missing,"
-            ))
+            ), only_once=True)
         return fmts
 
     def _extract_mpd_formats_and_subtitles(
@@ -2524,7 +2531,7 @@ class InfoExtractor(object):
             self.report_warning(bug_reports_message(
                 "Ignoring subtitle tracks found in the DASH manifest; "
                 "if any subtitle tracks are missing,"
-            ))
+            ), only_once=True)
         return fmts
 
     def _parse_mpd_formats_and_subtitles(

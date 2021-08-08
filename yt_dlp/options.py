@@ -190,15 +190,15 @@ def parseOpts(overrideArguments=None):
     general.add_option(
         '--dump-user-agent',
         action='store_true', dest='dump_user_agent', default=False,
-        help='Display the current browser identification')
+        help='Display the current user-agent and exit')
     general.add_option(
         '--list-extractors',
         action='store_true', dest='list_extractors', default=False,
-        help='List all supported extractors')
+        help='List all supported extractors and exit')
     general.add_option(
         '--extractor-descriptions',
         action='store_true', dest='list_extractor_descriptions', default=False,
-        help='Output descriptions of all supported extractors')
+        help='Output descriptions of all supported extractors and exit')
     general.add_option(
         '--force-generic-extractor',
         action='store_true', dest='force_generic_extractor', default=False,
@@ -223,12 +223,6 @@ def parseOpts(overrideArguments=None):
         '--flat-playlist',
         action='store_const', dest='extract_flat', const='in_playlist', default=False,
         help='Do not extract the videos of a playlist, only list them')
-    general.add_option(
-        '--flat-videos',
-        action='store_true', dest='extract_flat',
-        # help='Do not resolve the video urls')
-        # doesn't work
-        help=optparse.SUPPRESS_HELP)
     general.add_option(
         '--no-flat-playlist',
         action='store_false', dest='extract_flat',
@@ -564,7 +558,7 @@ def parseOpts(overrideArguments=None):
     video_format.add_option(
         '-F', '--list-formats',
         action='store_true', dest='listformats',
-        help='List all available formats of requested videos')
+        help='List available formats of each video. Simulate unless --no-simulate is used')
     video_format.add_option(
         '--list-formats-as-table',
         action='store_true', dest='listformats_table', default=True,
@@ -621,7 +615,7 @@ def parseOpts(overrideArguments=None):
     subtitles.add_option(
         '--list-subs', '--list-subtitles',
         action='store_true', dest='listsubtitles', default=False,
-        help='List all available subtitles for the video')
+        help='List available subtitles of each video. Simulate unless --no-simulate is used')
     subtitles.add_option(
         '--sub-format',
         action='store', dest='subtitlesformat', metavar='FORMAT', default='best',
@@ -840,21 +834,25 @@ def parseOpts(overrideArguments=None):
     verbosity.add_option(
         '-q', '--quiet',
         action='store_true', dest='quiet', default=False,
-        help='Activate quiet mode')
+        help='Activate quiet mode. If used with --verbose, print the log to stderr')
     verbosity.add_option(
         '--no-warnings',
         dest='no_warnings', action='store_true', default=False,
         help='Ignore warnings')
     verbosity.add_option(
         '-s', '--simulate',
-        action='store_true', dest='simulate', default=False,
+        action='store_true', dest='simulate', default=None,
         help='Do not download the video and do not write anything to disk')
+    verbosity.add_option(
+        '--no-simulate',
+        action='store_false', dest='simulate',
+        help='Download the video even if printing/listing options are used')
     verbosity.add_option(
         '--ignore-no-formats-error',
         action='store_true', dest='ignore_no_formats_error', default=False,
         help=(
             'Ignore "No video formats" error. Usefull for extracting metadata '
-            'even if the video is not actually available for download (experimental)'))
+            'even if the videos are not actually available for download (experimental)'))
     verbosity.add_option(
         '--no-ignore-no-formats-error',
         action='store_false', dest='ignore_no_formats_error',
@@ -868,8 +866,8 @@ def parseOpts(overrideArguments=None):
         action='callback', dest='forceprint', type='str', default=[],
         callback=_list_from_options_callback, callback_kwargs={'delim': None},
         help=(
-            'Simulate, quiet but print the given fields. Either a field name '
-            'or similar formatting as the output template can be used'))
+            'Quiet, but print the given fields for each video. Simulate unless --no-simulate is used. '
+            'Either a field name or same syntax as the output template can be used'))
     verbosity.add_option(
         '-g', '--get-url',
         action='store_true', dest='geturl', default=False,
@@ -905,17 +903,17 @@ def parseOpts(overrideArguments=None):
     verbosity.add_option(
         '-j', '--dump-json',
         action='store_true', dest='dumpjson', default=False,
-        help='Simulate, quiet but print JSON information. See "OUTPUT TEMPLATE" for a description of available keys')
+        help='Quiet, but print JSON information for each video. Simulate unless --no-simulate is used. See "OUTPUT TEMPLATE" for a description of available keys')
     verbosity.add_option(
         '-J', '--dump-single-json',
         action='store_true', dest='dump_single_json', default=False,
         help=(
-            'Simulate, quiet but print JSON information for each command-line argument. '
-            'If the URL refers to a playlist, dump the whole playlist information in a single line'))
+            'Quiet, but print JSON information for each url or infojson passed. Simulate unless --no-simulate is used. '
+            'If the URL refers to a playlist, the whole playlist information is dumped in a single line'))
     verbosity.add_option(
         '--print-json',
         action='store_true', dest='print_json', default=False,
-        help='Be quiet and print the video information as JSON (video is still being downloaded)')
+        help=optparse.SUPPRESS_HELP)
     verbosity.add_option(
         '--force-write-archive', '--force-write-download-archive', '--force-download-archive',
         action='store_true', dest='force_write_download_archive', default=False,
@@ -1190,7 +1188,7 @@ def parseOpts(overrideArguments=None):
     thumbnail.add_option(
         '--list-thumbnails',
         action='store_true', dest='list_thumbnails', default=False,
-        help='Simulate and list all available thumbnail formats')
+        help='List available thumbnails of each video. Simulate unless --no-simulate is used')
 
     link = optparse.OptionGroup(parser, 'Internet Shortcut Options')
     link.add_option(
@@ -1336,17 +1334,31 @@ def parseOpts(overrideArguments=None):
         dest='ffmpeg_location',
         help='Location of the ffmpeg binary; either the path to the binary or its containing directory')
     postproc.add_option(
-        '--exec',
-        metavar='CMD', dest='exec_cmd',
+        '--exec', metavar='CMD',
+        action='callback', dest='exec_cmd', default=[], type='str',
+        callback=_list_from_options_callback, callback_kwargs={'delim': None},
         help=(
             'Execute a command on the file after downloading and post-processing. '
-            'Similar syntax to the output template can be used to pass any field as arguments to the command. '
+            'Same syntax as the output template can be used to pass any field as arguments to the command. '
             'An additional field "filepath" that contains the final path of the downloaded file is also available. '
-            'If no fields are passed, %(filepath)q is appended to the end of the command'))
+            'If no fields are passed, %(filepath)q is appended to the end of the command. '
+            'This option can be used multiple times'))
     postproc.add_option(
-        '--exec-before-download',
-        metavar='CMD', dest='exec_before_dl_cmd',
-        help='Execute a command before the actual download. The syntax is the same as --exec but "filepath" is not available')
+        '--no-exec',
+        action='store_const', dest='exec_cmd', const=[],
+        help='Remove any previously defined --exec')
+    postproc.add_option(
+        '--exec-before-download', metavar='CMD',
+        action='callback', dest='exec_before_dl_cmd', default=[], type='str',
+        callback=_list_from_options_callback, callback_kwargs={'delim': None},
+        help=(
+            'Execute a command before the actual download. '
+            'The syntax is the same as --exec but "filepath" is not available. '
+            'This option can be used multiple times'))
+    postproc.add_option(
+        '--no-exec-before-download',
+        action='store_const', dest='exec_before_dl_cmd', const=[],
+        help='Remove any previously defined --exec-before-download')
     postproc.add_option(
         '--convert-subs', '--convert-sub', '--convert-subtitles',
         metavar='FORMAT', dest='convertsubtitles', default=None,
@@ -1430,7 +1442,7 @@ def parseOpts(overrideArguments=None):
         '--no-hls-split-discontinuity',
         dest='hls_split_discontinuity', action='store_false',
         help='Do not split HLS playlists to different formats at discontinuities such as ad breaks (default)')
-    _extractor_arg_parser = lambda key, vals='': (key.strip().lower(), [val.strip() for val in vals.split(',')])
+    _extractor_arg_parser = lambda key, vals='': (key.strip().lower().replace('-', '_'), [val.strip() for val in vals.split(',')])
     extractor.add_option(
         '--extractor-args',
         metavar='KEY:ARGS', dest='extractor_args', default={}, type='str',

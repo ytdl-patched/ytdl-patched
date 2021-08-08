@@ -265,7 +265,7 @@ def write_json_file(obj, fn):
 
     try:
         with tf:
-            json.dump(obj, tf, default=repr)
+            json.dump(obj, tf)
         if sys.platform == 'win32':
             # Need to remove existing file on Windows, else os.rename raises
             # WindowsError or FileExistsError.
@@ -4608,8 +4608,11 @@ def to_high_limit_path(path):
     return path
 
 
-def format_field(obj, field, template='%s', ignore=(None, ''), default='', func=None):
-    val = obj.get(field, default)
+def format_field(obj, field=None, template='%s', ignore=(None, ''), default='', func=None):
+    if field is None:
+        val = obj if obj is not None else default
+    else:
+        val = obj.get(field, default)
     if func and val not in ignore:
         val = func(val)
     return template % val if val not in ignore else default
@@ -4710,6 +4713,8 @@ def traverse_obj(
 
     def _traverse_obj(obj, path, _current_depth=0):
         nonlocal depth
+        if obj is None:
+            return None
         path = tuple(variadic(path))
         for i, key in enumerate(path):
             if isinstance(key, (list, tuple)):
@@ -4722,7 +4727,7 @@ def traverse_obj(
                 _current_depth += 1
                 depth = max(depth, _current_depth)
                 return [_traverse_obj(inner_obj, path[i + 1:], _current_depth) for inner_obj in obj]
-            elif isinstance(obj, dict):
+            elif isinstance(obj, dict) and not (is_user_input and key == ':'):
                 obj = (obj.get(key) if casesense or (key in obj)
                        else next((v for k, v in obj.items() if _lower(k) == key), None))
             else:
@@ -4730,7 +4735,7 @@ def traverse_obj(
                     key = (int_or_none(key) if ':' not in key
                            else slice(*map(int_or_none, key.split(':'))))
                     if key == slice(None):
-                        return _traverse_obj(obj, (..., *path[i + 1:]))
+                        return _traverse_obj(obj, (..., *path[i + 1:]), _current_depth)
                 if not isinstance(key, (int, slice)):
                     return None
                 if not isinstance(obj, (list, tuple, LazyList)):

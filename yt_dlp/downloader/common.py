@@ -50,9 +50,12 @@ class FileDownloader(object):
     min_filesize:       Skip files smaller than this size
     max_filesize:       Skip files larger than this size
     xattr_set_filesize: Set ytdl.filesize user xattribute with expected size.
-    external_downloader_args:  A list of additional command-line arguments for the
-                        external downloader.
-    hls_use_mpegts:     Use the mpegts container for HLS videself.ydl.
+    external_downloader_args:  A dictionary of downloader keys (in lower case)
+                        and a list of additional command-line arguments for the
+                        executable. Use 'default' as the name for arguments to be
+                        passed to all downloaders. For compatibility with youtube-dl,
+                        a single list of args can also be used
+    hls_use_mpegts:     Use the mpegts container for HLS videos.
     http_chunk_size:    Size of a chunk for chunk-based HTTP downloading. May be
                         useful for bypassing bandwidth throttling imposed by
                         a webserver (experimental)
@@ -330,12 +333,9 @@ class FileDownloader(object):
             '[download] Got server HTTP error: %s. Retrying (attempt %d of %s) ...'
             % (error_to_compat_str(err), count, self.format_retries(retries)))
 
-    def report_file_already_downloaded(self, file_name):
+    def report_file_already_downloaded(self, *args, **kwargs):
         """Report file has already been fully downloaded."""
-        try:
-            self.to_screen('[download] %s has already been downloaded' % file_name)
-        except UnicodeEncodeError:
-            self.to_screen('[download] The file has already been downloaded')
+        return self.ydl.report_file_already_downloaded(*args, **kwargs)
 
     def report_unable_to_resume(self):
         """Report it was impossible to resume download."""

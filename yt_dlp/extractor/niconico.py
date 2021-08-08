@@ -26,16 +26,16 @@ from ..neonippori import (
     convert_niconico_json_to_xml,
 )
 from ..utils import (
-    dict_get,
     ExtractorError,
+    dict_get,
     float_or_none,
-    InAdvancePagedList,
     int_or_none,
+    OnDemandPagedList,
     parse_duration,
     parse_iso8601,
     remove_start,
-    traverse_obj,
     try_get,
+    traverse_obj,
     unescapeHTML,
     unified_timestamp,
     urlencode_postdata,
@@ -731,10 +731,10 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = InAdvancePagedList(
+        entries = OnDemandPagedList(
             functools.partial(self._fetch_page, list_id),
             math.ceil(mylist['totalItemCount'] / self._PAGE_SIZE),
-            self._PAGE_SIZE).getslice()
+            self._PAGE_SIZE)
         result = self.playlist_result(
             entries, list_id, mylist.get('name'), mylist.get('description'))
         result.update(self._parse_owner(mylist))
@@ -789,10 +789,10 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = InAdvancePagedList(
+        entries = OnDemandPagedList(
             functools.partial(self._fetch_page, list_id),
             math.ceil(mylist['totalCount'] / self._PAGE_SIZE),
-            self._PAGE_SIZE).getslice()
+            self._PAGE_SIZE)
         result = self.playlist_result(
             entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
         result.update(self._parse_owner(mylist))
@@ -874,10 +874,10 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = InAdvancePagedList(
+        entries = OnDemandPagedList(
             functools.partial(self._fetch_page, list_id),
             math.ceil(mylist['totalCount'] / self._PAGE_SIZE),
-            self._PAGE_SIZE).getslice()
+            self._PAGE_SIZE)
         result = self.playlist_result(entries, list_id)
         result.update(self._parse_owner(mylist))
         return result
