@@ -1,19 +1,22 @@
 from __future__ import unicode_literals
 
 from .common import InfoExtractor
-from ..utils import ExtractorError
+from ..utils import (
+    ExtractorError,
+    traverse_obj,
+)
 
 
 class MirrativBaseIE(InfoExtractor):
     def assert_error(self, response):
-        error_message = response.get('status', {}).get('error')
+        error_message = traverse_obj(response, ('status', 'error'))
         if error_message:
             raise ExtractorError('Mirrativ says: %s' % error_message, expected=True)
 
 
 class MirrativIE(MirrativBaseIE):
     IE_NAME = 'mirrativ'
-    _VALID_URL = r'https?://(?:www.)?mirrativ\.com/live/(?P<id>[^/?#&]+)'
+    _VALID_URL = r'https?://(?:www\.)?mirrativ\.com/live/(?P<id>[^/?#&]+)'
     LIVE_API_URL = 'https://www.mirrativ.com/api/live/live?live_id=%s'
 
     TESTS = [{
@@ -27,19 +30,29 @@ class MirrativIE(MirrativBaseIE):
         live_response = self._download_json(self.LIVE_API_URL % video_id, video_id)
         self.assert_error(live_response)
 
-        if live_response.get('archive_url_hls'):
-            hls_url = live_response['archive_url_hls']
-            is_live = False
-        elif live_response.get('streaming_url_hls'):
-            hls_url = live_response['streaming_url_hls']
-            is_live = True
-        else:
-            raise ExtractorError('Live has ended, and has no archive found', expected=True)
+        hls_url = live_response.get('archive_url_hls') or live_response.get('streaming_url_hls')
+        is_live = bool(live_response.get('is_live'))
+        was_live = bool(live_response.get('is_archive'))
+        if not hls_url:
+            raise ExtractorError('Neither archive nor live is available.', expected=True)
 
         formats = self._extract_m3u8_formats(
             hls_url, video_id,
-            ext='mp4', entry_protocol='m3u8_native',
+            ext='mp4', entry_protocol='m3u8',
             m3u8_id='hls', live=is_live)
+        rtmp_url = live_response.get('streaming_url_edge')
+        if rtmp_url:
+            formats.append({
+                'format_id': 'rtmp',
+                'url': rtmp_url,
+                'protocol': 'rtmp',
+                'ext': 'mp4',
+                'width': traverse_obj(formats, (0, 'width')),
+                'height': traverse_obj(formats, (0, 'height')),
+                'vcodec': traverse_obj(formats, (0, 'vcodec')),
+                'acodec': traverse_obj(formats, (0, 'acodec')),
+            })
+        self._sort_formats(formats)
 
         title = self._og_search_title(webpage, default=None) or self._search_regex(
             r'<title>\s*(.+?) - Mirrativ\s*</title>', webpage) or live_response.get('title')
@@ -71,13 +84,13 @@ class MirrativIE(MirrativBaseIE):
             'view_count': view_count,
             'release_timestamp': release_timestamp,
             'timestamp': timestamp,
-            'was_live': None if is_live else True,
+            'was_live': was_live,
         }
 
 
 class MirrativUserIE(MirrativBaseIE):
     IE_NAME = 'mirrativ:user'
-    _VALID_URL = r'https?://(?:www.)?mirrativ\.com/user/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?mirrativ\.com/user/(?P<id>\d+)'
     LIVE_HISTORY_API_URL = 'https://www.mirrativ.com/api/live/live_history?user_id=%s&page=%d'
     USER_INFO_API_URL = 'https://www.mirrativ.com/api/user/profile?user_id=%s'
 
@@ -112,8 +125,9 @@ class MirrativUserIE(MirrativBaseIE):
             if not lives:
                 break
             for live in lives:
+                # !(live.is_archive || live.is_live) === !live.is_archive && !live.is_live
                 if not live.get('is_archive') and not live.get('is_live'):
-                    # neither of archive and live is available, so skip it
+                    # neither archive nor live is available, so skip it
                     # or the service will ban your IP address for a while
                     continue
                 live_id = live.get('live_id')
