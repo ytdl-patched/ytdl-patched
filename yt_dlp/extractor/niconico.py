@@ -607,42 +607,42 @@ class NiconicoIE(NiconicoBaseIE):
             auth_data = {'user_id': ''}
 
         # Request Start
-        post_data = [{"ping": {"content": "rs:0"}}]
+        post_data = [{'ping': {'content': 'rs:0'}}]
         for i, thread in enumerate(threads):
             thread_id = thread['id']
             thread_fork = thread['fork']
             # Post Start (2N)
-            post_data.append({"ping": {"content": f"ps:{i * 2}"}})
-            post_data.append({"thread": {
-                "fork": thread_fork,
-                "language": language_id,
-                "nicoru": 3,
-                "scores": 1,
-                "thread": thread_id,
-                "version": "20090904",
-                "with_global": 1,
+            post_data.append({'ping': {'content': f'ps:{i * 2}'}})
+            post_data.append({'thread': {
+                'fork': thread_fork,
+                'language': language_id,
+                'nicoru': 3,
+                'scores': 1,
+                'thread': thread_id,
+                'version': '20090904',
+                'with_global': 1,
                 **auth_data,
             }})
             # Post Final (2N)
-            post_data.append({"ping": {"content": f"pf:{i * 2}"}})
+            post_data.append({'ping': {'content': f'pf:{i * 2}'}})
 
             # Post Start (2N+1)
-            post_data.append({"ping": {"content": f"ps:{i * 2 + 1}"}})
-            post_data.append({"thread_leaves": {
-                # format is "<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments"
+            post_data.append({'ping': {'content': f'ps:{i * 2 + 1}'}})
+            post_data.append({'thread_leaves': {
+                # format is '<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments'
                 # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
-                "content": "0-999999:999999,999999,nicoru:999999",
-                "fork": thread_fork,
-                "language": language_id,
-                "nicoru": 3,
-                "scores": 1,
-                "thread": thread_id,
+                'content': '0-999999:999999,999999,nicoru:999999',
+                'fork': thread_fork,
+                'language': language_id,
+                'nicoru': 3,
+                'scores': 1,
+                'thread': thread_id,
                 **auth_data,
             }})
             # Post Final (2N+1)
-            post_data.append({"ping": {"content": f"pf:{i * 2 + 1}"}})
+            post_data.append({'ping': {'content': f'pf:{i * 2 + 1}'}})
         # Request Final
-        post_data.append({"ping": {"content": "rf:0"}})
+        post_data.append({'ping': {'content': 'rf:0'}})
 
         return self._download_json(
             api_url, video_id,
