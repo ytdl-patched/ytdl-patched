@@ -607,39 +607,46 @@ class NiconicoIE(NiconicoBaseIE):
 
         for i, thread_id in enumerate(thread_ids):
             raw_json += self._download_json(
-                'https://nvcomment.nicovideo.jp/legacy/api.json',
+                'https://nmsg.nicovideo.jp/api.json',
                 video_id,
                 headers={
                     'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
                     'Origin': 'https://www.nicovideo.jp',
+                    'Content-Type': 'text/plain;charset=UTF-8',
                 },
                 data=json.dumps([
+                    # Request Start
                     {"ping": {"content": "rs:0"}},
+                    # Post Start (#0)
                     {"ping": {"content": "ps:0"}},
                     {"thread": {
-                        "thread": thread_id,
-                        "version": "20090904",
                         "fork": 0,
-                        "language": 0,
-                        "user_id": "",
-                        "with_global": 1,
+                        "language": language_id,
+                        "nicoru": 3,
                         "scores": 1,
-                        "nicoru": 3
+                        "thread": thread_id,
+                        "user_id": "",
+                        "version": "20090904",
+                        "with_global": 1,
                     }},
                     {"ping": {"content": "pf:0"}},
+                    # Post Start (#1)
                     {"ping": {"content": "ps:1"}},
                     {"thread_leaves": {
-                        "thread": thread_id,
-                        "language": language_id,
-                        "user_id": "",
                         # format is "<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments"
                         # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
                         "content": "0-999999:999999,999999,nicoru:999999",
+                        # "content": "0-5:100,250,nicoru:100",
+                        "fork": 0,
+                        "language": language_id,
+                        "nicoru": 3,
                         "scores": 1,
-                        "nicoru": 3
+                        "thread": thread_id,
+                        "user_id": "",
                     }},
                     {"ping": {"content": "pf:1"}},
-                    {"ping": {"content": "rf:0"}}
+                    # Request Final
+                    {"ping": {"content": "rf:0"}},
                 ]).encode(),
                 note='Downloading comments from thread %s/%s (%s)' % (
                     i + 1, len(thread_ids), 'en' if language_id == 1 else
