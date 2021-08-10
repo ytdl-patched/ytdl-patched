@@ -596,8 +596,6 @@ class NiconicoIE(NiconicoBaseIE):
         }
 
     def _extract_all_comments(self, api_url, video_id, threads, language_id, user_id, user_key):
-        raw_json = []
-
         if user_id and user_key:
             # authenticate as an user
             auth_data = {
@@ -608,56 +606,53 @@ class NiconicoIE(NiconicoBaseIE):
             # user_id field with empty string is still needed
             auth_data = {'user_id': ''}
 
+        # Request Start
+        post_data = [{"ping": {"content": "rs:0"}}]
         for i, thread in enumerate(threads):
             thread_id = thread['id']
             thread_fork = thread['fork']
-            raw_json += self._download_json(
-                api_url, video_id,
-                headers={
-                    'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
-                    'Origin': 'https://www.nicovideo.jp',
-                    'Content-Type': 'text/plain;charset=UTF-8',
-                },
-                data=json.dumps([
-                    # Request Start
-                    {"ping": {"content": "rs:0"}},
-                    # Post Start (#0)
-                    {"ping": {"content": "ps:0"}},
-                    {"thread": {
-                        "fork": thread_fork,
-                        "language": language_id,
-                        "nicoru": 3,
-                        "scores": 1,
-                        "thread": thread_id,
-                        "version": "20090904",
-                        "with_global": 1,
-                        **auth_data,
-                    }},
-                    {"ping": {"content": "pf:0"}},
-                    # Post Start (#1)
-                    {"ping": {"content": "ps:1"}},
-                    {"thread_leaves": {
-                        # format is "<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments"
-                        # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
-                        "content": "0-999999:999999,999999,nicoru:999999",
-                        "fork": thread_fork,
-                        "language": language_id,
-                        "nicoru": 3,
-                        "scores": 1,
-                        "thread": thread_id,
-                        **auth_data,
-                    }},
-                    {"ping": {"content": "pf:1"}},
-                    # Request Final
-                    {"ping": {"content": "rf:0"}},
-                ]).encode(),
-                note='Downloading comments from thread %s/%s (%s)' % (
-                    i + 1, len(threads), 'en' if language_id == 1 else
-                    'jp' if language_id == 0 else
-                    'cn' if language_id == 2 else
-                    'unknown'))
+            # Post Start (2N)
+            post_data.append({"ping": {"content": f"ps:{i * 2}"}})
+            post_data.append({"thread": {
+                "fork": thread_fork,
+                "language": language_id,
+                "nicoru": 3,
+                "scores": 1,
+                "thread": thread_id,
+                "version": "20090904",
+                "with_global": 1,
+                **auth_data,
+            }})
+            # Post Final (2N)
+            post_data.append({"ping": {"content": f"pf:{i * 2}"}})
 
-        return raw_json
+            # Post Start (2N+1)
+            post_data.append({"ping": {"content": f"ps:{i * 2 + 1}"}})
+            post_data.append({"thread_leaves": {
+                # format is "<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments"
+                # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
+                "content": "0-999999:999999,999999,nicoru:999999",
+                "fork": thread_fork,
+                "language": language_id,
+                "nicoru": 3,
+                "scores": 1,
+                "thread": thread_id,
+                **auth_data,
+            }})
+            # Post Final (2N+1)
+            post_data.append({"ping": {"content": f"pf:{i * 2 + 1}"}})
+        # Request Final
+        post_data.append({"ping": {"content": "rf:0"}})
+
+        return self._download_json(
+            api_url, video_id,
+            headers={
+                'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
+                'Origin': 'https://www.nicovideo.jp',
+                'Content-Type': 'text/plain;charset=UTF-8',
+            },
+            data=json.dumps(post_data).encode(),
+            note='Downloading comments (%s)' % ('jp', 'en', 'cn')[language_id])
 
 
 class NiconicoPlaylistBaseIE(NiconicoBaseIE):
