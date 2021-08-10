@@ -4834,7 +4834,9 @@ def char_replace(base, replace, string):
     return result
 
 
-def dig_object_type(obj, prefix='', lines=[]):
+def dig_object_type(obj, prefix='', lines=None):
+    if lines is None:
+        lines = []
     if isinstance(obj, dict):
         for k, v in obj.items():
             dig_object_type(v, prefix + '.' + str(k), lines)

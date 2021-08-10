@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import datetime
 import functools
 import itertools
 import math
@@ -481,12 +480,6 @@ class NiconicoIE(NiconicoBaseIE):
                 r'<span[^>]+class="videoHeaderTitle"[^>]*>([^<]+)</span>',
                 webpage, 'video title'))
 
-        watch_api_data_string = self._html_search_regex(
-            r'<div[^>]+id="watchAPIDataContainer"[^>]+>([^<]+)</div>',
-            webpage, 'watch api data', default=None)
-        watch_api_data = self._parse_json(watch_api_data_string, video_id) if watch_api_data_string else {}
-        video_detail = watch_api_data.get('videoDetail', {})
-
         thumbnail = (
             self._html_search_regex(r'<meta property="og:image" content="([^"]+)">', webpage, 'thumbnail data', default=None)
             or get_video_info(['largeThumbnailURL', 'thumbnail_url', 'thumbnailURL'])
@@ -514,10 +507,6 @@ class NiconicoIE(NiconicoBaseIE):
             match = self._html_search_meta('datePublished', webpage, 'date published', default=None)
             if match:
                 timestamp = parse_iso8601(match.replace('+', ':00+'))
-        if not timestamp and video_detail.get('postedAt'):
-            timestamp = parse_iso8601(
-                video_detail['postedAt'].replace('/', '-'),
-                delimiter=' ', timezone=datetime.timedelta(hours=9))
 
         comment_count = traverse_obj(
             api_data,
@@ -535,7 +524,6 @@ class NiconicoIE(NiconicoBaseIE):
             parse_duration(
                 get_video_info('length')
                 or self._html_search_meta('video:duration', webpage, 'video duration', default=None))
-            or video_detail.get('length')
             or get_video_info('duration'))
 
         webpage_url = get_video_info('watch_url') or url
@@ -563,8 +551,13 @@ class NiconicoIE(NiconicoBaseIE):
             player_size = try_get(self._configuration_arg('player_size'), lambda x: x[0], compat_str)
             w, h = self._parse_player_size(player_size)
 
-            thread_ids = list(set(re.findall(r'threadIds&quot;:\[{&quot;id&quot;:([0-9]*)', webpage)))
-            raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0)
+            comment_api_url = 'https://nmsg.nicovideo.jp/api.json'
+            comment_user_key = traverse_obj(api_data, ('comment', 'keys', 'userKey'))
+            user_id_str = session_api_data.get('serviceUserId')
+
+            thread_ids = [x for x in traverse_obj(api_data, ('comment', 'threads')) if x['isActive']]
+            raw_danmaku = self._extract_all_comments(comment_api_url, video_id, thread_ids, 0, user_id_str, comment_user_key)
+
             raw_danmaku = json.dumps(raw_danmaku)
             danmaku = load_comments(raw_danmaku, 'NiconicoJson', w, h, report_warning=self.report_warning)
             xml_danmaku = convert_niconico_json_to_xml(raw_danmaku)
@@ -602,13 +595,24 @@ class NiconicoIE(NiconicoBaseIE):
             'subtitles': subtitles,
         }
 
-    def _extract_all_comments(self, video_id, thread_ids, language_id):
+    def _extract_all_comments(self, api_url, video_id, threads, language_id, user_id, user_key):
         raw_json = []
 
-        for i, thread_id in enumerate(thread_ids):
+        if user_id and user_key:
+            # authenticate as an user
+            auth_data = {
+                'user_id': user_id,
+                'userkey': user_key,
+            }
+        else:
+            # user_id field with empty string is still needed
+            auth_data = {'user_id': ''}
+
+        for i, thread in enumerate(threads):
+            thread_id = thread['id']
+            thread_fork = thread['fork']
             raw_json += self._download_json(
-                'https://nmsg.nicovideo.jp/api.json',
-                video_id,
+                api_url, video_id,
                 headers={
                     'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
                     'Origin': 'https://www.nicovideo.jp',
@@ -620,14 +624,14 @@ class NiconicoIE(NiconicoBaseIE):
                     # Post Start (#0)
                     {"ping": {"content": "ps:0"}},
                     {"thread": {
-                        "fork": 0,
+                        "fork": thread_fork,
                         "language": language_id,
                         "nicoru": 3,
                         "scores": 1,
                         "thread": thread_id,
-                        "user_id": "",
                         "version": "20090904",
                         "with_global": 1,
+                        **auth_data,
                     }},
                     {"ping": {"content": "pf:0"}},
                     # Post Start (#1)
@@ -636,20 +640,19 @@ class NiconicoIE(NiconicoBaseIE):
                         # format is "<bottom of minute range>-<top of minute range>:<comments per minute>,<total last comments"
                         # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
                         "content": "0-999999:999999,999999,nicoru:999999",
-                        # "content": "0-5:100,250,nicoru:100",
-                        "fork": 0,
+                        "fork": thread_fork,
                         "language": language_id,
                         "nicoru": 3,
                         "scores": 1,
                         "thread": thread_id,
-                        "user_id": "",
+                        **auth_data,
                     }},
                     {"ping": {"content": "pf:1"}},
                     # Request Final
                     {"ping": {"content": "rf:0"}},
                 ]).encode(),
                 note='Downloading comments from thread %s/%s (%s)' % (
-                    i + 1, len(thread_ids), 'en' if language_id == 1 else
+                    i + 1, len(threads), 'en' if language_id == 1 else
                     'jp' if language_id == 0 else
                     'cn' if language_id == 2 else
                     'unknown'))
