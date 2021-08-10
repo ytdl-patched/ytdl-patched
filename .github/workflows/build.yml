@@ -172,11 +172,6 @@ jobs:
       fail-fast: false
       matrix:
         icon: [red, white]
-        # :tada: https://github.com/pyinstaller/pyinstaller/releases/tag/v4.2
-        # builder: [PyInstaller, py2exe]
-        # remove_tests: ['-notests', '']  # yes and no
-        builder: [PyInstaller]
-        remove_tests: ['']
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -192,25 +187,24 @@ jobs:
       - name: Upgrade pip and enable wheel support
         run: python -m pip install --upgrade pip setuptools wheel
       - name: Install deps
-        run: pip install -U ${{ matrix.builder }} zopflipy websockets python-dateutil mutagen pycryptodome
+        run: pip install -U "https://yt-dlp.github.io/pyinstaller-builds/x86_64/pyinstaller-4.5.1-py3-none-any.whl" zopflipy websockets python-dateutil mutagen pycryptodome
       - name: Install UPX
         shell: pwsh
         run: pwsh ./devscripts/install_upx.ps1
       - name: Remove unneeded tests in InfoExtractor
         shell: bash
         run: python3 ./devscripts/reduce_code.py yt_dlp/extractor/*.py
-        if: ${{ matrix.remove_tests == '-notests' }}
+        if: ${{ 0 == 1 }}  # always skip this step
       - name: Build patched YTDL for Windows
         shell: pwsh
-        run: pwsh ./devscripts/build_windows_exe.ps1 ${{ matrix.builder }} ${{ matrix.icon }}
+        run: pwsh ./devscripts/build_windows_exe.ps1 PyInstaller ${{ matrix.icon }}
       - name: Compress generated EXE
         run: upx --lzma --best artifacts/youtube-dl.exe
-        if: ${{ matrix.builder == 'PyInstaller' }}
         continue-on-error: true
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: "ytdl-windows-${{ matrix.icon }}-${{ matrix.builder }}${{ matrix.remove_tests }}"
+          name: "ytdl-windows-${{ matrix.icon }}-PyInstaller"
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
@@ -292,6 +286,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-artifacts
+
       - name: Create release (for master)
         id: create_release
         uses: actions/create-release@v1
