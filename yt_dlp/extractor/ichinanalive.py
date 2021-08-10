@@ -12,7 +12,7 @@ from ..compat import compat_str
 #   so it will be replace as: "1"="ichi", "7"="nana", "live"=as-is .
 class IchinanaLiveIE(InfoExtractor):
     IE_NAME = '17live'
-    _VALID_URL = r'https?://(?:www\.)?17\.live/(?:live|profile/r)/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?17\.live/(?:[^/]+/)*(?:live|profile/r)/(?P<id>\d+)'
     _TEST = {
         'url': 'https://17.live/live/580309',
         'only_matching': True,
@@ -71,10 +71,8 @@ class IchinanaLiveIE(InfoExtractor):
                 'format_id': name,
                 'url': value,
                 'preference': preference,
-                # 'ffmpeg' protocol is added by ytdl-patched, same as 'm3u8'
-                'protocol': 'ffmpeg',
                 'http_headers': {'Referer': url},
-                'ext': 'mp4',
+                'ext': 'flv',
                 'vcodec': 'h264',
                 'acodec': 'aac',
             })
