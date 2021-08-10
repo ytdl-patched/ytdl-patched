@@ -9,7 +9,9 @@ from ..compat import compat_str
 # the real service name of this extractor is "17live",
 #   but identifiers cannot start with numbers.
 # class name of this extractor is taken from official pronounciation in Japanese,
-#   so it will be replace as: "1"="ichi", "7"="nana", "live"=as-is .
+#   so it will be replaced as: "1"="ichi", "7"="nana", "live"=as-is .
+# for reference, with the same rule, class name based on chinese should be "YiQiLive"
+# (ref. https://ltl-taiwan.com/chinese-numbers/ )
 class IchinanaLiveIE(InfoExtractor):
     IE_NAME = '17live'
     _VALID_URL = r'https?://(?:www\.)?17\.live/(?:[^/]+/)*(?:live|profile/r)/(?P<id>\d+)'
