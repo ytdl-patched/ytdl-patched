@@ -107,16 +107,17 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `javhub`
     * `ask.fm`, `marshmallow-qa`, `marshmallow-qa`, `mottohomete` (scrapes Q&A section and find video URLs in it)
     * `mastodon`, `mastodon:user`, `mastodon:user:numeric_id`
-    * `mirrativ`, `mirrativ:user`
+    * `mirrativ`, `mirrativ:user` (merged in upstream)
     * `niconico:live` (**COMMENTS ARE NOT SUPPORTED**)
     * `niconico:playlist`, `niconico:series`, `niconico:user`
-    * `openrec`, `openrec:capture`
+    * `openrec`, `openrec:capture` (merged in upstream)
     * `pixiv:sketch`, `pixiv:sketch:user`
     * `PornHubUserLive`
     * `Radiko` (does not have 24-hours limitation!)
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `voicy`, `voicy:channel`
+    * `whowatch` (merged in upstream)
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
