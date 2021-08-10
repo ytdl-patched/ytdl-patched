@@ -38,13 +38,14 @@ class VoicyBaseIE(InfoExtractor):
             'url': entry['VoiceHlsFile'],
             'format_id': 'hls',
             'ext': 'm4a',
-            'acodec': None,
+            'vcodec': 'none',
             'protocol': 'm3u8_native',
         }, {
             'url': entry['VoiceFile'],
             'format_id': 'mp3',
             'ext': 'mp3',
             'acodec': 'mp3',
+            'vcodec': 'none',
         }]
         self._sort_formats(formats)
         return {
@@ -85,7 +86,7 @@ class VoicyIE(VoicyBaseIE):
     # every queries are assumed to be a playlist
     def _real_extract(self, url):
         voice_id = self._match_id(url)
-        channel_id = compat_str(self._VALID_URL_RE.match(url).group('channel_id'))
+        channel_id = self._VALID_URL_RE.match(url).group('channel_id')
         url, article_list = unsmuggle_url(url)
         if not article_list:
             article_list = self._call_api(self.ARTICLE_LIST_API_URL % (channel_id, voice_id), voice_id)
@@ -133,8 +134,9 @@ class VoicyChannelIE(VoicyBaseIE):
         if not title:
             title = 'Uploads from channel ID %s' % channel_id
 
-        urls = [smuggle_url('https://voicy.jp/channel/%s/%d' % (channel_id, value['PlaylistId']), value) for value in articles]
-        playlist = [self.url_result(url_, VoicyIE.ie_key()) for url_ in urls]
+        playlist = [
+            self.url_result(smuggle_url('https://voicy.jp/channel/%s/%d' % (channel_id, value['PlaylistId']), value), VoicyIE.ie_key())
+            for value in articles]
         return {
             '_type': 'playlist',
             'entries': playlist,
