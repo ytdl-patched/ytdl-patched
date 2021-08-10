@@ -2,21 +2,21 @@
 from __future__ import unicode_literals
 
 from .common import InfoExtractor
-from ..utils import ExtractorError, str_or_none, unified_strdate
+from ..utils import ExtractorError, str_or_none, traverse_obj, unified_strdate
 from ..compat import compat_str
 
 
 # the real service name of this extractor is "17live",
 #   but identifiers cannot start with numbers.
-# class name of this extractor is taken from official pronounce in Japanese,
+# class name of this extractor is taken from official pronounciation in Japanese,
 #   so it will be replace as: "1"="ichi", "7"="nana", "live"=as-is .
 class IchinanaLiveIE(InfoExtractor):
     IE_NAME = '17live'
     _VALID_URL = r'https?://(?:www\.)?17\.live/(?:[^/]+/)*(?:live|profile/r)/(?P<id>\d+)'
-    _TEST = {
+    _TESTS = [{
         'url': 'https://17.live/live/580309',
         'only_matching': True,
-    }
+    }]
 
     @classmethod
     def suitable(cls, url):
@@ -25,7 +25,6 @@ class IchinanaLiveIE(InfoExtractor):
     def _real_extract(self, url):
         video_id = self._match_id(url)
         url = 'https://17.live/live/%s' % video_id
-        # self._download_webpage(url, video_id)
 
         # this endpoint sometimes return code 420, which is not defined
         enter = self._download_json(
@@ -39,10 +38,8 @@ class IchinanaLiveIE(InfoExtractor):
             'https://api-dsa.17app.co/api/v1/lives/%s' % video_id, video_id,
             headers={'Referer': url})
 
-        user_info = view_data.get('userInfo')
-        uploader = None
-        if user_info:
-            uploader = user_info.get('displayName') or user_info.get('openID')
+        uploader = traverse_obj(
+            view_data, ('userInfo', 'displayName'), ('userInfo', 'openID'))
         like_count = view_data.get('receivedLikeCount')
         view_count = view_data.get('viewerCount')
         thumbnail = view_data.get('coverPhoto')
@@ -96,8 +93,8 @@ class IchinanaLiveIE(InfoExtractor):
 
 class IchinanaLiveClipIE(InfoExtractor):
     IE_NAME = '17live:clip'
-    _VALID_URL = r'https?://(?:www\.)?17\.live/profile/r/(?P<uploader_id>\d+)/clip/(?P<id>[^/]+)'
-    _TEST = {
+    _VALID_URL = r'https?://(?:www\.)?17\.live/(?:[^/]+/)*profile/r/(?P<uploader_id>\d+)/clip/(?P<id>[^/]+)'
+    _TESTS = [{
         'url': 'https://17.live/profile/r/1789280/clip/1bHQSK8KUieruFXaCH4A4upCzlN',
         'info_dict': {
             'id': '1bHQSK8KUieruFXaCH4A4upCzlN',
@@ -105,7 +102,7 @@ class IchinanaLiveClipIE(InfoExtractor):
             'description': 'マチ戦隊　第一次　バスターコール\n総額200万coin！\n動画制作@うぉーかー🌱Walker🎫',
             'uploader_id': '1789280',
         },
-    }
+    }]
 
     def _real_extract(self, url):
         m = self._valid_url_re().match(url)
@@ -113,8 +110,8 @@ class IchinanaLiveClipIE(InfoExtractor):
         url = 'https://17.live/profile/r/%s/clip/%s' % (uploader_id, video_id)
 
         view_data = self._download_json(
-            'https://api-dsa.17app.co/api/v1/clips/%s/view' % video_id, video_id,
-            headers={'Referer': url}, data=b'\0')
+            'https://api-dsa.17app.co/api/v1/clips/%s' % video_id, video_id,
+            headers={'Referer': url})
 
         like_count = view_data.get('likeCount')
         view_count = view_data.get('viewCount')
@@ -123,27 +120,26 @@ class IchinanaLiveClipIE(InfoExtractor):
         description = view_data.get('caption')
         upload_date = unified_strdate(str_or_none(view_data.get('createdAt')))
 
-        user_info = self._download_json(
-            'https://api-dsa.17app.co/api/v1/clips/%s/view' % video_id, video_id,
-            headers={'Referer': url}, fatal=False)
-        uploader = None
-        if user_info:
-            uploader = user_info.get('displayName') or user_info.get('openID')
+        uploader = traverse_obj(
+            view_data, ('userInfo', 'displayName'), ('userInfo', 'name'))
 
         formats = []
         if view_data.get('videoURL'):
             formats.append({
+                'id': 'video',
                 'url': view_data['videoURL'],
                 'preference': -1,
             })
         if view_data.get('transcodeURL'):
             formats.append({
+                'id': 'transcode',
                 'url': view_data['transcodeURL'],
                 'preference': -1,
             })
         if view_data.get('srcVideoURL'):
             # highest quality
             formats.append({
+                'id': 'srcVideo',
                 'url': view_data['srcVideoURL'],
                 'preference': 1,
             })
@@ -164,7 +160,7 @@ class IchinanaLiveClipIE(InfoExtractor):
             'title': uploader or video_id,
             'formats': formats,
             'uploader': uploader,
-            'uploader_id': video_id,
+            'uploader_id': uploader_id,
             'like_count': like_count,
             'view_count': view_count,
             'thumbnail': thumbnail,
