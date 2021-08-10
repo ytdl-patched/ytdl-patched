@@ -134,6 +134,7 @@
  - **BitChuteChannel**
  - **bitwave:replay**
  - **bitwave:stream**
+ - **BlackboardCollaborate**
  - **BleacherReport**
  - **BleacherReportCMS**
  - **Bloomberg**
@@ -267,6 +268,7 @@
  - **dnatube**
  - **DoodStream**
  - **Dotsub**
+ - **Douyin**
  - **DouyuShow**
  - **DouyuTV**: 斗鱼
  - **DPlay**
@@ -378,6 +380,8 @@
  - **google:podcasts**
  - **google:podcasts:feed**
  - **GoogleDrive**
+ - **GorinLive**
+ - **GorinVideo**
  - **Goshgay**
  - **GPUTechConf**
  - **Groupon**
@@ -657,6 +661,9 @@
  - **NFHSNetwork**
  - **nfl.com** (Currently broken)
  - **nfl.com:article** (Currently broken)
+ - **NhkForSchoolBangumi**
+ - **NhkForSchoolProgramList**
+ - **NhkForSchoolSubject**: Portal page for each school subjects, like Japanese (kokugo, 国語) or math (sansuu/suugaku or 算数・数学)
  - **NhkVod**
  - **NhkVodProgram**
  - **nhl.com**
@@ -666,6 +673,7 @@
  - **nickelodeonru**
  - **nicknight**
  - **niconico**: ニコニコ動画
+ - **niconico:history**: NicoNico user history. Requires cookies.
  - **niconico:live**: ニコニコ生放送
  - **niconico:playlist**
  - **niconico:series**
@@ -748,6 +756,8 @@
  - **PalcoMP3:video**
  - **pandora.tv**: 판도라TV
  - **ParamountNetwork**
+ - **ParamountPlus**
+ - **ParamountPlusSeries**
  - **parliamentlive.tv**: UK parliament videos
  - **Parlview**
  - **Patreon**
@@ -793,6 +803,7 @@
  - **PopcornTV**
  - **PornCom**
  - **PornerBros**
+ - **PornFlip**
  - **PornHd**
  - **PornHub**: PornHub and Thumbzilla
  - **PornHubPagedVideoList**
@@ -838,6 +849,7 @@
  - **RCSVarious**
  - **RCTIPlus**
  - **RCTIPlusSeries**
+ - **RCTIPlusTV**
  - **RDS**: RDS.ca
  - **RedBull**
  - **RedBullEmbed**
@@ -896,6 +908,7 @@
  - **savefrom.net**
  - **SBS**: sbs.com.au
  - **schooltv**
+ - **ScienceChannel**
  - **screen.yahoo:search**: Yahoo screen search
  - **Screencast**
  - **ScreencastOMatic**
@@ -1035,7 +1048,6 @@
  - **ThisAmericanLife**
  - **ThisAV**
  - **ThisOldHouse**
- - **ThisVid**
  - **TikTok**
  - **tinypic**: tinypic.com videos
  - **TMZ**
@@ -1136,6 +1148,7 @@
  - **ustream:channel**
  - **ustudio**
  - **ustudio:embed**
+ - **Utreon**
  - **Varzesh3**
  - **Vbox7**
  - **VeeHD**
@@ -1275,7 +1288,6 @@
  - **XVideos**
  - **XXXYMovies**
  - **y2mate**
- - **y2mate:rushing**
  - **Yahoo**: Yahoo screen and movies
  - **yahoo:gyao**
  - **yahoo:gyao:player**
