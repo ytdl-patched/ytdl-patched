@@ -104,17 +104,19 @@ class FragmentFD(FileDownloader):
 
     def _write_ytdl_file(self, ctx):
         frag_index_stream, _ = self.ydl.sanitize_open(self.ytdl_filename(ctx['filename']), 'w')
-        downloader = {
-            'current_fragment': {
-                'index': ctx['fragment_index'],
-            },
-        }
-        if 'extra_state' in ctx:
-            downloader['extra_state'] = ctx['extra_state']
-        if ctx.get('fragment_count') is not None:
-            downloader['fragment_count'] = ctx['fragment_count']
-        frag_index_stream.write(json.dumps({'downloader': downloader}))
-        frag_index_stream.close()
+        try:
+            downloader = {
+                'current_fragment': {
+                    'index': ctx['fragment_index'],
+                },
+            }
+            if 'extra_state' in ctx:
+                downloader['extra_state'] = ctx['extra_state']
+            if ctx.get('fragment_count') is not None:
+                downloader['fragment_count'] = ctx['fragment_count']
+            frag_index_stream.write(json.dumps({'downloader': downloader}))
+        finally:
+            frag_index_stream.close()
 
     def _download_fragment(self, ctx, frag_url, info_dict, headers=None, request_data=None):
         fragment_filename = '%s-Frag%d' % (ctx['tmpfilename'], ctx['fragment_index'])
@@ -327,7 +329,7 @@ class FragmentFD(FileDownloader):
             'fragment_index': 0,
         })
 
-    def download_and_append_fragments(self, ctx, fragments, info_dict, pack_func=None):
+    def download_and_append_fragments(self, ctx, fragments, info_dict, *, pack_func=None, finish_func=None):
         fragment_retries = self.params.get('fragment_retries', 0)
         bad_status_code = info_dict.get('unrecoverable_http_error') or tuple()
         is_fatal = (lambda idx: idx == 0) if self.params.get('skip_unavailable_fragments', True) else (lambda _: True)
@@ -425,5 +427,8 @@ class FragmentFD(FileDownloader):
                 if not result:
                     return False
 
+        if finish_func is not None:
+            ctx['dest_stream'].write(finish_func())
+            ctx['dest_stream'].flush()
         self._finish_frag_download(ctx, info_dict)
         return True

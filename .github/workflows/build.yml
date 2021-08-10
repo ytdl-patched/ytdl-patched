@@ -292,7 +292,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-artifacts
-
       - name: Create release (for master)
         id: create_release
         uses: actions/create-release@v1
