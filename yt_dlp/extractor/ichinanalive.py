@@ -18,6 +18,9 @@ class IchinanaLiveIE(InfoExtractor):
     _TESTS = [{
         'url': 'https://17.live/live/580309',
         'only_matching': True,
+    }, {
+        'url': 'https://17.live/ja/live/580309',
+        'only_matching': True,
     }]
 
     @classmethod
@@ -104,6 +107,9 @@ class IchinanaLiveClipIE(InfoExtractor):
             'description': 'マチ戦隊　第一次　バスターコール\n総額200万coin！\n動画制作@うぉーかー🌱Walker🎫',
             'uploader_id': '1789280',
         },
+    }, {
+        'url': 'https://17.live/ja/profile/r/1789280/clip/1bHQSK8KUieruFXaCH4A4upCzlN',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
