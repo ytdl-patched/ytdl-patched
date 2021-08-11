@@ -99,8 +99,12 @@ class TokyoMotionIE(TokyoMotionBaseIE):
 
         for fmt in entry['formats']:
             fmt['external_downloader'] = 'ffmpeg'
+            if fmt['format_id'] == 'HD':
+                fmt['preference'] = fmt['quality'] = 1
+            else:
+                fmt['preference'] = fmt['quality'] = -1
 
-        self._sort_formats(entry['formats'], id_preference_dict={'hd': 1, 'sd': -1})
+        self._sort_formats(entry['formats'])
         entry.update({
             'id': video_id,
             'title': title,
