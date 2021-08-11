@@ -36,6 +36,12 @@ import time
 import traceback
 import xml.etree.ElementTree
 import zlib
+try:
+    import dateutil.parser
+    HAVE_DATEUTIL = True
+except (ImportError, SyntaxError):
+    # dateutil is optional
+    HAVE_DATEUTIL = False
 
 from .compat import (
     compat_HTMLParseError,
@@ -1494,17 +1500,26 @@ def parse_iso8601(date_str, delimiter='T', timezone=None):
     if date_str is None:
         return None
 
+    if HAVE_DATEUTIL and timezone is None:
+        try:
+            return math.floor(dateutil.parser.parse(date_str).timestamp())
+        except ValueError:
+            pass
+
     date_str = re.sub(r'\.[0-9]+', '', date_str)
 
     if timezone is None:
         timezone, date_str = extract_timezone(date_str)
 
-    try:
-        date_format = '%Y-%m-%d{0}%H:%M:%S'.format(delimiter)
-        dt = datetime.datetime.strptime(date_str, date_format) - timezone
-        return calendar.timegm(dt.timetuple())
-    except ValueError:
-        pass
+    formats = (
+        '%Y-%m-%d{0}%H:%M:%S'.format(delimiter),
+        '%Y-%m-%d{0}%H:%M'.format(delimiter), )
+    for date_format in formats:
+        try:
+            dt = datetime.datetime.strptime(date_str, date_format) - timezone
+            return calendar.timegm(dt.timetuple())
+        except ValueError:
+            pass
 
 
 def date_formats(day_first=True):

@@ -6,12 +6,6 @@ import itertools
 import math
 import re
 import json
-try:
-    import dateutil.parser
-    HAVE_DATEUTIL = True
-except (ImportError, SyntaxError):
-    # dateutil is optional
-    HAVE_DATEUTIL = False
 
 from .common import InfoExtractor
 from ..compat import (
@@ -26,6 +20,7 @@ from ..neonippori import (
 )
 from ..utils import (
     ExtractorError,
+    clean_html,
     dict_get,
     float_or_none,
     int_or_none,
@@ -36,7 +31,6 @@ from ..utils import (
     try_get,
     traverse_obj,
     unescapeHTML,
-    unified_timestamp,
     urlencode_postdata,
     update_url_query,
     time_millis,
@@ -475,67 +469,57 @@ class NiconicoIE(NiconicoBaseIE):
         # Start extracting information
         title = (
             get_video_info(['originalTitle', 'title'])
-            or self._og_search_title(webpage, default=None)
-            or self._html_search_regex(
-                r'<span[^>]+class="videoHeaderTitle"[^>]*>([^<]+)</span>',
-                webpage, 'video title'))
+            or self._og_search_title(webpage, default=None))
 
-        thumbnail = (
-            self._html_search_regex(r'<meta property="og:image" content="([^"]+)">', webpage, 'thumbnail data', default=None)
-            or get_video_info(['largeThumbnailURL', 'thumbnail_url', 'thumbnailURL'])
-            or self._html_search_meta('image', webpage, 'thumbnail', default=None))
-
-        match = self._html_search_meta('datePublished', webpage, 'date published', default=None)
-        if match:
-            timestamp = parse_iso8601(match.replace('+', ':00+'))
-        else:
-            date = api_data['video']['registeredAt']
-            # FIXME see animelover1984/youtube-dl
-            if HAVE_DATEUTIL:
-                timestamp = math.floor(dateutil.parser.parse(date).timestamp())
-            else:
-                timestamp = None
+        thumbnail = traverse_obj(api_data, ('video', 'thumbnail', 'url'))
+        if not thumbnail:
+            thumbnail = self._html_search_meta(('image', 'og:image'), webpage, 'thumbnail', default=None)
 
         view_count = int_or_none(api_data['video']['count'].get('view'))
 
         description = get_video_info('description')
 
+        timestamp = parse_iso8601(get_video_info('registeredAt'))
         if not timestamp:
-            timestamp = (parse_iso8601(get_video_info('first_retrieve'))
-                         or unified_timestamp(get_video_info('postedDateTime')))
-        if not timestamp:
-            match = self._html_search_meta('datePublished', webpage, 'date published', default=None)
+            match = self._html_search_meta('video:release_date', webpage, 'date published', default=None)
             if match:
-                timestamp = parse_iso8601(match.replace('+', ':00+'))
+                timestamp = parse_iso8601(match)
 
         comment_count = traverse_obj(
             api_data,
             ('video', 'count', 'comment'),
-            ('thread', 'commentCount'),
             expected_type=int)
-        if comment_count is None:
-            match = self._html_search_regex(
-                r'>Comments: <strong[^>]*>([^<]+)</strong>',
-                webpage, 'comment count', default=None)
-            if match:
-                comment_count = int_or_none(match.replace(',', ''))
 
         duration = (
-            parse_duration(
-                get_video_info('length')
-                or self._html_search_meta('video:duration', webpage, 'video duration', default=None))
+            parse_duration(self._html_search_meta('video:duration', webpage, 'video duration', default=None))
             or get_video_info('duration'))
 
-        webpage_url = get_video_info('watch_url') or url
+        if url.startswith('http://') or url.startswith('https://'):
+            webpage_url = url
+        else:
+            webpage_url = 'https://www.nicovideo.jp/watch/%s' % video_id
 
-        # Note: cannot use api_data.get('owner', {}) because owner may be set to "null"
-        # in the JSON, which will cause None to be returned instead of {}.
-        owner = try_get(api_data, lambda x: x['owner'], dict) or {}
-        uploader_id = get_video_info(['ch_id', 'user_id']) or owner.get('id')
-        uploader = get_video_info(['ch_name', 'user_nickname']) or owner.get('nickname')
+        uploader_id = traverse_obj(api_data, ('owner', 'id'))
+        uploader = traverse_obj(api_data, ('owner', 'nickname'))
 
-        tags = get_video_info('tags') or []
-        genre = get_video_info('genre')
+        # attempt to extract tags in 3 ways
+        # you have to request Japanese pages to get tags;
+        # NN seems to drop tags data when it's English
+        tags = None
+        if webpage:
+            # use og:video:tag (not logged in)
+            og_video_tags = re.finditer(r'<meta\s+property="og:video:tag"\s*content="(.*?)">', webpage)
+            tags = list(filter(bool, (clean_html(x.group(1)) for x in og_video_tags)))
+            if not tags:
+                # use keywords and split with comma (not logged in)
+                kwds = self._html_search_meta('keywords', webpage, default=None)
+                if kwds:
+                    tags = [x for x in kwds.split(',') if x]
+        if not tags:
+            # find it in json (logged in)
+            tags = traverse_obj(api_data, ('tag', 'items', ..., 'name'))
+
+        genre = traverse_obj(api_data, ('genre', 'label'), ('genre', 'key'))
 
         tracking_id = try_get(api_data, lambda x: x['media']['delivery']['trackingId'], compat_str)
         if tracking_id:
