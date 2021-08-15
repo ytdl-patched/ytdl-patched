@@ -502,7 +502,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prepare, build-linux]
     continue-on-error: true
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
+    if: ${{ 1 == 0 && github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
     steps:
       - uses: actions/checkout@v2
       - name: Download artifacts
@@ -549,7 +549,7 @@ jobs:
     runs-on: ${{ matrix.windows.os }}
     needs: [prepare, build-windows]
     continue-on-error: true
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
+    if: ${{ 1 == 0 && github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
     strategy:
       matrix:
         windows: [
