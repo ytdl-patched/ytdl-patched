@@ -134,6 +134,8 @@ class TwitCastingIE(TwitCastingBaseIE):
                     'Origin': 'https://twitcasting.tv',
                     'Referer': 'https://twitcasting.tv/',
                 })
+            for fmt in formats:
+                fmt['quality'] = 10
 
             if stream_server_data and HAVE_WEBSOCKET:
                 qq = qualities(['base', 'mobilesource', 'main'])
