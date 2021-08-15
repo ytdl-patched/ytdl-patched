@@ -52,28 +52,28 @@ def update_self(to_screen, verbose, opener):
     return run_update(FakeYDL())
 
 
-# def get_version_info(ydl):
-#     # NOTE: running with -U will update to youtube-dl-based version
-#     try:
-#         JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases/latest'
-#         version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
-#     except BaseException:
-#         JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
-#         version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
-#     return json.loads(version_info)
-
 def get_version_info(ydl):
-    for page_num in range(1, 4):
-        try:
-            JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases?page=%d' % page_num
-            releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
-        except BaseException:
-            JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases?page=%d' % page_num
-            releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
-        for release in releases:
-            if release.get('prerelease'):
-                return release
-    raise Exception('can\'t find pre-release.')
+    try:
+        JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases/latest'
+        version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
+    except BaseException:
+        JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
+        version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
+    return json.loads(version_info)
+
+# def get_version_info(ydl):
+#     # this is for when it needs to look into pre-prelease versions
+#     for page_num in range(1, 4):
+#         try:
+#             JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases?page=%d' % page_num
+#             releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
+#         except BaseException:
+#             JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases?page=%d' % page_num
+#             releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
+#         for release in releases:
+#             if release.get('prerelease'):
+#                 return release
+#     raise Exception('can\'t find pre-release.')
 
 
 def run_update(ydl):
