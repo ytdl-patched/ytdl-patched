@@ -116,9 +116,10 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `Radiko` (does not have 24-hours limitation!)
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
-    * `voicy`, `voicy:channel`
+    * `voicy`, `voicy:channel` (merged in upstream)
     * `whowatch` (merged in upstream)
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
+    * `mixch`
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
