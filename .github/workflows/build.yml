@@ -268,7 +268,7 @@ jobs:
         run: |
           git config --global user.name nao20010128nao
           git config --global user.email nao20010128@gmail.com
-          git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/ytdl-patched/homebrew-my.git
+          git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
           cd homebrew-my
           echo $FILEHASH_TAR $VERSION
           sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
@@ -304,6 +304,8 @@ jobs:
             - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
+
+            **ytdlp-patched is now yt-dlp-based version**
       - name: Create release
         if: ${{ github.ref == 'refs/heads/ytdlp' }}
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
