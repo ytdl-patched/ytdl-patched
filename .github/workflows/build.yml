@@ -66,6 +66,9 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     needs: prepare
+    outputs:
+      filehash_bin: ${{ steps.build.outputs.filehash_bin }}
+      filehash_tar: ${{ steps.build.outputs.filehash_tar }}
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -89,6 +92,8 @@ jobs:
           make youtube-dl youtube-dl.tar.gz
           mv youtube-dl artifacts/
           mv youtube-dl.tar.gz artifacts/
+          echo "::set-output name=filehash_bin::$(sha256sum artifacts/youtube-dl | awk '{print $1}')"
+          echo "::set-output name=filehash_tar::$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -101,6 +106,9 @@ jobs:
   build-wheel:
     runs-on: ubuntu-latest
     needs: prepare
+    outputs:
+      filehash_wheel: ${{ steps.hash.outputs.filehash_wheel }}
+      filehash_wheel_tar: ${{ steps.hash.outputs.filehash_wheel_tar }}
     steps:
       - uses: actions/checkout@v2
       - name: Download base
@@ -115,6 +123,11 @@ jobs:
         run: pip3 install -U pip build wheel setuptools
       - name: Build wheel
         run: python3 -m build
+      - name: Calculate hashes
+        id: hash
+        run: |
+          echo "::set-output name=filehash_wheel::$(sha256sum dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl | awk '{print $1}')"
+          echo "::set-output name=filehash_wheel_tar::$(sha256sum dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz | awk '{print $1}')"
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -168,6 +181,9 @@ jobs:
   build-windows:
     runs-on: windows-latest
     needs: prepare
+    outputs:
+      filehash_exe_red: ${{ steps.hash.outputs.filehash_exe_red }}
+      filehash_exe_white: ${{ steps.hash.outputs.filehash_exe_white }}
     strategy:
       fail-fast: false
       matrix:
@@ -201,6 +217,9 @@ jobs:
       - name: Compress generated EXE
         run: upx --lzma --best artifacts/youtube-dl.exe
         continue-on-error: true
+      - name: Calculate hash
+        id: hash
+        run: echo "::set-output name=filehash_exe_${{ matrix.icon }}::$((Get-FileHash artifacts/youtube-dl.exe -Algorithm SHA256).Hash.ToLower())"
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -214,10 +233,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prepare, build-linux, build-windows]
     if: ${{ github.ref == 'refs/heads/ytdlp' }}
-    outputs:
-      filehash_bin: ${{ steps.hash-and-versions.outputs.filehash_bin }}
-      filehash_exe: ${{ steps.hash-and-versions.outputs.filehash_exe }}
-      filehash_tar: ${{ steps.hash-and-versions.outputs.filehash_tar }}
     steps:
       - name: Download builds for Linux
         uses: actions/download-artifact@v2
@@ -231,21 +246,6 @@ jobs:
         run: |
           sudo apt update
           sudo env DEBIAN_FRONTEND=noninteractive apt install -y jq
-      - name: Prepare artifacts
-        id: hash-and-versions
-        run: |
-          FILEHASH_BIN="$(sha256sum artifacts/youtube-dl        | awk '{print $1}')"
-          FILEHASH_TAR="$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
-          FILEHASH_EXE="$(sha256sum artifacts/youtube-dl.exe    | awk '{print $1}')"
-          echo "::set-output name=filehash_bin::${FILEHASH_BIN}"
-          echo "::set-output name=filehash_tar::${FILEHASH_TAR}"
-          echo "::set-output name=filehash_exe::${FILEHASH_EXE}"
-          echo '{"versions":{}}' | jq ".latest=\"${{ needs.prepare.outputs.latest_version }}\"" \
-            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].bin=[\"https://github.com/ytdl-patched/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl\",\"${FILEHASH_BIN}\"]" \
-            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].tar=[\"https://github.com/ytdl-patched/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl.tar.gz\",\"${FILEHASH_TAR}\"]" \
-            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"].exe=[\"https://github.com/ytdl-patched/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl-${{ env.windows_icon }}.exe\",\"${FILEHASH_EXE}\"]" \
-            | jq ".versions[\"${{ needs.prepare.outputs.latest_version }}\"][\"exe-${{ env.windows_icon }}\"]=[\"https://github.com/ytdl-patched/ytdl-patched/releases/download/${{ needs.prepare.outputs.latest_version_numeric }}/youtube-dl-${{ env.windows_icon }}.exe\",\"${FILEHASH_EXE}\"]" \
-            | tee artifacts/versions.json
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -261,7 +261,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
     env:
-      FILEHASH_TAR: ${{ needs.prepare-artifacts.outputs.filehash_tar }}
+      FILEHASH_TAR: ${{ needs.build-wheel.outputs.filehash_wheel_tar }}
       VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
       VERSION_NAME: ${{ needs.prepare.outputs.latest_version }}
     steps:
