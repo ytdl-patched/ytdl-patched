@@ -263,6 +263,7 @@ jobs:
     env:
       FILEHASH_TAR: ${{ needs.prepare-artifacts.outputs.filehash_tar }}
       VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
+      VERSION_NAME: ${{ needs.prepare.outputs.latest_version }}
     steps:
       - name: Upload to my homebrew repository
         run: |
@@ -273,7 +274,7 @@ jobs:
           echo $FILEHASH_TAR $VERSION
           sed -E -i "s/sha256 \"[0-9a-f]*\"/sha256 \"$FILEHASH_TAR\"/g" Formula/ytdl-patched.rb
           sed -E -i "s/version \".*\"/version \"$VERSION\"/g" Formula/ytdl-patched.rb
-          sed -E -i "s^url \".*\"^url \"https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/youtube-dl.tar.gz\"^g" Formula/ytdl-patched.rb
+          sed -E -i "s^url \".*\"^url \"https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/yt-dlp-${VERSION_NAME}-wheel.tar.gz\"^g" Formula/ytdl-patched.rb
           git add .
           git commit -m "ytdl-patched: $VERSION"
           git push
