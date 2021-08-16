@@ -61,7 +61,7 @@ class DamtomoBaseIE(InfoExtractor):
 
 class DamtomoVideoIE(InfoExtractor):
     IE_NAME = 'damtomo:video'
-    _VALID_URL = r'https?://(www\.)?clubdam\.com/app/damtomo/(?:SP/)?karaokeMovie/StreamingDkm\.do\?karaokeMovieId=(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?clubdam\.com/app/damtomo/(?:SP/)?karaokeMovie/StreamingDkm\.do\?karaokeMovieId=(?P<id>\d+)'
     _WEBPAGE_URL_TMPL = 'https://www.clubdam.com/app/damtomo/karaokeMovie/StreamingDkm.do?karaokeMovieId=%s'
     _DKML_XML_URL = 'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML.do?movieSelectFlg=2&karaokeMovieId=%s'
     _DKML_XML_NS = 'https://www.clubdam.com/app/damtomo/karaokeMovie/GetStreamingDkmUrlXML'
@@ -80,7 +80,7 @@ class DamtomoVideoIE(InfoExtractor):
 
 class DamtomoRecordIE(InfoExtractor):
     IE_NAME = 'damtomo:record'
-    _VALID_URL = r'https?://(www\.)?clubdam\.com/app/damtomo/(?:SP/)?karaokePost/StreamingKrk\.do\?karaokeContributeId=(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?clubdam\.com/app/damtomo/(?:SP/)?karaokePost/StreamingKrk\.do\?karaokeContributeId=(?P<id>\d+)'
     _WEBPAGE_URL_TMPL = 'https://www.clubdam.com/app/damtomo/karaokePost/StreamingKrk.do?karaokeContributeId=%s'
     _DKML_XML_URL = 'https://www.clubdam.com/app/damtomo/karaokePost/GetStreamingKrkUrlXML.do?karaokeContributeId=%s'
     _DKML_XML_NS = 'https://www.clubdam.com/app/damtomo/karaokePost/GetStreamingKrkUrlXML'
