@@ -435,6 +435,9 @@ class FFmpegFD(ExternalFD):
 
         protocol = info_dict.get('protocol')
 
+        if protocol == 'ffmpeg':
+            self.report_warning('Calling this downloader with "ffmpeg" is deprecated. Please fix code.')
+
         if protocol == 'rtmp':
             player_url = info_dict.get('player_url')
             page_url = info_dict.get('page_url')

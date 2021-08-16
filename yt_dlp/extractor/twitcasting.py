@@ -129,7 +129,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             m3u8_url = m3u8_urls[0]
             formats = self._extract_m3u8_formats(
                 m3u8_url, video_id, ext='mp4', m3u8_id='hls',
-                entry_protocol='m3u8', is_live=True,
+                entry_protocol='m3u8', live=True,
                 headers={
                     'Accept': '*/*',
                     'Origin': 'https://twitcasting.tv',

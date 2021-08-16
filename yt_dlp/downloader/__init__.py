@@ -38,6 +38,8 @@ from .external import (
 PROTOCOL_MAP = {
     'rtmp': RtmpFD,
     'rtmp_ffmpeg': FFmpegFD,
+    'ffmpeg': FFmpegFD,  # for backward compatibility with old version
+    'live_ffmpeg': FFmpegFD,
     'm3u8_native': HlsFD,
     'm3u8': FFmpegFD,
     'mms': RtspFD,
@@ -53,6 +55,14 @@ PROTOCOL_MAP = {
     'youtube_live_chat': YoutubeLiveChatFD,
     'youtube_live_chat_replay': YoutubeLiveChatFD,
 }
+
+# exceptions for --live-download-mkv
+# adding here will bypass protocol change
+LDM_EXCEPTIONS = (
+    'http_dash_segments', 'serial',
+    'niconico_live',
+    'youtube_live_chat', 'youtube_live_chat_replay',
+)
 
 
 def shorten_protocol_name(proto, simplify=False):

@@ -131,6 +131,7 @@ from .extractor import (
 from .extractor.openload import PhantomJSwrapper
 from .downloader import (
     FFmpegFD,
+    LDM_EXCEPTIONS,
     get_suitable_downloader,
     shorten_protocol_name
 )
@@ -2516,7 +2517,8 @@ class YoutubeDL(object):
 
         if info_dict.get('ext') == 'mp4' and info_dict.get('is_live', False) and self.params.get('live_download_mkv', False):
             info_dict['format'] = info_dict['ext'] = 'mkv'
-            info_dict['protocol'] = 'ffmpeg'
+            if info_dict['protocol'] not in LDM_EXCEPTIONS:
+                info_dict['protocol'] = 'live_ffmpeg'
 
         if self._match_entry(info_dict) is not None:
             return
