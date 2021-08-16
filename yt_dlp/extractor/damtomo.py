@@ -59,7 +59,7 @@ class DamtomoBaseIE(InfoExtractor):
         }
 
 
-class DamtomoVideoIE(InfoExtractor):
+class DamtomoVideoIE(DamtomoBaseIE):
     IE_NAME = 'damtomo:video'
     _VALID_URL = r'https?://(?:www\.)?clubdam\.com/app/damtomo/(?:SP/)?karaokeMovie/StreamingDkm\.do\?karaokeMovieId=(?P<id>\d+)'
     _WEBPAGE_URL_TMPL = 'https://www.clubdam.com/app/damtomo/karaokeMovie/StreamingDkm.do?karaokeMovieId=%s'
@@ -78,7 +78,7 @@ class DamtomoVideoIE(InfoExtractor):
     }]
 
 
-class DamtomoRecordIE(InfoExtractor):
+class DamtomoRecordIE(DamtomoBaseIE):
     IE_NAME = 'damtomo:record'
     _VALID_URL = r'https?://(?:www\.)?clubdam\.com/app/damtomo/(?:SP/)?karaokePost/StreamingKrk\.do\?karaokeContributeId=(?P<id>\d+)'
     _WEBPAGE_URL_TMPL = 'https://www.clubdam.com/app/damtomo/karaokePost/StreamingKrk.do?karaokeContributeId=%s'
