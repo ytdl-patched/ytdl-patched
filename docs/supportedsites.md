@@ -100,6 +100,7 @@
  - **Bandcamp**
  - **Bandcamp:album**
  - **Bandcamp:weekly**
+ - **BandcampMusic**
  - **bangumi.bilibili.com**: BiliBili番剧
  - **bbc**: BBC
  - **bbc.co.uk**: BBC iPlayer
@@ -304,6 +305,7 @@
  - **Engadget**
  - **Eporner**
  - **EroProfile**
+ - **EroProfile:album**
  - **Escapist**
  - **ESPN**
  - **ESPNArticle**
@@ -322,6 +324,7 @@
  - **fc2**
  - **fc2:embed**
  - **Fczenit**
+ - **Filmmodu**
  - **filmon**
  - **filmon:channel**
  - **Filmweb**
@@ -571,6 +574,7 @@
  - **mirrativ**
  - **mirrativ:user**
  - **MiTele**: mitele.es
+ - **mixch**
  - **mixcloud**
  - **mixcloud:playlist**
  - **mixcloud:user**
@@ -807,6 +811,7 @@
  - **PornHd**
  - **PornHub**: PornHub and Thumbzilla
  - **PornHubPagedVideoList**
+ - **PornHubPlaylist**
  - **PornHubUser**
  - **PornHubUserVideosUpload**
  - **Pornotube**
