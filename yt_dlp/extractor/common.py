@@ -931,7 +931,8 @@ class InfoExtractor(object):
         if transform_source:
             xml_string = transform_source(xml_string)
         try:
-            return compat_etree_fromstring(xml_string.encode('utf-8'))
+            # return compat_etree_fromstring(xml_string.encode('utf-8'))
+            return compat_etree_fromstring(xml_string)
         except compat_xml_parse_error as ve:
             errmsg = '%s: Failed to parse XML ' % video_id
             if fatal:

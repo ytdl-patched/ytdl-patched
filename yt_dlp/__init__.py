@@ -68,6 +68,12 @@ def _real_main(argv=None):
         # https://github.com/ytdl-org/youtube-dl/issues/820
         codecs.register(lambda name: codecs.lookup('utf-8') if name == 'cp65001' else None)
 
+    # currently required by Damtomo**IE, but applies to all websites that serve XMLs in SJIS
+    if sys.version_info < (3, 9):
+        codecs.register(lambda name: codecs.lookup('sjis') if name == 'windows-31j' else None)
+    else:
+        codecs.register(lambda name: codecs.lookup('sjis') if name == 'windows_31j' else None)
+
     workaround_optparse_bug9161()
 
     setproctitle('yt-dlp')
