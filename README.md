@@ -99,7 +99,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
     * `17live`, `17live:clip`
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
-    * `clubdam:damtomo`
+    * `damtomo:video`
     * `disneychris`
     * `dnatube`
     * `fc2:user` (FC2 user-uploaded videos)
