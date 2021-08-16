@@ -126,8 +126,8 @@ jobs:
       - name: Calculate hashes
         id: hash
         run: |
-          echo "::set-output name=filehash_wheel::$(sha256sum dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl | awk '{print $1}')"
-          echo "::set-output name=filehash_wheel_tar::$(sha256sum dist/youtube_dl-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz | awk '{print $1}')"
+          echo "::set-output name=filehash_wheel::$(sha256sum dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl | awk '{print $1}')"
+          echo "::set-output name=filehash_wheel_tar::$(sha256sum dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz | awk '{print $1}')"
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
