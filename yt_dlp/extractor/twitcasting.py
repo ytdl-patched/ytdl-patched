@@ -128,7 +128,8 @@ class TwitCastingIE(TwitCastingBaseIE):
             # use `m3u8` entry_protocol until EXT-X-MAP is properly supported by `m3u8_native` entry_protocol
             m3u8_url = m3u8_urls[0]
             formats = self._extract_m3u8_formats(
-                m3u8_url, video_id, 'mp4', m3u8_id='hls',
+                m3u8_url, video_id, ext='mp4', m3u8_id='hls',
+                entry_protocol='m3u8', is_live=True,
                 headers={
                     'Accept': '*/*',
                     'Origin': 'https://twitcasting.tv',
