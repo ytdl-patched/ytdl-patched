@@ -21,7 +21,12 @@ class RadikoIE(InfoExtractor):
     _AUTH_CACHE = ()
 
     _TESTS = [{
+        # QRR (文化放送) station provides <desc>
         'url': 'https://radiko.jp/#!/ts/QRR/20210425101300',
+        'only_matching': True,
+    }, {
+        # FMT (TOKYO FM) station does not provide <desc>
+        'url': 'https://radiko.jp/#!/ts/FMT/20210810150000',
         'only_matching': True,
     }, {
         'url': 'https://radiko.jp/#!/ts/JOAK-FM/20210509090000',
@@ -53,8 +58,8 @@ class RadikoIE(InfoExtractor):
         assert ft, to
 
         title = prog.find('title').text
-        description = clean_html(prog.find('desc').text)
-        program_description = clean_html(prog.find('info').text)
+        description = clean_html(prog.find('info').text)
+        station_name = station_program.find('.//name').text
 
         m3u8_playlist_data = self._download_xml(
             'https://radiko.jp/v3/station/stream/pc_html5/%s.xml' % station, video_id,
@@ -97,7 +102,7 @@ class RadikoIE(InfoExtractor):
                         sf['preference'] = -100  # they probably goes to different station
                     if url_attrib['timefree'] == '1' and time_to_skip:
                         # sf['format_note'] = 'timefree'
-                        sf['input_params'] = ['-ss', '%d' % time_to_skip]
+                        sf['start_time'] = time_to_skip
                 formats.extend(subformats)
             except ExtractorError:
                 pass
@@ -108,8 +113,10 @@ class RadikoIE(InfoExtractor):
             'id': video_id,
             'title': title,
             'description': description,
-            'program_description': program_description,
+            'uploader': station_name,
+            'uploader_id': station,
             'formats': formats,
+            # we have to mark this live since they behave as if it's a live
             'is_live': True,
         }
 
