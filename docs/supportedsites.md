@@ -205,7 +205,6 @@
  - **CloserToTruth**
  - **CloudflareStream**
  - **Cloudy**
- - **clubdam:damtomo**
  - **Clubic**
  - **Clyp**
  - **cmt.com**
@@ -240,6 +239,8 @@
  - **dailymotion**
  - **dailymotion:playlist**
  - **dailymotion:user**
+ - **damtomo:record**
+ - **damtomo:video**
  - **daum.net**
  - **daum.net:clip**
  - **daum.net:playlist**
