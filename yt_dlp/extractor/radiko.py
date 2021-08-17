@@ -16,7 +16,7 @@ from ..compat import compat_urllib_parse
 
 
 class RadikoIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www.)?radiko\.jp/#!/ts/(?P<station>[A-Z-]+)/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?radiko\.jp/#!/ts/(?P<station>[A-Z-]+)/(?P<id>\d+)'
     _FULL_KEY = None
     _AUTH_CACHE = ()
 
@@ -92,8 +92,8 @@ class RadikoIE(InfoExtractor):
                         'X-Radiko-AuthToken': auth_token,
                     })
                 for sf in subformats:
-                    sf['format_id'] = compat_urllib_parse.urlparse(sf['url']).netloc
-                    if re.match(r'^[cf]-radiko\.smartstream\.ne\.jp$', sf['format_id']):
+                    domain = sf['format_id'] = compat_urllib_parse.urlparse(sf['url']).netloc
+                    if re.match(r'^[cf]-radiko\.smartstream\.ne\.jp$', domain):
                         sf['preference'] = -100  # they probably goes to different station
                     if url_attrib['timefree'] == '1' and time_to_skip:
                         # sf['format_note'] = 'timefree'
