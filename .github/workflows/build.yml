@@ -257,7 +257,7 @@ jobs:
             README.md
 
   upload-homebrew:
-    needs: [prepare, prepare-artifacts]
+    needs: [prepare, prepare-artifacts, build-wheel]
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
     env:
