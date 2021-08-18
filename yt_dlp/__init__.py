@@ -310,10 +310,7 @@ def _real_main(argv=None):
         _unused_compat_opt('multistreams')
     outtmpl_default = opts.outtmpl.get('default')
     if 'filename' in compat_opts:
-        if outtmpl_default is None:
-            outtmpl_default = '%(title)s-%(id)s.%(ext)s'
-            opts.outtmpl.update({'default': outtmpl_default})
-        else:
+        if outtmpl_default is not None:
             _unused_compat_opt('filename')
 
     def validate_outtmpl(tmpl, msg):
