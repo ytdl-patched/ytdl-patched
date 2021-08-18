@@ -15,6 +15,7 @@ A command-line program to download videos from YouTube and many other [video pla
 - https://git.sr.ht/~nao20010128nao/ytdl-patched (secondary)
   - manually mirrored at every git push
 - https://codeberg.org/nao20010128nao/ytdl-patched (secondary)
+- https://gitgud.io/nao20010128nao/ytdl-patched (secondary)
 - [In my Keybase account](https://book.keybase.io/git) (secondary)
   - spoiler: you can clone it with `git clone keybase://public/nao20010128nao/ytdl-patched`
 - https://bookish-octo-barnacle.vercel.app/ (just for fun, no longer synced)
