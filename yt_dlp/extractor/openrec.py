@@ -6,7 +6,8 @@ from ..utils import (
     ExtractorError,
     traverse_obj,
     try_get,
-    unified_strdate
+    unified_strdate,
+    unified_timestamp
 )
 from ..compat import compat_str
 
@@ -93,7 +94,7 @@ class OpenRecCaptureIE(InfoExtractor):
 
         window_stores = self._parse_json(
             self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.pageStore'), video_id)
-        movie_store = window_stores.get('movie')
+        movie_store = window_stores.get('movie') or {}
 
         capture_data = window_stores.get('capture')
         if not capture_data:
@@ -105,6 +106,8 @@ class OpenRecCaptureIE(InfoExtractor):
         channel_info = traverse_obj(movie_store, ('channel',), expected_type=dict)
         uploader = try_get(channel_info, lambda x: x['name'], compat_str)
         uploader_id = try_get(channel_info, lambda x: x['id'], compat_str)
+
+        timestamp = unified_timestamp(movie_store.get('createdAt'))
 
         m3u8_url = capture_data.get('source')
         if not m3u8_url:
@@ -120,6 +123,7 @@ class OpenRecCaptureIE(InfoExtractor):
             'title': title,
             'thumbnail': thumbnail,
             'formats': formats,
+            'timestamp': timestamp,
             'uploader': uploader,
             'uploader_id': uploader_id,
             'upload_date': upload_date,
