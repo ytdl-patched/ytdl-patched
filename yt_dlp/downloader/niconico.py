@@ -86,7 +86,7 @@ class NiconicoLiveFD(FileDownloader):
         new_info_dict = info_dict.copy()
         new_info_dict.update({
             'url': None,
-            'protocol': 'ffmpeg',
+            'protocol': 'live_ffmpeg',
         })
         lock = threading.Lock()
         lock.acquire()
@@ -113,7 +113,7 @@ class NiconicoLiveFD(FileDownloader):
                             "protocol": "webSocket",
                             "commentable": True
                         },
-                        "reconnect": reconnect
+                        "reconnect": reconnect,
                     }
                 }))
 
