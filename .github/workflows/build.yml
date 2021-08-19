@@ -306,7 +306,7 @@ jobs:
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
 
-            **ytdlp-patched is now yt-dlp-based version**
+            **ytdl-patched is now yt-dlp-based version**
       - name: Create release
         if: ${{ github.ref == 'refs/heads/ytdlp' }}
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
