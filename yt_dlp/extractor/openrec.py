@@ -40,15 +40,15 @@ class OpenRecIE(InfoExtractor):
         description = movie_store.get('introduction')
         thumbnail = movie_store.get('thumbnailUrl')
 
-        channel_user = movie_store.get('channel', {}).get('user')
+        channel_user = traverse_obj(movie_store, ('channel', 'user'), expected_type=dict)
         uploader = try_get(channel_user, lambda x: x['name'], compat_str)
         uploader_id = try_get(channel_user, lambda x: x['id'], compat_str)
 
         timestamp = traverse_obj(movie_store, ('startedAt', 'time'), expected_type=int)
 
-        m3u8_playlists = movie_store.get('media')
+        m3u8_playlists = movie_store.get('media') or {}
         formats = []
-        for (name, m3u8_url) in m3u8_playlists.items():
+        for name, m3u8_url in m3u8_playlists.items():
             if not m3u8_url:
                 continue
             formats.extend(self._extract_m3u8_formats(
@@ -102,9 +102,9 @@ class OpenRecCaptureIE(InfoExtractor):
         thumbnail = capture_data.get('thumbnailUrl')
         upload_date = unified_strdate(capture_data.get('createdAt'))
 
-        channel_info = movie_store.get('channel') or {}
-        uploader = channel_info.get('name')
-        uploader_id = channel_info.get('id')
+        channel_info = traverse_obj(movie_store, ('channel',), expected_type=dict)
+        uploader = try_get(channel_info, lambda x: x['name'], compat_str)
+        uploader_id = try_get(channel_info, lambda x: x['id'], compat_str)
 
         m3u8_url = capture_data.get('source')
         if not m3u8_url:
