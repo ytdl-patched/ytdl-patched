@@ -37,6 +37,7 @@ jobs:
     - name: Create tag
       continue-on-error: true
       run: |
-        git push self :refs/tags/yt-dlp || true
+        # git push self :refs/tags/yt-dlp || true
+        git tag -d yt-dlp || true
         git tag -f yt-dlp upstream/master || true
         git push self -f --tags || true
