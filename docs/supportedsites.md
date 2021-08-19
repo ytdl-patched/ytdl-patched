@@ -998,6 +998,7 @@
  - **Streamable**
  - **streamcloud.eu**
  - **StreamCZ**
+ - **Streamlink**
  - **StreetVoice**
  - **StretchInternet**
  - **stv:player**
