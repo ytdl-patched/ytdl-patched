@@ -100,7 +100,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
     * `17live`, `17live:clip`
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
-    * `damtomo:video`
+    * `damtomo:video`, `damtomo:record`
     * `disneychris`
     * `dnatube`
     * `fc2:user` (FC2 user-uploaded videos)
@@ -114,7 +114,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `openrec`, `openrec:capture` (merged in upstream)
     * `pixiv:sketch`, `pixiv:sketch:user`
     * `PornHubUserLive`
-    * `Radiko` (does not have 24-hours limitation!)
+    * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!)
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `voicy`, `voicy:channel` (merged in upstream)
