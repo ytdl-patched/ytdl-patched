@@ -167,7 +167,7 @@ class IwaraUserIE(InfoExtractor):
         title = 'Uploaded videos from %s' % uploader
 
         if not videos_url:
-            videos_webpage_iter = [webpage]
+            webpages = [webpage]
         else:
             videos_base_url = urljoin(url, videos_url)
 
@@ -182,20 +182,21 @@ class IwaraUserIE(InfoExtractor):
                     if not '?page=%d' % (i + 1) in videos_webpage:
                         break
 
-            videos_webpage_iter = do_paging()
+            webpages = do_paging()
 
-        results = []
-        for page in videos_webpage_iter:
-            for x in re.finditer(r'<a href="(/videos/[^"]+)">', page):
-                results.append(x.group(1))
+        results = (
+            self.url_result(urljoin(url, x.group(1)))
+            for page in webpages
+            for x in re.finditer(r'<a href="(/videos/[^"]+)">', page))
 
-        playlist = self.playlist_result([self.url_result(urljoin(url, x))
-                                         for x in dict.fromkeys(results)], video_id, title)
-        playlist.update({
+        return {
+            '_type': 'playlist',
+            'entries': results,
+            'id': video_id,
+            'title': title,
             'uploader': uploader,
             'uploader_id': video_id,
-        })
-        return playlist
+        }
 
 
 class IwaraUser2IE(InfoExtractor):
