@@ -24,7 +24,7 @@ class TestAllURLsMatching(unittest.TestCase):
         self.ies = gen_extractors()
 
     def matching_ies(self, url):
-        return [ie.IE_NAME for ie in self.ies if ie.suitable(url) and ie.IE_NAME != 'generic']
+        return [ie.IE_NAME for ie in self.ies if ie.suitable(url) and ie.IE_NAME not in ('generic', 'Streamlink')]
 
     def assertMatch(self, url, ie_list):
         self.assertEqual(self.matching_ies(url), ie_list)

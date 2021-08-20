@@ -41,7 +41,7 @@ jobs:
           python-version: ${{ matrix.python.name }}
       - name: Install deps
         if: ${{ !matrix.python.special }}
-        run: pip install pytest streamlink
+        run: pip install -U pip pytest streamlink
       # main script
       - name: Run test
         continue-on-error: ${{ matrix.ytdl_test_set.may_fail || matrix.python.may_fail }}
@@ -55,6 +55,6 @@ jobs:
         with:
           python-version: 3.8
       - name: Install deps
-        run: pip3 install flake8
+        run: pip install -U pip flake8
       - name: Run flake8 .
         run: flake8 .

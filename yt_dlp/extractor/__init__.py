@@ -15,8 +15,9 @@ if not _LAZY_LOADER:
     _ALL_CLASSES = [
         klass
         for name, klass in globals().items()
-        if name.endswith('IE') and name != 'GenericIE'
+        if name.endswith('IE') and name not in ('GenericIE', 'StreamlinkIE')
     ]
+    _ALL_CLASSES.append(StreamlinkIE)
     _ALL_CLASSES.append(GenericIE)
 
     _PLUGIN_CLASSES = load_plugins('extractor', 'IE', globals())

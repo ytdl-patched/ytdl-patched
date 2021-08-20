@@ -81,13 +81,13 @@ class StreamlinkIE(InfoExtractor):
             # Steamlink is forced, omit IE checks
             return True
 
-        from . import gen_extractor_classes
-        for ie in gen_extractor_classes():
-            # skip must-match extractor and StreamlinkIE itself
-            if ie.ie_key() in (cls.ie_key(), 'Generic'):
-                continue
-            if ie.suitable(url):
-                return False
+        # from . import gen_extractor_classes
+        # for ie in gen_extractor_classes():
+        #     # skip GenericIE and StreamlinkIE itself
+        #     if ie.ie_key() in (cls.ie_key(), 'Generic'):
+        #         continue
+        #     if ie.suitable(url):
+        #         return False
         return True
 
     def _real_extract(self, url):
