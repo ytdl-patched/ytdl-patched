@@ -81,6 +81,12 @@ class TestAllURLsMatching(unittest.TestCase):
         for tc in gettestcases(include_onlymatching=True):
             url = tc['url']
             for ie in ies:
+                if type(ie).__name__ == 'StreamlinkIE':
+                    # skip StreamlinkIE from this test since:
+                    # - matches change whether SL was installed or not
+                    # - One or more supported websites of both softwares exist, causing 2 extractors match
+                    #   (StreamlinkIE and one in yt-dlp/ytdl-patched)
+                    continue
                 if type(ie).__name__ in ('GenericIE', tc['name'] + 'IE'):
                     self.assertTrue(ie.suitable(url), '%s should match URL %r' % (type(ie).__name__, url))
                 else:
