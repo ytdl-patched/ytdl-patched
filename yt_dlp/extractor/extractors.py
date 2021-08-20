@@ -600,6 +600,7 @@ from .iwara import (
     IwaraIE,
     IwaraUserIE,
     IwaraUser2IE,
+    IwaraPlaylistIE,
 )
 from .izlesene import IzleseneIE
 from .jamendo import (

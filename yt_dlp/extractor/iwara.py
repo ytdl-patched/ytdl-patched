@@ -230,3 +230,42 @@ class IwaraUser2IE(InfoExtractor):
         videos_url = self._search_regex(r'<a href="(/users/.+?)"(?: title=".+?")? class="username">', webpage, 'user page url')
         videos_url = urljoin(url, videos_url)
         return self.url_result(videos_url, ie=IwaraUserIE.ie_key())
+
+
+class IwaraPlaylistIE(InfoExtractor):
+    IE_NAME = 'iwara:playlist'
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/playlist/(?P<id>[a-zA-Z0-9-]+)'
+    _TESTS = [{
+        'url': 'https://ecchi.iwara.tv/playlist/best-enf',
+        'info_dict': {
+            'title': 'Best enf',
+            'uploader_id': 'Jared98112',
+            'id': 'best-enf',
+        },
+        'playlist_mincount': 50,
+    }]
+
+    def _real_extract(self, url):
+        playlist_id = self._match_id(url)
+
+        webpage = self._download_webpage(url, playlist_id)
+
+        title = self._html_search_regex(
+            (r'<h1 class="title"[^>]*?>(.*?)</h1>',
+             r'<title>(.*?)\s+\|\s*Iwara'), webpage, 'title')
+        uploader_id = self._html_search_regex(
+            r'<div class="[^"]*views-field-name">\s*<span class="field-content">\s*<h2>(.*?)</h2>',
+            webpage,
+            'uploader_id')
+        urls = re.findall(
+            r'<h3 class="title">\s*<a href="([^"]+)">',
+            webpage)
+        entries = (self.url_result(urljoin(url, u)) for u in urls)
+
+        return {
+            '_type': 'playlist',
+            'id': playlist_id,
+            'uploader_id': uploader_id,
+            'title': title,
+            'entries': entries,
+        }
