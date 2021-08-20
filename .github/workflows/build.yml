@@ -30,8 +30,6 @@ jobs:
       latest_version_numeric: ${{ steps.prepare.outputs.latest_version_numeric }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v2
         with:
@@ -71,6 +69,8 @@ jobs:
       filehash_tar: ${{ steps.build.outputs.filehash_tar }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Download base
         uses: actions/download-artifact@v2
         with:
@@ -190,6 +190,8 @@ jobs:
         icon: [red, white]
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Download base
         uses: actions/download-artifact@v2
         with:
