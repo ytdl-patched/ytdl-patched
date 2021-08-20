@@ -450,6 +450,7 @@
  - **ivi:compilation**: ivi.ru compilations
  - **ivideon**: Ivideon TV
  - **iwara**
+ - **iwara:playlist**
  - **iwara:user**
  - **Izlesene**
  - **Jamendo**
