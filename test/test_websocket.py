@@ -65,8 +65,9 @@ for testsuite in ('kraken', 'echo'):
                 if testsuite == 'kraken':
                     self._kraken(impl)
                 elif testsuite == 'echo':
-                    self._echo(impl, 'ws://echo.websocket.org')
-                    self._echo(impl, 'wss://echo.websocket.org')
+                    # self._echo(impl, 'ws://echo.websocket.org')
+                    # self._echo(impl, 'wss://echo.websocket.org')
+                    pass
 
             return _runtest
 
