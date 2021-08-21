@@ -111,6 +111,8 @@ jobs:
       filehash_wheel_tar: ${{ steps.hash.outputs.filehash_wheel_tar }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Download base
         uses: actions/download-artifact@v2
         with:
@@ -119,6 +121,8 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.python_version }}
+      - name: Create buildconfig.py
+        run: python ./devscripts/make_buildconfig.py
       - name: Install deps
         run: pip3 install -U pip build wheel setuptools
       - name: Build wheel
