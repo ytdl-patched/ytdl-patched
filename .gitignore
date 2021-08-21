@@ -81,6 +81,7 @@ README.txt
 *.zsh
 *.spec
 test/testdata/player-*.js
+yt_dlp/build_config.py
 
 # Binary
 /youtube-dl
