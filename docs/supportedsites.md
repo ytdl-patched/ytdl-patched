@@ -102,6 +102,7 @@
  - **Bandcamp:weekly**
  - **BandcampMusic**
  - **bangumi.bilibili.com**: BiliBili番剧
+ - **BannedVideo**
  - **bbc**: BBC
  - **bbc.co.uk**: BBC iPlayer
  - **bbc.co.uk:article**: BBC articles
@@ -123,6 +124,7 @@
  - **Bigflix**
  - **Bild**: Bild.de
  - **BiliBili**
+ - **Bilibili category extractor**
  - **BilibiliAudio**
  - **BilibiliAudioAlbum**
  - **BilibiliChannel**
@@ -419,6 +421,7 @@
  - **Huajiao**: 花椒直播
  - **HuffPost**: Huffington Post
  - **Hungama**
+ - **HungamaAlbumPlaylist**
  - **HungamaSong**
  - **Hypem**
  - **ign.com**
