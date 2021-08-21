@@ -119,6 +119,7 @@ from .bandcamp import (
     BandcampWeeklyIE,
     BandcampMusicIE,
 )
+from .bannedvideo import BannedVideoIE
 from .bbc import (
     BBCCoUkIE,
     BBCCoUkArticleIE,
@@ -144,6 +145,7 @@ from .bild import BildIE
 from .bilibili import (
     BiliBiliIE,
     BiliBiliSearchIE,
+    BilibiliCategoryIE,
     BiliBiliBangumiIE,
     BilibiliAudioIE,
     BilibiliAudioAlbumIE,
@@ -549,6 +551,7 @@ from .huffpost import HuffPostIE
 from .hungama import (
     HungamaIE,
     HungamaSongIE,
+    HungamaAlbumPlaylistIE,
 )
 from .hypem import HypemIE
 from .ichinanalive import (
