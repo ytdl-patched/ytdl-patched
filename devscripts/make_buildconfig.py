@@ -67,3 +67,4 @@ for k, v in values.items():
 
 with open('./yt_dlp/build_config.py', 'w') as w:
     w.write(pycode)
+print(pycode)
