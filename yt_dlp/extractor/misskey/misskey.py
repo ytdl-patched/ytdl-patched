@@ -175,10 +175,14 @@ class MisskeyUserIE(MisskeyBaseIE):
     _TESTS = [{
         'note': 'refer to another instance',
         'url': 'https://misskey.io/@vitaone@misskey.dev',
+        'playlist_mincount': 0,
+    }, {
+        'url': 'https://misskey.io/@kubaku@misskey.dev',
+        'playlist_mincount': 1,
     }]
 
     def _entries(self, instance, user_id):
-        since_id = None
+        until_id = None
         for i in itertools.count(1):
             page = self._download_json(
                 'https://%s/api/users/notes' % instance, user_id,
@@ -186,11 +190,11 @@ class MisskeyUserIE(MisskeyBaseIE):
                     'limit': 100,
                     'userId': user_id,
                     'withFiles': True,
-                    **({'since_id': since_id} if since_id else {}),
+                    **({'untilId': until_id} if until_id else {}),
                 }).encode())
             yield from page
-            since_id = traverse_obj(page, (0, 'id'))
-            if not since_id:
+            until_id = traverse_obj(page, (-1, 'id'))
+            if not until_id:
                 break
 
     def _filter_items_with_media(self, entries):
@@ -211,9 +215,10 @@ class MisskeyUserIE(MisskeyBaseIE):
             data=('{"username":"%s"}' % user_handle).encode())
         user_id = user_info.get('id')
 
-        entries = self._entries(instance, user_id)
-        for item in entries:
-            print(item.get('id'))
+        entries = self._filter_items_with_media(self._entries(instance, user_id))
 
-        # TODO: imcomplete
-        return instance, user_handle
+        # TODO: WIP
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+        }
