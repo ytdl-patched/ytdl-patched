@@ -1,11 +1,20 @@
 # coding: utf-8
 from __future__ import unicode_literals
+import itertools
+import json
 
 import re
 
 from .instances import instances
 from ..common import InfoExtractor
-from ...utils import ExtractorError, determine_ext, mimetype2ext, preferredencoding, traverse_obj, unified_timestamp
+from ...utils import (
+    ExtractorError,
+    determine_ext,
+    mimetype2ext,
+    preferredencoding,
+    traverse_obj,
+    unified_timestamp
+)
 from ...compat import compat_str
 
 
@@ -163,12 +172,48 @@ class MisskeyIE(MisskeyBaseIE):
 class MisskeyUserIE(MisskeyBaseIE):
     IE_NAME = 'misskey:user'
     _VALID_URL = r'(?P<prefix>(?:misskey|msky|msk):)?https?://(?P<instance>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)(?:@(?P<instance2>[a-zA-Z0-9_.-]+))?'
-    _TESTS = []
+    _TESTS = [{
+        'note': 'refer to another instance',
+        'url': 'https://misskey.io/@vitaone@misskey.dev',
+    }]
+
+    def _entries(self, instance, user_id):
+        since_id = None
+        for i in itertools.count(1):
+            page = self._download_json(
+                'https://%s/api/users/notes' % instance, user_id,
+                note='Downloading page %d' % i, data=json.dumps({
+                    'limit': 100,
+                    'userId': user_id,
+                    'withFiles': True,
+                    **({'since_id': since_id} if since_id else {}),
+                }).encode())
+            yield from page
+            since_id = traverse_obj(page, (0, 'id'))
+            if not since_id:
+                break
+
+    def _filter_items_with_media(self, entries):
+        for item in entries:
+            mimetypes = [x.get('type') for x in item.get('files') or [] if x]
+            if any(x and (x.startswith('video/') or x.startswith('audio/')) for x in mimetypes):
+                yield item
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
         instance = mobj.group('instance2') or mobj.group('instance')
-        user_id = mobj.group('id')
+        user_handle = mobj.group('id')
+
+        user_info = self._download_json(
+            'https://%s/api/users/show' % instance, user_handle,
+            note='Fetching user info',
+            # building POST payload without using json module
+            data=('{"username":"%s"}' % user_handle).encode())
+        user_id = user_info.get('id')
+
+        entries = self._entries(instance, user_id)
+        for item in entries:
+            print(item.get('id'))
 
         # TODO: imcomplete
-        return instance, user_id
+        return instance, user_handle
