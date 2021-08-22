@@ -20,7 +20,7 @@ class MisskeyBaseIE(InfoExtractor):
         if not mobj:
             return False
         prefix = mobj.group('prefix')
-        hostname = mobj.group('domain')
+        hostname = mobj.group('instance')
         return cls._test_mastodon_instance(None, hostname, True, prefix)
 
     @staticmethod
@@ -76,7 +76,7 @@ class MisskeyBaseIE(InfoExtractor):
 
 class MisskeyIE(MisskeyBaseIE):
     IE_NAME = 'misskey'
-    _VALID_URL = r'(?P<prefix>(?:misskey|msky|msk):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/notes/(?P<id>[a-zA-Z0-9]+)'
+    _VALID_URL = r'(?P<prefix>(?:misskey|msky|msk):)?https?://(?P<instance>[a-zA-Z0-9._-]+)/notes/(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
         'note': 'embed video',
         'url': 'https://misskey.io/notes/8pp0c7gsbm',
@@ -95,6 +95,7 @@ class MisskeyIE(MisskeyBaseIE):
         # we have to port mfm-js in Node.js to mimick embed URL extraction
         # https://github.com/misskey-dev/misskey/blob/develop/src/misc/extract-url-from-mfm.ts
         # https://github.com/misskey-dev/misskey/blob/develop/src/client/ui/chat/note.vue
+        # https://github.com/misskey-dev/mfm.js/blob/develop/src/internal/parser.pegjs
         'only_matching': True,
     }, {
         'note': 'no video',
@@ -104,11 +105,11 @@ class MisskeyIE(MisskeyBaseIE):
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        domain = mobj.group('domain')
+        instance = mobj.group('instance')
         video_id = mobj.group('id')
 
         api_response = self._download_json(
-            'https://%s/api/notes/show' % domain, video_id,
+            'https://%s/api/notes/show' % instance, video_id,
             # building POST payload without using json module
             data=('{"noteId":"%s"}' % video_id).encode())
 
@@ -124,7 +125,7 @@ class MisskeyIE(MisskeyBaseIE):
         formats = []
         for file in api_response.get('files') or []:
             mimetype = file.get('type')
-            if not mimetype or not mimetype.startswith('video/'):
+            if not mimetype or (not mimetype.startswith('video/') and not mimetype.startswith('audio/')):
                 continue
             formats.append({
                 'format_id': file.get('id'),
@@ -135,7 +136,7 @@ class MisskeyIE(MisskeyBaseIE):
 
         # must be here to prevent circular import
         from .complement import _COMPLEMENTS
-        complements = [x() for x in _COMPLEMENTS if re.match(x._INSTANCE_RE, domain)]
+        complements = [x() for x in _COMPLEMENTS if re.match(x._INSTANCE_RE, instance)]
         if complements:
             self.to_screen('%d complement(s) found, running them to get more formats' % len(complements))
             for cmpl in complements:
@@ -161,27 +162,13 @@ class MisskeyIE(MisskeyBaseIE):
 
 class MisskeyUserIE(MisskeyBaseIE):
     IE_NAME = 'misskey:user'
-    _VALID_URL = r'(?P<prefix>(?:misskey|msky|msk):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)/?(?:\?.*)?$'
-    _TESTS = [{
-        'url': 'https://mstdn.jp/@kris57',
-        'info_dict': {
-            'title': 'Toots from @kris57@mstdn.jp',
-            'id': 'kris57',
-        },
-        'playlist_mincount': 261,
-    }, {
-        'url': 'https://pawoo.net/@iriomote_yamaneko',
-        'info_dict': {
-            'title': 'Toots from @iriomote_yamaneko@pawoo.net',
-            'id': 'iriomote_yamaneko',
-        },
-        'playlist_mincount': 80500,
-    }]
+    _VALID_URL = r'(?P<prefix>(?:misskey|msky|msk):)?https?://(?P<instance>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)(?:@(?P<instance2>[a-zA-Z0-9_.-]+))?'
+    _TESTS = []
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        domain = mobj.group('domain')
+        instance = mobj.group('instance2') or mobj.group('instance')
         user_id = mobj.group('id')
 
         # TODO: imcomplete
-        return domain, user_id
+        return instance, user_id
