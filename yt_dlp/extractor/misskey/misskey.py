@@ -92,9 +92,10 @@ class MisskeyIE(MisskeyBaseIE):
     }, {
         'note': 'embed video with YouTube',
         'url': 'https://misskey.io/notes/8pp0di8s4t',
-        'info_dict': {
-            'id': '8pp0di8s4t',
-        },
+        # we have to port mfm-js in Node.js to mimick embed URL extraction
+        # https://github.com/misskey-dev/misskey/blob/develop/src/misc/extract-url-from-mfm.ts
+        # https://github.com/misskey-dev/misskey/blob/develop/src/client/ui/chat/note.vue
+        'only_matching': True,
     }, {
         'note': 'no video',
         'url': 'https://misskey.io/notes/8pp04mprzx',
@@ -132,7 +133,7 @@ class MisskeyIE(MisskeyBaseIE):
                 'filesize': file.get('size'),
             })
 
-        # must be here because of circular import
+        # must be here to prevent circular import
         from .complement import _COMPLEMENTS
         complements = [x() for x in _COMPLEMENTS if re.match(x._INSTANCE_RE, domain)]
         if complements:
