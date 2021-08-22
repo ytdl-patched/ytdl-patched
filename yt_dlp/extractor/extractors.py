@@ -775,6 +775,7 @@ from .mirrativ import (
     MirrativIE,
     MirrativUserIE,
 )
+from .misskey import MisskeyIE, MisskeyUserIE
 from .mit import TechTVMITIE, OCWMITIE
 from .mitele import MiTeleIE
 from .mixch import MixchIE
