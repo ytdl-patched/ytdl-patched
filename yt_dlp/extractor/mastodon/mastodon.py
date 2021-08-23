@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import itertools
 import re
 
 from .instances import instances
@@ -199,22 +200,16 @@ class MastodonUserIE(MastodonBaseIE):
         'playlist_mincount': 80500,
     }]
 
-    def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        domain = mobj.group('domain')
-        user_id = mobj.group('id')
-
+    def _entries(self, domain, user_id):
         # FIXME: filter toots with video or youtube attached
         # TODO: replace to api calls if possible
-        results = []
-        index = 1
         next_url = 'https://%s/@%s' % (domain, user_id)
-        while True:
+        for index in itertools.count(1):
             webpage = self._download_webpage(next_url, user_id, note='Downloading page %d' % index)
             for matches in re.finditer(r'(?x)<a class=(["\'])(?:.*?\s+)*status__relative-time(?:\s+.*)*\1\s+(?:rel=(["\'])noopener\2)?\s+href=(["\'])(https://%s/@%s/(\d+))\3>'
                                        % (re.escape(domain), re.escape(user_id)), webpage):
                 _, _, _, url, video_id = matches.groups()
-                results.append(self.url_result(url, id=video_id))
+                yield self.url_result(url, id=video_id)
             next_url = self._search_regex(
                 # other instances may have different tags
                 # r'<div\s+class=(["\'])entry\1>.*?<a\s+class=(["\'])(?:.*\s+)*load-more(?:\s+.*)*\2\s+href=(["\'])(.+)\3>.+</a></div>\s*</div>',
@@ -222,9 +217,14 @@ class MastodonUserIE(MastodonBaseIE):
                 webpage, 'next cursor url', default=None, fatal=False)
             if not next_url:
                 break
-            index += 1
 
-        return self.playlist_result(results, user_id, 'Toots from @%s@%s' % (user_id, domain))
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        domain = mobj.group('domain')
+        user_id = mobj.group('id')
+
+        entries = self._entries(domain, user_id)
+        return self.playlist_result(entries, user_id, 'Toots from @%s@%s' % (user_id, domain))
 
 
 class MastodonUserNumericIE(MastodonBaseIE):
