@@ -32,10 +32,10 @@ class MisskeyBaseIE(InfoExtractor):
             return False
         prefix = mobj.group('prefix')
         hostname = mobj.group('instance')
-        return cls._test_mastodon_instance(None, hostname, True, prefix)
+        return cls._test_misskey_instance(None, hostname, True, prefix)
 
     @staticmethod
-    def _test_mastodon_instance(ie, hostname, skip, prefix):
+    def _test_misskey_instance(ie, hostname, skip, prefix):
         hostname = hostname.encode('idna')
         if not isinstance(hostname, compat_str):
             hostname = hostname.decode(preferredencoding())
