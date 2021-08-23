@@ -63,19 +63,10 @@ class MisskeyBaseIE(InfoExtractor):
             # try /api/stats
             api_request_stats = ie._download_json(
                 'https://%s/api/stats' % hostname, hostname,
-                note='Testing Misskey API /api/stats', data='{}')
+                note='Testing Misskey API /api/stats', data=b'{}')
             if not isinstance(api_request_stats.get('usersCount'), int):
                 return False
             if not isinstance(api_request_stats.get('instances'), int):
-                return False
-
-            # try /api/server-info
-            api_request_serverinfo = ie._download_json(
-                'https://%s/api/server-info' % hostname, hostname,
-                note='Testing Misskey API /api/server-info', data='{}')
-            if not traverse_obj(api_request_serverinfo, ('cpu', 'model'), expected_type=compat_str):
-                return False
-            if not traverse_obj(api_request_serverinfo, ('cpu', 'cores'), expected_type=int):
                 return False
         except (IOError, ExtractorError):
             return False

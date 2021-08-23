@@ -294,7 +294,7 @@ def parseOpts(overrideArguments=None):
         help='Always perform online checks for PeerTube-like URL')
     general.add_option(
         '--check-misskey-instance',
-        action='store_true', dest='check_peertube_instance',
+        action='store_true', dest='check_misskey_instance',
         default=False,
         help='Always perform online checks for Misskey-like URL')
     general.add_option(
