@@ -100,6 +100,18 @@ class MisskeyIE(MisskeyBaseIE):
             'age_limit': 0,
         },
     }, {
+        'note': 'another instance, and have no content (title=NA)',
+        'url': 'https://misskey.dev/notes/8o0h93l7bl',
+        'info_dict': {
+            'id': '8o0h93l7bl',
+            'title': None,
+            'timestamp': 1625869866,
+            'uploader': 'かに座と悪ヨメミ',
+            'uploader_id': '8izhlpyfdt',
+            'visibility': 'public',
+            'age_limit': 0,
+        },
+    }, {
         'note': 'embed video with YouTube',
         'url': 'https://misskey.io/notes/8pp0di8s4t',
         # we have to port mfm-js in Node.js to mimick embed URL extraction
