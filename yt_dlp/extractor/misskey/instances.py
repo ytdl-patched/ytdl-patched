@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 instances = {
     # list of instances here
     "misskey.io",
+    "misskey.dev",
 }
 
 __all__ = ['instances']

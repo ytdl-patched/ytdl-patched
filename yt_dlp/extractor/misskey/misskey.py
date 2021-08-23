@@ -12,6 +12,7 @@ from ...utils import (
     determine_ext,
     mimetype2ext,
     preferredencoding,
+    smuggle_url,
     traverse_obj,
     unified_timestamp
 )
@@ -179,6 +180,9 @@ class MisskeyUserIE(MisskeyBaseIE):
     }, {
         'url': 'https://misskey.io/@kubaku@misskey.dev',
         'playlist_mincount': 1,
+    }, {
+        'url': 'https://misskey.dev/@kubaku',
+        'playlist_mincount': 1,
     }]
 
     def _entries(self, instance, user_id):
@@ -197,11 +201,11 @@ class MisskeyUserIE(MisskeyBaseIE):
             if not until_id:
                 break
 
-    def _filter_items_with_media(self, entries):
+    def _mapfilter_items_with_media(self, instance, entries):
         for item in entries:
             mimetypes = [x.get('type') for x in item.get('files') or [] if x]
             if any(x and (x.startswith('video/') or x.startswith('audio/')) for x in mimetypes):
-                yield item
+                yield self.url_result(smuggle_url('https://%s/notes/%s' % (instance, item.get('id')), item))
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -214,11 +218,16 @@ class MisskeyUserIE(MisskeyBaseIE):
             # building POST payload without using json module
             data=('{"username":"%s"}' % user_handle).encode())
         user_id = user_info.get('id')
+        uploader = user_info.get('name')
+        uploader_id = user_info.get('username')
+        description = user_info.get('description')
 
-        entries = self._filter_items_with_media(self._entries(instance, user_id))
+        entries = self._mapfilter_items_with_media(instance, self._entries(instance, user_id))
 
-        # TODO: WIP
         return {
             '_type': 'playlist',
             'entries': entries,
+            'uploader': uploader,
+            'uploader_id': uploader_id,
+            'description': description,
         }
