@@ -32,4 +32,5 @@ jobs:
         git push --all  --force keybase
         git push --tags --force keybase
     - name: GC repository on Keybase
+      continue-on-error: true
       run: keybase git gc ytdl-patched
