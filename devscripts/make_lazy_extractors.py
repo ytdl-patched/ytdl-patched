@@ -31,7 +31,7 @@ if os.path.exists(plugins_blocked_dirname):
 with open('devscripts/lazy_load_template.py', 'rt') as f:
     module_template = f.read()
 
-CLASS_PROPERTIES = ['ie_key', 'working', '_match_valid_url', 'suitable', '_match_id', 'get_temp_id', '_valid_url_re']
+CLASS_PROPERTIES = ['ie_key', 'working', '_match_valid_url', 'suitable', '_match_id', 'get_temp_id']
 module_contents = [
     module_template,
     *[getsource(getattr(InfoExtractor, k)) for k in CLASS_PROPERTIES],
