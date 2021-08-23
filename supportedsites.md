@@ -364,6 +364,7 @@
  - **Funk**
  - **Fusion**
  - **Fux**
+ - **GabTV**
  - **Gaia**
  - **GameInformer**
  - **GameSpot**
@@ -1061,6 +1062,7 @@
  - **ThisAV**
  - **ThisOldHouse**
  - **TikTok**
+ - **tiktok:user**
  - **tinypic**: tinypic.com videos
  - **TMZ**
  - **TNAFlix**
