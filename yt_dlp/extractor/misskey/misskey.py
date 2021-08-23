@@ -132,8 +132,12 @@ class MisskeyIE(MisskeyBaseIE):
         thumbnail = traverse_obj(api_response, ('files', 0, 'thumbnailUrl'), expected_type=compat_str)
         age_limit = 18 if traverse_obj(api_response, ('files', 0, 'isSensitive'), expected_type=bool) else 0
 
-        formats = []
-        for file in api_response.get('files') or []:
+        from .complement import _COMPLEMENTS
+        complements = [x() for x in _COMPLEMENTS if re.match(x._INSTANCE_RE, instance)]
+
+        files = []
+        for idx, file in enumerate(api_response.get('files') or []):
+            formats = []
             mimetype = file.get('type')
             if not mimetype or (not mimetype.startswith('video/') and not mimetype.startswith('audio/')):
                 continue
@@ -144,20 +148,24 @@ class MisskeyIE(MisskeyBaseIE):
                 'filesize': file.get('size'),
             })
 
-        # must be here to prevent circular import
-        from .complement import _COMPLEMENTS
-        complements = [x() for x in _COMPLEMENTS if re.match(x._INSTANCE_RE, instance)]
-        if complements:
-            self.to_screen('%d complement(s) found, running them to get more formats' % len(complements))
-            for cmpl in complements:
-                try:
-                    formats.extend(cmpl._extract_formats(self, video_id, api_response))
-                except ExtractorError as ex:
-                    self.report_warning('Error occured in complement "%s": %s' % (cmpl, ex))
+            # must be here to prevent circular import
+            if complements:
+                self.to_screen('%d complement(s) found, running them to get more formats' % len(complements))
+                for cmpl in complements:
+                    try:
+                        formats.extend(cmpl._extract_formats(self, video_id, file))
+                    except ExtractorError as ex:
+                        self.report_warning('Error occured in complement "%s": %s' % (cmpl, ex))
 
-        self._sort_formats(formats)
+            self._sort_formats(formats)
 
-        return {
+            files.append({
+                'id': '%s-%d' % (video_id, idx),
+                'title': title,
+                'formats': formats,
+            })
+
+        base = {
             'id': video_id,
             'title': title,
             'timestamp': timestamp,
@@ -166,8 +174,18 @@ class MisskeyIE(MisskeyBaseIE):
             'visibility': visibility,
             'thumbnail': thumbnail,
             'age_limit': age_limit,
-            'formats': formats,
         }
+        if not files:
+            raise ExtractorError('This note does not have any media file.', expected=True)
+        elif len(files) == 1:
+            files[0].update(base)
+            return files[0]
+        else:
+            base.update({
+                '_type': 'multi_video',
+                'entries': files,
+            })
+            return base
 
 
 class MisskeyUserIE(MisskeyBaseIE):

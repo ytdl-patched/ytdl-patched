@@ -9,7 +9,7 @@ class BaseMisskeyComplement(object):
     """
     _INSTANCE_RE = r''
 
-    def _extract_formats(self, ie: MisskeyIE, video_id: compat_str, api_response) -> list:
+    def _extract_formats(self, ie: MisskeyIE, video_id: compat_str, file) -> list:
         """
         Return list of formats which is not available in standard extraction.
         Sorting is done in MisskeyIE, so you don't have to do that in it.
@@ -20,26 +20,22 @@ class BaseMisskeyComplement(object):
 class MisskeyIoComplement(BaseMisskeyComplement):
     _INSTANCE_RE = r'^misskey\.io$'
 
-    def _extract_formats(self, ie: MisskeyIE, video_id: compat_str, api_response) -> list:
-        formats = []
-        for file in api_response.get('files') or []:
-            mimetype = file.get('type')
-            if not mimetype or not mimetype.startswith('video/'):
-                continue
-            embed_url = 'https://s3encode.arkjp.net/?video=%s' % file.get('url')
-            embed_webpage = ie._download_webpage(
-                embed_url, video_id, note='Downloading embed webpage',
-                headers={
-                    'Referer': 'https://misskey.io/',
-                })
-            vdeliv_embed_id = ie._search_regex(
-                r'<iframe src="https://iframe\.videodelivery\.net/([a-zA-Z0-9]+)"',
-                embed_webpage, 'videodeliver embed URL', group=1)
-            vdeliv_mpd_url = f'https://videodelivery.net/{vdeliv_embed_id}/manifest/video.mpd?parentOrigin=https%3A%2F%2Fs3encode.arkjp.net'
+    def _extract_formats(self, ie: MisskeyIE, video_id: compat_str, file) -> list:
+        mimetype = file.get('type')
+        if not mimetype or not mimetype.startswith('video/'):
+            return []
+        embed_url = 'https://s3encode.arkjp.net/?video=%s' % file.get('url')
+        embed_webpage = ie._download_webpage(
+            embed_url, video_id, note='Downloading embed webpage',
+            headers={
+                'Referer': 'https://misskey.io/',
+            })
+        vdeliv_embed_id = ie._search_regex(
+            r'<iframe src="https://iframe\.videodelivery\.net/([a-zA-Z0-9]+)"',
+            embed_webpage, 'videodeliver embed URL', group=1)
+        vdeliv_mpd_url = f'https://videodelivery.net/{vdeliv_embed_id}/manifest/video.mpd?parentOrigin=https%3A%2F%2Fs3encode.arkjp.net'
 
-            formats.extend(ie._extract_mpd_formats(vdeliv_mpd_url, video_id, mpd_id='mpd', fatal=False))
-
-        return formats
+        return ie._extract_mpd_formats(vdeliv_mpd_url, video_id, mpd_id='mpd', fatal=False)
 
 
 _COMPLEMENTS = [MisskeyIoComplement]
