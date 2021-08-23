@@ -113,8 +113,7 @@ class IchinanaLiveClipIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        m = self._valid_url_re().match(url)
-        uploader_id, video_id = m.group('uploader_id'), m.group('id')
+        uploader_id, video_id = self._match_valid_url(url).groups()
         url = 'https://17.live/profile/r/%s/clip/%s' % (uploader_id, video_id)
 
         view_data = self._download_json(

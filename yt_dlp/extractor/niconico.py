@@ -213,7 +213,7 @@ class NiconicoIE(NiconicoBaseIE):
 
     @classmethod
     def suitable(cls, url):
-        m = cls._valid_url_re().match(url)
+        m = cls._match_valid_url(url)
         if not m:
             return False
         if m.group('alphabet') == 'lv':

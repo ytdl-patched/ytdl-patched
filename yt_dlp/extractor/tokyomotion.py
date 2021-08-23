@@ -31,7 +31,7 @@ class TokyoMotionBaseIE(InfoExtractor):
 
     @staticmethod
     def _int_id(url):
-        m = TokyoMotionIE._valid_url_re().match(url)
+        m = TokyoMotionIE._match_valid_url(url)
         return int(compat_str(m.group('id')))
 
     @staticmethod
@@ -54,8 +54,7 @@ class TokyoMotionBaseIE(InfoExtractor):
 
 class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
     def _real_extract(self, url):
-        user_id = self._match_id(url)
-        variant = self._VALID_URL_RE.match(url).group('variant')
+        variant, user_id = self._match_valid_url(url).groups()[0:1]
         matches = self._do_paging(variant, user_id)
         return self.playlist_result(matches, user_id, self.TITLE % user_id)
 
@@ -75,11 +74,10 @@ class TokyoMotionIE(TokyoMotionBaseIE):
     def _real_extract(self, url):
         url = url.split('?')[0].split('#')[0]  # sanitize URL
 
-        mobj = self._valid_url_re().match(url)
+        mobj = self._match_valid_url(url)
         assert mobj
-        video_id = mobj.group('id')
-        variant = mobj.group('variant')
-        if not mobj.group('excess'):
+        variant, video_id, excess = mobj.groups()
+        if not excess:
             # fix URL silently
             url = url.split('#')[0]
             if not url.endswith('/'):
@@ -145,10 +143,7 @@ class TokyoMotionScannerIE(TokyoMotionBaseIE):
     _TEST = {}
 
     def _real_extract(self, url):
-        mobj = self._valid_url_re().match(url)
-        assert mobj
-        user_id = mobj.group('id')
-        variant = mobj.group('variant')
+        variant, user_id = self._match_valid_url(url).groups()
         webpage = self._download_page(url[7:], user_id)
         matches = self._extract_video_urls(variant, webpage)
         playlist = (self.url_result(url) for url in sorted(set(matches), key=self._int_id))

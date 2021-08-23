@@ -463,16 +463,6 @@ class InfoExtractor(object):
         self.set_downloader(downloader)
 
     @classmethod
-    def _valid_url_re(cls):
-        # TODO: remove this because _match_valid_url is added in upstream
-        # This does not use has/getattr intentionally - we want to know whether
-        # we have cached the regexp for *this* class, whereas getattr would also
-        # match the superclass
-        if '_VALID_URL_RE' not in cls.__dict__:
-            cls._VALID_URL_RE = re.compile(cls._VALID_URL)
-        return cls._VALID_URL_RE
-
-    @classmethod
     def _match_valid_url(cls, url):
         # This does not use has/getattr intentionally - we want to know whether
         # we have cached the regexp for *this* class, whereas getattr would also
