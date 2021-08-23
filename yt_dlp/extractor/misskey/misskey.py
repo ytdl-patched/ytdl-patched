@@ -14,7 +14,8 @@ from ...utils import (
     preferredencoding,
     smuggle_url,
     traverse_obj,
-    unified_timestamp
+    unified_timestamp,
+    unsmuggle_url
 )
 from ...compat import compat_str
 
@@ -130,10 +131,12 @@ class MisskeyIE(MisskeyBaseIE):
         instance = mobj.group('instance')
         video_id = mobj.group('id')
 
-        api_response = self._download_json(
-            'https://%s/api/notes/show' % instance, video_id,
-            # building POST payload without using json module
-            data=('{"noteId":"%s"}' % video_id).encode())
+        url, api_response = unsmuggle_url(url)
+        if not api_response:
+            api_response = self._download_json(
+                'https://%s/api/notes/show' % instance, video_id,
+                # building POST payload without using json module
+                data=('{"noteId":"%s"}' % video_id).encode())
 
         title = api_response.get('text')
         timestamp = unified_timestamp(api_response.get('createdAt'))
