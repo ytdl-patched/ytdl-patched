@@ -23,12 +23,12 @@ known_valid_instances = set()
 
 
 class PeerTubeIE(InfoExtractor):
-    _UUID_RE = r'[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
+    _UUID_RE = r'[\da-zA-Z]{22}|[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
     _API_BASE = 'https://%s/api/v1/videos/%s/%s'
     _VALID_URL = r'''(?x)
                     (?:
                         (?P<prefix>peertube:)(?P<host>[^:]+):|
-                        https?://(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos)/
+                        https?://(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos|w)/
                     )
                     (?P<id>%s)
                     ''' % _UUID_RE
@@ -59,6 +59,39 @@ class PeerTubeIE(InfoExtractor):
             'categories': ['Science & Technology'],
         }
     }, {
+        'url': 'https://peertube2.cpy.re/w/122d093a-1ede-43bd-bd34-59d2931ffc5e',
+        'info_dict': {
+            'id': '122d093a-1ede-43bd-bd34-59d2931ffc5e',
+            'ext': 'mp4',
+            'title': 'E2E tests',
+            'uploader_id': '37855',
+            'timestamp': 1589276219,
+            'upload_date': '20200512',
+            'uploader': 'chocobozzz',
+        }
+    }, {
+        'url': 'https://peertube2.cpy.re/w/3fbif9S3WmtTP8gGsC5HBd',
+        'info_dict': {
+            'id': '3fbif9S3WmtTP8gGsC5HBd',
+            'ext': 'mp4',
+            'title': 'E2E tests',
+            'uploader_id': '37855',
+            'timestamp': 1589276219,
+            'upload_date': '20200512',
+            'uploader': 'chocobozzz',
+        },
+    }, {
+        'url': 'https://peertube2.cpy.re/api/v1/videos/3fbif9S3WmtTP8gGsC5HBd',
+        'info_dict': {
+            'id': '3fbif9S3WmtTP8gGsC5HBd',
+            'ext': 'mp4',
+            'title': 'E2E tests',
+            'uploader_id': '37855',
+            'timestamp': 1589276219,
+            'upload_date': '20200512',
+            'uploader': 'chocobozzz',
+        },
+    }, {
         # Issue #26002
         'url': 'peertube:spacepub.space:d8943b2d-8280-497b-85ec-bc282ec2afdc',
         'info_dict': {
@@ -85,9 +118,10 @@ class PeerTubeIE(InfoExtractor):
     @staticmethod
     def _extract_peertube_url(webpage, source_url):
         mobj = re.match(
-            r'https?://(?P<host>[^/]+?)/videos/(?:watch|embed)/(?P<id>%s)'
+            r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)|w)/(?P<id>%s)'
             % PeerTubeIE._UUID_RE, source_url)
         if mobj and any(p in webpage for p in (
+                'meta property="og:platform" content="PeerTube"',
                 '<title>PeerTube<',
                 'There will be other non JS-based clients to access PeerTube',
                 '>We are sorry but it seems that PeerTube is not compatible with your web browser.<')):

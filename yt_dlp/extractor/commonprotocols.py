@@ -58,5 +58,3 @@ class MmsIE(InfoExtractor):
             'title': title,
             'url': url,
         }
-
-# ViewSourceIE has been merged into GenericIE

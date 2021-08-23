@@ -23,7 +23,7 @@ class NhkBaseIE(InfoExtractor):
 
     def _extract_episode_info(self, url, episode=None):
         fetch_episode = episode is None
-        lang, m_type, episode_id = re.match(NhkVodIE._VALID_URL, url).groups()
+        lang, m_type, episode_id = NhkVodIE._match_valid_url(url).groups()
         if episode_id.isdigit():
             episode_id = episode_id[:4] + '-' + episode_id[4:]
 
@@ -159,7 +159,7 @@ class NhkVodProgramIE(NhkBaseIE):
     }]
 
     def _real_extract(self, url):
-        lang, m_type, program_id, episode_type = re.match(self._VALID_URL, url).groups()
+        lang, m_type, program_id, episode_type = self._match_valid_url(url).groups()
 
         episodes = self._call_api(
             program_id, lang, m_type == 'video', False, episode_type == 'clip')
@@ -188,7 +188,7 @@ class NhkForSchoolBangumiIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        program_type, video_id = re.match(self._valid_url_re(), url).groups()
+        program_type, video_id = self._match_valid_url(url).groups()
 
         webpage = self._download_webpage(
             'https://www2.nhk.or.jp/school/movie/%s.cgi?das_id=%s' % (program_type, video_id), video_id)
