@@ -126,15 +126,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
 
-* **New extractor arguments**: Some extractor arguments are added.
-
-| Name | Extractor | Working? | Recommended? | Description |
-|---|---|---|---|---|
-| `segment_duration` | `niconico` | Yes | No *1 | Changes segment duration (in **milliseconds**) for DMC formats.<br>Only have effects for HLS formats. |
-| `player_size` | `niconico` | Yes | No | Modifies the simulated size of player, needed to convert comments to subtitles. |
-| `mode` | `y2mate` | No | No | Changes mode for extraction.<br>One of `normal` and `rush`.<br>Defaults to `normal`.  |
-
-*1: **READ CAREFULLY**: Using it will make non-standard DMC request(s). You may be being banned of your account or IP address by using it. Use it at your own risk. <!-- It's better to use this option with `-N` if you really don't mind. -->
+* **New extractor arguments**: Some extractor arguments are added. Check [**EXTRACTOR ARGUMENTS**](#extractor-arguments) section for details.
 
 * **Streamlink integration**: You can download video sites that ytdl-patched don't support but Streamlink do. Currently works with Streamlink 2.3.0.
     * **You have to install Streamlink via pip: `pip install -U streamlink`**
@@ -1530,7 +1522,16 @@ The following extractors use this feature:
 * **vikiChannel**
     * `video_types`: Types of videos to download - one or more of `episodes`, `movies`, `clips`, `trailers`
 
+* **niconico**
+    * `segment_duration` *1: Changes segment duration (in **milliseconds**) for DMC formats. Only have effects for HLS formats.
+    * `player_size`: Modifies the simulated size of player, needed to convert comments to subtitles. `16:9`, `4:3` and size specification (`WIDTHxHEIGHT`) are accepted.
+
+* **y2mate**
+    * `mode`: Changes mode for extraction. One of `normal` and `rush`. Defaults to `normal`.
+
 NOTE: These options may be changed/removed in the future without concern for backward compatibility
+
+*1: **READ CAREFULLY**: Using it will make non-standard DMC request(s). You may be being banned of your account or IP address by using it. Use it at your own risk. <!-- It's better to use this option with `-N` if you really don't mind. -->
 
 
 # PLUGINS
