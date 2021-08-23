@@ -259,6 +259,7 @@ class MisskeyUserIE(MisskeyBaseIE):
 
         return {
             '_type': 'playlist',
+            'title': 'Notes from @%s@%s' % (uploader_id, instance),
             'entries': entries,
             'uploader': uploader,
             'uploader_id': uploader_id,
