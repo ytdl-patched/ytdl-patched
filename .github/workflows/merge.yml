@@ -30,8 +30,8 @@ jobs:
     - name: Regenerate docs/supportedsites.md
       continue-on-error: true
       run: |
-        python ./devscripts/make_supportedsites.py ./docs/supportedsites.md 
-        git commit -m"[automatic] regenerate docs/supportedsites.md @ $(date +'%Y%m%d')" ./docs/supportedsites.md
+        python ./devscripts/make_supportedsites.py ./supportedsites.md 
+        git commit -m"[automatic] regenerate supportedsites.md @ $(date +'%Y%m%d')" ./supportedsites.md
     - name: Push to here
       run: git push self HEAD:ytdlp
     - name: Create tag
