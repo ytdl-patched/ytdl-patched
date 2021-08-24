@@ -538,6 +538,9 @@
  - **MallTV**
  - **mangomolo:live**
  - **mangomolo:video**
+ - **ManotoTV**: Manoto TV (Episode)
+ - **ManotoTVLive**: Manoto TV (Live)
+ - **ManotoTVShow**: Manoto TV (Show)
  - **ManyVids**
  - **MaoriTV**
  - **Markiza**
