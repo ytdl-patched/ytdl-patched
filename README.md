@@ -113,8 +113,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `niconico:playlist`, `niconico:series`, `niconico:user`
     * `openrec`, `openrec:capture` (merged in upstream)
     * `pixiv:sketch`, `pixiv:sketch:user`
-    * `PornHubUserLive`
-    * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!)
+    * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!) (merged in upstream)
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `voicy`, `voicy:channel` (merged in upstream)
