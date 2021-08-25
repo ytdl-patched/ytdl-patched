@@ -582,6 +582,8 @@
  - **miomio.tv**
  - **mirrativ**
  - **mirrativ:user**
+ - **misskey**
+ - **misskey:user**
  - **MiTele**: mitele.es
  - **mixch**
  - **mixcloud**
