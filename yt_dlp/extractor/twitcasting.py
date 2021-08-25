@@ -13,6 +13,7 @@ from ..utils import (
     get_element_by_id,
     parse_duration,
     str_to_int,
+    traverse_obj,
     unified_timestamp,
     urlencode_postdata,
     try_get,
@@ -118,25 +119,21 @@ class TwitCastingIE(TwitCastingBaseIE):
         m3u8_urls = try_get(
             webpage,
             (find_dmu,
-             lambda x: [y['source']['url'] for y in video_js_data]
-                if video_js_data else None,
+             lambda x: traverse_obj(video_js_data, (..., 'source', 'url')),
              lambda x: ['https://twitcasting.tv/%s/metastream.m3u8' % uploader_id]
                 if is_live else None),
             list)
 
         if is_live:
-            # use `m3u8` entry_protocol until EXT-X-MAP is properly supported by `m3u8_native` entry_protocol
             m3u8_url = m3u8_urls[0]
             formats = self._extract_m3u8_formats(
                 m3u8_url, video_id, ext='mp4', m3u8_id='hls',
-                entry_protocol='m3u8', live=True,
+                entry_protocol='m3u8', live=True, quality=10,
                 headers={
                     'Accept': '*/*',
                     'Origin': 'https://twitcasting.tv',
                     'Referer': 'https://twitcasting.tv/',
                 })
-            for fmt in formats:
-                fmt['quality'] = 10
 
             if stream_server_data and HAVE_WEBSOCKET:
                 qq = qualities(['base', 'mobilesource', 'main'])
@@ -168,7 +165,7 @@ class TwitCastingIE(TwitCastingBaseIE):
 
             url_count = len(m3u8_urls)
             if url_count > 1:
-                self.report_warning('This archive got split in %d parts; to download each split, please use "-f hls-0".."-f hls-%d" option.' % (url_count, url_count - 1))
+                self.report_warning('This archive is split in %d parts; to download each split, please use "-f hls-0".."-f hls-%d" option.' % (url_count, url_count - 1))
                 formats.append({
                     # renamed from 'all' because 'all' is reserved word in yt-dlp
                     'format_id': 'joinall',
@@ -181,7 +178,7 @@ class TwitCastingIE(TwitCastingBaseIE):
 
         thumbnail = try_get(
             video_js_data,
-            (lambda x: x[0].get('thumbnailUrl'),
+            (lambda x: traverse_obj(x, (0, 'thumbnailUrl')),
              lambda x: self._og_search_thumbnail(webpage)),
             compat_str)
         description = clean_html(get_element_by_id(
