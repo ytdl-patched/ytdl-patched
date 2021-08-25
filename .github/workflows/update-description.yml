@@ -24,6 +24,7 @@ jobs:
     - name: Update description and homepage
       uses: actions/github-script@v4
       with:
+        github-token: ${{ secrets.GH_PAT }}
         script: |
           const fs = require("fs");
           const yaml = require("js-yaml");
