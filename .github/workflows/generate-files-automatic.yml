@@ -58,7 +58,7 @@ jobs:
       run: git commit -m"[automatic] regenerate yt_dlp/extractor/peertube/instances.py @ $(date +'%Y%m%d')" yt_dlp/extractor/peertube/instances.py
       continue-on-error: true
     - name: Commit yt_dlp/extractor/misskey/instances.py
-      run: git commit -m"[automatic] regenerate yt_dlp/extractor/misskey/instances.py @ $(date +'%Y%m%d')" yt_dlp/extractor/peertube/instances.py
+      run: git commit -m"[automatic] regenerate yt_dlp/extractor/misskey/instances.py @ $(date +'%Y%m%d')" yt_dlp/extractor/misskey/instances.py
       continue-on-error: true
     - name: Commit yt_dlp/chrome_versions.py
       run: git commit -m"[automatic] regenerate yt_dlp/chrome_versions.py @ $(date +'%Y%m%d')" yt_dlp/chrome_versions.py
