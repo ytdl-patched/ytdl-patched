@@ -306,6 +306,8 @@
  - **Embedly**
  - **EMPFlix**
  - **Engadget**
+ - **Epicon**
+ - **EpiconSeries**
  - **Eporner**
  - **EroProfile**
  - **EroProfile:album**
@@ -830,6 +832,7 @@
  - **PornoXO**
  - **PornTube**
  - **PressTV**
+ - **ProjectVeritas**
  - **prosiebensat1**: ProSiebenSat.1 Digital
  - **puhutv**
  - **puhutv:serie**
