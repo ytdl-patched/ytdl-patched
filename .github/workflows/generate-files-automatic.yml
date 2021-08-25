@@ -6,6 +6,7 @@ on:
       - .github/workflows/generate-files-automatic.yml
       - devscripts/make_mastodon_instance_list.py
       - devscripts/make_peertube_instance_list.py
+      - devscripts/make_misskey_version_list.py
       - devscripts/make_chrome_version_list.py
     branches:
       - ytdlp
@@ -43,6 +44,9 @@ jobs:
     - name: Generate yt_dlp/extractor/peertube/instances.py
       run: python ./devscripts/make_peertube_instance_list.py
       continue-on-error: true
+    - name: Generate yt_dlp/extractor/misskey/instances.py
+      run: python ./devscripts/make_misskey_instance_list.py
+      continue-on-error: true
     - name: Generate yt_dlp/chrome_versions.py
       run: python ./devscripts/make_chrome_version_list.py
       continue-on-error: true
@@ -52,6 +56,9 @@ jobs:
       continue-on-error: true
     - name: Commit yt_dlp/extractor/peertube/instances.py
       run: git commit -m"[automatic] regenerate yt_dlp/extractor/peertube/instances.py @ $(date +'%Y%m%d')" yt_dlp/extractor/peertube/instances.py
+      continue-on-error: true
+    - name: Commit yt_dlp/extractor/misskey/instances.py
+      run: git commit -m"[automatic] regenerate yt_dlp/extractor/misskey/instances.py @ $(date +'%Y%m%d')" yt_dlp/extractor/peertube/instances.py
       continue-on-error: true
     - name: Commit yt_dlp/chrome_versions.py
       run: git commit -m"[automatic] regenerate yt_dlp/chrome_versions.py @ $(date +'%Y%m%d')" yt_dlp/chrome_versions.py

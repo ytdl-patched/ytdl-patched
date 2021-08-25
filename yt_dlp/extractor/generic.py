@@ -142,6 +142,10 @@ from .mastodon import (
     MastodonUserIE,
     MastodonUserNumericIE,
 )
+from .misskey import (
+    MisskeyIE,
+    MisskeyUserIE,
+)
 
 
 class GenericIE(InfoExtractor):
@@ -2605,7 +2609,7 @@ class GenericIE(InfoExtractor):
                 (MastodonIE._VALID_URL,
                  MastodonUserIE._VALID_URL,
                  MastodonUserNumericIE._VALID_URL),
-                url, 'mastdon test', group='prefix', default=None)
+                url, 'mastodon test', group='prefix', default=None)
             if MastodonIE._test_mastodon_instance(self, parsed_url.hostname, False, prefix):
                 return self.url_result(url)
 
@@ -2614,6 +2618,14 @@ class GenericIE(InfoExtractor):
                 PeerTubeIE._VALID_URL,
                 url, 'peertube test', group='prefix', default=None)
             if PeerTubeIE._test_peertube_instance(self, parsed_url.hostname, False, prefix):
+                return self.url_result(url)
+
+        if self._downloader.params.get('check_misskey_instance', False):
+            prefix = self._search_regex(
+                (MisskeyIE._VALID_URL,
+                 MisskeyUserIE._VALID_URL),
+                url, 'misskey test', group='prefix', default=None)
+            if MisskeyIE._test_misskey_instance(self, parsed_url.hostname, False, prefix):
                 return self.url_result(url)
 
         self.to_screen('%s: Requesting header' % video_id)

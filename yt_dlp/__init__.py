@@ -695,6 +695,7 @@ def _real_main(argv=None):
 
         'check_mastodon_instance': opts.check_mastodon_instance,
         'check_peertube_instance': opts.check_peertube_instance,
+        'check_misskey_instance': opts.check_misskey_instance,
         'escape_long_names': opts.escape_long_names,
         'test_filename': opts.test_filename,
         'printjsontypes': opts.printjsontypes,

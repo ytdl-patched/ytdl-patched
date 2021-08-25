@@ -293,6 +293,11 @@ def parseOpts(overrideArguments=None):
         default=False,
         help='Always perform online checks for PeerTube-like URL')
     general.add_option(
+        '--check-misskey-instance',
+        action='store_true', dest='check_misskey_instance',
+        default=False,
+        help='Always perform online checks for Misskey-like URL')
+    general.add_option(
         '--test-filename',
         metavar='CMD', dest='test_filename',
         help='Like --exec option, but used for testing if downloading should be started. '
