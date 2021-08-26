@@ -113,7 +113,7 @@ class Y2mateIE(Y2mateBaseIE):
                     break
                 video_url = None
 
-            if not video_url:
+            if not video_url or 'app.y2mate.com' in video_url:
                 continue
 
             preference = int_or_none(self._search_regex(r'(\d+)p?', format_name, 'video size', group=1, default=None))
@@ -161,7 +161,7 @@ class Y2mateIE(Y2mateBaseIE):
                     break
                 video_url = None
 
-            if not video_url:
+            if not video_url or 'app.y2mate.com' in video_url:
                 continue
 
             formats.append({
