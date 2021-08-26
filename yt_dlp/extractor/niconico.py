@@ -907,7 +907,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
                 'protocol': 'niconico_live',
                 'format_id': '%s' % quality,
                 'video_id': video_id,
-                'cookies': str(self._get_cookies('https://live2.nicovideo.jp/')).replace('Set-Cookie: ', ''),
+                'cookies': str(self._get_cookies('https://live2.nicovideo.jp/').value),
                 'ext': 'mp4',
                 'is_live': True,
                 'live_quality': quality,
