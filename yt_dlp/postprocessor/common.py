@@ -1,8 +1,12 @@
 from __future__ import unicode_literals
 
-from ..longname import split_longname
 import functools
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..YoutubeDL import YoutubeDL
+
+from ..longname import split_longname
 from ..compat import compat_str
 from ..utils import (
     _configuration_args,
@@ -34,7 +38,7 @@ class PostProcessor(object):
     _downloader = None
 
     def __init__(self, downloader=None):
-        self._downloader = downloader
+        self._downloader: 'YoutubeDL' = downloader
         self.PP_NAME = self.pp_key()
 
     @classmethod

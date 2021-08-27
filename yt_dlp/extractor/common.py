@@ -17,6 +17,10 @@ try:
 except ImportError:
     from collections.abc import Generator, Iterator
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..YoutubeDL import YoutubeDL
+
 from ..compat import (
     compat_cookiejar_Cookie,
     compat_cookies_SimpleCookie,
@@ -455,7 +459,7 @@ class InfoExtractor(object):
         'password': 'Use --username and --password or --netrc to provide account credentials',
     }
 
-    def __init__(self, downloader=None):
+    def __init__(self, downloader: 'YoutubeDL' = None):
         """Constructor. Receives an optional downloader."""
         self._ready = False
         self._x_forwarded_for_ip = None
@@ -642,9 +646,9 @@ class InfoExtractor(object):
                 return True
         return False
 
-    def set_downloader(self, downloader):
+    def set_downloader(self, downloader: 'YoutubeDL'):
         """Sets the downloader for this IE."""
-        self._downloader = downloader
+        self._downloader: 'YoutubeDL' = downloader
 
     def _real_initialize(self):
         """Real initialization process. Redefine in subclasses."""

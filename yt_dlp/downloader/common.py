@@ -72,7 +72,7 @@ class FileDownloader(object):
 
     def __init__(self, ydl, params):
         """Create a FileDownloader object with the given options."""
-        self.ydl: YoutubeDL = ydl
+        self.ydl: 'YoutubeDL' = ydl
         self._progress_hooks = []
         self.params = params
         self.add_progress_hook(self.report_progress)
