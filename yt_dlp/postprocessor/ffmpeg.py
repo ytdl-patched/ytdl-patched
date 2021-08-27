@@ -535,8 +535,7 @@ class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
         temp_filename = prepend_extension(filename, 'temp')
         self.to_screen('Embedding subtitles in "%s"' % filename)
         self.run_ffmpeg_multiple_files(input_files, temp_filename, opts)
-        self._downloader.remove(filename)
-        self._downloader.rename(temp_filename, filename)
+        self._downloader.replace(temp_filename, filename)
 
         files_to_delete = [] if self._already_have_subtitle else sub_filenames
         return files_to_delete, information
@@ -643,8 +642,7 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
             itertools.chain(self._options(info['ext']), *options))
         if chapters:
             self._downloader.remove(metadata_filename)
-        self._downloader.remove(filename)
-        self._downloader.rename(temp_filename, filename)
+        self._downloader.replace(temp_filename, filename)
         return [], info
 
 
@@ -688,8 +686,7 @@ class FFmpegFixupPostProcessor(FFmpegPostProcessor):
         self.to_screen(f'{msg} of "{filename}"')
         self.run_ffmpeg(filename, temp_filename, options)
 
-        self._downloader.remove(filename)
-        self._downloader.rename(temp_filename, filename)
+        self._downloader.replace(temp_filename, filename)
 
 
 class FFmpegFixupStretchedPP(FFmpegFixupPostProcessor):
@@ -881,9 +878,7 @@ class FFmpegThumbnailsConvertorPP(FFmpegPostProcessor):
             if thumbnail_ext != 'webp' and self.is_webp(thumbnail_filename):
                 self.to_screen('Correcting thumbnail "%s" extension to webp' % thumbnail_filename)
                 webp_filename = replace_extension(thumbnail_filename, 'webp')
-                if self._downloader.exists(webp_filename):
-                    self._downloader.remove(webp_filename)
-                self._downloader.rename(thumbnail_filename, webp_filename)
+                self._downloader.replace(thumbnail_filename, webp_filename)
                 info['thumbnails'][idx]['filepath'] = webp_filename
                 info['__files_to_move'][webp_filename] = replace_extension(
                     info['__files_to_move'].pop(thumbnail_filename), 'webp')

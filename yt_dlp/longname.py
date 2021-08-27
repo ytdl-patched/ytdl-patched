@@ -3,10 +3,9 @@ from __future__ import unicode_literals
 
 import re
 
-from os import PathLike, fsdecode
 from typing import Union
 
-from os import remove, rename, sep, stat, utime, unlink, makedirs
+from os import PathLike, fsdecode, remove, rename, sep, stat, utime, unlink, makedirs, replace
 from os.path import exists, isfile, getsize, normpath, join, basename, dirname, isabs
 from .compat import compat_str
 from .utils import (
@@ -261,6 +260,14 @@ def escaped_rename(src, dst, *args, **kwargs):
     "os.rename() that escapes long names"
     dst = ensure_directory(dst)
     rename(
+        split_longname(src, get_filesystem_encoding()),
+        dst, *args, **kwargs)
+
+
+def escaped_replace(src, dst, *args, **kwargs):
+    "os.replace() that escapes long names"
+    dst = ensure_directory(dst)
+    replace(
         split_longname(src, get_filesystem_encoding()),
         dst, *args, **kwargs)
 

@@ -157,6 +157,7 @@ from .longname import (
     escaped_unlink,
     escaped_utime,
     escaped_rename,
+    escaped_replace,
     escaped_remove,
     escaped_basename,
     escaped_dirname,
@@ -3595,6 +3596,12 @@ class YoutubeDL(object):
             escaped_rename(src, dst, *args, **kwargs)
         else:
             os.rename(src, dst, *args, **kwargs)
+
+    def replace(self, src, dst, *args, **kwargs):
+        if self.params.get('escape_long_names', False):
+            escaped_replace(src, dst, *args, **kwargs)
+        else:
+            os.replace(src, dst, *args, **kwargs)
 
     def remove(self, path, *args, **kwargs):
         if self.params.get('escape_long_names', False):
