@@ -696,6 +696,9 @@
  - **niconico:series**
  - **niconico:smile** (Currently broken)
  - **niconico:user**
+ - **nicovideo:search**: Nico video searches
+ - **nicovideo:search:date**: Nico video searches, newest first
+ - **nicovideo:search_url**: Nico video search URLs
  - **Nintendo**
  - **Nitter**
  - **njoy**: N-JOY
