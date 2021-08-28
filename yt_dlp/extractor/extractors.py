@@ -925,6 +925,9 @@ from .niconico import (
     NiconicoUserIE,
     NiconicoSeriesIE,
     NiconicoHistoryIE,
+    NicovideoSearchDateIE,
+    NicovideoSearchIE,
+    NicovideoSearchURLIE,
     NiconicoLiveIE,
 )
 from .niconico_smile import NiconicoSmileIE
