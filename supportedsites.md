@@ -1105,10 +1105,11 @@
  - **Turbo**
  - **tv.dfb.de**
  - **TV2**
- - **tv2.hu**
  - **TV2Article**
  - **TV2DK**
  - **TV2DKBornholmPlay**
+ - **tv2play.hu**
+ - **tv2playseries.hu**
  - **TV4**: tv4.se and tv4play.se
  - **TV5MondePlus**: TV5MONDE+
  - **tv5unis**
