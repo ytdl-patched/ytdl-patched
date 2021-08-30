@@ -121,7 +121,7 @@ yt_dlp/extractor/lazy_extractors.py: devscripts/make_lazy_extractors.py devscrip
 	$(PYTHON) devscripts/make_lazy_extractors.py $@
 
 youtube-dl.tar.gz: youtube-dl README.md youtube-dl.1 completions Changelog.md AUTHORS
-	@tar -czf youtube-dl.tar.gz --transform "s|^|youtube-dl/|" --owner 0 --group 0 \
+	@tar -czf $(DESTDIR)/youtube-dl.tar.gz --transform "s|^|youtube-dl/|" --owner 0 --group 0 \
 		--exclude '*.DS_Store' \
 		--exclude '*.kate-swp' \
 		--exclude '*.pyc' \
@@ -134,7 +134,7 @@ youtube-dl.tar.gz: youtube-dl README.md youtube-dl.1 completions Changelog.md AU
 		devscripts test \
 		Changelog.md AUTHORS LICENSE README.md supportedsites.md \
 		Makefile MANIFEST.in youtube-dl.1 completions \
-		setup.py setup.cfg youtube-dl
+		setup.py setup.cfg youtube-dl yt_dlp
 	advdef -z -4 -i 30 youtube-dl.tar.gz
 
 AUTHORS: .mailmap
