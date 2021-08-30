@@ -15,7 +15,7 @@ class ArgumentsJob(JobBase):
 
 class AppendArgsJob(JobBase):
     """
-    Presistent arguments job.
+    Persistent arguments job.
     """
     def __init__(self, args: List[str]) -> None:
         self.args: List[str] = args
