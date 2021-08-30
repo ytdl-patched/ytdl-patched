@@ -62,7 +62,7 @@ from .longname import DEFAULT_DELIMITER
 from .YoutubeDL import YoutubeDL
 
 
-def _real_main(argv=None):
+def _pre_main():
     # Compatibility fixes for Windows
     if sys.platform == 'win32':
         # https://github.com/ytdl-org/youtube-dl/issues/820
@@ -78,6 +78,8 @@ def _real_main(argv=None):
 
     setproctitle('yt-dlp')
 
+
+def _read_ytdl_opts(argv=None):
     parser, opts, args = parseOpts(argv)
     warnings = []
 
@@ -707,6 +709,11 @@ def _real_main(argv=None):
         'useid': opts.useid or None,
     }
 
+    return ydl_opts, all_urls, opts, parser
+
+
+def _real_main(argv=None):
+    ydl_opts, all_urls, opts, parser = _read_ytdl_opts(argv)
     with YoutubeDL(ydl_opts) as ydl:
         actual_use = len(all_urls) or opts.load_info_filename
 
@@ -746,6 +753,7 @@ def _real_main(argv=None):
 
 def main(argv=None):
     try:
+        _pre_main()
         _real_main(argv)
     except DownloadError:
         sys.exit(1)
