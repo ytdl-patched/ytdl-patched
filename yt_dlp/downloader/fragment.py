@@ -222,7 +222,7 @@ class FragmentFD(FileDownloader):
 
     def _start_frag_download(self, ctx, info_dict):
         resume_len = ctx['complete_frags_downloaded_bytes']
-        total_frags = ctx['total_frags']
+        total_frags = ctx.get('total_frags', 0)
         # This dict stores the download progress, it's updated by the progress
         # hook
         state = {

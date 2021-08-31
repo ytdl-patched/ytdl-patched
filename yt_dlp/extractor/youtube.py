@@ -2821,6 +2821,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # Source is given priority since formats that throttle are given lower source_preference
         # When throttling issue is fully fixed, remove this
         self._sort_formats(formats, ('quality', 'res', 'fps', 'source', 'codec:vp9.2', 'lang'))
+        if is_live and self._configuration_arg('download_live_from_start'):
+            # override protocols with dl-from-start one
+            for fmt in formats:
+                protocol = fmt['protocol']
+                if 'dash' in protocol:
+                    fmt['protocol'] = 'youtube_dl_from_start_dash'
+                elif 'm3u8' in protocol:
+                    fmt['protocol'] = 'youtube_dl_from_start_m3u8'
 
         keywords = get_first(video_details, 'keywords', expected_type=list) or []
         if not keywords and webpage:

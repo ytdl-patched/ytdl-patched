@@ -8,10 +8,8 @@ from ..downloader import get_suitable_downloader
 from ..extractor.youtube import YoutubeIE
 
 from ..utils import (
-    update_url_query,
     urljoin,
     time_millis,
-    parse_qs,
 )
 from ..compat import compat_urlparse
 
@@ -119,13 +117,13 @@ class YoutubeDlFromStartHlsFD(FragmentFD):
                         last_url = frag_url
                     elif line == '#EXT-X-ENDLIST':
                         finale = True
-            last_seq = int(parse_qs(frag_url)['seq'][0])
+            last_seq = int(re.search(r'/sq/(\d+)/', last_url).group(1))
             for idx in range(known_idx, last_seq):
                 seq = idx + 1
                 yield {
                     'frag_index': seq,
                     'index': seq,
-                    'url': update_url_query(last_url, {'seq': str(seq)}),
+                    'url': re.sub(r'/sq/\d+/', '/sq/%d/' % seq, frag_url),
                 }
             known_idx = last_seq
             if finale:
