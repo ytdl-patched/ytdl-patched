@@ -25,21 +25,24 @@ class YoutubeDlFromStartDashFD(FragmentFD):
     @staticmethod
     def _manifest_fragments(ie: YoutubeIE, mpd_url, stream_number, fetch_span=5000):
         known_idx = 0
+        no_fragment_count = 0
         prev_dl = time_millis()
         while True:
+            if no_fragment_count > 5:
+                return
             fmts, _ = ie._extract_mpd_formats_and_subtitles(
                 mpd_url, None, note=False, errnote=False, fatal=False)
             if not fmts:
+                no_fragment_count += 1
                 continue
             fmt_info = next(x for x in fmts if x['manifest_stream_number'] == stream_number)
             fragments = fmt_info['fragments']
             fragment_base_url = fmt_info.get('fragment_base_url')
 
             last_fragment = fragments[-1]
-            last_url = last_fragment.get('url')
-            if not last_url:
-                assert fragment_base_url
-                last_url = urljoin(fragment_base_url, last_fragment['path'])
+
+            assert fragment_base_url
+            last_url = urljoin(fragment_base_url, last_fragment['path'])
 
             last_seq = int(re.search(r'/sq/(\d+)', last_url).group(1))
             for idx in range(known_idx, last_seq):
@@ -47,10 +50,12 @@ class YoutubeDlFromStartDashFD(FragmentFD):
                 yield {
                     'frag_index': seq,
                     'index': seq,
-                    'url': re.sub(r'/sq/\d+', '/sq/%d' % seq, last_url),
+                    'url': urljoin(fragment_base_url, 'sq/%d' % seq),
                 }
             if known_idx == last_seq:
-                return
+                no_fragment_count += 1
+            else:
+                no_fragment_count = 0
             known_idx = last_seq
 
             now_time = time_millis()
@@ -61,7 +66,7 @@ class YoutubeDlFromStartDashFD(FragmentFD):
     def real_download(self, filename, info_dict):
         manifest_url = info_dict.get('manifest_url')
         if not manifest_url:
-            self.report_error('URL to MPD manifest is not known; there is a problem in YoutubeIE code')
+            self.report_error('URL for MPD manifest is not known; there is a problem in YoutubeIE code')
 
         stream_number = info_dict.get('manifest_stream_number', 0)
         yie: YoutubeIE = self.ydl.get_info_extractor(YoutubeIE.ie_key())
@@ -123,12 +128,14 @@ class YoutubeDlFromStartHlsFD(FragmentFD):
                     elif line == '#EXT-X-ENDLIST':
                         finale = True
             last_seq = int(re.search(r'/sq/(\d+)/', last_url).group(1))
+            # remove parameter which blocks downloading past segments
+            last_url = re.sub(r'/?lim/\d+', '', last_url)
             for idx in range(known_idx, last_seq):
                 seq = idx + 1
                 yield {
                     'frag_index': seq + 1,
                     'index': seq,
-                    'url': re.sub(r'/sq/\d+/', '/sq/%d/' % seq, frag_url),
+                    'url': re.sub(r'/sq/\d+/', '/sq/%d/' % seq, last_url),
                 }
             known_idx = last_seq
             if finale:
@@ -142,7 +149,7 @@ class YoutubeDlFromStartHlsFD(FragmentFD):
     def real_download(self, filename, info_dict):
         manifest_url = info_dict.get('url')
         if not manifest_url:
-            self.report_error('URL to m3u8 manifest is not known; there is a problem in YoutubeIE code')
+            self.report_error('URL for m3u8 manifest is not known; there is a problem in YoutubeIE code')
 
         yie: YoutubeIE = self.ydl.get_info_extractor(YoutubeIE.ie_key())
 

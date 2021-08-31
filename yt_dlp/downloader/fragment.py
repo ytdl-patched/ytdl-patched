@@ -305,7 +305,7 @@ class FragmentFD(FileDownloader):
             'filename': ctx['filename'],
             'status': 'finished',
             'elapsed': elapsed,
-            'fragment_count': ctx['total_frags'],
+            'fragment_count': ctx.get('total_frags'),
         }, info_dict)
 
     def _prepare_external_frag_download(self, ctx):
