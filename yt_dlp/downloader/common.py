@@ -315,11 +315,9 @@ class FileDownloader(object):
                     msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s (%(_elapsed_str)s)'
                 else:
                     msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s'
-                if s.get('fragment_count') is not None:
-                    msg_template += ' (%(fragment_count)s fragments)'
             else:
                 msg_template = '%(_percent_str)s % at %(_speed_str)s ETA %(_eta_str)s'
-        if s.get('fragment_count') is not None and s.get('fragment_index') is not None:
+        if not s.get('fragment_count') and s.get('fragment_index') is not None:
             msg_template += ' (%(fragment_index)d fragments of %(fragment_count)d)'
         elif s.get('fragment_index') is not None:
             msg_template += ' (%(fragment_index)d fragments downloaded)'
