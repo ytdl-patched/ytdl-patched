@@ -14,7 +14,9 @@ jobs:
       with:
         fetch-depth: 0
     - name: Pull all bracnhes
-      run: git push --all origin
+      run: |
+        git push --all origin
+        for i in $(git branch -a | grep remote | grep -v HEAD | grep -v master); do git branch --track ${i#remotes/origin/} $i; done
       continue-on-error: true
     - name: Install Keybase
       run: |
