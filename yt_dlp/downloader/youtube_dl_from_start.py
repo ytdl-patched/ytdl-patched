@@ -26,7 +26,6 @@ class YoutubeDlFromStartDashFD(FragmentFD):
     def _manifest_fragments(ie: YoutubeIE, mpd_url, stream_number, fetch_span=5000):
         known_idx = 0
         prev_dl = time_millis()
-        frag_index = 0
         while True:
             fmts, _ = ie._extract_mpd_formats_and_subtitles(
                 mpd_url, None, note=False, errnote=False, fatal=False)
@@ -36,22 +35,28 @@ class YoutubeDlFromStartDashFD(FragmentFD):
             fragments = fmt_info['fragments']
             fragment_base_url = fmt_info.get('fragment_base_url')
 
-            for fragment in fragments[known_idx:]:
-                frag_index += 1
-                fragment_url = fragment.get('url')
-                if not fragment_url:
-                    assert fragment_base_url
-                    fragment_url = urljoin(fragment_base_url, fragment['path'])
+            last_fragment = fragments[-1]
+            last_url = last_fragment.get('url')
+            if not last_url:
+                assert fragment_base_url
+                last_url = urljoin(fragment_base_url, last_fragment['path'])
 
+            last_seq = int(re.search(r'/sq/(\d+)', last_url).group(1))
+            for idx in range(known_idx, last_seq):
+                seq = idx + 1
                 yield {
-                    'frag_index': frag_index,
-                    'index': frag_index,
-                    'url': fragment_url,
+                    'frag_index': seq,
+                    'index': seq,
+                    'url': re.sub(r'/sq/\d+', '/sq/%d' % seq, last_url),
                 }
+            if known_idx == last_seq:
+                return
+            known_idx = last_seq
+
             now_time = time_millis()
             if (now_time - prev_dl) < fetch_span:
                 sleep((now_time - prev_dl) / 1e3)
-            prev_dl = time_millis()
+            prev_dl = now_time
 
     def real_download(self, filename, info_dict):
         manifest_url = info_dict.get('manifest_url')
@@ -121,7 +126,7 @@ class YoutubeDlFromStartHlsFD(FragmentFD):
             for idx in range(known_idx, last_seq):
                 seq = idx + 1
                 yield {
-                    'frag_index': seq,
+                    'frag_index': seq + 1,
                     'index': seq,
                     'url': re.sub(r'/sq/\d+/', '/sq/%d/' % seq, frag_url),
                 }
