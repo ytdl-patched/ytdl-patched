@@ -234,6 +234,7 @@ yt-dlp is not platform specific. So it should work on your Unix box, on Windows 
 
 You can install yt-dlp using one of the following methods:
 * Download the binary from the [latest release](https://github.com/nao20010128nao/ytdl-patched/releases/latest) (recommended method)
+* With Homebrew, `brew install nao20010128nao/my/ytdl-patched`
 * ~~Use [PyPI package](https://pypi.org/project/yt-dlp): `python3 -m pip install --upgrade yt-dlp`~~ Not available.
 * Use pip+git: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched.git@release`
 * Install ytdlp branch: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched.git@ytdlp`
@@ -257,9 +258,16 @@ sudo aria2c https://bookish-octo-barnacle.vercel.app/api/release/latest/youtube-
 sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
+macOS or Linux users that are using Homebrew (formerly known as Linuxbrew for Linux users) can also install it by:
+
+```
+brew install nao20010128nao/my/ytdl-patched
+```
+
 ### UPDATE
 You can use `yt-dlp -U` to update if you are using the provided release.
 If you are using `pip`, simply re-run the same command that was used to install the program.
+If you have installed using Homebrew, run `brew upgrade ytdl-patched`
 
 ### DEPENDENCIES
 Python versions 3.6+ (CPython and PyPy) are supported. Other versions and implementations may or may not work correctly.
