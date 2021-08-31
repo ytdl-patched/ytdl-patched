@@ -93,4 +93,4 @@ class YoutubeDlFromStartDashFD(FragmentFD):
             fd = real_downloader(self.ydl, self.params)
             return fd.real_download(filename, info_copy)
 
-        return self.download_and_append_fragments(ctx, fragments_to_download, info_dict)
+        return self.download_and_append_fragments(ctx, fragments_to_download, info_dict, ignore_lethal_error=True)

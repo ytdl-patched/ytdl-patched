@@ -329,10 +329,10 @@ class FragmentFD(FileDownloader):
             'fragment_index': 0,
         })
 
-    def download_and_append_fragments(self, ctx, fragments, info_dict, *, pack_func=None, finish_func=None):
+    def download_and_append_fragments(self, ctx, fragments, info_dict, *, pack_func=None, finish_func=None, ignore_lethal_error=False):
         fragment_retries = self.params.get('fragment_retries', 0)
         bad_status_code = info_dict.get('unrecoverable_http_error') or tuple()
-        is_fatal = (lambda idx: idx == 0) if self.params.get('skip_unavailable_fragments', True) else (lambda _: True)
+        is_fatal = (lambda idx: idx == 0) if self.params.get('skip_unavailable_fragments', True) or ignore_lethal_error else (lambda _: True)
         if not pack_func:
             pack_func = lambda frag_content, _: frag_content
 
@@ -393,7 +393,7 @@ class FragmentFD(FileDownloader):
 
         def append_fragment(frag_content, frag_index, ctx):
             if not frag_content:
-                if not is_fatal(frag_index - 1):
+                if not is_fatal(frag_index - 1) or ignore_lethal_error:
                     self.report_skip_fragment(frag_index)
                     return True
                 else:
