@@ -31,6 +31,10 @@ from .websocket import WebSocketFragmentFD
 from .youtube_live_chat import YoutubeLiveChatFD
 from .serial import SerialFD
 from .streamlink import StreamlinkFD
+from .youtube_dl_from_start import (
+    YoutubeDlFromStartDashFD,
+    YoutubeDlFromStartHlsFD,
+)
 from .external import (
     get_external_downloader,
     FFmpegFD,
@@ -56,6 +60,8 @@ PROTOCOL_MAP = {
     'streamlink': StreamlinkFD,
     'youtube_live_chat': YoutubeLiveChatFD,
     'youtube_live_chat_replay': YoutubeLiveChatFD,
+    'youtube_dl_from_start_dash': YoutubeDlFromStartDashFD,
+    'youtube_dl_from_start_m3u8': YoutubeDlFromStartHlsFD,
 }
 
 # exceptions for --live-download-mkv
@@ -65,6 +71,7 @@ LDM_EXCEPTIONS = (
     'niconico_live',
     'youtube_live_chat', 'youtube_live_chat_replay',
     'streamlink', 'websocket_frag',
+    'youtube_dl_from_start_dash', 'youtube_dl_from_start_m3u8',
 )
 
 
@@ -76,6 +83,8 @@ def shorten_protocol_name(proto, simplify=False):
         'niconico_dmc': 'dmc',
         'websocket_frag': 'WSfrag',
         'streamlink': 'SLink',
+        'youtube_dl_from_start_dash': 'YTLstartD',  # Dash
+        'youtube_dl_from_start_m3u8': 'YTLstartH',  # HLS
     }
     if simplify:
         short_protocol_names.update({
@@ -85,6 +94,8 @@ def shorten_protocol_name(proto, simplify=False):
             'rtmp_ffmpeg': 'rtmp',
             'm3u8_frag_urls': 'm3u8',
             'dash_frag_urls': 'dash',
+            'youtube_dl_from_start_m3u8': 'm3u8',
+            'youtube_dl_from_start_dash': 'dash',
         })
     return short_protocol_names.get(proto, proto)
 
