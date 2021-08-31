@@ -2657,9 +2657,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         skip_manifests = self._configuration_arg('skip')
         get_dash = (
-            (not is_live or self._configuration_arg('include_live_dash'))
+            (not is_live or self._configuration_arg('include_live_dash') or self._configuration_arg('download_live_from_start'))
             and 'dash' not in skip_manifests and self.get_param('youtube_include_dash_manifest', True))
-        get_hls = 'hls' not in skip_manifests and self.get_param('youtube_include_hls_manifest', True)
+        get_hls = (
+            not self._configuration_arg('download_live_from_start')
+            and 'hls' not in skip_manifests and self.get_param('youtube_include_hls_manifest', True))
 
         def guess_quality(f):
             for val, qdict in ((f.get('format_id'), itag_qualities), (f.get('height'), res_qualities)):
@@ -2827,8 +2829,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 protocol = fmt['protocol']
                 if 'dash' in protocol:
                     fmt['protocol'] = 'youtube_dl_from_start_dash'
-                elif 'm3u8' in protocol:
-                    fmt['protocol'] = 'youtube_dl_from_start_m3u8'
+                else:
+                    pass
 
         keywords = get_first(video_details, 'keywords', expected_type=list) or []
         if not keywords and webpage:
