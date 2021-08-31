@@ -29,7 +29,7 @@ class NiconicoDmcFD(FileDownloader):
     """
 
     def real_download(self, filename, info_dict):
-        nie = self.ydl.get_info_extractor(NiconicoIE.ie_key())
+        nie: NiconicoIE = self.ydl.get_info_extractor(NiconicoIE.ie_key())
 
         video_id = info_dict['video_id']
         session_api_data = info_dict['session_api_data']
