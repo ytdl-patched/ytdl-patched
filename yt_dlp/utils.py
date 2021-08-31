@@ -4905,4 +4905,7 @@ class PrintJsonEncoder(json.JSONEncoder):
 
 
 def time_millis():
-    return round(time.time() * 1000)
+    # https://stackoverflow.com/questions/5395872/how-can-i-create-a-python-timestamp-with-millisecond-granularity
+    now = datetime.datetime.now(datetime.timezone.utc)
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    return (now - epoch) // datetime.timedelta(milliseconds=1)
