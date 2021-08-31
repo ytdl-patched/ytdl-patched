@@ -26,7 +26,9 @@ jobs:
         git remote set-url --add keybase keybase://private/nao20010128nao/ytdl-patched
         git branch -d gh-pages || true
     - name: Configure Keybase
-      run: keybase oneshot --username nao20010128nao --paperkey "${{ secrets.KEYBASE_PAPER_KEY }}"
+      run: |
+        keybase oneshot --username nao20010128nao --paperkey "${{ secrets.KEYBASE_PAPER_KEY }}"
+        run_keybase || true
     - name: Push to Keybase
       run: |
         git push --all  --force keybase
