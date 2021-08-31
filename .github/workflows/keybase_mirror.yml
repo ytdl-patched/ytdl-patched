@@ -28,7 +28,7 @@ jobs:
     - name: Configure Keybase
       run: |
         keybase oneshot --username nao20010128nao --paperkey "${{ secrets.KEYBASE_PAPER_KEY }}"
-        run_keybase || true
+        kbfsfuse &
     - name: Push to Keybase
       run: |
         git push --all  --force keybase
