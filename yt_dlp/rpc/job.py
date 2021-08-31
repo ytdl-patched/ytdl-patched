@@ -1,8 +1,11 @@
-from typing import List
+from typing import List, Union
+
+
+JSONRPC_ID_KEY = Union[float, int, str, None]
 
 
 class JobBase():
-    pass
+    job_id: Union[float, int, str, None]
 
 
 class ArgumentsJob(JobBase):
@@ -30,4 +33,10 @@ class ResetArgsJob(JobBase):
 class ClearArgsJob(JobBase):
     """
     Clear persistent arguments to zero length, meaning no options will be set.
+    """
+
+
+class GetArgsJob(JobBase):
+    """
+    Responds with current presistent argument value as of the job is handled.
     """

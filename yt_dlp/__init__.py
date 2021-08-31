@@ -79,7 +79,7 @@ def _pre_main():
     setproctitle('yt-dlp')
 
 
-def _read_ytdl_opts(argv=None):
+def _read_ytdl_opts(argv=None, internal=True):
     parser, opts, args = parseOpts(argv)
     warnings = []
 
@@ -95,7 +95,7 @@ def _read_ytdl_opts(argv=None):
     std_headers.update(opts.headers)
 
     # Dump user agent
-    if opts.dump_user_agent:
+    if opts.dump_user_agent and internal:
         write_string(std_headers['User-Agent'] + '\n', out=sys.stdout)
         sys.exit(0)
 
@@ -118,14 +118,14 @@ def _read_ytdl_opts(argv=None):
     _enc = preferredencoding()
     all_urls = [url.decode(_enc, 'ignore') if isinstance(url, bytes) else url for url in all_urls]
 
-    if opts.list_extractors:
+    if opts.list_extractors and internal:
         for ie in list_extractors(opts.age_limit):
             write_string(ie.IE_NAME + (' (CURRENTLY BROKEN)' if not ie.working() else '') + '\n', out=sys.stdout)
             matchedUrls = [url for url in all_urls if ie.suitable(url)]
             for mu in matchedUrls:
                 write_string('  ' + mu + '\n', out=sys.stdout)
         sys.exit(0)
-    if opts.list_extractor_descriptions:
+    if opts.list_extractor_descriptions and internal:
         for ie in list_extractors(opts.age_limit):
             if not ie.working():
                 continue
@@ -138,11 +138,11 @@ def _read_ytdl_opts(argv=None):
                 desc += ' (Example: "%s%s:%s" )' % (ie.SEARCH_KEY, random.choice(_COUNTS), random.choice(_SEARCHES))
             write_string(desc + '\n', out=sys.stdout)
         sys.exit(0)
-    if opts.ap_list_mso:
+    if opts.ap_list_mso and internal:
         table = [[mso_id, mso_info['name']] for mso_id, mso_info in MSO_INFO.items()]
         write_string('Supported TV Providers:\n' + render_table(['mso', 'mso name'], table) + '\n', out=sys.stdout)
         sys.exit(0)
-    if opts.rm_longnamedir:
+    if opts.rm_longnamedir and internal:
         for dirpath, _, _ in os.walk(os.getcwd(), topdown=False):
             if isinstance(dirpath, bytes):  # Python 2
                 dirpath = dirpath.decode(get_filesystem_encoding())
