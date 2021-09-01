@@ -2045,6 +2045,11 @@ class InfoExtractor(object):
             preference=None, quality=None, m3u8_id=None, live=False, note=None,
             errnote=None, fatal=True, data=None, headers={}, query={},
             video_id=None):
+
+        if not m3u8_url:
+            b64data = base64.b64encode(m3u8_doc.encode('utf-8')).decode()
+            m3u8_url = f'data:application/mpegurl;base64,{b64data}'
+
         formats, subtitles = [], {}
 
         if '#EXT-X-FAXS-CM:' in m3u8_doc:  # Adobe Flash Access
@@ -2553,6 +2558,11 @@ class InfoExtractor(object):
 
     def _parse_mpd_formats_and_subtitles(
             self, mpd_doc, mpd_id=None, mpd_base_url='', mpd_url=None):
+
+        if not mpd_url:
+            b64data = base64.b64encode(mpd_doc.encode('utf-8')).decode()
+            mpd_url = f'data:application/dash+xml;base64,{b64data}'
+
         """
         Parse formats from MPD manifest.
         References:
