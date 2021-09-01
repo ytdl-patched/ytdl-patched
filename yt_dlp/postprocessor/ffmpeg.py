@@ -493,6 +493,9 @@ class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
         mp4_ass_warn = False
 
         for lang, sub_info in subtitles.items():
+            if not os.path.exists(information.get('filepath', '')):
+                self.report_warning(f'Skipping embedding {lang} subtitle because the file is missing')
+                continue
             sub_ext = sub_info['ext']
             if sub_ext in ('json', 'xml'):
                 self.report_warning(f'{sub_ext.upper()} subtitles cannot be embedded')
