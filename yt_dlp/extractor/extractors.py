@@ -1463,6 +1463,10 @@ from .tokyomotion import (
     TokyoMotionSearchesIE,
     TokyoMotionScannerIE,
 )
+from .tokentube import (
+    TokentubeIE,
+    TokentubeChannelIE
+)
 from .tonline import TOnlineIE
 from .toongoggles import ToonGogglesIE
 from .toutv import TouTvIE

@@ -1082,6 +1082,8 @@
  - **TNAFlix**
  - **TNAFlixNetworkEmbed**
  - **toggle**
+ - **Tokentube**
+ - **Tokentube:channel**
  - **tokyomotion**
  - **tokyomotion:searches**
  - **tokyomotion:user**
