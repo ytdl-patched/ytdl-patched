@@ -4,7 +4,7 @@ from typing import Dict, List, Type, Union
 JSONRPC_ID_KEY = Union[float, int, str, None]
 
 
-class JobBase():
+class JobBase:
     job_id: Union[float, int, str, None]
 
 

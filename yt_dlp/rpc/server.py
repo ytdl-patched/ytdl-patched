@@ -189,6 +189,6 @@ def run_server(init_args: List[str], server: RpcServerBase):
             elif isinstance(job, ClearArgsJob):
                 curr_opts = []
             elif isinstance(job, GetArgsJob):
-                server.respond(job.job_id, init_args)
+                server.respond(job.job_id, list(curr_opts))
     finally:
         server.stop_server()
