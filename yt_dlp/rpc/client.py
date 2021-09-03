@@ -2,6 +2,7 @@ import base64
 import json
 import random
 import shlex
+import sys
 from typing import List, Optional
 
 from .job import (
@@ -133,6 +134,7 @@ def show_help(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
     print('!appendargs - Append persistent arguments')
     print('!resetargs - Reset persistent arguments')
     print('!clearargs - Clear persistent arguments')
+    print('!response - Get received response. Responses are only shown once')
     print('If command starts with none of the above, it will be treated as one-shot arguments (such as URLs, options)')
     print('If you want to distinguish requests, you should append RPC_ID=<blablabla> before arguments')
 
@@ -158,12 +160,30 @@ def cmd_clear_args(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KE
     print('Enqueued clearArgs')
 
 
+def cmd_response(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
+    client.poll_responses()
+    print('Enqueued clearArgs')
+
+
+def cmd_shutdown(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
+    client.shutdown()
+    print('Goodbye.')
+    try:
+        cmd = input('Do you want to continue? [y/N] ').strip().lower()
+    except EOFError:
+        cmd = 'n'
+    if cmd != 'y':
+        sys.exit(0)
+
+
 _COMMANDS = {
     '!help': show_help,
     '!getargs': cmd_get_args,
     '!appendargs': cmd_append_args,
     '!resetargs': cmd_reset_args,
     '!clearargs': cmd_clear_args,
+    '!response': cmd_response,
+    '!shutdown': cmd_shutdown,
 }
 
 
