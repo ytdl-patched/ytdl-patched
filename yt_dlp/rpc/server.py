@@ -103,12 +103,11 @@ class HttpRpcServer(RpcServerBase):
                     self.wfile.write(b'{"response":"Goodbye"}')
                     hrs.stop_server()
                 elif parsed_path.path == '/responses':
-                    with hrs.response_lock:
-                        response_data = json.dumps({'response': hrs.responses})
-                        hrs.responses.clear()
                     self.send_response(200)
                     self.end_headers()
-                    self.wfile.write(response_data.encode('utf-8'))
+                    with hrs.response_lock:
+                        json.dump({'response': hrs.responses}, self.wfile)
+                        hrs.responses.clear()
                 else:
                     self.send_response(403)
                     self.end_headers()
