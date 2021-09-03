@@ -49,10 +49,10 @@ class HttpRpcServer(RpcServerBase):
                     self.send_response(200)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({
+                    json.dump({
                         'brand': 'ytdl-patched',
                         'version': __version__,
-                    }).encode('utf-8'))
+                    }, self.wfile)
                 else:
                     # respond with 418 I'm a teapot
                     self.send_response(418)
@@ -84,7 +84,15 @@ class HttpRpcServer(RpcServerBase):
                     return
 
                 parsed_path = compat_urllib_parse_urlparse(self.path)
-                if parsed_path.path == '/enqueue':
+                if parsed_path.path == '/version':
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    json.dump({
+                        'brand': 'ytdl-patched',
+                        'version': __version__,
+                    }, self.wfile)
+                elif parsed_path.path == '/enqueue':
                     if self.headers.get('Content-Type') != 'application/json':
                         self.send_response(403)
                         self.end_headers()
@@ -94,22 +102,26 @@ class HttpRpcServer(RpcServerBase):
                     job = create_job_from_json(post_data)
                     job_queue.put(job)
                     self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
                     self.end_headers()
                     self.wfile.write(b'{"response":"Enqueued"}')
                 elif parsed_path.path == '/shutdown':
                     job_queue.put(_TAIL_OF_QUEUE)
                     self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
                     self.end_headers()
                     self.wfile.write(b'{"response":"Goodbye"}')
                     hrs.stop_server()
                 elif parsed_path.path == '/responses':
                     self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
                     self.end_headers()
                     with hrs.response_lock:
                         json.dump({'response': hrs.responses}, self.wfile)
                         hrs.responses.clear()
                 else:
                     self.send_response(403)
+                    self.send_header('Content-type', 'application/json')
                     self.end_headers()
                     self.wfile.write(b'{"error":"Unknown endpoint"}')
 

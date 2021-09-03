@@ -58,6 +58,9 @@ class HttpRpcClient(RpcClientBase):
         else:
             self.auth = None
 
+        # test if auth works (/version has no side-effect on server state)
+        self._send_request('/version', b'versiooooooooooon')
+
     def _send_request(self, ep, data):
         request = sanitized_Request(urljoin(self.url, ep), data=data)
         if self.auth:
