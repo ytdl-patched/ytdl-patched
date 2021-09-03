@@ -5,6 +5,7 @@ from queue import Empty, Queue
 from typing import Dict, List, Optional
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Lock, Thread
+
 from .job import JSONRPC_ID_KEY, AppendArgsJob, ArgumentsJob, ClearArgsJob, GetArgsJob, JobBase, ResetArgsJob, create_job_from_json
 from .. import _read_ytdl_opts
 from ..utils import ExistingVideoReached, MaxDownloadsReached, RejectedVideoReached
