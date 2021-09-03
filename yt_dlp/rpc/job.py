@@ -42,12 +42,19 @@ class GetArgsJob(JobBase):
     """
 
 
+REQTYPE_ARGUMENTS = 'arguments'
+REQTYPE_APPEND_ARGS = 'appendArgs'
+REQTYPE_RESET_ARGS = 'resetArgs'
+REQTYPE_CLEAR_ARGS = 'clearArgs'
+REQTYPE_GET_ARGS = 'getArgs'
+
+
 _REQTYPE_TO_CLASS: Dict[str, Type[JobBase]] = {
-    'arguments': ArgumentsJob,
-    'appendArgs': AppendArgsJob,
-    'resetArgs': ResetArgsJob,
-    'clearArgs': ClearArgsJob,
-    'getArgs': GetArgsJob,
+    REQTYPE_ARGUMENTS: ArgumentsJob,
+    REQTYPE_APPEND_ARGS: AppendArgsJob,
+    REQTYPE_RESET_ARGS: ResetArgsJob,
+    REQTYPE_CLEAR_ARGS: ClearArgsJob,
+    REQTYPE_GET_ARGS: GetArgsJob,
 }
 
 
