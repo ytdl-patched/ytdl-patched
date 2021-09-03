@@ -193,7 +193,7 @@ def run_server(init_args: List[str], server: RpcServerBase):
                         ydl.to_screen('An error occurred')
                         retcode = 109
                         err = '%s' % ex
-                    server.respond(job.job_id, {'retcode': retcode, 'err': err})
+                server.respond(job.job_id, {'retcode': retcode, 'err': err})
             elif isinstance(job, AppendArgsJob):
                 curr_opts = curr_opts + job.args
             elif isinstance(job, ResetArgsJob):

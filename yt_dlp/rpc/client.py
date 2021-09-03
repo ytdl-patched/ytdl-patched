@@ -1,5 +1,6 @@
 import base64
 import json
+import random
 import shlex
 from typing import List, Optional
 
@@ -126,18 +127,43 @@ class HttpRpcClient(RpcClientBase):
         return self._send_request('/shutdown', b'byeeeeee').encode()
 
 
-def show_help(client: RpcClientBase):
+def show_help(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
     print('!help - Show help (this message)')
     print('!getargs - Get persistent arguments')
     print('!appendargs - Append persistent arguments')
     print('!resetargs - Reset persistent arguments')
     print('!clearargs - Clear persistent arguments')
-    print('If command starts with none of above, it will be treated as one-shot arguments (such as URLs, options)')
+    print('If command starts with none of the above, it will be treated as one-shot arguments (such as URLs, options)')
     print('If you want to distinguish requests, you should append RPC_ID=<blablabla> before arguments')
+
+
+def cmd_get_args(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
+    key = ''.join(random.choices('abcdef0123456789', k=5)) if rpc_id is None else rpc_id
+    client.queue_get_args(key)
+    print(f'Enqueued getArgs with ID {key}')
+
+
+def cmd_append_args(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
+    client.queue_append_persistent_arg(args)
+    print('Enqueued appendArgs')
+
+
+def cmd_reset_args(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
+    client.queue_reset_args(args)
+    print('Enqueued resetArgs')
+
+
+def cmd_clear_args(client: RpcClientBase, args: List[str], rpc_id: JSONRPC_ID_KEY):
+    client.queue_clear_args(args)
+    print('Enqueued clearArgs')
 
 
 _COMMANDS = {
     '!help': show_help,
+    '!getargs': cmd_get_args,
+    '!appendargs': cmd_append_args,
+    '!resetargs': cmd_reset_args,
+    '!clearargs': cmd_clear_args,
 }
 
 
@@ -161,13 +187,13 @@ def run_loop(server_addr: str, username: Optional[str], password: Optional[str])
             # nothing is input
             continue
 
+        rpc_id: JSONRPC_ID_KEY = None
+        if args[0].startswith('RPC_ID='):
+            rpc_id = args[0][7:]
+            args = args[1:]
         func = _COMMANDS.get(args[0])
         if func:
-            func(client)
+            func(client, args[1:], rpc_id)
         else:
-            rpc_id: JSONRPC_ID_KEY = None
-            if args[0].startswith('RPC_ID='):
-                rpc_id = args[0][7:]
-                args = args[1:]
             client.queue_arguments(args, rpc_id)
             print('Enqueued:', repr(args))
