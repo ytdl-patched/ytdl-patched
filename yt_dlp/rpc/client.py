@@ -217,3 +217,7 @@ def run_loop(server_addr: str, username: Optional[str], password: Optional[str])
         else:
             client.queue_arguments(args, rpc_id)
             print('Enqueued:', repr(args))
+
+
+def run_unattended(server_addr: str, username: Optional[str], password: Optional[str], args: List[str], key: JSONRPC_ID_KEY):
+    pass
