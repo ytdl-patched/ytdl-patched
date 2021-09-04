@@ -1323,6 +1323,10 @@ from .southpark import (
     SouthParkEsIE,
     SouthParkNlIE
 )
+from .sovietscloset import (
+    SovietsClosetIE,
+    SovietsClosetPlaylistIE
+)
 from .spankbang import (
     SpankBangIE,
     SpankBangPlaylistIE,
