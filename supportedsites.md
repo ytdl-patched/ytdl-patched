@@ -987,6 +987,8 @@
  - **southpark.de**
  - **southpark.nl**
  - **southparkstudios.dk**
+ - **SovietsCloset**
+ - **SovietsClosetPlaylist**
  - **SpankBang**
  - **SpankBangPlaylist**
  - **Spankwire**
