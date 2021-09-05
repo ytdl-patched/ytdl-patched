@@ -123,6 +123,8 @@ class TwitCastingIE(TwitCastingBaseIE):
              lambda x: ['https://twitcasting.tv/%s/metastream.m3u8' % uploader_id]
                 if is_live else None),
             list)
+        if not m3u8_urls:
+            raise ExtractorError('Failed to get m3u8 playlist')
 
         if is_live:
             m3u8_url = m3u8_urls[0]
