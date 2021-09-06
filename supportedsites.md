@@ -556,6 +556,7 @@
  - **MedalTV**
  - **media.ccc.de**
  - **media.ccc.de:lists**
+ - **MediaKlikk**
  - **Medialaan**
  - **Mediaset**
  - **Mediasite**
