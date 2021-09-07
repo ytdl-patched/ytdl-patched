@@ -391,6 +391,7 @@
  - **GorinLive**
  - **GorinVideo**
  - **Goshgay**
+ - **GoToStage**
  - **GPUTechConf**
  - **Groupon**
  - **hbo**
@@ -741,6 +742,7 @@
  - **OdaTV**
  - **Odnoklassniki**
  - **OktoberfestTV**
+ - **OlympicsReplay**
  - **OnDemandKorea**
  - **onet.pl**
  - **onet.tv**
@@ -1366,6 +1368,8 @@
  - **ZDFChannel**
  - **Zee5**
  - **zee5:series**
+ - **ZenYandex**
+ - **ZenYandexChannel**
  - **Zhihu**
  - **zingmp3**: mp3.zing.vn
  - **zingmp3:album**
