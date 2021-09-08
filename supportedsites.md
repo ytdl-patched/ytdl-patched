@@ -737,6 +737,7 @@
  - **NYTimes**
  - **NYTimesArticle**
  - **NYTimesCooking**
+ - **nzherald**
  - **NZZ**
  - **ocw.mit.edu**
  - **OdaTV**
