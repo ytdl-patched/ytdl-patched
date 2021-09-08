@@ -1752,6 +1752,7 @@ class YoutubeDL(object):
                                   'video': self.params.get('allow_multiple_video_streams', False)}
 
         check_formats = self.params.get('check_formats')
+        verbose = self.params.get('verbose')
 
         def _parse_filter(tokens):
             filter_parts = []
@@ -2033,6 +2034,29 @@ class YoutubeDL(object):
                 return selector_function(ctx_copy)
             return final_selector
 
+        def _visit_selectors(selector):
+            """
+            Selector tree visitor. Only used when -Fv is set
+            This yields selectors including non-SINGLE ones, but then it won't be visitor anymore
+            """
+            if isinstance(selector, list):  # ,
+                for n in selector:
+                    yield from _visit_selectors(n)
+
+            elif selector.type == GROUP:  # ()
+                yield selector
+                yield from _visit_selectors(selector.selector)
+            elif selector.type == PICKFIRST:  # /
+                yield selector
+                for n in selector.selector:
+                    yield from _visit_selectors(n)
+            elif selector.type == MERGE:  # +
+                yield selector
+                for n in selector.selector:
+                    yield from _visit_selectors(n)
+            elif selector.type == SINGLE:  # atom
+                yield selector
+
         stream = io.BytesIO(format_spec.encode('utf-8'))
         try:
             tokens = list(_remove_unused_ops(compat_tokenize_tokenize(stream.readline)))
@@ -2060,7 +2084,12 @@ class YoutubeDL(object):
                 self.counter -= 1
 
         parsed_selector = _parse_format_selection(iter(TokenIterator(tokens)))
-        return _build_selector_function(parsed_selector)
+        final_selector_func = _build_selector_function(parsed_selector)
+        if verbose:
+            # perform format debugging when -Fv
+            all_single_selectors = list(filter(lambda x: x.type == SINGLE, _visit_selectors(parsed_selector)))
+            final_selector_func.selectors = list(zip(all_single_selectors, map(_build_selector_function, all_single_selectors)))
+        return final_selector_func
 
     def _calc_headers(self, info_dict):
         res = std_headers.copy()
@@ -2319,13 +2348,20 @@ class YoutubeDL(object):
 
         info_dict, _ = self.pre_process(info_dict)
 
+        # NOTE: be careful at list_formats
+        format_selector = self.format_selector
+        if format_selector is None:
+            req_format = self._default_format_spec(info_dict, download=download)
+            self.write_debug('Default format spec: %s' % req_format)
+            format_selector = self.build_format_selector(req_format)
+
         if self.params.get('list_thumbnails'):
             self.list_thumbnails(info_dict)
         if self.params.get('listformats'):
             if not info_dict.get('formats') and not info_dict.get('url'):
                 self.to_screen('%s has no formats' % info_dict['id'])
             else:
-                self.list_formats(info_dict)
+                self.list_formats(info_dict, format_selector if self.params.get('verbose') else None)
         if self.params.get('listsubtitles'):
             if 'automatic_captions' in info_dict:
                 self.list_subtitles(
@@ -2337,12 +2373,6 @@ class YoutubeDL(object):
             # Without this printing, -F --print-json will not work
             self.__forced_printings(info_dict, self.prepare_filename(info_dict), incomplete=True)
             return
-
-        format_selector = self.format_selector
-        if format_selector is None:
-            req_format = self._default_format_spec(info_dict, download=download)
-            self.write_debug('Default format spec: %s' % req_format)
-            format_selector = self.build_format_selector(req_format)
 
         # While in format selection we may need to have an access to the original
         # format set in order to calculate some metrics or do some processing.
@@ -2360,6 +2390,7 @@ class YoutubeDL(object):
         # This fixes incorrect format selection issue (see
         # https://github.com/ytdl-org/youtube-dl/issues/10083).
         incomplete_formats = (
+            # NOTE: be careful at list_formats (here too to detect changes as conflict)
             # All formats are video-only or
             all(f.get('vcodec') != 'none' and f.get('acodec') == 'none' for f in formats)
             # all formats are audio-only
@@ -3264,11 +3295,49 @@ class YoutubeDL(object):
             res += '~' + format_bytes(fdict['filesize_approx'])
         return res
 
-    def list_formats(self, info_dict):
+    def list_formats(self, info_dict, format_selector):
         formats = info_dict.get('formats', [info_dict])
+        verbose = format_selector and self.params.get('verbose') and len(formats) > 1
+
         new_format = (
             'list-formats' not in self.params.get('compat_opts', [])
             and self.params.get('listformats_table', True) is not False)
+
+        if verbose:
+            # taken from process_video_result
+            incomplete_formats = (
+                # All formats are video-only or
+                all(f.get('vcodec') != 'none' and f.get('acodec') == 'none' for f in formats)
+                # all formats are audio-only
+                or all(f.get('vcodec') == 'none' and f.get('acodec') != 'none' for f in formats))
+            unknown_formats = []
+
+            ctx = {
+                'formats': formats,
+                'incomplete_formats': incomplete_formats,
+            }
+
+            # search this file for "perform format debugging when -Fv" for contents of format_selector.selectors
+            found = {}
+            for sel, func in format_selector.selectors:
+                found_fmt = next(func(ctx), None)
+                if found_fmt:
+                    found.setdefault(found_fmt['format_id'], []).append(sel.selector)
+                else:
+                    unknown_formats.append(sel.selector)
+
+            def debug_info(f):
+                if new_format:
+                    columns = ['|']
+                else:
+                    columns = []
+                columns.append(', '.join(found.get(f['format_id']) or []))
+                return columns
+        else:
+            def debug_info(f):
+                return []
+        debug_info_title = []
+
         if new_format:
             def format_protocol(f):
                 proto = shorten_protocol_name(f.get('protocol', '').replace("native", "n"))
@@ -3277,6 +3346,9 @@ class YoutubeDL(object):
                     return f'{exp_proto} ({proto})'
                 else:
                     return proto
+
+            if verbose:
+                debug_info_title = ['|', 'DEBUG']
 
             table = [
                 [
@@ -3300,10 +3372,14 @@ class YoutubeDL(object):
                         format_field(f, 'format_note'),
                         format_field(f, 'container', ignore=(None, f.get('ext'))),
                     ))),
+                    *debug_info(f),
                 ] for f in formats if f.get('preference') is None or f['preference'] >= -1000]
             header_line = ['ID', 'EXT', 'RESOLUTION', 'FPS', '|', ' FILESIZE', '  TBR', 'PROTO',
-                           '|', 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'MORE INFO']
+                           '|', 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'MORE INFO', *debug_info_title]
         else:
+            if verbose:
+                debug_info_title = ['debug']
+
             table = [
                 [
                     format_field(f, 'format_id'),
@@ -3312,12 +3388,14 @@ class YoutubeDL(object):
                     self._format_note(f)]
                 for f in formats
                 if f.get('preference') is None or f['preference'] >= -1000]
-            header_line = ['format code', 'extension', 'resolution', 'note']
+            header_line = ['format code', 'extension', 'resolution', 'note', *debug_info_title]
 
         self.to_screen(
             '[info] Available formats for %s:' % info_dict['id'])
         self.to_stdout(render_table(
             header_line, table, delim=new_format, extraGap=(0 if new_format else 1), hideEmpty=new_format))
+        if verbose and unknown_formats:
+            self.to_screen('[debugger] Specs not matched: %s' % ', '.join(unknown_formats))
 
     def list_thumbnails(self, info_dict):
         thumbnails = list(info_dict.get('thumbnails'))
