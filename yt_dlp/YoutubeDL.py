@@ -3321,10 +3321,13 @@ class YoutubeDL(object):
             found = {}
             for sel, func in format_selector.selectors:
                 found_fmt = next(func(ctx), None)
+                selector_text = sel.selector
+                if sel.filters:
+                    selector_text += '[' + ']['.join(sel.filters) + ']'
                 if found_fmt:
-                    found.setdefault(found_fmt['format_id'], []).append(sel.selector)
+                    found.setdefault(found_fmt['format_id'], []).append(selector_text)
                 else:
-                    unknown_formats.append(sel.selector)
+                    unknown_formats.append(selector_text)
 
             def debug_info(f):
                 if new_format:

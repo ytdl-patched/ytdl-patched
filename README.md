@@ -128,7 +128,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 
 * **New extractor arguments**: Some extractor arguments are added. Check [**EXTRACTOR ARGUMENTS**](#extractor-arguments) section for details.
 
-* **Formats debugger**: You can debug `-f FORMAT` specs, by just adding `-Fv`. This doesn't work if specs passed to `-f` is malformed.
+* **Format debugger**: You can debug `-f FORMAT` specs, by just adding `-Fv`. This doesn't work if specs passed to `-f` is malformed.
 You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens.
 
 * **Streamlink integration**: You can download video sites that ytdl-patched don't support but Streamlink do. Currently works with Streamlink 2.3.0.
