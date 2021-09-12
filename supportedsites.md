@@ -672,7 +672,8 @@
  - **NetPlus**
  - **Netzkino**
  - **Newgrounds**
- - **NewgroundsPlaylist**
+ - **Newgrounds:playlist**
+ - **Newgrounds:user**
  - **Newstube**
  - **NextMedia**: 蘋果日報
  - **NextMediaActionNews**: 蘋果日報 - 動新聞
