@@ -283,11 +283,7 @@ class PeerTubeIE(InfoExtractor):
         category = data('category', 'label', compat_str)
         categories = [category] if category else None
 
-        nsfw = video.get('nsfw')
-        if nsfw is bool:
-            age_limit = 18 if nsfw else 0
-        else:
-            age_limit = None
+        age_limit = 18 if video.get('nsfw') else 0
 
         webpage_url = 'https://%s/videos/watch/%s' % (host, video_id)
 
