@@ -128,6 +128,8 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 
 * **New extractor arguments**: Some extractor arguments are added. Check [**EXTRACTOR ARGUMENTS**](#extractor-arguments) section for details.
 
+* **Merging**: All merges are forced to output MKV file. This cannot be changed.
+
 * **Format debugger**: You can debug `-f FORMAT` specs, by just adding `-Fv`. This doesn't work if specs passed to `-f` is malformed.
 You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens.
 
