@@ -130,6 +130,8 @@
  - **BilibiliChannel**
  - **BiliBiliPlayer**
  - **BiliBiliSearch**: Bilibili video search, "bilisearch" keyword
+ - **BiliIntl**
+ - **BiliIntlSeries**
  - **BioBioChileTV**
  - **Biography**
  - **BIQLE**
@@ -620,6 +622,7 @@
  - **mtvservices:embedded**
  - **MTVUutisetArticle**
  - **MuenchenTV**: münchen.tv
+ - **MuseScore**
  - **mva**: Microsoft Virtual Academy videos
  - **mva:course**: Microsoft Virtual Academy courses
  - **Mwave**
@@ -669,7 +672,8 @@
  - **NetPlus**
  - **Netzkino**
  - **Newgrounds**
- - **NewgroundsPlaylist**
+ - **Newgrounds:playlist**
+ - **Newgrounds:user**
  - **Newstube**
  - **NextMedia**: 蘋果日報
  - **NextMediaActionNews**: 蘋果日報 - 動新聞
