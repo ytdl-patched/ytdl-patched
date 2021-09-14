@@ -1054,7 +1054,10 @@ from .patreon import (
 )
 from .pbs import PBSIE
 from .pearvideo import PearVideoIE
-from .peertube import PeerTubeIE
+from .peertube import (
+    PeerTubeIE,
+    PeerTubePlaylistIE,
+)
 from .peloton import (
     PelotonIE,
     PelotonLiveIE
