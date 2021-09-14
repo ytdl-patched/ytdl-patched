@@ -27,7 +27,7 @@ class MisskeyBaseIE(InfoExtractor):
 
     @classmethod
     def suitable(cls, url):
-        mobj = re.match(cls._VALID_URL, url)
+        mobj = cls._match_valid_url(url)
         if not mobj:
             return False
         prefix = mobj.group('prefix')
@@ -118,9 +118,7 @@ class MisskeyIE(MisskeyBaseIE):
     }]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        instance = mobj.group('instance')
-        video_id = mobj.group('id')
+        instance, video_id = self._match_valid_url(url).group('instance', 'id')
 
         url, api_response = unsmuggle_url(url)
         if not api_response:
@@ -232,7 +230,7 @@ class MisskeyUserIE(MisskeyBaseIE):
                 yield self.url_result(smuggle_url('https://%s/notes/%s' % (instance, item.get('id')), item))
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
+        mobj = self._match_valid_url(url)
         instance = mobj.group('instance2') or mobj.group('instance')
         user_handle = mobj.group('id')
 

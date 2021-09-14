@@ -17,7 +17,7 @@ class MastodonBaseIE(InfoExtractor):
 
     @classmethod
     def suitable(cls, url):
-        mobj = re.match(cls._VALID_URL, url)
+        mobj = cls._match_valid_url(url)
         if not mobj:
             return False
         prefix = mobj.group('prefix')
@@ -128,10 +128,7 @@ class MastodonIE(MastodonBaseIE):
     }]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        domain = mobj.group('domain')
-        uploader_id = mobj.group('username')
-        video_id = mobj.group('id')
+        domain, uploader_id, video_id = self._match_valid_url(url).group('domain', 'username', 'id')
 
         api_response = self._download_json('https://%s/api/v1/statuses/%s' % (domain, video_id), video_id)
 
@@ -219,9 +216,7 @@ class MastodonUserIE(MastodonBaseIE):
                 break
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        domain = mobj.group('domain')
-        user_id = mobj.group('id')
+        domain, user_id = self._match_valid_url(url).group('domain', 'id')
 
         entries = self._entries(domain, user_id)
         return self.playlist_result(entries, user_id, 'Toots from @%s@%s' % (user_id, domain))
@@ -236,10 +231,7 @@ class MastodonUserNumericIE(MastodonBaseIE):
     }]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        prefix = mobj.group('prefix')
-        domain = mobj.group('domain')
-        user_id = mobj.group('id')
+        prefix, domain, user_id = self._match_valid_url(url).group('prefix', 'domain', 'id')
 
         if not prefix and not self._test_mastodon_instance(domain):
             return self.url_result(url, ie='Generic')
