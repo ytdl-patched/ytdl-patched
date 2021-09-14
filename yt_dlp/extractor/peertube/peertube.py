@@ -148,7 +148,7 @@ class PeerTubeIE(InfoExtractor):
 
     @classmethod
     def suitable(cls, url):
-        mobj = re.match(cls._VALID_URL, url)
+        mobj = cls._match_valid_url(url)
         if not mobj:
             return False
         prefix = mobj.group('prefix')
@@ -326,10 +326,10 @@ class PeerTubePlaylistIE(InfoExtractor):
     IE_NAME = 'PeerTube:Playlist'
     _VALID_URL = r'''(?x)
                     (?:
-                        https?://(?P<host>%s)/w/p/
+                        https?://(?P<host>[^/]+)/w/p/
                     )
                     (?P<id>%s)
-                    ''' % (PeerTubeIE._INSTANCES_RE, PeerTubeIE._UUID_RE)
+                    ''' % (PeerTubeIE._UUID_RE, )
     _API_BASE = 'https://%s/api/v1/video-playlists/%s%s'
     _TESTS = [{
         'url': 'https://peertube.tux.ovh/w/p/3af94cba-95e8-4b74-b37a-807ab6d82526',
@@ -360,6 +360,14 @@ class PeerTubePlaylistIE(InfoExtractor):
         'playlist_mincount': 9,
     }]
     _PAGE_SIZE = 30
+
+    @classmethod
+    def suitable(cls, url):
+        mobj = cls._match_valid_url(url)
+        if not mobj:
+            return False
+        hostname = mobj.group('host') or mobj.group('host_2')
+        return PeerTubeIE._test_peertube_instance(None, hostname, True, False)
 
     def _call_api(self, host, uuid, path, note=None, errnote=None, fatal=True):
         return self._download_json(
