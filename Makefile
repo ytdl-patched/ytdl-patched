@@ -115,22 +115,16 @@ youtube-dl.1: README.md
 	pandoc -s -f $(MARKDOWN) -t man youtube-dl.1.temp.md -o youtube-dl.1
 	rm -f youtube-dl.1.temp.md
 
-youtube-dl.bash-completion: yt_dlp/*.py yt_dlp/*/*.py devscripts/bash-completion.in
+completion-bash: yt_dlp/*.py yt_dlp/*/*.py devscripts/bash-completion.in
 	$(PYTHON) devscripts/bash-completion.py
 
-bash-completion: youtube-dl.bash-completion
-
-_youtube-dl: yt_dlp/*.py yt_dlp/*/*.py devscripts/zsh-completion.in
+completion-zsh: yt_dlp/*.py yt_dlp/*/*.py devscripts/zsh-completion.in
 	mkdir -p completions/zsh/
 	$(PYTHON) devscripts/zsh-completion.py
 
-zsh-completion: _youtube-dl
-
-youtube-dl.fish: yt_dlp/*.py yt_dlp/*/*.py devscripts/fish-completion.in
+completion-fish: yt_dlp/*.py yt_dlp/*/*.py devscripts/fish-completion.in
 	mkdir -p completions/fish/
 	$(PYTHON) devscripts/fish-completion.py
-
-fish-completion: youtube-dl.fish
 
 lazy-extractors: yt_dlp/extractor/lazy_extractors.py
 
