@@ -1,7 +1,25 @@
-all: youtube-dl README.md CONTRIBUTING.md README.txt youtube-dl.1 youtube-dl.bash-completion _youtube-dl youtube-dl.fish supportedsites
-
+all: youtube-dl doc pypi-files
 clean: clean-test clean-dist clean-cache
-completions: bash-completion fish-completion zsh-completion
+completions: completion-bash completion-fish completion-zsh
+doc: README.md CONTRIBUTING.md issuetemplates supportedsites
+ot: offlinetest
+tar: youtube-dl.tar.gz
+
+# Keep this list in sync with MANIFEST.in
+# intended use: when building a source distribution,
+# make pypi-files && python setup.py sdist
+pypi-files: AUTHORS Changelog.md LICENSE README.md README.txt supportedsites completions yt-dlp.1 devscripts/* test/*
+
+.PHONY: all clean install test tar pypi-files completions ot offlinetest codetest supportedsites
+
+clean-test:
+	rm -rf *.3gp *.annotations.xml *.ape *.avi *.description *.dump *.flac *.flv *.frag *.frag.aria2 *.frag.urls \
+	*.info.json *.jpeg *.jpg *.live_chat.json *.m4a *.m4v *.mkv *.mp3 *.mp4 *.ogg *.opus *.part* *.png *.sbv *.srt \
+	*.swf *.swp *.ttml *.vtt *.wav *.webm *.webp *.ytdl test/testdata/player-*.js
+clean-dist:
+	rm -rf yt-dlp.1.temp.md yt-dlp.1 README.txt MANIFEST build/ dist/ .coverage cover/ yt-dlp.tar.gz completions/ yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp yt-dlp yt-dlp.exe yt_dlp.egg-info/ AUTHORS .mailmap
+clean-cache:
+	find . -name "*.pyc" -o -name "*.class" -delete
 
 lazy-extractors: yt_dlp/extractor/lazy_extractors.py
 

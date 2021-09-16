@@ -343,7 +343,8 @@ from .dplay import (
     DPlayIE,
     DiscoveryPlusIE,
     HGTVDeIE,
-    ScienceChannelIE
+    ScienceChannelIE,
+    DIYNetworkIE
 )
 from .dreisat import DreiSatIE
 from .drbonanza import DRBonanzaIE
@@ -1162,6 +1163,11 @@ from .radiode import RadioDeIE
 from .radiojavan import RadioJavanIE
 from .radiobremen import RadioBremenIE
 from .radiofrance import RadioFranceIE
+from .radlive import (
+    RadLiveIE,
+    RadLiveChannelIE,
+    RadLiveSeasonIE,
+)
 from .rai import (
     RaiPlayIE,
     RaiPlayLiveIE,
