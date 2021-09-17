@@ -560,6 +560,7 @@
  - **MedalTV**
  - **media.ccc.de**
  - **media.ccc.de:lists**
+ - **Mediaite**
  - **MediaKlikk**
  - **Medialaan**
  - **Mediaset**
@@ -1030,6 +1031,7 @@
  - **StoryFireSeries**
  - **StoryFireUser**
  - **Streamable**
+ - **Streamanity**
  - **streamcloud.eu**
  - **StreamCZ**
  - **Streamlink**
