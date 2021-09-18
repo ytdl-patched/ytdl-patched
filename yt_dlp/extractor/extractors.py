@@ -189,6 +189,7 @@ from .businessinsider import BusinessInsiderIE
 from .buzzfeed import BuzzFeedIE
 from .byutv import BYUtvIE
 from .c56 import C56IE
+from .cam4 import CAM4IE
 from .camdemy import (
     CamdemyIE,
     CamdemyFolderIE
@@ -312,7 +313,10 @@ from .dailymotion import (
     DailymotionPlaylistIE,
     DailymotionUserIE,
 )
-from .damtomo import DamtomoRecordIE, DamtomoVideoIE
+from .damtomo import (
+    DamtomoRecordIE,
+    DamtomoVideoIE,
+)
 from .daum import (
     DaumIE,
     DaumClipIE,
