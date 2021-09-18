@@ -159,6 +159,7 @@
  - **BusinessInsider**
  - **BuzzFeed**
  - **BYUtv**
+ - **CAM4**
  - **Camdemy**
  - **CamdemyFolder**
  - **CamModels**
