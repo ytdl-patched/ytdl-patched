@@ -35,6 +35,7 @@ from .compat import (
     compat_kwargs,
     compat_numeric_types,
     compat_os_name,
+    compat_pycrypto_AES,
     compat_shlex_quote,
     compat_str,
     compat_tokenize_tokenize,
@@ -959,7 +960,7 @@ class YoutubeDL(object):
     def validate_outtmpl(cls, outtmpl):
         ''' @return None or Exception object '''
         outtmpl = re.sub(
-            STR_FORMAT_RE_TMPL.format('[^)]*', '[ljq]'),
+            STR_FORMAT_RE_TMPL.format('[^)]*', '[ljqB]'),
             lambda mobj: f'{mobj.group(0)[:-1]}s',
             cls._outtmpl_expandpath(outtmpl))
         try:
@@ -991,7 +992,7 @@ class YoutubeDL(object):
         }
 
         TMPL_DICT = {}
-        EXTERNAL_FORMAT_RE = re.compile(STR_FORMAT_RE_TMPL.format('[^)]*', f'[{STR_FORMAT_TYPES}ljq]'))
+        EXTERNAL_FORMAT_RE = re.compile(STR_FORMAT_RE_TMPL.format('[^)]*', f'[{STR_FORMAT_TYPES}ljqB]'))
         MATH_FUNCTIONS = {
             '+': float.__add__,
             '-': float.__sub__,
@@ -1083,6 +1084,9 @@ class YoutubeDL(object):
                 value, fmt = json.dumps(value, default=_dumpjson_default), str_fmt
             elif fmt[-1] == 'q':
                 value, fmt = compat_shlex_quote(str(value)), str_fmt
+            elif fmt[-1] == 'B':
+                value = f'%{str_fmt}'.encode('utf-8') % str(value).encode('utf-8')
+                value, fmt = value.decode('utf-8', 'ignore'), 's'
             elif fmt[-1] == 'c':
                 value = str(value)
                 if value is None:
@@ -3503,13 +3507,12 @@ class YoutubeDL(object):
         ) or 'none'
         self._write_string('[debug] exe versions: %s\n' % exe_str)
 
-        from .downloader.fragment import can_decrypt_frag
         from .downloader.websocket import has_websockets
         from .postprocessor.embedthumbnail import has_mutagen
         from .cookies import SQLITE_AVAILABLE, KEYRING_AVAILABLE
 
         lib_str = ', '.join(sorted(filter(None, (
-            can_decrypt_frag and 'pycryptodome',
+            compat_pycrypto_AES and compat_pycrypto_AES.__name__.split('.')[0],
             has_websockets and 'websockets',
             has_mutagen and 'mutagen',
             SQLITE_AVAILABLE and 'sqlite',
