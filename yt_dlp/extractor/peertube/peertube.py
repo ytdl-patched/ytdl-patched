@@ -330,7 +330,7 @@ class PeerTubePlaylistIE(InfoExtractor):
         'w/p': 'video-playlists',
     }
     _VALID_URL = r'''(?x)
-                        https?://(?P<host>[^/])/(?P<type>(?:%s))/
+                        https?://(?P<host>[^/]+)/(?P<type>(?:%s))/
                     (?P<id>[^/]+)
                     ''' % ('|'.join(_TYPES.keys()), )
     _TESTS = [{
@@ -393,7 +393,7 @@ class PeerTubePlaylistIE(InfoExtractor):
         mobj = cls._match_valid_url(url)
         if not mobj:
             return False
-        hostname = mobj.group('host') or mobj.group('host_2')
+        hostname = mobj.group('host')
         return PeerTubeIE._test_peertube_instance(None, hostname, True, False)
 
     def call_api(self, host, name, path, base, **kwargs):
