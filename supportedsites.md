@@ -172,10 +172,7 @@
  - **CarambaTVPage**
  - **CartoonNetwork**
  - **cbc.ca**
- - **cbc.ca:olympics**
  - **cbc.ca:player**
- - **cbc.ca:watch**
- - **cbc.ca:watch:video**
  - **CBS**
  - **CBSInteractive**
  - **CBSLocal**
@@ -190,6 +187,7 @@
  - **CDA**
  - **CeskaTelevize**
  - **CeskaTelevizePorady**
+ - **CGTN**
  - **channel9**: Channel 9
  - **CharlieRose**
  - **Chaturbate**
@@ -378,6 +376,9 @@
  - **Gazeta**
  - **GDCVault**
  - **GediDigital**
+ - **gem.cbc.ca**
+ - **gem.cbc.ca:live**
+ - **gem.cbc.ca:playlist**
  - **generic**: Generic downloader that works on some sites
  - **Gfycat**
  - **GiantBomb**
