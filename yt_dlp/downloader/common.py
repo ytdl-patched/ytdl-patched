@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 from ..compat import (
     compat_os_name,
-    compat_urllib_request,
 )
 from ..utils import (
     decodeArgument,
@@ -22,6 +21,7 @@ from ..utils import (
     format_bytes,
     shell_quote,
     timeconvert,
+    sanitized_Request,
 )
 
 
@@ -408,9 +408,11 @@ class FileDownloader(object):
             heartbeat_interval = info_dict.get('heartbeat_interval', 30)
             self.to_screen('[download] Heartbeat with %s second interval...' % heartbeat_interval)
 
+            request = sanitized_Request(heartbeat_url, heartbeat_data)
+
             def heartbeat():
                 try:
-                    compat_urllib_request.urlopen(url=heartbeat_url, data=heartbeat_data)
+                    self.ydl.urlopen(request).read()
                 except Exception:
                     self.to_screen("[download] Heartbeat failed")
 
