@@ -312,6 +312,7 @@ class HttpFD(FileDownloader):
                     'eta': eta,
                     'speed': speed,
                     'elapsed': now - ctx.start_time,
+                    'ctx_id': info_dict.get('ctx_id'),
                 }, info_dict)
 
                 if data_len is not None and byte_counter == data_len:
@@ -359,6 +360,7 @@ class HttpFD(FileDownloader):
                 'filename': ctx.filename,
                 'status': 'finished',
                 'elapsed': time.time() - ctx.start_time,
+                'ctx_id': info_dict.get('ctx_id'),
             }, info_dict)
 
             return True

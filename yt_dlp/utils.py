@@ -4927,3 +4927,11 @@ class PrintJsonEncoder(json.JSONEncoder):
 
 def time_millis():
     return round(time.time() * 1000)
+
+
+def get_windows_version():
+    ''' Get Windows version. None if it's not running on Windows '''
+    if compat_os_name == 'nt':
+        return version_tuple(platform.win32_ver()[1])
+    else:
+        return None
