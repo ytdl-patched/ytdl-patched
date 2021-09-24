@@ -37,7 +37,7 @@ assert arch in ('32', '64')
 
 _x86 = '_x86' if arch == '32' else ''
 
-opts = sys.argv[2:] or ['--onefile']
+opts = sys.argv[3:] or ['--onefile']
 print(f'Building {arch}bit version with options {opts}')
 
 FILE_DESCRIPTION = 'ytdl-patched%s' % (' (32 Bit)' if _x86 else '')
@@ -94,7 +94,7 @@ excluded_modules = ['test', 'ytdlp_plugins', 'youtube-dl', 'youtube-dlc']
 
 PyInstaller.__main__.run([
     '--name=youtube-dl%s' % _x86,
-    '--onefile', '--console', '--distpath', '.',
+    '--console', '--distpath', '.',
     f'--icon=icons\\youtube_social_squircle_{icon}.ico',
     *[f'--exclude-module={module}' for module in excluded_modules],
     *[f'--hidden-import={module}' for module in dependancies],
