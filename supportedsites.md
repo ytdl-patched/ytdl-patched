@@ -193,6 +193,8 @@
  - **CharlieRose**
  - **Chaturbate**
  - **Chilloutzone**
+ - **Chingari**
+ - **ChingariUser**
  - **chirbit**
  - **chirbit:profile**
  - **cielotv.it**
@@ -486,6 +488,7 @@
  - **KinjaEmbed**
  - **KinoPoisk**
  - **KonserthusetPlay**
+ - **Koo**
  - **KrasView**: Красвью
  - **Ku6**
  - **KUSI**
@@ -1091,6 +1094,7 @@
  - **TheScene**
  - **TheStar**
  - **TheSun**
+ - **Theta**
  - **TheWeatherChannel**
  - **ThisAmericanLife**
  - **ThisAV**
