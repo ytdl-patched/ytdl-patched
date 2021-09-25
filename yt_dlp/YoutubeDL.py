@@ -3477,11 +3477,13 @@ class YoutubeDL(object):
         write_string(encoding_str, encoding=None)
 
         source = detect_variant()
-        self._write_string('[debug] yt-dlp version %s %s\n' % (__version__, source))
+        self._write_string('[debug] ytdl-patched version %s %s\n' % (__version__, source))
         if git_commit:
-            self._write_string('[debug]    from commit %s\n' % git_commit)
+            self._write_string('[debug]      from commit %s\n' % git_commit)
         if git_upstream_commit:
-            self._write_string('[debug]       based on %s\n' % git_upstream_commit)
+            self._write_string('[debug]      based on %s\n' % git_upstream_commit)
+        self._write_string('[debug] ** The command you are running is not yt-dlp. \n')
+        self._write_string('[debug] ** Please make bug reports at https://github.com/ytdl-patched/ytdl-patched instead. \n')
 
         if _LAZY_LOADER:
             self._write_string('[debug] Lazy loading extractors enabled\n')
