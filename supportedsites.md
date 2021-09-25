@@ -269,6 +269,7 @@
  - **DiscoveryPlusIndiaShow**
  - **DiscoveryVR**
  - **Disney**
+ - **disneychris**
  - **DIYNetwork**
  - **dlive:stream**
  - **dlive:vod**
@@ -800,6 +801,7 @@
  - **PearVideo**
  - **PeerTube**
  - **PeerTube:Playlist**
+ - **peing**
  - **peloton**
  - **peloton:live**: Peloton Live
  - **People**
