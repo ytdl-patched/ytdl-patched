@@ -1207,6 +1207,7 @@
  - **Varzesh3**
  - **Vbox7**
  - **VeeHD**
+ - **Veo**
  - **Veoh**
  - **Vesti**: Вести.Ru
  - **Vevo**
