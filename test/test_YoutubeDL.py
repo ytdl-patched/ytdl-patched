@@ -650,7 +650,7 @@ class TestYoutubeDL(unittest.TestCase):
         'title2': '%PATH%',
         'title3': 'foo/bar\\test',
         'title4': 'foo "bar" test',
-        'title5': 'áéí',
+        'title5': 'áéí 𝐀',
         'timestamp': 1618488000,
         'duration': 100000,
         'playlist_index': 1,
@@ -770,6 +770,10 @@ class TestYoutubeDL(unittest.TestCase):
         test('%(formats.:.id) 15l', '  id1, id2, id3')
         test('%(formats)j', (json.dumps(FORMATS), sanitize(json.dumps(FORMATS))))
         test('%(title5).3B', 'á')
+        test('%(title5)U', 'áéí 𝐀')
+        test('%(title5)#U', 'a\u0301e\u0301i\u0301 𝐀')
+        test('%(title5)+U', 'áéí A')
+        test('%(title5)+#U', 'a\u0301e\u0301i\u0301 A')
         if compat_os_name == 'nt':
             test('%(title4)q', ('"foo \\"bar\\" test"', "'foo _'bar_' test'"))
         else:
