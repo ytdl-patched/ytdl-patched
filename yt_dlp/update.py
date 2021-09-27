@@ -96,7 +96,7 @@ def run_update(ydl):
 
     def report_error(msg, network=False, expected=False, delim=';'):
         if network:
-            msg += '%s Visit  https://github.com/nao20010128nao/ytdl-patched/releases/latest' % delim
+            msg += '%s Visit  https://github.com/ytdl-patched/ytdl-patched/releases/latest' % delim
         ydl.report_error(msg, tb='' if network or expected else None)
 
     def calc_sha256sum(path):
@@ -108,23 +108,6 @@ def run_update(ydl):
                 h.update(mv[:n])
         return h.hexdigest()
 
-    ERRORS = {
-        'exe': None,
-        'zip': None,
-        'dir': 'Auto-update is not supported for unpackaged windows executable. Re-download the latest release',
-        'source': 'You cannot update when running from source code',
-        'unknown': 'It looks like you installed yt-dlp with a package manager, pip, setup.py or a tarball. Use that to update',
-    }
-    err = ERRORS.get(detect_variant(), ERRORS['unknown'])
-    if err:
-        return report_error(err, expected=True)
-
-    # sys.executable is set to the full pathname of the exe-file for py2exe
-    # though symlinks are not followed so that we need to do this manually
-    # with help of realpath
-    filename = compat_realpath(sys.executable if hasattr(sys, 'frozen') else sys.argv[0])
-    ydl.to_screen('Current Build Hash %s' % calc_sha256sum(filename))
-
     # Download and check versions info
     try:
         version_info = get_version_info(ydl)
@@ -134,12 +117,30 @@ def run_update(ydl):
     def version_tuple(version_str):
         return tuple(map(int, version_str.split('.')))
 
-    version_id = version_info['name']
+    version_id = version_info['tag_name']
     if version_tuple(__version__) >= version_tuple(version_id):
-        ydl.to_screen('ytdl-patched is up to date (%s)' % __version__)
+        ydl.to_screen(f'ytdl-patched is up to date ({__version__})')
         return
 
-    ydl.to_screen('Updating to version ' + version_id + ' ...')
+    ERRORS = {
+        'exe': None,
+        'zip': None,
+        'dir': 'Auto-update is not supported for unpackaged windows executable. Re-download the latest release',
+        'source': 'You cannot update when running from source code',
+        'unknown': 'It looks like you installed ytdl-patched with a package manager, pip, setup.py or a tarball. Use that to update',
+    }
+    err = ERRORS.get(detect_variant(), ERRORS['unknown'])
+    if err:
+        ydl.to_screen(f'Latest version: {version_id}, Current version: {__version__}')
+        return report_error(err, expected=True)
+
+    # sys.executable is set to the full pathname of the exe-file for py2exe
+    # though symlinks are not followed so that we need to do this manually
+    # with help of realpath
+    filename = compat_realpath(sys.executable if hasattr(sys, 'frozen') else sys.argv[0])
+
+    ydl.to_screen(f'Current version {__version__}; Build Hash {calc_sha256sum(filename)}')
+    ydl.to_screen(f'Updating to version {version_id} ...')
 
     version_labels = {
         'zip_3': '',
@@ -152,7 +153,7 @@ def run_update(ydl):
         return next((i for i in version_info['assets'] if i['name'] == 'youtube-dl%s' % label), {})
 
     def get_sha256sum(bin_or_exe, version):
-        filename = 'yt-dlp%s' % version_labels['%s_%s' % (bin_or_exe, version)]
+        filename = 'ytdl-patched%s' % version_labels['%s_%s' % (bin_or_exe, version)]
         urlh = next(
             (i for i in version_info['assets'] if i['name'] in ('SHA2-256SUMS')),
             {}).get('browser_download_url')

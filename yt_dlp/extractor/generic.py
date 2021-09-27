@@ -2878,12 +2878,6 @@ class GenericIE(InfoExtractor):
         if vhx_url:
             waitlist.append(self.url_result(vhx_url, VHXEmbedIE.ie_key()))
 
-        vid_me_embed_url = self._search_regex(
-            r'src=[\'"](https?://vid\.me/[^\'"]+)[\'"]',
-            webpage, 'vid.me embed', default=None)
-        if vid_me_embed_url is not None:
-            waitlist.append(self.url_result(vid_me_embed_url, 'Vidme'))
-
         # Invidious Instances
         # https://github.com/yt-dlp/yt-dlp/issues/195
         # https://github.com/iv-org/invidious/pull/1730
@@ -3872,7 +3866,7 @@ class GenericIE(InfoExtractor):
             if ext == 'smil':
                 entry_info_dict = {**self._extract_smil_info(video_url, video_id), **entry_info_dict}
             elif ext == 'xspf':
-                waitlist.append(self.playlist_result(self._extract_xspf_playlist(video_url, video_id), video_id))
+                entries.append(self.playlist_result(self._extract_xspf_playlist(video_url, video_id), video_id))
             elif ext == 'm3u8':
                 entry_info_dict['formats'], entry_info_dict['subtitles'] = self._extract_m3u8_formats_and_subtitles(video_url, video_id, ext='mp4')
             elif ext == 'mpd':
