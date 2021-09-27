@@ -1236,9 +1236,6 @@
  - **VidioLive**
  - **VidioPremier**
  - **VidLii**
- - **vidme**
- - **vidme:user**
- - **vidme:user:likes**
  - **vier**: vier.be and vijf.be
  - **vier:videos**
  - **viewlift**
