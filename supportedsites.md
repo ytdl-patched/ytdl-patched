@@ -647,6 +647,8 @@
  - **MyviEmbed**
  - **MyVisionTV**
  - **n-tv.de**
+ - **N1Info:article**
+ - **N1InfoAsset**
  - **natgeo:video**
  - **NationalGeographicTV**
  - **Naver**
@@ -932,6 +934,7 @@
  - **RTVNH**
  - **RTVS**
  - **RUHD**
+ - **RumbleChannel**
  - **RumbleEmbed**
  - **rutube**: Rutube videos
  - **rutube:channel**: Rutube channels
