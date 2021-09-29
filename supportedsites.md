@@ -383,6 +383,7 @@
  - **gem.cbc.ca:live**
  - **gem.cbc.ca:playlist**
  - **generic**: Generic downloader that works on some sites
+ - **Gettr**
  - **Gfycat**
  - **GiantBomb**
  - **Giga**
