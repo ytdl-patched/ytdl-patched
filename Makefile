@@ -8,7 +8,7 @@ tar: youtube-dl.tar.gz
 # Keep this list in sync with MANIFEST.in
 # intended use: when building a source distribution,
 # make pypi-files && python setup.py sdist
-pypi-files: AUTHORS Changelog.md LICENSE README.md README.txt supportedsites completions yt-dlp.1 devscripts/* test/*
+pypi-files: AUTHORS Changelog.md LICENSE README.md README.txt supportedsites completions youtube-dl.1 devscripts/* test/*
 
 .PHONY: all clean install test tar pypi-files completions ot offlinetest codetest supportedsites
 
@@ -17,7 +17,7 @@ clean-test:
 	*.info.json *.jpeg *.jpg *.live_chat.json *.m4a *.m4v *.mkv *.mp3 *.mp4 *.ogg *.opus *.part* *.png *.sbv *.srt \
 	*.swf *.swp *.ttml *.vtt *.wav *.webm *.webp *.ytdl test/testdata/player-*.js
 clean-dist:
-	rm -rf yt-dlp.1.temp.md yt-dlp.1 README.txt MANIFEST build/ dist/ .coverage cover/ yt-dlp.tar.gz completions/ yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp yt-dlp yt-dlp.exe yt_dlp.egg-info/ AUTHORS .mailmap
+	rm -rf youtube-dl.1.temp.md youtube-dl.1 README.txt MANIFEST build/ dist/ .coverage cover/ youtube-dl.tar.gz completions/ yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp youtube-dl youtube-dl.exe yt_dlp.egg-info/ AUTHORS .mailmap
 clean-cache:
 	find . -name "*.pyc" -o -name "*.class" -delete
 
@@ -61,32 +61,6 @@ offlinetest: codetest
 	$(PYTHON) -m pytest -k "not download"
 
 tar: youtube-dl.tar.gz
-
-.PHONY: all clean install test tar bash-completion pypi-files zsh-completion fish-completion ot offlinetest codetest supportedsites
-
-clean-test:
-	rm -rf *.dump *.part* *.ytdl *.info.json *.mp4 *.m4a *.flv *.mp3 *.avi *.mkv *.webm *.3gp *.wav *.ape *.swf *.jpg *.png *.frag *.frag.urls *.frag.aria2
-clean-dist:
-	rm -rf ytdl-patched.1.temp.md ytdl-patched.1 README.txt MANIFEST build/ dist/ .coverage cover/ ytdl-patched.tar.gz completions/ yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp youtube-dl youtube-dl.exe yt_dlp.egg-info/ AUTHORS .mailmap
-clean-cache:
-	find . -name "*.pyc" -o -name "*.class" -delete
-
-pypi-files: youtube-dl.bash-completion README.txt youtube-dl.1 youtube-dl.fish _youtube-dl
-
-# youtube-dl: yt_dlp/*.py yt_dlp/*/*.py
-# 	mkdir -p zip
-# 	for d in yt_dlp yt_dlp/downloader yt_dlp/extractor yt_dlp/extractor/*/ yt_dlp/postprocessor yt_dlp/websocket ; do \
-# 	  mkdir -p zip/$$d ;\
-# 	  cp -pPR $$d/*.py zip/$$d/ ;\
-# 	done
-# 	touch -t 200001010101 zip/yt_dlp/*.py zip/yt_dlp/*/*.py
-# 	mv zip/yt_dlp/__main__.py zip/
-# 	cd zip ; 7z a -mm=Deflate -mfb=258 -mpass=15 -mtc- ../youtube-dl.zip yt_dlp/*.py yt_dlp/*/*.py yt_dlp/*/*/*.py __main__.py
-# 	rm -rf zip
-# 	echo '#!$(PYTHON)' > youtube-dl
-# 	cat youtube-dl.zip >> youtube-dl
-# 	rm youtube-dl.zip
-# 	chmod a+x youtube-dl
 
 youtube-dl: yt_dlp/*.py yt_dlp/*/*.py yt_dlp/*/*/*.py devscripts/make_zipfile.py
 	$(PYTHON) devscripts/make_zipfile.py "$(PYTHON)"
@@ -144,8 +118,8 @@ youtube-dl.tar.gz: all
 		-- \
 		README.md supportedsites.md Changelog.md LICENSE \
 		CONTRIBUTING.md Collaborators.md CONTRIBUTORS AUTHORS \
-		Makefile MANIFEST.in yt-dlp.1 README.txt completions \
-		setup.py setup.cfg yt-dlp yt_dlp requirements.txt \
+		Makefile MANIFEST.in youtube-dl.1 README.txt completions \
+		setup.py setup.cfg youtube-dl yt_dlp requirements.txt \
 		devscripts test tox.ini pytest.ini
 	advdef -z -4 -i 30 youtube-dl.tar.gz
 
