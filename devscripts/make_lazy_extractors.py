@@ -8,8 +8,6 @@ import re
 from os.path import dirname as dirn
 import sys
 
-print('WARNING: Lazy loading extractors is an experimental feature that may not always work', file=sys.stderr)
-
 sys.path.insert(0, dirn(dirn((os.path.abspath(__file__)))))
 
 lazy_extractors_filename = sys.argv[1]
