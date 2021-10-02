@@ -1098,7 +1098,8 @@
  - **TheScene**
  - **TheStar**
  - **TheSun**
- - **Theta**
+ - **ThetaStream**
+ - **ThetaVideo**
  - **TheWeatherChannel**
  - **ThisAmericanLife**
  - **ThisAV**
