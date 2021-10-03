@@ -370,12 +370,14 @@ jobs:
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
             -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
             ./artifacts/youtube-dl
       - name: Upload source tar (IA)
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
             -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
             ./artifacts/youtube-dl.tar.gz
 
 
@@ -398,6 +400,7 @@ jobs:
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-red.exe" \
             -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
             ./artifacts/youtube-dl.exe
 
 
@@ -420,6 +423,7 @@ jobs:
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-white.exe" \
             -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
             ./artifacts/youtube-dl.exe
 
 
@@ -452,12 +456,14 @@ jobs:
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-py2.py3-none-any.whl" \
             -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
             ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
       - name: Upload wheel tar (IA)
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-wheel.tar.gz" \
             -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
             ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
 
   # upload-pull-request:
