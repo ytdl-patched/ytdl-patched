@@ -285,16 +285,11 @@ jobs:
           git add .
           git commit -m "ytdl-patched: $VERSION"
           git push
-  upload-releases:
+  upload-releases-and-internetarchive:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-artifacts
-
       - name: Create release (for master)
         id: create_release
         uses: actions/create-release@v1
@@ -317,7 +312,17 @@ jobs:
       - name: Create release
         if: ${{ github.ref == 'refs/heads/ytdlp' }}
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
+
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Install ia command and configure
+        run: |
+          brew install internetarchive
+          ia configure -u "${{ secrets.IA_USERNAME }}" -p "${{ secrets.IA_PASSWORD }}"
   
+
       - name: Create release (for non-master)
         id: create_release_nm
         uses: actions/create-release@v1
@@ -339,7 +344,12 @@ jobs:
         if: ${{ github.ref != 'refs/heads/ytdlp' }}
         run: echo "upload_url=${{ steps.create_release_nm.outputs.upload_url }}" >> $GITHUB_ENV
 
-      - name: Upload bin
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
+      - name: Upload bin (Releases)
         id: upload-1
         uses: actions/upload-release-asset@v1
         env:
@@ -349,8 +359,7 @@ jobs:
           asset_path: ./artifacts/youtube-dl
           asset_name: youtube-dl
           asset_content_type: application/zip
-
-      - name: Upload source tar
+      - name: Upload source tar (Releases)
         id: upload-2
         uses: actions/upload-release-asset@v1
         env:
@@ -360,11 +369,25 @@ jobs:
           asset_path: ./artifacts/youtube-dl.tar.gz
           asset_name: youtube-dl.tar.gz
           asset_content_type: application/gzip
+      - name: Upload bin (IA)
+        run: |
+          ia upload ytdl-patched \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
+            -H x-archive-keep-old-version:0 \
+            ./artifacts/youtube-dl
+      - name: Upload source tar (IA)
+        run: |
+          ia upload ytdl-patched \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
+            -H x-archive-keep-old-version:0 \
+            ./artifacts/youtube-dl.tar.gz
+
+
       - name: Download builds for Windows (red icon)
         uses: actions/download-artifact@v2
         with:
           name: ytdl-windows-red-PyInstaller
-      - name: Upload exe
+      - name: Upload red exe (Releases)
         id: upload-3
         uses: actions/upload-release-asset@v1
         env:
@@ -374,11 +397,19 @@ jobs:
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-red.exe
           asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Upload red exe (IA)
+        run: |
+          ia upload ytdl-patched \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-red.exe" \
+            -H x-archive-keep-old-version:0 \
+            ./artifacts/youtube-dl.exe
+
+
       - name: Download builds for Windows (white icon)
         uses: actions/download-artifact@v2
         with:
           name: ytdl-windows-white-PyInstaller
-      - name: Upload exe
+      - name: Upload white exe (Releases)
         id: upload-4
         uses: actions/upload-release-asset@v1
         env:
@@ -388,11 +419,19 @@ jobs:
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Upload white exe (IA)
+        run: |
+          ia upload ytdl-patched \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-white.exe" \
+            -H x-archive-keep-old-version:0 \
+            ./artifacts/youtube-dl.exe
+
+
       - name: Download wheel
         uses: actions/download-artifact@v2
         with:
           name: ytdl-wheel
-      - name: Upload wheel
+      - name: Upload wheel (Releases)
         id: upload-5
         uses: actions/upload-release-asset@v1
         env:
@@ -400,9 +439,9 @@ jobs:
         with:
           upload_url: ${{ env.upload_url }} 
           asset_path: ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
-          asset_name: yt_dlp-${{ needs.prepare.outputs.latest_version }}-py2.py3-none-any.whl
+          asset_name: yt_dlp-py2.py3-none-any.whl
           asset_content_type: application/zip
-      - name: Upload wheel tar
+      - name: Upload wheel tar (Releases)
         id: upload-6
         uses: actions/upload-release-asset@v1
         env:
@@ -410,8 +449,20 @@ jobs:
         with:
           upload_url: ${{ env.upload_url }} 
           asset_path: ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
-          asset_name: yt_dlp-${{ needs.prepare.outputs.latest_version }}-wheel.tar.gz
+          asset_name: yt_dlp-wheel.tar.gz
           asset_content_type: application/gzip
+      - name: Upload wheel (IA)
+        run: |
+          ia upload ytdl-patched \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-py2.py3-none-any.whl" \
+            -H x-archive-keep-old-version:0 \
+            ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
+      - name: Upload wheel tar (IA)
+        run: |
+          ia upload ytdl-patched \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-wheel.tar.gz" \
+            -H x-archive-keep-old-version:0 \
+            ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
 
   # upload-pull-request:
   #   needs: prepare-artifacts
