@@ -313,10 +313,6 @@ jobs:
         if: ${{ github.ref == 'refs/heads/ytdlp' }}
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
 
-      - name: Set up Python ${{ env.python_version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.python_version }}
       - name: Install ia command and configure
         run: |
           brew install internetarchive
