@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 switch ($BuilderName) {
     "PyInstaller" {
         write-host "Building an EXE using PyInstaller"
-        python -OO pyinst.py 64 "${IconName}"
+        python -OO pyinst.py "${IconName}"
 
         write-host "Moving built EXE into artifacts/"
         Move-Item youtube-dl.exe artifacts/

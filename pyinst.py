@@ -31,13 +31,20 @@ def zlib_compress(data, level=-1):
 zlib.compress = zlib_compress
 
 
-arch = sys.argv[1] if len(sys.argv) > 1 else platform.architecture()[0][:2]
-icon = sys.argv[2] if len(sys.argv) > 2 else 'red'
+arch = platform.architecture()[0][:2]
+icon = sys.argv[1] if len(sys.argv) > 1 else 'red'
 assert arch in ('32', '64')
 
 _x86 = '_x86' if arch == '32' else ''
 
-opts = sys.argv[3:] or ['--onefile']
+# Compatability with older arguments
+opts = sys.argv[2:]
+if opts[0:1] in (['32'], ['64']):
+    if arch != opts[0]:
+        raise Exception(f'{opts[0]}bit executable cannot be built on a {arch}bit system')
+    opts = opts[1:]
+opts = opts or ['--onefile']
+
 print(f'Building {arch}bit version with options {opts}')
 
 FILE_DESCRIPTION = 'ytdl-patched%s' % (' (32 Bit)' if _x86 else '')
@@ -103,4 +110,4 @@ PyInstaller.__main__.run([
     *opts,
     'yt_dlp/__main__.py',
 ])
-SetVersion('youtube-dl%s.exe' % _x86, VERSION_FILE)
+SetVersion('%syoutube-dl%s.exe' % ('yt-dlp/' if '--onedir' in opts else '', _x86), VERSION_FILE)
