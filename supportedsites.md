@@ -397,6 +397,7 @@
  - **google:podcasts**
  - **google:podcasts:feed**
  - **GoogleDrive**
+ - **GoPro**
  - **GorinLive**
  - **GorinVideo**
  - **Goshgay**
@@ -1292,6 +1293,7 @@
  - **VTXTV**
  - **vube**: Vube.com
  - **VuClip**
+ - **Vupload**
  - **VVVVID**
  - **VVVVIDShow**
  - **VyboryMos**
