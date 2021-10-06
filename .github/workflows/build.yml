@@ -285,7 +285,7 @@ jobs:
           git add .
           git commit -m "ytdl-patched: $VERSION"
           git push
-  upload-releases-and-internetarchive:
+  upload-releases-and-mirrors:
     needs: [prepare, prepare-artifacts]
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
@@ -314,6 +314,7 @@ jobs:
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
 
       - name: Install ia command and configure
+        if: ${{ success() && false }}
         run: |
           brew install internetarchive
           ia configure -u "${{ secrets.IA_USERNAME }}" -p "${{ secrets.IA_PASSWORD }}"
