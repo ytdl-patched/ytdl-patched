@@ -1,4 +1,4 @@
 mutagen
-pycryptodome
+pycryptodomex
 websockets
 streamlink

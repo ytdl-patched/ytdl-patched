@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 import sys
-# import os
 import platform
 
 from PyInstaller.utils.hooks import collect_submodules
@@ -49,10 +48,6 @@ print(f'Building {arch}bit version with options {opts}')
 
 FILE_DESCRIPTION = 'ytdl-patched%s' % (' (32 Bit)' if _x86 else '')
 
-# root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# print('Changing working directory to %s' % root_dir)
-# os.chdir(root_dir)
-
 exec(compile(open('yt_dlp/version.py').read(), 'yt_dlp/version.py', 'exec'))
 VERSION = locals()['__version__']
 
@@ -96,7 +91,22 @@ VERSION_FILE = VSVersionInfo(
     ]
 )
 
-dependancies = ['Crypto', 'mutagen'] + collect_submodules('websockets')
+
+def pycryptodome_module():
+    try:
+        import Cryptodome  # noqa: F401
+    except ImportError:
+        try:
+            import Crypto  # noqa: F401
+            print('WARNING: Using Crypto since Cryptodome is not available. '
+                  'Install with: pip install pycryptodomex', file=sys.stderr)
+            return 'Crypto'
+        except ImportError:
+            pass
+    return 'Cryptodome'
+
+
+dependancies = [pycryptodome_module(), 'mutagen'] + collect_submodules('websockets')
 excluded_modules = ['test', 'ytdlp_plugins', 'youtube-dl', 'youtube-dlc']
 
 PyInstaller.__main__.run([
