@@ -269,7 +269,7 @@ macOS or Linux users that are using Homebrew (formerly known as Linuxbrew for Li
 brew install nao20010128nao/my/ytdl-patched
 ```
 
-You can find mirror for binaries here: https://archive.org/details/ytdl-patched
+~~You can find mirror for binaries here: https://archive.org/details/ytdl-patched~~
 
 ### UPDATE
 You can use `yt-dlp -U` to update if you are using the provided release.

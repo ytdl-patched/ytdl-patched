@@ -366,6 +366,7 @@ jobs:
           asset_name: youtube-dl.tar.gz
           asset_content_type: application/gzip
       - name: Upload bin (IA)
+        if: ${{ success() && false }}
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
@@ -373,6 +374,7 @@ jobs:
             -H x-archive-queue-derive:0 \
             ./artifacts/youtube-dl
       - name: Upload source tar (IA)
+        if: ${{ success() && false }}
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
@@ -396,6 +398,7 @@ jobs:
           asset_name: youtube-dl-red.exe
           asset_content_type: application/vnd.microsoft.portable-executable
       - name: Upload red exe (IA)
+        if: ${{ success() && false }}
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-red.exe" \
@@ -419,6 +422,7 @@ jobs:
           asset_name: youtube-dl-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
       - name: Upload white exe (IA)
+        if: ${{ success() && false }}
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-white.exe" \
@@ -452,6 +456,7 @@ jobs:
           asset_name: yt_dlp-wheel.tar.gz
           asset_content_type: application/gzip
       - name: Upload wheel (IA)
+        if: ${{ success() && false }}
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-py2.py3-none-any.whl" \
@@ -459,6 +464,7 @@ jobs:
             -H x-archive-queue-derive:0 \
             ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
       - name: Upload wheel tar (IA)
+        if: ${{ success() && false }}
         run: |
           ia upload ytdl-patched \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-wheel.tar.gz" \
