@@ -100,7 +100,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
     * `17live`, `17live:clip`
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
-    * `damtomo:video`, `damtomo:record`
     * `disneychris`
     * `dnatube`
     * `fc2:user` (FC2 user-uploaded videos)
@@ -121,6 +120,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!) (merged in upstream)
     * `voicy`, `voicy:channel` (merged in upstream)
     * `whowatch` (merged in upstream)
+    * `damtomo:video`, `damtomo:record` (merged in upstream)
     * `streamlink` (See below)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
