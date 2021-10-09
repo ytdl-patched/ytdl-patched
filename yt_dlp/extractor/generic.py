@@ -2601,8 +2601,7 @@ class GenericIE(InfoExtractor):
         else:
             video_id = self._generic_id(url)
 
-        # Test if the URL is for Mastodon instance
-
+        # Test if the URL is for Fediverse instances
         if self._downloader.params.get('check_mastodon_instance', False):
             prefix = self._search_regex(
                 (MastodonIE._VALID_URL,
