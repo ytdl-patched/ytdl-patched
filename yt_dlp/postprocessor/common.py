@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import copy
 import functools
 
 from typing import TYPE_CHECKING
@@ -15,7 +16,26 @@ from ..utils import (
 )
 
 
-class PostProcessor(object):
+class PostProcessorMetaClass(type):
+    @staticmethod
+    def run_wrapper(func):
+        @functools.wraps(func)
+        def run(self, info, *args, **kwargs):
+            self._hook_progress({'status': 'started'}, info)
+            ret = func(self, info, *args, **kwargs)
+            if ret is not None:
+                _, info = ret
+            self._hook_progress({'status': 'finished'}, info)
+            return ret
+        return run
+
+    def __new__(cls, name, bases, attrs):
+        if 'run' in attrs:
+            attrs['run'] = cls.run_wrapper(attrs['run'])
+        return type.__new__(cls, name, bases, attrs)
+
+
+class PostProcessor(metaclass=PostProcessorMetaClass):
     """Post Processor class.
 
     PostProcessor objects can be added to downloaders with their
@@ -35,10 +55,12 @@ class PostProcessor(object):
     with self._configuration_args.
     """
 
-    _downloader = None
+    _downloader: 'YoutubeDL' = None
 
     def __init__(self, downloader=None):
-        self._downloader: 'YoutubeDL' = downloader
+        self._progress_hooks = []
+        self.add_progress_hook(self.report_progress)
+        self.set_downloader(downloader)
         self.PP_NAME = self.pp_key()
 
     @classmethod
@@ -69,9 +91,13 @@ class PostProcessor(object):
             return self._downloader.params.get(name, default, *args, **kwargs)
         return default
 
-    def set_downloader(self, downloader):
+    def set_downloader(self, downloader: 'YoutubeDL'):
         """Sets the downloader for this PP."""
         self._downloader = downloader
+        if not downloader:
+            return
+        for ph in downloader._postprocessor_hooks:
+            self.add_progress_hook(ph)
 
     @staticmethod
     def _restrict_to(*, video=True, audio=True, images=True):
@@ -124,6 +150,39 @@ class PostProcessor(object):
             return encodeFilename(split_longname(path), for_subprocess)
         else:
             return encodeFilename(path, for_subprocess)
+
+    def _hook_progress(self, status, info_dict):
+        if not self._progress_hooks:
+            return
+        info_dict = dict(info_dict)
+        for key in ('__original_infodict', '__postprocessors'):
+            info_dict.pop(key, None)
+        status.update({
+            'info_dict': copy.deepcopy(info_dict),
+            'postprocessor': self.pp_key(),
+        })
+        for ph in self._progress_hooks:
+            ph(status)
+
+    def add_progress_hook(self, ph):
+        # See YoutubeDl.py (search for postprocessor_hooks) for a description of this interface
+        self._progress_hooks.append(ph)
+
+    def report_progress(self, s):
+        s['_default_template'] = '%(postprocessor)s %(status)s' % s
+
+        progress_dict = s.copy()
+        progress_dict.pop('info_dict')
+        progress_dict = {'info': s['info_dict'], 'progress': progress_dict}
+
+        progress_template = self.get_param('progress_template', {})
+        tmpl = progress_template.get('postprocess')
+        if tmpl:
+            self._downloader.to_stdout(self._downloader.evaluate_outtmpl(tmpl, progress_dict))
+
+        self._downloader.to_console_title(self._downloader.evaluate_outtmpl(
+            progress_template.get('postprocess-title') or 'yt-dlp %(progress._default_template)s',
+            progress_dict))
 
 
 class AudioConversionError(PostProcessingError):

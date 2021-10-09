@@ -963,7 +963,7 @@ class RejectedVideoReached(YoutubeDLError):
 
 
 class ReextractRequested(YoutubeDLError):
-    """ Request re-extraction. """
+    """ Request re-extraction in any reason. """
     def __init__(self, msg='Re-extraction requested.') -> None:
         super().__init__(msg)
         self.msg = msg
@@ -976,7 +976,7 @@ class ThrottledDownload(ReextractRequested):
 
 
 class UnrecoverableHttpError(ReextractRequested):
-    """ Unrecoverable errors defined by each format reported. """
+    """ Unrecoverable errors defined by each format has been reported by downloader. """
     def __init__(self) -> None:
         super().__init__('An unrecoverable error has been detected.')
 
@@ -4994,3 +4994,26 @@ def jwt_encode_hs256(payload_data, key, headers={}):
     signature_b64 = base64.b64encode(h.digest())
     token = header_b64 + b'.' + payload_b64 + b'.' + signature_b64
     return token
+
+
+def supports_terminal_sequences(stream):
+    if compat_os_name == 'nt':
+        if get_windows_version() < (10, ):
+            return False
+    elif not os.getenv('TERM'):
+        return False
+    try:
+        return stream.isatty()
+    except BaseException:
+        return False
+
+
+TERMINAL_SEQUENCES = {
+    'DOWN': '\n',
+    'UP': '\x1b[A',
+    'ERASE_LINE': '\x1b[K',
+    'RED': '\033[0;31m',
+    'YELLOW': '\033[0;33m',
+    'BLUE': '\033[0;34m',
+    'RESET_STYLE': '\033[0m',
+}
