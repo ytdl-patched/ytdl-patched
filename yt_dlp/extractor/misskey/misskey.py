@@ -45,10 +45,6 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
         if hostname in known_valid_instances:
             return True
 
-        # HELP: more cases needed
-        if hostname in ['medium.com', 'lbry.tv']:
-            return False
-
         # continue anyway if "misskey:" is added to URL
         if prefix:
             return True

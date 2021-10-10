@@ -37,10 +37,6 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
         if hostname in known_valid_instances:
             return True
 
-        # HELP: more cases needed
-        # if hostname in ['medium.com', 'lbry.tv']:
-        #     return False
-
         # continue anyway if "peertube:" is used
         if prefix:
             return True
