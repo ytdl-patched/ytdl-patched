@@ -6,7 +6,7 @@ import json
 import re
 
 from .instances import instances
-from ..common import InfoExtractor
+from ..common import InfoExtractor, SelfHostedInfoExtractor
 from ...utils import (
     ExtractorError,
     determine_ext,
@@ -23,7 +23,7 @@ from ...compat import compat_str
 known_valid_instances = set()
 
 
-class MisskeyBaseIE(InfoExtractor):
+class MisskeyBaseIE(SelfHostedInfoExtractor):
 
     @classmethod
     def suitable(cls, url):
@@ -74,6 +74,18 @@ class MisskeyBaseIE(InfoExtractor):
         # this is probably misskey instance
         known_valid_instances.add(hostname)
         return True
+
+    @staticmethod
+    def _is_probe_enabled(ydl):
+        return ydl.params.get('check_misskey_instance', False)
+
+    @classmethod
+    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname):
+        prefix = ie._search_regex(
+            # (MisskeyIE._VALID_URL, MisskeyUserIE._VALID_URL),
+            cls._VALID_URL,
+            url, 'misskey test', group='prefix', default=None)
+        return cls._test_misskey_instance(ie, hostname, False, prefix)
 
 
 class MisskeyIE(MisskeyBaseIE):

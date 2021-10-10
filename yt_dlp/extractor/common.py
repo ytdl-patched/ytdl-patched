@@ -448,6 +448,8 @@ class InfoExtractor(object):
     _GEO_COUNTRIES = None
     _GEO_IP_BLOCKS = None
     _WORKING = True
+    """ True if it's self-hosted service. DO NOT SET IT TRUE MANUALLY """
+    _SELF_HOSTED = False
     """
     Feature dependency declaration. Case sensitive.
     Following features are known and recognized:
@@ -3692,3 +3694,33 @@ class SearchInfoExtractor(InfoExtractor):
     @property
     def SEARCH_KEY(self):
         return self._SEARCH_KEY
+
+
+class SelfHostedInfoExtractor(InfoExtractor):
+    """
+    Base class for Self-hosted extractors.
+
+    Self-hosted extractors are for the services,
+    that cannot be handled by just listing all of their domains.
+    Mostly related to free and open source software,
+    which everyone is allowed to host on their own servers
+    (like PeerTube, Mastodon, Misskey, and lots of others).
+    """
+
+    _SELF_HOSTED = True
+
+    @staticmethod
+    def _is_probe_enabled(ydl: 'YoutubeDL'):
+        """
+        True if user requested probing for the service.
+        There must be corresponding options for each services one-by-one, and this method just return its value.
+        """
+        return False
+
+    @classmethod
+    def _probe_selfhosted_service(cls, ie, url):
+        """
+        True if it's acceptable URL for the service.
+        Extractors may cache its result whenever possible.
+        """
+        return False

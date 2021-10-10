@@ -5,7 +5,7 @@ import functools
 import re
 
 from .instances import instances
-from ..common import InfoExtractor
+from ..common import InfoExtractor, SelfHostedInfoExtractor
 from ...compat import compat_str
 from ...utils import (
     int_or_none,
@@ -24,7 +24,68 @@ from ...utils import (
 known_valid_instances = set()
 
 
-class PeerTubeIE(InfoExtractor):
+class PeerTubeBaseIE(SelfHostedInfoExtractor):
+
+    @staticmethod
+    def _test_peertube_instance(ie, hostname, skip, prefix):
+        hostname = hostname.encode('idna')
+        if not isinstance(hostname, compat_str):
+            hostname = hostname.decode(preferredencoding())
+
+        if hostname in instances:
+            return True
+        if hostname in known_valid_instances:
+            return True
+
+        # HELP: more cases needed
+        # if hostname in ['medium.com', 'lbry.tv']:
+        #     return False
+
+        # continue anyway if "peertube:" is used
+        if prefix:
+            return True
+        # without --check-peertube-instance,
+        #   skip further instance check
+        if skip:
+            return False
+
+        ie.report_warning('Testing if %s is a PeerTube instance because it is not listed in joinpeertube.org.' % hostname)
+
+        try:
+            # try /api/v1/config
+            api_request_config = ie._download_json(
+                'https://%s/api/v1/config' % hostname, hostname,
+                note='Testing PeerTube API /api/v1/config')
+            if not api_request_config.get('instance', {}).get('name'):
+                return False
+
+            # try /api/v1/videos
+            api_request_videos = ie._download_json(
+                'https://%s/api/v1/videos' % hostname, hostname,
+                note='Testing PeerTube API /api/v1/videos')
+            if not isinstance(api_request_videos.get('data'), (tuple, list)):
+                return False
+        except (IOError, ExtractorError):
+            return False
+
+        # this is probably peertube instance
+        known_valid_instances.add(hostname)
+        return True
+
+    @staticmethod
+    def _is_probe_enabled(ydl):
+        return ydl.params.get('check_peertube_instance', False)
+
+    @classmethod
+    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname):
+        prefix = ie._search_regex(
+            # (PeerTubeIE._VALID_URL, PeerTubePlaylistIE._VALID_URL),
+            cls._VALID_URL,
+            url, 'peertube test', group='prefix', default=None)
+        return cls._test_peertube_instance(ie, hostname, False, prefix)
+
+
+class PeerTubeIE(PeerTubeBaseIE):
     _UUID_RE = r'[\da-zA-Z]{22}|[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
     _API_BASE = 'https://%s/api/v1/videos/%s/%s'
     _VALID_URL = r'''(?x)
@@ -155,52 +216,6 @@ class PeerTubeIE(InfoExtractor):
         hostname = mobj.group('host') or mobj.group('host_2')
         return cls._test_peertube_instance(None, hostname, True, prefix)
 
-    @staticmethod
-    def _test_peertube_instance(ie, hostname, skip, prefix):
-        hostname = hostname.encode('idna')
-        if not isinstance(hostname, compat_str):
-            hostname = hostname.decode(preferredencoding())
-
-        if hostname in instances:
-            return True
-        if hostname in known_valid_instances:
-            return True
-
-        # HELP: more cases needed
-        # if hostname in ['medium.com', 'lbry.tv']:
-        #     return False
-
-        # continue anyway if "peertube:" is used
-        if prefix:
-            return True
-        # without --check-peertube-instance,
-        #   skip further instance check
-        if skip:
-            return False
-
-        ie.report_warning('Testing if %s is a PeerTube instance because it is not listed in joinpeertube.org.' % hostname)
-
-        try:
-            # try /api/v1/config
-            api_request_config = ie._download_json(
-                'https://%s/api/v1/config' % hostname, hostname,
-                note='Testing PeerTube API /api/v1/config')
-            if not api_request_config.get('instance', {}).get('name'):
-                return False
-
-            # try /api/v1/videos
-            api_request_videos = ie._download_json(
-                'https://%s/api/v1/videos' % hostname, hostname,
-                note='Testing PeerTube API /api/v1/videos')
-            if not isinstance(api_request_videos.get('data'), (tuple, list)):
-                return False
-        except (IOError, ExtractorError):
-            return False
-
-        # this is probably peertube instance
-        known_valid_instances.add(hostname)
-        return True
-
     def _call_api(self, host, video_id, path, note=None, errnote=None, fatal=True):
         return self._download_json(
             self._API_BASE % (host, video_id, path), video_id,
@@ -322,7 +337,7 @@ class PeerTubeIE(InfoExtractor):
         }
 
 
-class PeerTubePlaylistIE(InfoExtractor):
+class PeerTubePlaylistIE(PeerTubeBaseIE):
     IE_NAME = 'PeerTube:Playlist'
     _TYPES = {
         'a': 'accounts',
@@ -394,7 +409,7 @@ class PeerTubePlaylistIE(InfoExtractor):
         if not mobj:
             return False
         hostname = mobj.group('host')
-        return PeerTubeIE._test_peertube_instance(None, hostname, True, False)
+        return cls._test_peertube_instance(None, hostname, True, False)
 
     def call_api(self, host, name, path, base, **kwargs):
         return self._download_json(

@@ -5,7 +5,7 @@ import itertools
 import re
 
 from .instances import instances
-from ..common import InfoExtractor
+from ..common import InfoExtractor, SelfHostedInfoExtractor
 from ...utils import ExtractorError, clean_html, preferredencoding
 from ...compat import compat_str
 
@@ -13,7 +13,7 @@ from ...compat import compat_str
 known_valid_instances = set()
 
 
-class MastodonBaseIE(InfoExtractor):
+class MastodonBaseIE(SelfHostedInfoExtractor):
 
     @classmethod
     def suitable(cls, url):
@@ -71,6 +71,20 @@ class MastodonBaseIE(InfoExtractor):
         # this is probably mastodon instance
         known_valid_instances.add(hostname)
         return True
+
+    @staticmethod
+    def _is_probe_enabled(ydl):
+        return ydl.params.get('check_mastodon_instance', False)
+
+    @classmethod
+    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname):
+        prefix = ie._search_regex(
+            # (MastodonIE._VALID_URL,
+            #  MastodonUserIE._VALID_URL,
+            #  MastodonUserNumericIE._VALID_URL),
+            cls._VALID_URL,
+            url, 'mastodon test', group='prefix', default=None)
+        return MastodonIE._test_mastodon_instance(ie, hostname, False, prefix)
 
 
 class MastodonIE(MastodonBaseIE):

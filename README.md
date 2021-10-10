@@ -93,8 +93,8 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
         * Pixiv redirect
             * Looking for test cases for char-mutated URLs
         * Firebase Dynamic Link: domains ending with `.page.link`
-    * Fediverse support (Mastodon, PeerTube and Misskey)
-        * For supported fediverses, ytdl-patched contains a huge list of instances. But you can opt-in for instance checking, in case of undiscovered instance.  To opt-in, use these flags: `--check-mastodon-instance`, `--check-peertube-instance`, `--check-misskey-instance`
+    * Self-hosted service support (Mastodon, PeerTube and Misskey)
+        * For supported self-hosted services, ytdl-patched contains a huge list of instances. But you can opt-in for instance checking, in case of undiscovered instance.  To opt-in, use these flags: `--check-mastodon-instance`, `--check-peertube-instance`, `--check-misskey-instance`
 
 * **NicoNico comments as subtitles**: Now you can download NicoNico comments as a subtitle.
     * No dependency required. Just use ytdl-patched.

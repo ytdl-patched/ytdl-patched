@@ -2,9 +2,15 @@ from __future__ import unicode_literals
 
 from ..utils import load_plugins
 
+
+from typing import TYPE_CHECKING, List, Tuple, Type
+if TYPE_CHECKING:
+    from .common import SelfHostedInfoExtractor
+
 try:
     from .lazy_extractors import *
     from .lazy_extractors import _ALL_CLASSES
+    _SELFHOSTED_CLASSES = []
     _LAZY_LOADER = True
     _PLUGIN_CLASSES = {}
 except ImportError:
@@ -16,6 +22,9 @@ if not _LAZY_LOADER:
         klass
         for name, klass in globals().items()
         if name.endswith('IE') and name not in ('GenericIE', 'StreamlinkIE')
+    ]
+    _SELFHOSTED_CLASSES = [
+        ie for ie in _ALL_CLASSES if ie._SELF_HOSTED
     ]
     _ALL_CLASSES.append(StreamlinkIE)
     _ALL_CLASSES.append(GenericIE)
@@ -29,6 +38,13 @@ def gen_extractor_classes():
     The order does matter; the first extractor matched is the one handling the URL.
     """
     return _ALL_CLASSES
+
+
+def gen_selfhosted_extractor_classes() -> List[Type[SelfHostedInfoExtractor]]:
+    """
+    Return a list of extractors for self-hosted services.
+    """
+    return _SELFHOSTED_CLASSES
 
 
 def gen_extractors():

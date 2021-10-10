@@ -137,15 +137,6 @@ from .arcpublishing import ArcPublishingIE
 from .medialaan import MedialaanIE
 from .simplecast import SimplecastIE
 from .wimtv import WimTVIE
-from .mastodon import (
-    MastodonIE,
-    MastodonUserIE,
-    MastodonUserNumericIE,
-)
-from .misskey import (
-    MisskeyIE,
-    MisskeyUserIE,
-)
 
 
 class GenericIE(InfoExtractor):
@@ -2601,30 +2592,12 @@ class GenericIE(InfoExtractor):
         else:
             video_id = self._generic_id(url)
 
-        # Test if the URL is for Fediverse instances
-        if self._downloader.params.get('check_mastodon_instance', False):
-            prefix = self._search_regex(
-                (MastodonIE._VALID_URL,
-                 MastodonUserIE._VALID_URL,
-                 MastodonUserNumericIE._VALID_URL),
-                url, 'mastodon test', group='prefix', default=None)
-            if MastodonIE._test_mastodon_instance(self, parsed_url.hostname, False, prefix):
-                return self.url_result(url)
-
-        if self._downloader.params.get('check_peertube_instance', False):
-            prefix = self._search_regex(
-                PeerTubeIE._VALID_URL,
-                url, 'peertube test', group='prefix', default=None)
-            if PeerTubeIE._test_peertube_instance(self, parsed_url.hostname, False, prefix):
-                return self.url_result(url)
-
-        if self._downloader.params.get('check_misskey_instance', False):
-            prefix = self._search_regex(
-                (MisskeyIE._VALID_URL,
-                 MisskeyUserIE._VALID_URL),
-                url, 'misskey test', group='prefix', default=None)
-            if MisskeyIE._test_misskey_instance(self, parsed_url.hostname, False, prefix):
-                return self.url_result(url)
+        # Test if the URL is for self-hosted instances
+        if not is_intentional:
+            from ..extractor import gen_selfhosted_extractor_classes
+            for ie in gen_selfhosted_extractor_classes():
+                if ie._is_probe_enabled(self._downloader) and ie._probe_selfhosted_service(self, url, parsed_url.hostname):
+                    return self.url_result(url, ie=ie.ie_key())
 
         self.to_screen('%s: Requesting header' % video_id)
 
