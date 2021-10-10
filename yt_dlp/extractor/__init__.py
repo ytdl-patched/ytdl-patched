@@ -40,7 +40,7 @@ def gen_extractor_classes():
     return _ALL_CLASSES
 
 
-def gen_selfhosted_extractor_classes() -> List[Type[SelfHostedInfoExtractor]]:
+def gen_selfhosted_extractor_classes() -> List[Type['SelfHostedInfoExtractor']]:
     """
     Return a list of extractors for self-hosted services.
     """

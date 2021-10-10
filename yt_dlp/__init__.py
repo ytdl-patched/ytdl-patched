@@ -762,10 +762,6 @@ def _real_main(argv=None):
         'printjsontypes': opts.printjsontypes,
         'live_download_mkv': opts.live_download_mkv,
         'lock_exclusive': opts.lock_exclusive,
-        # just for deprecation check
-        'autonumber': opts.autonumber or None,
-        'usetitle': opts.usetitle or None,
-        'useid': opts.useid or None,
     }
 
     with YoutubeDL(ydl_opts) as ydl:
