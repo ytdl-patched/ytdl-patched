@@ -829,7 +829,10 @@ class YoutubeDL(object):
         self.restore_console_title()
 
         if self.params.get('cookiefile') is not None:
-            self.cookiejar.save(ignore_discard=True, ignore_expires=True)
+            try:
+                self.cookiejar.save(ignore_discard=True, ignore_expires=True)
+            except BaseException as ex:
+                self.report_warning('Failed to save cookies: %s' & ex)
 
     def trouble(self, message=None, tb=None):
         """Determine action to take when a download problem appears.
