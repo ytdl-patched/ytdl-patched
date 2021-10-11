@@ -102,7 +102,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * To embed comments without problems: `--sub-format ass --write-subs --embed-subs --remux-video mkv`
 
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
-    * `17live`, `17live:clip`
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
     * `disneychris`
     * `dnatube`
@@ -125,6 +124,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `voicy`, `voicy:channel` (merged in upstream)
     * `whowatch` (merged in upstream)
     * `damtomo:video`, `damtomo:record` (merged in upstream)
+    * `17live`, `17live:clip` (merged in upstream)
     * `streamlink` (See below)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
