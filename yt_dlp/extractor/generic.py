@@ -2595,9 +2595,10 @@ class GenericIE(InfoExtractor):
         # Test if the URL is for self-hosted instances
         if not is_intentional:
             from ..extractor import gen_selfhosted_extractor_classes
-            for ie in gen_selfhosted_extractor_classes():
-                if ie._is_probe_enabled(self._downloader) and ie._probe_selfhosted_service(self, url, parsed_url.hostname):
-                    return self.url_result(url, ie=ie.ie_key())
+            _ie = next((ie for ie in gen_selfhosted_extractor_classes()
+                        if ie._is_probe_enabled(self._downloader) and ie._probe_selfhosted_service(self, url, parsed_url.hostname)), None)
+            if _ie:
+                return self.url_result(url, ie=_ie.ie_key())
 
         self.to_screen('%s: Requesting header' % video_id)
 
