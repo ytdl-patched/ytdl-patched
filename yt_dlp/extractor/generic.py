@@ -2562,7 +2562,7 @@ class GenericIE(InfoExtractor):
             host = host[4:]
         # japan BBS redirect
         if host in ('pinktower.com', 'jump.5ch.net', 'jump.megabbs.info'):
-            return self.url_result(parsed_url.query)
+            return self.url_result(compat_urllib_parse_unquote(parsed_url.query))
         # Pixiv redirect (usually requires referer to jump)
         if host in ('pixiv.net', 'www.pixiv.net') and path == '/jump.php':
             # Following URLs are valid and acceptable:
