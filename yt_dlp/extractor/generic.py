@@ -2576,6 +2576,11 @@ class GenericIE(InfoExtractor):
                 compat_str)
             if link:
                 return self.url_result(link)
+        # twpf.jp redirect
+        if host == 'twpf.jp' and path == '/home/jump':
+            link = try_get(compat_parse_qs(parsed_url.query), lambda qs: qs['p'][0], compat_str)
+            if link:
+                return self.url_result(link)
         # Firebase Dynamic Link
         # https://firebase.google.com/docs/dynamic-links/create-manually
         if host.endswith('.page.link'):
