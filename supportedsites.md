@@ -1227,7 +1227,7 @@
  - **Viddler**
  - **Videa**
  - **video.arnes.si**: Arnes Video
- - **video.google:search**: Google Video search
+ - **video.google:search**: Google Video search (Currently broken)
  - **video.sky.it**
  - **video.sky.it:live**
  - **VideoDetective**
