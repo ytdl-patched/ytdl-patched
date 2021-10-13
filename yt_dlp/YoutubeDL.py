@@ -1088,7 +1088,7 @@ class YoutubeDL(object):
 
         def create_key(outer_mobj):
             if not outer_mobj.group('has_key'):
-                return f'%{outer_mobj.group(0)}'
+                return outer_mobj.group(0)
             key = outer_mobj.group('key')
             mobj = re.match(INTERNAL_FORMAT_RE, key)
             initial_field = mobj.group('fields').split('.')[-1] if mobj else ''
@@ -1159,10 +1159,8 @@ class YoutubeDL(object):
                 compat_str(v),
                 restricted=self.params.get('restrictfilenames'),
                 is_id=(k == 'id' or k.endswith('_id')))
-            outtmpl = self.outtmpl_dict.get(tmpl_type, self.outtmpl_dict['default'])
-            outtmpl, template_dict = self.prepare_outtmpl(outtmpl, info_dict, sanitize)
-            outtmpl = self.escape_outtmpl(self._outtmpl_expandpath(outtmpl))
-            filename = outtmpl % template_dict
+            outtmpl = self._outtmpl_expandpath(self.outtmpl_dict.get(tmpl_type, self.outtmpl_dict['default']))
+            filename = self.evaluate_outtmpl(outtmpl, info_dict, sanitize)
 
             force_ext = OUTTMPL_TYPES.get(tmpl_type)
             if filename and force_ext is not None:
@@ -1911,11 +1909,18 @@ class YoutubeDL(object):
             # because this is the behavior what I want
             output_ext = self.params.get('merge_output_format') or 'mkv'
 
+            filtered = lambda *keys: filter(None, (traverse_obj(fmt, *keys) for fmt in formats_info))
+
             new_dict = {
                 'requested_formats': formats_info,
-                'format': '+'.join(fmt_info.get('format') for fmt_info in formats_info),
-                'format_id': '+'.join(fmt_info.get('format_id') for fmt_info in formats_info),
+                'format': '+'.join(filtered('format')),
+                'format_id': '+'.join(filtered('format_id')),
                 'ext': output_ext,
+                'protocol': '+'.join(map(determine_protocol, formats_info)),
+                'language': '+'.join(orderedSet(filtered('language'))),
+                'format_note': '+'.join(orderedSet(filtered('format_note'))),
+                'filesize_approx': sum(filtered('filesize', 'filesize_approx')),
+                'tbr': sum(filtered('tbr', 'vbr', 'abr')),
             }
 
             if the_only_video:
@@ -1933,6 +1938,7 @@ class YoutubeDL(object):
                 new_dict.update({
                     'acodec': the_only_audio.get('acodec'),
                     'abr': the_only_audio.get('abr'),
+                    'asr': the_only_audio.get('asr'),
                 })
 
             return new_dict
@@ -2816,14 +2822,9 @@ class YoutubeDL(object):
                     dl_filename = existing_file(full_filename, temp_filename)
                     info_dict['__real_download'] = False
 
-                    _protocols = set(determine_protocol(f) for f in requested_formats)
-                    if len(_protocols) == 1:  # All requested formats have same protocol
-                        info_dict['protocol'] = _protocols.pop()
-                    directly_mergable = FFmpegFD.can_merge_formats(info_dict, self.params)
                     if dl_filename is not None:
                         self.report_file_already_downloaded(dl_filename)
-                    elif (directly_mergable and get_suitable_downloader(
-                            info_dict, self.params, to_stdout=(temp_filename == '-')) == FFmpegFD):
+                    elif get_suitable_downloader(info_dict, self.params, to_stdout=temp_filename == '-'):
                         info_dict['url'] = '\n'.join(f['url'] for f in requested_formats)
                         success, real_download = self.dl(temp_filename, info_dict)
                         info_dict['__real_download'] = real_download
@@ -2841,7 +2842,7 @@ class YoutubeDL(object):
                                 'The formats won\'t be merged.')
 
                         if temp_filename == '-':
-                            reason = ('using a downloader other than ffmpeg' if directly_mergable
+                            reason = ('using a downloader other than ffmpeg' if FFmpegFD.can_merge_formats(info_dict)
                                       else 'but the formats are incompatible for simultaneous download' if merger.available
                                       else 'but ffmpeg is not installed')
                             self.report_warning(
@@ -2937,8 +2938,8 @@ class YoutubeDL(object):
                         'writing DASH m4a. Only some players support this container',
                         FFmpegFixupM4aPP)
 
-                    downloader = (get_suitable_downloader(info_dict, self.params).__name__
-                                  if 'protocol' in info_dict else None)
+                    downloader = get_suitable_downloader(info_dict, self.params) if 'protocol' in info_dict else None
+                    downloader = downloader.__name__ if downloader else None
                     ffmpeg_fixup(info_dict.get('requested_formats') is None and downloader == 'HlsFD',
                                  'malformed AAC bitstream detected', FFmpegFixupM3u8PP)
                     ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'malformed timestamps detected', FFmpegFixupTimestampPP)
