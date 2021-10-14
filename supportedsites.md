@@ -1123,6 +1123,8 @@
  - **TrailerAddict** (Currently broken)
  - **Trilulilu**
  - **Trovo**
+ - **TrovoChannelClip**: All Clips of a trovo.live channel, "trovoclip" keyword
+ - **TrovoChannelVod**: All VODs of a trovo.live channel, "trovovod" keyword
  - **TrovoVod**
  - **TruNews**
  - **TruTV**
