@@ -2054,9 +2054,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 self._n_cache[player_id] = response_data['data']
             return self._n_cache[player_id]
         except Exception as e:
-            tb = traceback.format_exc()
             raise ExtractorError(
-                'n-param decryption failed: ' + tb, cause=e)
+                'n-param decryption failed: ' + e, cause=e)
 
     def _extract_signature_timestamp(self, video_id, player_url, ytcfg=None, fatal=False):
         """
