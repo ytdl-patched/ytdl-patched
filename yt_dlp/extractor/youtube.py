@@ -1880,6 +1880,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         super(YoutubeIE, self).__init__(*args, **kwargs)
         self._code_cache = {}
         self._player_cache = {}
+        self._n_cache = {}
 
     def _extract_player_url(self, *ytcfgs, webpage=None):
         player_url = traverse_obj(
@@ -2035,6 +2036,27 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             tb = traceback.format_exc()
             raise ExtractorError(
                 'Signature extraction failed: ' + tb, cause=e)
+
+    def _decrypt_n_params(self, n, player_url, video_id):
+        """Turn the n field into a working value"""
+
+        if player_url is None:
+            raise ExtractorError('Cannot decrypt n-param without player_url')
+
+        try:
+            player_id = (player_url, n)
+            if player_id not in self._n_cache:
+                response_data = self._download_json(
+                    'https://bookish-octo-barnacle-nao20010128nao.vercel.app/youtube/nparams/decrypt', video_id,
+                    query={'player': player_url, 'n': n},
+                    note='Delegating n-param decryption and waiting for result')
+                assert response_data['status'] == 'ok'
+                self._n_cache[player_id] = response_data['data']
+            return self._n_cache[player_id]
+        except Exception as e:
+            tb = traceback.format_exc()
+            raise ExtractorError(
+                'n-param decryption failed: ' + tb, cause=e)
 
     def _extract_signature_timestamp(self, video_id, player_url, ytcfg=None, fatal=False):
         """
@@ -2832,10 +2854,17 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 self.raise_no_formats(reason, expected=True)
 
         for f in formats:
-            if '&c=WEB&' in f['url'] and '&ratebypass=yes&' not in f['url']:  # throttled
-                f['source_preference'] = -10
-                # TODO: this method is not reliable
-                f['format_note'] = format_field(f, 'format_note', '%s ') + '(maybe throttled)'
+            if '&c=WEB' in f['url'] and '&ratebypass=yes&' not in f['url']:  # throttled
+                try:
+                    old_n = parse_qs(f['url'])['n'][0]
+                    new_n = self._decrypt_n_params(old_n, player_url, video_id)
+                    assert new_n != old_n
+                    f['url'] = update_url_query(f['url'], {'n': new_n})
+                except Exception as e:
+                    self.report_warning(e)
+                    f['source_preference'] = -10
+                    # TODO: this method is not reliable
+                    f['format_note'] = format_field(f, 'format_note', '%s ') + '(maybe throttled)'
 
         # Source is given priority since formats that throttle are given lower source_preference
         # When throttling issue is fully fixed, remove this
