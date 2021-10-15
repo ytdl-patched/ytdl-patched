@@ -1,4 +1,4 @@
 mutagen
 pycryptodomex
 websockets
-streamlink
+streamlink==2.3.0
