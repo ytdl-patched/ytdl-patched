@@ -99,7 +99,7 @@ class OdnoklassnikiIE(InfoExtractor):
         'skip': 'Video has not been found',
     }, {
         'note': 'Only available in mobile webpage',
-        'url': ' https://m.ok.ru/video/2361249957145',
+        'url': 'https://m.ok.ru/video/2361249957145',
         'only_matching': True,
     }, {
         'url': 'http://ok.ru/web-api/video/moviePlayer/20079905452',
