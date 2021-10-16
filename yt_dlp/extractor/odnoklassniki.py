@@ -141,23 +141,13 @@ class OdnoklassnikiIE(InfoExtractor):
 
     def _real_extract(self, url):
         try:
-            desktop_result = self._extract_desktop(url)
-            desktop_error = None
+            return self._extract_desktop(url)
         except ExtractorError as e:
-            desktop_result = None
-            desktop_error = e
-
-        try:
-            mobile_result = self._extract_mobile(url)
-            mobile_error = None
-        except ExtractorError as e:
-            mobile_result = None
-            mobile_error = e
-
-        if not desktop_result and not mobile_result:
-            raise desktop_error or mobile_error
-
-        return self._merge_video_infodicts(desktop_result, mobile_result)
+            try:
+                return self._extract_mobile(url)
+            except ExtractorError:
+                # error message of desktop webpage is in English
+                raise e
 
     def _extract_desktop(self, url):
         start_time = int_or_none(compat_parse_qs(
