@@ -828,7 +828,7 @@ def parseOpts(overrideArguments=None):
         help='Specify a custom referer, use if the video access is restricted to one domain',
     )
     workarounds.add_option(
-        '--add-header',
+        '--add-header', '--header', '-H',
         metavar='FIELD:VALUE', dest='headers', default={}, type='str',
         action='callback', callback=_dict_from_options_callback,
         callback_kwargs={'multiple_keys': False},
