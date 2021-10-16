@@ -100,7 +100,11 @@ class OdnoklassnikiIE(InfoExtractor):
     }, {
         'note': 'Only available in mobile webpage',
         'url': 'https://m.ok.ru/video/2361249957145',
-        'only_matching': True,
+        'info_dict': {
+            'id': '2361249957145',
+            'title': 'Быковское крещение',
+            'duration': 3038.181,
+        },
     }, {
         'url': 'http://ok.ru/web-api/video/moviePlayer/20079905452',
         'only_matching': True,
