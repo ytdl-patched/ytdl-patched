@@ -12,6 +12,7 @@ from ..compat import (
 )
 from ..utils import (
     ExtractorError,
+    float_or_none,
     unified_strdate,
     int_or_none,
     qualities,
@@ -97,6 +98,10 @@ class OdnoklassnikiIE(InfoExtractor):
         },
         'skip': 'Video has not been found',
     }, {
+        'note': 'Only available in mobile webpage',
+        'url': 'https://m.ok.ru/video/2361249957145',
+        'only_matching': True,
+    }, {
         'url': 'http://ok.ru/web-api/video/moviePlayer/20079905452',
         'only_matching': True,
     }, {
@@ -131,13 +136,34 @@ class OdnoklassnikiIE(InfoExtractor):
             return mobj.group('url')
 
     def _real_extract(self, url):
+        try:
+            desktop_result = self._extract_desktop(url)
+            desktop_error = None
+        except ExtractorError as e:
+            desktop_result = None
+            desktop_error = e
+
+        try:
+            mobile_result = self._extract_mobile(url)
+            mobile_error = None
+        except ExtractorError as e:
+            mobile_result = None
+            mobile_error = e
+
+        if not desktop_result and not mobile_result:
+            raise desktop_error or mobile_error
+
+        return self._merge_video_infodicts(desktop_result, mobile_result)
+
+    def _extract_desktop(self, url):
         start_time = int_or_none(compat_parse_qs(
             compat_urllib_parse_urlparse(url).query).get('fromTime', [None])[0])
 
         video_id = self._match_id(url)
 
         webpage = self._download_webpage(
-            'http://ok.ru/video/%s' % video_id, video_id)
+            'http://ok.ru/video/%s' % video_id, video_id,
+            note='Downloading desktop webpage')
 
         error = self._search_regex(
             r'[^>]+class="vp_video_stub_txt"[^>]*>([^<]+)<',
@@ -261,7 +287,39 @@ class OdnoklassnikiIE(InfoExtractor):
             if payment_info:
                 self.raise_no_formats('This video is paid, subscribe to download it', expected=True)
 
-        self._sort_formats(formats)
+        if False:
+            self._sort_formats(formats)
 
         info['formats'] = formats
         return info
+
+    def _extract_mobile(self, url):
+        video_id = self._match_id(url)
+
+        webpage = self._download_webpage(
+            'http://m.ok.ru/video/%s' % video_id, video_id,
+            note='Downloading mobile webpage')
+
+        error = self._search_regex(
+            # popular] video</a><div class="empty">[reason in russian]</div>
+            r'видео</a>\s*<div\s+class="empty">(.+?)</div>',
+            webpage, 'error', default=None)
+        if error:
+            raise ExtractorError(error, expected=True)
+
+        json_data = self._search_regex(
+            r'data-video="(.+?)"', webpage, 'json data')
+        json_data = self._parse_json(unescapeHTML(json_data), video_id) or {}
+
+        return {
+            'id': video_id,
+            'title': json_data.get('videoName'),
+            'duration': float_or_none(json_data.get('videoDuration'), scale=1000),
+            'thumbnail': json_data.get('videoPosterSrc'),
+            'formats': [{
+                'format_id': 'mobile',
+                'url': json_data.get('videoSrc'),
+                'ext': 'mp4',
+                'source_preference': -1,
+            }]
+        }

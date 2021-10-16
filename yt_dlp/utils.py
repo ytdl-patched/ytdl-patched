@@ -1032,6 +1032,10 @@ class XAttrUnavailableError(YoutubeDLError):
     pass
 
 
+class DummyError(YoutubeDLError):
+    pass
+
+
 def _create_http_connection(ydl_handler, http_class, is_https, *args, **kwargs):
     # Working around python 2 bug (see http://bugs.python.org/issue17849) by limiting
     # expected HTTP responses to meet HTTP/1.0 or later (see also
