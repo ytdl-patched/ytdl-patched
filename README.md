@@ -1,3 +1,7 @@
+# **CAME HERE FOR HACKTOBERFEST?**
+**Your PRs are unlikely qualified for Hacktoberfest. Don't expect to qualify, unless it's high quality enough.**
+
+
 <div align="center">
 
 # YTDL-PATCHED
