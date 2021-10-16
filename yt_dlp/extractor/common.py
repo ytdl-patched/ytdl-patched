@@ -64,6 +64,7 @@ from ..utils import (
     int_or_none,
     js_to_json,
     JSON_LD_RE,
+    merge_dicts,
     mimetype2ext,
     network_exceptions,
     NO_DEFAULT,
@@ -2600,10 +2601,6 @@ class InfoExtractor(object):
     def _parse_mpd_formats_and_subtitles(
             self, mpd_doc, mpd_id=None, mpd_base_url='', mpd_url=None):
 
-        if not mpd_url:
-            b64data = base64.b64encode(mpd_doc.encode('utf-8')).decode()
-            mpd_url = f'data:application/dash+xml;base64,{b64data}'
-
         """
         Parse formats from MPD manifest.
         References:
@@ -3667,6 +3664,21 @@ class InfoExtractor(object):
         if val is None:
             return [] if default is NO_DEFAULT else default
         return list(val) if casesense else [x.lower() for x in val]
+
+    def _merge_video_infodicts(self, *dicts, sort_formats=True):
+        valid_dicts = list(filter(None, dicts))
+        all_info = merge_dicts(*filter(None, dicts))
+
+        all_formats = list(x for y in valid_dicts for x in (y.get('formats') or []))
+        if sort_formats:
+            self._sort_formats(all_formats)
+        all_info['formats'] = all_formats
+
+        all_subtitles = self._merge_subtitles(*filter(None, (x.get('subtitles') for x in valid_dicts)))
+        if all_subtitles:
+            all_info['subtitles'] = all_subtitles
+
+        return all_info
 
 
 class SearchInfoExtractor(InfoExtractor):
