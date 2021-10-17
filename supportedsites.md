@@ -404,6 +404,8 @@
  - **GoToStage**
  - **GPUTechConf**
  - **Groupon**
+ - **Hanimetv**
+ - **HanimetvPlaylist**
  - **hbo**
  - **HearThisAt**
  - **Heise**
