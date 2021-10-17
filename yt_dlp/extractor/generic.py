@@ -3612,7 +3612,9 @@ class GenericIE(InfoExtractor):
                 # See https://github.com/ytdl-org/youtube-dl/pull/16735
                 pass
 
-        if waitlist:
+        if len(waitlist) == 1:
+            return waitlist[0]
+        elif waitlist:
             return self.playlist_result(waitlist, video_id, video_id)
 
         # Video.js embed
