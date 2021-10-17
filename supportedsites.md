@@ -229,7 +229,9 @@
  - **Crackle**
  - **CrooksAndLiars**
  - **crunchyroll**
+ - **crunchyroll:beta**
  - **crunchyroll:playlist**
+ - **crunchyroll:playlist:beta**
  - **CSpan**: C-SPAN
  - **CtsNews**: 華視新聞
  - **CTV**
