@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         python: [
-          { name: '3.10-dev', may_fail: false, major: 3, special: '' },
+          { name: '3.10', may_fail: false, major: 3, special: '' },
           { name: '3.9', may_fail: false, major: 3, special: '' },
           { name: '3.8', may_fail: false, major: 3, special: '' },
           { name: '3.7', may_fail: false, major: 3, special: '' },
