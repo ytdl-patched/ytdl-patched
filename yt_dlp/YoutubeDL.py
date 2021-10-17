@@ -943,8 +943,13 @@ class YoutubeDL(object):
         outtmpl_dict = self.params.get('outtmpl', {})
         if not isinstance(outtmpl_dict, dict):
             outtmpl_dict = {'default': outtmpl_dict}
+        # Remove spaces in the default template
+        if self.params.get('restrictfilenames'):
+            sanitize = lambda x: x.replace(' - ', ' ').replace(' ', '-')
+        else:
+            sanitize = lambda x: x
         outtmpl_dict.update({
-            k: v for k, v in DEFAULT_OUTTMPL.items()
+            k: sanitize(v) for k, v in DEFAULT_OUTTMPL.items()
             if outtmpl_dict.get(k) is None})
         for key, val in outtmpl_dict.items():
             if isinstance(val, bytes):
@@ -2263,6 +2268,9 @@ class YoutubeDL(object):
         if info_dict.get('display_id') is None and 'id' in info_dict:
             info_dict['display_id'] = info_dict['id']
 
+        if info_dict.get('duration') is not None:
+            info_dict['duration_string'] = formatSeconds(info_dict['duration'])
+
         for ts_key, date_key in (
                 ('timestamp', 'upload_date'),
                 ('release_timestamp', 'release_date'),
@@ -2381,10 +2389,10 @@ class YoutubeDL(object):
                     res=self.format_resolution(format),
                     note=format_field(format, 'format_note', ' (%s)'),
                 )
-            # Automatically determine protocol if missing (useful for format
-            # selection purposes)
             if format.get('protocol') is None:
                 format['protocol'] = determine_protocol(format)
+            if format.get('resolution') is None:
+                format['resolution'] = self.format_resolution(format, default=None)
             # Add HTTP headers, so that external programs can use them from the
             # json output
             full_format_info = info_dict.copy()
