@@ -74,6 +74,18 @@ class HanimetvIE(InfoExtractor):
             'timestamp': 1633016880,
             'description': 'A serious honor student "Chizuru Shiina" was shunned by her classmates due to her being a teacher\'s pet, but none of that mattered whenever she ran into her favorite teacher that she so deeply admired...',
         }
+    }, {
+        'url': 'https://hanime.tv/videos/hentai/kutsujoku-2-ep-2',
+        'info_dict': {
+            'series': 'Kutsujoku 2',
+            'episode_number': 2,
+        }
+    }, {
+        'url': 'https://hanime.tv/videos/hentai/doukyuusei-2-ep-7',
+        'info_dict': {
+            'series': 'Doukyuusei 2',
+            'episode_number': 7,
+        }
     }]
 
     @classmethod
@@ -106,7 +118,7 @@ class HanimetvIE(InfoExtractor):
 
         title = traverse_obj(hentai_video, 'name', default=video_id)
         series_and_episode = self._search_regex(
-            r'^(.+)[\s-](\d+)$', title, 'series and episode', default=(None, None),
+            r'(?i)^(.+?)(?:[\s-]*Ep(?:\.|isode)?)?[\s-]*(\d+)$', title, 'series and episode', default=(None, None),
             fatal=False, group=(1, 2))
 
         release_date = traverse_obj(hentai_video, 'released_at')
