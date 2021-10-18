@@ -106,7 +106,7 @@ class HanimetvIE(InfoExtractor):
 
         title = traverse_obj(hentai_video, 'name', default=video_id)
         series_and_episode = self._search_regex(
-            r'^(.+)[\s-](\d+)$', title, 'series and episode', default=(None, None),
+            r'^(.+?)(?:\s*(?:Ep\.|Episode)\s*|[\s-]*)(\d+)$', title, 'series and episode', default=(None, None),
             fatal=False, group=(1, 2))
 
         release_date = traverse_obj(hentai_video, 'released_at')
