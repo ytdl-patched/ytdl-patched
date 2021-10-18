@@ -131,7 +131,6 @@ class HanimetvPlaylistIE(InfoExtractor):
     _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?hanime\.tv)/videos/hentai/(?P<vid>[a-zA-Z0-9-]+?)\?playlist_id=(?P<id>[a-zA-Z0-9-]+)'
 
     def _entries(self, url, host, playlist_id):
-        # https://hw.hanime.tv/api/v8/playlist_hentai_videos?playlist_id=e7qjufonjw4foyq8akqs&__order=sequence,DESC&__offset=24&__count=24&personalized=1
         for page_num in itertools.count(1):
             page_data = self._download_json(
                 'https://hw.hanime.tv/api/v8/playlist_hentai_videos', playlist_id,
