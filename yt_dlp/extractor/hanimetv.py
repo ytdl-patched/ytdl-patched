@@ -87,7 +87,7 @@ class HanimetvIE(InfoExtractor):
 
         formats = []
         streams = traverse_obj(json_data, ('videos_manifest', 'servers', ..., 'streams', ...))
-        for stream in streams:
+        for stream in streams or []:
             url = stream['url']
             if not url:
                 continue
@@ -100,16 +100,14 @@ class HanimetvIE(InfoExtractor):
                 'protocol': 'm3u8',
             })
 
-        title = traverse_obj(json_data, ('hentai_video', 'name'), default=video_id)
+        hentai_video = traverse_obj(json_data, 'hentai_video')
+
+        title = traverse_obj(hentai_video, 'name', default=video_id)
         series_and_episode = self._search_regex(
             r'^(.+)[\s-](\d+)$', title, 'series and episode', default=(None, None),
             fatal=False, group=(1, 2))
 
-        alt_title = traverse_obj(json_data, ('hentai_video', 'titles', ..., 'title'), get_all=False)
-        description = clean_html(traverse_obj(json_data, ('hentai_video', 'description')))
-        publisher = traverse_obj(json_data, ('hentai_video', 'brand'))
-        tags = traverse_obj(json_data, ('hentai_video', 'hentai_tags', ..., 'text'))
-        release_date = traverse_obj(json_data, ('hentai_video', 'released_at'))
+        release_date = traverse_obj(hentai_video, 'released_at')
         if release_date:
             release_date = release_date[:10].replace('-', '')
 
@@ -117,20 +115,27 @@ class HanimetvIE(InfoExtractor):
         return {
             'id': video_id,
             'formats': formats,
-            'description': description,
-            'creator': publisher,
+            'description': clean_html(traverse_obj(hentai_video, 'description')),
+            'creator': traverse_obj(hentai_video, 'brand'),
             'title': title,
-            'alt_title': alt_title,
-            'tags': tags,
+            'alt_title': traverse_obj(hentai_video, ('titles', ..., 'title'), get_all=False),
+            'tags': traverse_obj(hentai_video, ('hentai_tags', ..., 'text')),
             'release_date': release_date,
+            'thumbnails': [{
+                'url': traverse_obj(hentai_video, 'poster_url'),
+                'id': 'poster',
+            }, {
+                'url': traverse_obj(hentai_video, 'cover_url'),
+                'id': 'cover',
+            }],
 
             'series': series_and_episode[0],
             'episode_number': int_or_none(series_and_episode[1]),
 
-            'timestamp': traverse_obj(json_data, ('hentai_video', 'released_at_unix')),
-            'view_count': traverse_obj(json_data, ('hentai_video', 'views')),
-            'like_count': traverse_obj(json_data, ('hentai_video', 'likes')),
-            'dislike_count': traverse_obj(json_data, ('hentai_video', 'dislikes')),
+            'timestamp': traverse_obj(hentai_video, 'released_at_unix'),
+            'view_count': traverse_obj(hentai_video, 'views'),
+            'like_count': traverse_obj(hentai_video, 'likes'),
+            'dislike_count': traverse_obj(hentai_video, 'dislikes'),
             'age_limit': 18,
         }
 
