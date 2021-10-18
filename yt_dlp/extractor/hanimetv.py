@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import itertools
 from .common import InfoExtractor
 from ..utils import (
+    clean_html,
     int_or_none,
     time_millis,
     traverse_obj,
@@ -100,9 +101,12 @@ class HanimetvIE(InfoExtractor):
             })
 
         title = traverse_obj(json_data, ('hentai_video', 'name'), default=video_id)
+        series_and_episode = self._search_regex(
+            r'^(.+)[\s-](\d+)$', title, 'series and episode', default=(None, None),
+            fatal=False, group=(1, 2))
 
         alt_title = traverse_obj(json_data, ('hentai_video', 'titles', ..., 'title'), get_all=False)
-        description = traverse_obj(json_data, ('hentai_video', 'description'))
+        description = clean_html(traverse_obj(json_data, ('hentai_video', 'description')))
         publisher = traverse_obj(json_data, ('hentai_video', 'brand'))
         tags = traverse_obj(json_data, ('hentai_video', 'hentai_tags', ..., 'text'))
         release_date = traverse_obj(json_data, ('hentai_video', 'released_at'))
@@ -119,6 +123,10 @@ class HanimetvIE(InfoExtractor):
             'alt_title': alt_title,
             'tags': tags,
             'release_date': release_date,
+
+            'series': series_and_episode[0],
+            'episode_number': int_or_none(series_and_episode[1]),
+
             'timestamp': traverse_obj(json_data, ('hentai_video', 'released_at_unix')),
             'view_count': traverse_obj(json_data, ('hentai_video', 'views')),
             'like_count': traverse_obj(json_data, ('hentai_video', 'likes')),
