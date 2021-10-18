@@ -542,7 +542,8 @@ from .groupon import GrouponIE
 from .hbo import HBOIE
 from .hanimetv import (
     HanimetvIE,
-    HanimetvPlaylistIE
+    HanimetvPlaylistIE,
+    HanimeAllIE,
 )
 from .hearthisat import HearThisAtIE
 from .heise import HeiseIE

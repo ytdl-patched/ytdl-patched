@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
 import itertools
+import json
+
 from .common import InfoExtractor
 from ..utils import (
     clean_html,
@@ -183,3 +185,34 @@ class HanimetvPlaylistIE(InfoExtractor):
         playlist_info = next(entries)['playlist']
         return self.playlist_result(
             entries, playlist_id, playlist_title=playlist_info['title'])
+
+
+class HanimeAllIE(InfoExtractor):
+    IE_DESC = False
+    _VALID_URL = r'hanime-all'
+
+    def _entries(self):
+        for i in itertools.count(1):
+            page = self._download_json(
+                'https://search.htv-services.com/', 'hanime-all',
+                note=f'Downloading page {i}', data=json.dumps({
+                    'blacklist': [],
+                    'brands': [],
+                    'order_by': 'created_at_unix',
+                    'ordering': 'desc',
+                    'page': i,
+                    'search_text': '',
+                    'tags': [],
+                    'tags_mode': 'AND',
+                }).encode('utf-8'), headers={
+                    'Content-Type': 'application/json;charset=utf-8',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Origin': 'https://hanime.tv',
+                })
+            hits = self._parse_json(page['hits'], 'hanime-all')
+            if not hits:
+                break
+            yield from (self.url_result('https://hanime.tv/videos/hentai/%s' % x['slug']) for x in hits)
+
+    def _real_extract(self, url):
+        return self.playlist_result(self._entries())
