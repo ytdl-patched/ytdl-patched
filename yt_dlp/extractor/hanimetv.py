@@ -4,9 +4,8 @@ import itertools
 from .common import InfoExtractor
 from ..utils import (
     int_or_none,
-    smuggle_url,
+    time_millis,
     traverse_obj,
-    unsmuggle_url,
 )
 
 
@@ -74,14 +73,16 @@ class HanimetvIE(InfoExtractor):
         }
     }]
 
+    @classmethod
+    def suitable(cls, url):
+        return super(HanimetvIE, cls).suitable(url) and not HanimetvPlaylistIE.suitable(url)
+
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
-        url, json_data = unsmuggle_url(url)
-        if not json_data:
-            webpage = self._download_webpage(url, video_id)
-            json_data = self._html_search_regex(r'window\.__NUXT__=(\{.+?});\s*<\/script>', webpage, 'json data')
-            json_data = self._parse_json(json_data, video_id)['state']['data']['video']
+        webpage = self._download_webpage(url, video_id)
+        json_data = self._html_search_regex(r'window\.__NUXT__=(\{.+?});\s*<\/script>', webpage, 'json data')
+        json_data = self._parse_json(json_data, video_id)['state']['data']['video']
 
         formats = []
         streams = traverse_obj(json_data, ('videos_manifest', 'servers', ..., 'streams', ...))
@@ -127,26 +128,46 @@ class HanimetvIE(InfoExtractor):
 
 
 class HanimetvPlaylistIE(InfoExtractor):
-    # NOTE: there must be a better way to do the same
-    _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?hanime\.tv)/videos/hentai/(?P<vid>.+?)\?playlist_id=(?P<id>[a-zA-Z0-9-]+)'
+    _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?hanime\.tv)/videos/hentai/(?P<vid>[a-zA-Z0-9-]+?)\?playlist_id=(?P<id>[a-zA-Z0-9-]+)'
 
     def _entries(self, url, host, playlist_id):
-        page_url = url
+        # https://hw.hanime.tv/api/v8/playlist_hentai_videos?playlist_id=e7qjufonjw4foyq8akqs&__order=sequence,DESC&__offset=24&__count=24&personalized=1
         for page_num in itertools.count(1):
-            webpage = self._download_webpage(page_url, playlist_id, note=f'Downloading page {page_num}')
-
-            json_data = self._html_search_regex(r'window\.__NUXT__=(.+?);<\/script>', webpage, 'json data')
-            json_data = self._parse_json(json_data, playlist_id)['state']['data']['video']
-
-            curr_vid_url = smuggle_url(f'https://{host}/videos/hentai/' + json_data['hentai_video']['slug'], json_data)
-            yield self.url_result(curr_vid_url, ie=HanimetvIE.ie_key())
-
-            next_vid_id = traverse_obj(json_data, ('next_hentai_video', 'slug'))
-            if not next_vid_id:
+            page_data = self._download_json(
+                'https://hw.hanime.tv/api/v8/playlist_hentai_videos', playlist_id,
+                note='Downloading page %d' % page_num,
+                query={
+                    'playlist_id': playlist_id,
+                    '__order': 'sequence,DESC',
+                    '__offset': str(24 * (page_num - 1)),
+                    '__count': '24',
+                    'personalized': '0',
+                }, headers={
+                    'X-Signature': 'null',
+                    'X-Signature-Version': 'web2',
+                    'X-Time': str(int(time_millis() / 1000)),
+                    'X-Token': 'null',
+                })
+            if page_num == 1:
+                # yield page_data only once to extract more data in _real_extract
+                yield page_data
+            videos = page_data['fapi']['data']
+            if not videos:
                 break
-
-            page_url = f'https://{host}/videos/hentai/{next_vid_id}?playlist_id={playlist_id}'
+            for vid in videos:
+                yield self.url_result(
+                    f'https://{host}/videos/hentai/{vid["slug"]}',
+                    video_id=vid["slug"], video_title=vid.get('name'))
 
     def _real_extract(self, url):
-        host, playlist_id = self._match_valid_url(url).group('host', 'id')
-        return self.playlist_result(self._entries(url, host, playlist_id), playlist_id)
+        host, video_id, playlist_id = self._match_valid_url(url).group('host', 'vid', 'id')
+
+        if self.get_param('noplaylist'):
+            self.to_screen('Downloading just video %s because of --no-playlist' % video_id)
+            return self.url_result(f'https://{host}/videos/hentai/{video_id}', ie=HanimetvIE.ie_key(), video_id=video_id)
+        # self.to_screen('Downloading playlist %s; add --no-playlist to just download video %s' % (playlist_id, video_id))
+
+        entries = self._entries(url, host, playlist_id)
+        playlist_info = next(entries)['playlist']
+        return self.playlist_result(
+            entries, playlist_id, playlist_title=playlist_info['title'])
