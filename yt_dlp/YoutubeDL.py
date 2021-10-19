@@ -2186,25 +2186,14 @@ class YoutubeDL(object):
                 t.get('url')))
 
             def thumbnail_tester():
-                if self.params.get('check_formats'):
-                    test_all = True
-                    to_screen = lambda msg: self.to_screen(f'[info] {msg}')
-                else:
-                    test_all = False
-                    to_screen = self.write_debug
-
                 def test_thumbnail(t):
-                    if not test_all and not t.get('_test_url'):
-                        return True
-                    to_screen('Testing thumbnail %s' % t['id'])
+                    self.to_screen(f'[info] Testing thumbnail {t["id"]}')
                     try:
                         self.urlopen(HEADRequest(t['url']))
                     except network_exceptions as err:
-                        to_screen('Unable to connect to thumbnail %s URL "%s" - %s. Skipping...' % (
-                            t['id'], t['url'], error_to_compat_str(err)))
+                        self.to_screen(f'[info] Unable to connect to thumbnail {t["id"]} URL {t["url"]!r} - {err}. Skipping...')
                         return False
                     return True
-
                 return test_thumbnail
 
             for i, t in enumerate(thumbnails):
@@ -2214,7 +2203,7 @@ class YoutubeDL(object):
                     t['resolution'] = '%dx%d' % (t['width'], t['height'])
                 t['url'] = sanitize_url(t['url'])
 
-            if self.params.get('check_formats') is not False:
+            if self.params.get('check_formats'):
                 info_dict['thumbnails'] = LazyList(filter(thumbnail_tester(), thumbnails[::-1])).reverse()
             else:
                 info_dict['thumbnails'] = thumbnails
@@ -2393,6 +2382,8 @@ class YoutubeDL(object):
                 format['protocol'] = determine_protocol(format)
             if format.get('resolution') is None:
                 format['resolution'] = self.format_resolution(format, default=None)
+            if format.get('dynamic_range') is None and format.get('vcodec') != 'none':
+                format['dynamic_range'] = 'SDR'
             # Add HTTP headers, so that external programs can use them from the
             # json output
             full_format_info = info_dict.copy()
@@ -3381,6 +3372,7 @@ class YoutubeDL(object):
                     format_field(f, 'ext'),
                     self.format_resolution(f),
                     format_field(f, 'fps', '%d'),
+                    format_field(f, 'dynamic_range', '%s', ignore=(None, 'SDR')).replace('HDR', ''),
                     '|',
                     format_field(f, 'filesize', ' %s', func=format_bytes) + format_field(f, 'filesize_approx', '~%s', func=format_bytes),
                     format_field(f, 'tbr', '%4dk'),
@@ -3399,7 +3391,7 @@ class YoutubeDL(object):
                     ))),
                     *debug_info(f),
                 ] for f in formats if f.get('preference') is None or f['preference'] >= -1000]
-            header_line = ['ID', 'EXT', 'RESOLUTION', 'FPS', '|', ' FILESIZE', '  TBR', 'PROTO',
+            header_line = ['ID', 'EXT', 'RESOLUTION', 'FPS', 'HDR', '|', ' FILESIZE', '  TBR', 'PROTO',
                            '|', 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'MORE INFO', *debug_info_title]
         else:
             if verbose:
@@ -3565,7 +3557,7 @@ class YoutubeDL(object):
 
     def _setup_opener(self):
         timeout_val = self.params.get('socket_timeout')
-        self._socket_timeout = 600 if timeout_val is None else float(timeout_val)
+        self._socket_timeout = 20 if timeout_val is None else float(timeout_val)
 
         opts_cookiesfrombrowser = self.params.get('cookiesfrombrowser')
         opts_cookiefile = self.params.get('cookiefile')

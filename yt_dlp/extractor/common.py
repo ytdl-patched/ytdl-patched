@@ -156,6 +156,8 @@ class InfoExtractor(object):
                     * width      Width of the video, if known
                     * height     Height of the video, if known
                     * resolution Textual description of width and height
+                    * dynamic_range The dynamic range of the video. One of:
+                                 "SDR" (None), "HDR10", "HDR10+, "HDR12", "HLG, "DV"
                     * tbr        Average bitrate of audio and video in KBit/s
                     * abr        Average audio bitrate in KBit/s
                     * acodec     Name of the audio codec in use
@@ -245,7 +247,6 @@ class InfoExtractor(object):
                         * "resolution" (optional, string "{width}x{height}",
                                         deprecated)
                         * "filesize" (optional, int)
-                        * "_test_url" (optional, bool) - If true, test the URL
     thumbnail:      Full URL to a video thumbnail image.
     description:    Full video description.
     uploader:       Full name of the video uploader.
@@ -1550,7 +1551,7 @@ class InfoExtractor(object):
         regex = r' *((?P<reverse>\+)?(?P<field>[a-zA-Z0-9_]+)((?P<separator>[~:])(?P<limit>.*?))?)? *$'
 
         default = ('hidden', 'aud_or_vid', 'hasvid', 'ie_pref', 'lang', 'quality',
-                   'res', 'fps', 'codec:vp9.2', 'size', 'br', 'asr',
+                   'res', 'fps', 'hdr:12', 'codec:vp9.2', 'size', 'br', 'asr',
                    'proto', 'ext', 'hasaud', 'source', 'format_id')  # These must not be aliases
         ytdl_default = ('hasaud', 'lang', 'quality', 'tbr', 'filesize', 'vbr',
                         'height', 'width', 'proto', 'vext', 'abr', 'aext',
@@ -1562,6 +1563,8 @@ class InfoExtractor(object):
             'acodec': {'type': 'ordered', 'regex': True,
                        'order': ['opus', 'vorbis', 'aac', 'mp?4a?', 'mp3', 'e?a?c-?3', 'dts', '', None, 'none']},
 
+            'hdr': {'type': 'ordered', 'regex': True, 'field': 'dynamic_range',
+                    'order': ['dv', '(hdr)?12', r'(hdr)?10\+', '(hdr)?10', 'hlg', '', 'sdr', None]},
             # sort with multiple:ordered from "expected_protocol", "protocol" in this order to make DMC formats properly sorted
             'proto': {'type': 'multiple:ordered', 'regex': True, 'field': ('expected_protocol', 'protocol'),
                       'order': ['m3u8.+', 'm3u8', '(ht|f)tps', '(ht|f)tp$', '.*dash', 'ws|websocket', '', 'mms|rtsp', 'none', 'f4'],
