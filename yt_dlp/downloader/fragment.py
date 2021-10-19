@@ -71,8 +71,9 @@ class FragmentFD(FileDownloader):
             '\r[download] Got server HTTP error: %s. Retrying fragment %d (attempt %d of %s) ...'
             % (error_to_compat_str(err), frag_index, count, self.format_retries(retries)))
 
-    def report_skip_fragment(self, frag_index):
-        self.to_screen('[download] Skipping fragment %d ...' % frag_index)
+    def report_skip_fragment(self, frag_index, err=None):
+        err = f' {err};' if err else ''
+        self.to_screen(f'[download]{err} Skipping fragment {frag_index:d} ...')
 
     def _prepare_url(self, info_dict, url):
         headers = info_dict.get('http_headers')
@@ -355,8 +356,7 @@ class FragmentFD(FileDownloader):
             # not what it decrypts to.
             if self.params.get('test', False):
                 return frag_content
-            padding_len = 16 - (len(frag_content) % 16)
-            decrypted_data = aes_cbc_decrypt_bytes(frag_content + bytes([padding_len] * padding_len), decrypt_info['KEY'], iv)
+            decrypted_data = aes_cbc_decrypt_bytes(frag_content, decrypt_info['KEY'], iv)
             return decrypted_data[:-decrypted_data[-1]]
 
         return decrypt_fragment
@@ -447,7 +447,7 @@ class FragmentFD(FileDownloader):
         def append_fragment(frag_content, frag_index, ctx):
             if not frag_content:
                 if not is_fatal(frag_index - 1):
-                    self.report_skip_fragment(frag_index)
+                    self.report_skip_fragment(frag_index, 'fragment not found')
                     return True
                 else:
                     ctx['dest_stream'].close()
