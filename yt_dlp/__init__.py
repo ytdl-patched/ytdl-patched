@@ -770,6 +770,7 @@ def _real_main(argv=None):
         'printjsontypes': opts.printjsontypes,
         'live_download_mkv': opts.live_download_mkv,
         'lock_exclusive': opts.lock_exclusive,
+        'use_modern_tls_cipher': opts.use_modern_tls_cipher,
     }
 
     with YoutubeDL(ydl_opts) as ydl:

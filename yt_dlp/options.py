@@ -878,6 +878,17 @@ def parseOpts(overrideArguments=None):
         help=(
             'Split filename longer than 255 bytes into few path segments. '
             'This may create dumb directories.'))
+    workarounds.add_option(
+        '--use-modern-tls-ciphers', '--enable-modern-tls-ciphers',
+        action='store_true', dest='use_modern_tls_cipher', default=False,
+        help=(
+            'Report servers that client is only capable of modern cipher suites for TLS. '
+            'See https://github.com/yt-dlp/yt-dlp/pull/1049 for details.'))
+    workarounds.add_option(
+        '--no-use-modern-tls-ciphers', '--disable-modern-tls-ciphers',
+        action='store_false', dest='use_modern_tls_cipher', default=False,
+        help=(
+            'Report servers that client is capable of Python\'s default cipher suites for TLS.'))
 
     verbosity = optparse.OptionGroup(parser, 'Verbosity and Simulation Options')
     verbosity.add_option(

@@ -815,7 +815,10 @@ def _ssl_load_windows_store_certs(ssl_context, storename):
 
 def make_HTTPS_handler(params, **kwargs):
     opts_check_certificate = not params.get('nocheckcertificate')
+    opts_modern_tls_cipher = params.get('use_modern_tls_cipher')
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    if opts_modern_tls_cipher:
+        context.set_ciphers('ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:AES256-SHA')
     context.check_hostname = opts_check_certificate
     context.verify_mode = ssl.CERT_REQUIRED if opts_check_certificate else ssl.CERT_NONE
     if opts_check_certificate:
