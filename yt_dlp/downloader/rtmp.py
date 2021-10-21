@@ -11,6 +11,7 @@ from ..utils import (
     encodeFilename,
     encodeArgument,
     get_exe_version,
+    Popen,
 )
 
 
@@ -25,7 +26,7 @@ class RtmpFD(FileDownloader):
             start = time.time()
             resume_percent = None
             resume_downloaded_data_len = None
-            proc = subprocess.Popen(args, stderr=subprocess.PIPE)
+            proc = Popen(args, stderr=subprocess.PIPE)
             cursor_in_new_line = True
             proc_stderr_closed = False
             try:

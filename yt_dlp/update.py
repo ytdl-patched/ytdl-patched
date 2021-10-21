@@ -9,7 +9,7 @@ import traceback
 from zipimport import zipimporter
 
 from .compat import compat_realpath
-from .utils import encode_compat_str
+from .utils import encode_compat_str, Popen
 
 from .version import __version__
 try:
@@ -197,7 +197,7 @@ def run_update(ydl):
             return
         try:
             # Continues to run in the background
-            subprocess.Popen(
+            Popen(
                 'ping 127.0.0.1 -n 5 -w 1000 & del /F "%s.old"' % exe,
                 shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             ydl.to_screen('Updated ytdl-patched to version %s' % version_id)

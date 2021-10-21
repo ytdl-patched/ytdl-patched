@@ -23,7 +23,7 @@ from ..utils import (
     handle_youtubedl_headers,
     check_executable,
     is_outdated_version,
-    process_communicate_or_kill,
+    Popen,
     sanitize_open,
 )
 from ..longname import split_longname
@@ -118,9 +118,8 @@ class ExternalFD(FragmentFD):
         self._debug_cmd(cmd)
 
         if 'fragments' not in info_dict:
-            p = subprocess.Popen(
-                cmd, stderr=subprocess.PIPE)
-            _, stderr = process_communicate_or_kill(p)
+            p = Popen(cmd, stderr=subprocess.PIPE)
+            _, stderr = p.communicate_or_kill()
             if p.returncode != 0:
                 self.to_stderr(stderr.decode('utf-8', 'replace'))
             return p.returncode
@@ -130,9 +129,8 @@ class ExternalFD(FragmentFD):
 
         count = 0
         while count <= fragment_retries:
-            p = subprocess.Popen(
-                cmd, stderr=subprocess.PIPE)
-            _, stderr = process_communicate_or_kill(p)
+            p = Popen(cmd, stderr=subprocess.PIPE)
+            _, stderr = p.communicate_or_kill()
             if p.returncode == 0:
                 break
             # TODO: Decide whether to retry based on error code
@@ -201,8 +199,8 @@ class CurlFD(ExternalFD):
         self._debug_cmd(cmd)
 
         # curl writes the progress to stderr so don't capture it.
-        p = subprocess.Popen(cmd)
-        process_communicate_or_kill(p)
+        p = Popen(cmd)
+        p.communicate_or_kill()
         return p.returncode
 
 
@@ -484,7 +482,7 @@ class FFmpegFD(ExternalFD):
         args.append(encodeFilename(ffpp._ffmpeg_filename_argument(tmpfilename), True))
         self._debug_cmd(args)
 
-        proc = subprocess.Popen(args, stdin=subprocess.PIPE, env=env)
+        proc = Popen(args, stdin=subprocess.PIPE, env=env)
         if url in ('-', 'pipe:'):
             self.on_process_started(proc, proc.stdin)
         try:
@@ -495,13 +493,8 @@ class FFmpegFD(ExternalFD):
             # produces a file that is playable (this is mostly useful for live
             # streams). Note that Windows is not affected and produces playable
             # files (see https://github.com/ytdl-org/youtube-dl/issues/8300).
-            if isinstance(e, KeyboardInterrupt) and sys.platform != 'win32':
-                if url in ('-', 'pipe:'):
-                    proc.kill()
-                    proc.wait()
-                else:
-                    process_communicate_or_kill(proc, b'q')
-                return 0
+            if isinstance(e, KeyboardInterrupt) and sys.platform != 'win32' and url not in ('-', 'pipe:'):
+                proc.communicate_or_kill(b'q')
             else:
                 proc.kill()
                 proc.wait()
