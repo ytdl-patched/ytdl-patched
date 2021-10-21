@@ -693,7 +693,7 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
 
 class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:playlist'
-    _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/(?:user/\d+/)?(?:my/)?mylist/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/(?:user/\d+/)?(?:my/)?mylist/(?:#/)?(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'http://www.nicovideo.jp/mylist/27411728',
@@ -707,6 +707,9 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         'playlist_mincount': 225,
     }, {
         'url': 'https://www.nicovideo.jp/user/805442/mylist/27411728',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.nicovideo.jp/my/mylist/#/68048635',
         'only_matching': True,
     }]
 
