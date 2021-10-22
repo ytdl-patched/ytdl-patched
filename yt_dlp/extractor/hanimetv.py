@@ -204,7 +204,7 @@ class HanimeAllIE(InfoExtractor):
     _VALID_URL = r'hanime-all'
 
     def _entries(self):
-        for i in itertools.count(1):
+        for i in itertools.count(0):
             page = self._download_json(
                 'https://search.htv-services.com/', 'hanime-all',
                 note=f'Downloading page {i}', data=json.dumps({
