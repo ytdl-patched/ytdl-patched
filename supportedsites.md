@@ -589,6 +589,7 @@
  - **Mgoon**
  - **MGTV**: 芒果TV
  - **MiaoPai**
+ - **microsoftstream**: Microsoft Stream
  - **mildom**: Record ongoing live by specific user in Mildom
  - **mildom:user:vod**: Download all VODs from specific user in Mildom
  - **mildom:vod**: Download a VOD in Mildom
@@ -1066,7 +1067,6 @@
  - **SztvHu**
  - **t-online.de**
  - **Tagesschau**
- - **tagesschau:player**
  - **Tass**
  - **TBS**
  - **TDSLifeway**
