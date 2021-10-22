@@ -2629,7 +2629,7 @@ class YoutubeDL(object):
 
     def __process_info_lock(func):
         @functools.wraps(func)
-        def process_info(self, info_dict):
+        def process_info(self: 'YoutubeDL', info_dict):
             unlock_file = True
             try:
                 self.lock_file(info_dict)
