@@ -2635,7 +2635,7 @@ class YoutubeDL(object):
                 self.lock_file(info_dict)
                 func(self, info_dict)
             except ExclusivelyLockedError:
-                self.report_error('being downloaded in other process; skipping')
+                self.report_warning('being downloaded in other process; skipping')
                 unlock_file = False
             finally:
                 if unlock_file:
