@@ -278,6 +278,9 @@ def _real_main(argv=None):
 
     compat_opts = opts.compat_opts
 
+    def report_conflict(arg1, arg2):
+        warnings.append(f'{arg2} is ignored since {arg1} was given')
+
     def _unused_compat_opt(name):
         if name not in compat_opts:
             return False
@@ -309,8 +312,15 @@ def _real_main(argv=None):
     if _video_multistreams_set is False and _audio_multistreams_set is False:
         _unused_compat_opt('multistreams')
     outtmpl_default = opts.outtmpl.get('default')
+    if opts.useid:
+        if outtmpl_default is None:
+            outtmpl_default = opts.outtmpl['default'] = '%(id)s.%(ext)s'
+        else:
+            report_conflict('--output', '--id')
     if 'filename' in compat_opts:
-        if outtmpl_default is not None:
+        if outtmpl_default is None:
+            outtmpl_default = opts.outtmpl['default'] = '%(title)s-%(id)s.%(ext)s'
+        else:
             _unused_compat_opt('filename')
 
     def validate_outtmpl(tmpl, msg):
@@ -381,9 +391,6 @@ def _real_main(argv=None):
     if (opts.addmetadata or opts.sponsorblock_mark) and opts.addchapters is None:
         opts.addchapters = True
     opts.remove_chapters = opts.remove_chapters or []
-
-    def report_conflict(arg1, arg2):
-        warnings.append('%s is ignored since %s was given' % (arg2, arg1))
 
     if (opts.remove_chapters or sponsorblock_query) and opts.sponskrub is not False:
         if opts.sponskrub:

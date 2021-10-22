@@ -255,6 +255,7 @@ You can install yt-dlp using one of the following methods:
 * Use pip+git: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched.git@release`
 * Install ytdlp branch: `python3 -m pip install --upgrade git+https://github.com/nao20010128nao/ytdl-patched.git@ytdlp`
 
+
 Note that on some systems, you may need to use `py` or `python` instead of `python3`
 
 UNIX users (Linux, macOS, BSD) can also install the [latest release](https://github.com/nao20010128nao/ytdl-patched/releases/latest) one of the following ways:
@@ -321,13 +322,10 @@ The windows releases are already built with the python interpreter, mutagen, pyc
 **For Windows**:
 To build the Windows executable, you must have pyinstaller (and optionally mutagen, pycryptodomex, websockets)
 
-    python3 -m pip install -U -r requirements.txt
+Once you have all the necessary dependencies installed, just run `pyinst.py`. The executable will be built for the same architecture (32/64 bit) as the python used to build it.
 
-Once you have all the necessary dependencies installed, just run `py pyinst.py`. The executable will be built for the same architecture (32/64 bit) as the python used to build it.
-
-You can also build the executable without any version info or metadata by using:
-
-    pyinstaller.exe yt_dlp\__main__.py --onefile --name yt-dlp
+    py -m pip install -U pyinstaller -r requirements.txt
+    py pyinst.py
 
 Note that pyinstaller [does not support](https://github.com/pyinstaller/pyinstaller#requirements-and-tested-platforms) Python installed from the Windows store without using a virtual environment
 
@@ -1770,6 +1768,7 @@ While these options still work, their use is not recommended since there are oth
     --print-json                     -j --no-simulate
     --autonumber-size NUMBER         Use string formatting. Eg: %(autonumber)03d
     --autonumber-start NUMBER        Use internal field formatting like %(autonumber+NUMBER)s
+    --id                             -o "%(id)s.%(ext)s"
     --metadata-from-title FORMAT     --parse-metadata "%(title)s:FORMAT"
     --hls-prefer-native              --downloader "m3u8:native"
     --hls-prefer-ffmpeg              --downloader "m3u8:ffmpeg"
@@ -1836,7 +1835,6 @@ These options may no longer work as intended
 #### Removed
 These options were deprecated since 2014 and have now been entirely removed
 
-    --id                             -o "%(id)s.%(ext)s"
     -A, --auto-number                -o "%(autonumber)s-%(id)s.%(ext)s"
     -t, --title                      -o "%(title)s-%(id)s.%(ext)s"
     -l, --literal                    -o accepts literal names

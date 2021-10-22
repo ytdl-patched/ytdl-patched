@@ -3483,16 +3483,20 @@ class YoutubeDL(object):
             write_string(encoding_str, encoding=None)
 
         source = detect_variant()
-        write_debug('[debug] ytdl-patched version %s %s\n' % (__version__, source))
+        write_debug('ytdl-patched version %s %s\n' % (__version__, source))
         if git_commit:
-            write_debug('[debug]      from commit %s\n' % git_commit)
+            write_debug('     from commit %s\n' % git_commit)
         if git_upstream_commit:
-            write_debug('[debug]      based on %s\n' % git_upstream_commit)
-        write_debug('[debug] ** The command you are running is not yt-dlp. \n')
-        write_debug('[debug] ** Please make bug reports at https://github.com/ytdl-patched/ytdl-patched instead. \n')
+            write_debug('     based on %s\n' % git_upstream_commit)
+        write_debug('** The command you are running is not yt-dlp. \n')
+        write_debug('** Please make bug reports at https://github.com/ytdl-patched/ytdl-patched instead. \n')
 
-        if _LAZY_LOADER:
-            write_debug('Lazy loading extractors enabled\n')
+        if not _LAZY_LOADER:
+            if os.environ.get('YTDLP_NO_LAZY_EXTRACTORS'):
+                write_debug('Lazy loading extractors is forcibly disabled\n')
+            else:
+                write_debug('Lazy loading extractors is disabled\n')
+
         if plugin_extractors or plugin_postprocessors:
             write_debug('Plugins: %s\n' % [
                 '%s%s' % (klass.__name__, '' if klass.__name__ == name else f' as {name}')

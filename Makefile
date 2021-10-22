@@ -1,4 +1,4 @@
-all: youtube-dl doc pypi-files
+all: lazy-extractors youtube-dl doc pypi-files
 clean: clean-test clean-dist clean-cache
 completions: completion-bash completion-fish completion-zsh
 doc: README.md CONTRIBUTING.md issuetemplates supportedsites
@@ -34,19 +34,14 @@ PYTHON ?= /usr/bin/env python3
 SYSCONFDIR = $(shell if [ $(PREFIX) = /usr -o $(PREFIX) = /usr/local ]; then echo /etc; else echo $(PREFIX)/etc; fi)
 
 # set markdown input format to "markdown-smart" for pandoc version 2 and to "markdown" for pandoc prior to version 2
-MARKDOWN = $(shell if [ "$(pandoc -v | head -n1 | cut -d" " -f2 | head -c1)" = "2" ]; then echo markdown-smart; else echo markdown; fi)
+MARKDOWN = $(shell if [ `pandoc -v | head -n1 | cut -d" " -f2 | head -c1` = "2" ]; then echo markdown-smart; else echo markdown; fi)
 
-install: youtube-dl youtube-dl.1 youtube-dl.bash-completion _youtube-dl youtube-dl.fish
-	install -d $(DESTDIR)$(BINDIR)
-	install -m 755 youtube-dl $(DESTDIR)$(BINDIR)
-	install -d $(DESTDIR)$(MANDIR)/man1
-	install -m 644 youtube-dl.1 $(DESTDIR)$(MANDIR)/man1
-	install -d $(DESTDIR)$(SYSCONFDIR)/bash_completion.d
-	install -m 644 youtube-dl.bash-completion $(DESTDIR)$(SYSCONFDIR)/bash_completion.d/youtube-dl
-	install -d $(DESTDIR)$(SHAREDIR)/zsh/site-functions
-	install -m 644 _youtube-dl $(DESTDIR)$(SHAREDIR)/zsh/site-functions/_youtube-dl
-	install -d $(DESTDIR)$(SYSCONFDIR)/fish/completions
-	install -m 644 youtube-dl.fish $(DESTDIR)$(SYSCONFDIR)/fish/completions/youtube-dl.fish
+install: lazy-extractors youtube-dl youtube-dl.1 completions
+	install -Dm755 youtube-dl $(DESTDIR)$(BINDIR)/youtube-dl
+	install -Dm644 youtube-dl.1 $(DESTDIR)$(MANDIR)/man1/youtube-dl.1
+	install -Dm644 completions/bash/youtube-dl $(DESTDIR)$(SHAREDIR)/bash-completion/completions/youtube-dl
+	install -Dm644 completions/zsh/_youtube-dl $(DESTDIR)$(SHAREDIR)/zsh/site-functions/_youtube-dl
+	install -Dm644 completions/fish/youtube-dl.fish $(DESTDIR)$(SHAREDIR)/fish/vendor_completions.d/youtube-dl.fish
 
 codetest:
 	flake8 .

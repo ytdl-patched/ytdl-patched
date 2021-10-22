@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import traceback
+import platform
 from zipimport import zipimporter
 
 from .compat import compat_realpath
@@ -37,9 +38,9 @@ _NON_UPDATEABLE_REASONS = {
     'win_exe': None,
     'zip': None,
     'mac_exe': None,
+    'py2exe': None,
     'win_dir': 'Auto-update is not supported for unpackaged windows executable; Re-download the latest release',
     'mac_dir': 'Auto-update is not supported for unpackaged MacOS executable; Re-download the latest release',
-    'py2exe': 'There is no official release for py2exe executable; Build it again with the latest source code',
     'source': 'You cannot update when running from source code; Use git to pull the latest changes',
     'unknown': 'It looks like you installed yt-dlp with a package manager, pip, setup.py or a tarball; Use that to update',
 }
@@ -130,9 +131,10 @@ def run_update(ydl):
         'zip_3': '',
         'exe_red': '-red.exe',
         'exe_white': '-white.exe',
-        'exe_64': '.exe',
-        'exe_32': '_x86.exe',
-        'mac_64': '_macos',
+        'win_exe_64': '.exe',
+        'py2exe_64': '_min.exe',
+        'win_exe_32': '_x86.exe',
+        'mac_exe_64': '_macos',
     }
 
     def get_bin_info(bin_or_exe, version):
@@ -155,9 +157,8 @@ def run_update(ydl):
 
     # PyInstaller
     variant = detect_variant()
-    if variant == 'win_exe':
-        exe = filename
-        directory = os.path.dirname(exe)
+    if variant in ('win_exe', 'py2exe'):
+        directory = os.path.dirname(filename)
         if not os.access(directory, os.W_OK):
             return report_permission_error(directory)
         try:
@@ -167,7 +168,8 @@ def run_update(ydl):
             return report_unable('remove the old version')
 
         try:
-            url = get_bin_info('exe', variant).get('browser_download_url')
+            arch = platform.architecture()[0][:2]
+            url = get_bin_info(variant, arch).get('browser_download_url')
             if not url:
                 return report_network_error('fetch updates')
             urlh = ydl._opener.open(url)
@@ -177,35 +179,35 @@ def run_update(ydl):
             return report_network_error('download latest version')
 
         try:
-            with open(exe + '.new', 'wb') as outf:
+            with open(filename + '.new', 'wb') as outf:
                 outf.write(newcontent)
         except (IOError, OSError):
-            return report_permission_error(f'{exe}.new')
+            return report_permission_error(f'{filename}.new')
 
-        expected_sum = get_sha256sum('exe', variant)
+        expected_sum = get_sha256sum(variant, arch)
         if not expected_sum:
             ydl.report_warning('no hash information found for the release')
-        elif calc_sha256sum(exe + '.new') != expected_sum:
+        elif calc_sha256sum(filename + '.new') != expected_sum:
             report_network_error('verify the new executable')
             try:
-                os.remove(exe + '.new')
+                os.remove(filename + '.new')
             except OSError:
                 return report_unable('remove corrupt download')
 
         try:
-            os.rename(exe, exe + '.old')
+            os.rename(filename, filename + '.old')
         except (IOError, OSError):
             return report_unable('move current version')
         try:
-            os.rename(exe + '.new', exe)
+            os.rename(filename + '.new', filename)
         except (IOError, OSError):
             report_unable('overwrite current version')
-            os.rename(exe + '.old', exe)
+            os.rename(filename + '.old', filename)
             return
         try:
             # Continues to run in the background
             Popen(
-                'ping 127.0.0.1 -n 5 -w 1000 & del /F "%s.old"' % exe,
+                'ping 127.0.0.1 -n 5 -w 1000 & del /F "%s.old"' % filename,
                 shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             ydl.to_screen('Updated ytdl-patched to version %s' % version_id)
             return True  # Exit app
@@ -213,9 +215,9 @@ def run_update(ydl):
             report_unable('delete the old version')
 
     elif variant in ('zip', 'mac_exe'):
-        pack_type = ('mac', '64') if variant == 'mac_exe' else ('zip', '3')
+        pack_type = '3' if variant == 'zip' else '64'
         try:
-            url = get_bin_info(*pack_type).get('browser_download_url')
+            url = get_bin_info(variant, pack_type).get('browser_download_url')
             if not url:
                 return report_network_error('fetch updates')
             urlh = ydl._opener.open(url)
@@ -224,7 +226,7 @@ def run_update(ydl):
         except (IOError, OSError):
             return report_network_error('download the latest version')
 
-        expected_sum = get_sha256sum(*pack_type)
+        expected_sum = get_sha256sum(variant, pack_type)
         if not expected_sum:
             ydl.report_warning('no hash information found for the release')
         elif hashlib.sha256(newcontent).hexdigest() != expected_sum:
