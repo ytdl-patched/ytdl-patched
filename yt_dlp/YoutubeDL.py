@@ -47,6 +47,7 @@ from .compat import (
 )
 from .cookies import load_cookies
 from .utils import (
+    ExclusivelyLockedError,
     age_restricted,
     args_to_str,
     compiled_regex_type,
@@ -2626,6 +2627,23 @@ class YoutubeDL(object):
             new_info['http_headers'] = self._calc_headers(new_info)
         return fd.download(name, new_info, subtitle)
 
+    def __process_info_lock(func):
+        @functools.wraps(func)
+        def process_info(self, info_dict):
+            unlock_file = True
+            try:
+                self.lock_file(info_dict)
+                func(self, info_dict)
+            except ExclusivelyLockedError:
+                self.report_error('being downloaded in other process; skipping')
+                unlock_file = False
+            finally:
+                if unlock_file:
+                    self.unlock_file(info_dict)
+
+        return process_info
+
+    @__process_info_lock
     def process_info(self, info_dict):
         """Process a single resolved IE result."""
 
@@ -2789,8 +2807,6 @@ class YoutubeDL(object):
             info_dict.setdefault('__postprocessors', [])
 
             try:
-                self.lock_file(info_dict)
-
                 def existing_file(*filepaths):
                     ext = info_dict.get('ext')
                     final_ext = self.params.get('final_ext', ext)
@@ -2911,8 +2927,6 @@ class YoutubeDL(object):
             except (ContentTooShortError, ) as err:
                 self.report_error('content too short (expected %s bytes and served %s)' % (err.expected, err.downloaded))
                 return
-            finally:
-                self.unlock_file(info_dict)
 
             if success and full_filename != '-':
 
@@ -3207,6 +3221,8 @@ class YoutubeDL(object):
         vid_id = re.sub(r'[/\\: ]+', '_', vid_id) + '.lock'
         if self.params.get('verbose'):
             self.to_screen('[debug] locking %s' % vid_id)
+        if self.exists(vid_id):
+            raise ExclusivelyLockedError()
         try:
             with locked_file(vid_id, 'w', encoding='utf-8') as w:
                 w.write('%s\n' % vid_id)

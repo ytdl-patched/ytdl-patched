@@ -968,6 +968,15 @@ class SameFileError(YoutubeDLError):
     pass
 
 
+class ExclusivelyLockedError(YoutubeDLError):
+    """Exclusively locked exception.
+
+    This exception will be thrown by FileDownloader objects if they detect
+    multiple files would have to be downloaded to the same file on disk.
+    """
+    pass
+
+
 class PostProcessingError(YoutubeDLError):
     """Post Processing exception.
 
