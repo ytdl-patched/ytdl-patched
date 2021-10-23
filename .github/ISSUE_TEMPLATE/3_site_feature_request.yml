@@ -11,7 +11,9 @@ body:
       options:
         - label: I'm reporting a site feature request
           required: true
-        - label: I've verified that I'm running yt-dlp version **2021.10.10**. ([update instructions](https://github.com/yt-dlp/yt-dlp#update))
+        - label: I've verified that I'm running yt-dlp version **2021.10.22**. ([update instructions](https://github.com/yt-dlp/yt-dlp#update))
+          required: true
+        - label: I've checked that all provided URLs are alive and playable in a browser
           required: true
         - label: I've searched the [bugtracker](https://github.com/yt-dlp/yt-dlp/issues?q=) for similar issues including closed ones. DO NOT post duplicates
           required: true
@@ -24,6 +26,16 @@ body:
       label: Region
       description: "Enter the region the site is accessible from"
       placeholder: "India"
+  - type: textarea
+    id: example-urls
+    attributes:
+      label: Example URLs
+      description: |
+        Example URLs that can be used to demonstrate the requested feature
+      value: |
+        https://www.youtube.com/watch?v=BaW_jenozKc
+    validations:
+      required: true
   - type: textarea
     id: description
     attributes:

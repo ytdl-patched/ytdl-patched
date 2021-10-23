@@ -28,6 +28,7 @@ import traceback
 import random
 import unicodedata
 
+from enum import Enum
 from string import ascii_letters
 
 from .compat import (
@@ -85,6 +86,7 @@ from .utils import (
     make_HTTPS_handler,
     MaxDownloadsReached,
     network_exceptions,
+    number_of_digits,
     orderedSet,
     OUTTMPL_TYPES,
     PagedList,
@@ -113,7 +115,6 @@ from .utils import (
     subtitles_filename,
     ReextractRequested,
     supports_terminal_sequences,
-    TERMINAL_SEQUENCES,
     to_high_limit_path,
     traverse_obj,
     try_get,
@@ -128,6 +129,7 @@ from .utils import (
     YoutubeDLRedirectHandler,
 )
 from .cache import Cache
+from .minicurses import format_text
 from .extractor import (
     gen_extractor_classes,
     get_info_extractor,
@@ -334,7 +336,7 @@ class YoutubeDL(object):
     cookiefile:        File name where cookies should be read from and dumped to
     cookiesfrombrowser: A tuple containing the name of the browser and the profile
                        name/path from where cookies are loaded.
-                       Eg: ('chrome', ) or (vivaldi, 'default')
+                       Eg: ('chrome', ) or ('vivaldi', 'default')
     nocheckcertificate:Do not verify SSL certificates
     prefer_insecure:   Use HTTP instead of HTTPS to retrieve information.
                        At the moment, this is only supported by YouTube.
@@ -555,7 +557,7 @@ class YoutubeDL(object):
     def __init__(self, params=None, auto_init=True):
         """Create a FileDownloader object with the given options.
         @param auto_init    Whether to load the default extractors and print header (if verbose).
-                            Set to 'no_verbose_header' to not ptint the header
+                            Set to 'no_verbose_header' to not print the header
         """
         if params is None:
             params = {}
@@ -576,7 +578,10 @@ class YoutubeDL(object):
 
         windows_enable_vt_mode()
         # FIXME: This will break if we ever print color to stdout
-        self.params['no_color'] = self.params.get('no_color') or not supports_terminal_sequences(self._err_file)
+        self._allow_colors = {
+            'screen': not self.params.get('no_color') and supports_terminal_sequences(self._screen_file),
+            'err': not self.params.get('no_color') and supports_terminal_sequences(self._err_file),
+        }
 
         if sys.version_info < (3, 6):
             self.report_warning(
@@ -584,10 +589,10 @@ class YoutubeDL(object):
 
         if self.params.get('allow_unplayable_formats'):
             self.report_warning(
-                f'You have asked for {self._color_text("unplayable formats", "blue")} to be listed/downloaded. '
+                f'You have asked for {self._format_err("UNPLAYABLE", self.Styles.EMPHASIS)} formats to be listed/downloaded. '
                 'This is a developer option intended for debugging. \n'
                 '         If you experience any issues while using this option, '
-                f'{self._color_text("DO NOT", "red")} open a bug report')
+                f'{self._format_err("DO NOT", self.Styles.ERROR)} open a bug report')
 
         def check_deprecated(param, option, suggestion):
             if self.params.get(param) is not None:
@@ -603,8 +608,11 @@ class YoutubeDL(object):
         check_deprecated('usetitle', '--title', '-o "%(title)s-%(id)s.%(ext)s"')
         check_deprecated('useid', '--id', '-o "%(id)s.%(ext)s"')
 
-        for msg in self.params.get('warnings', []):
+        for msg in self.params.get('_warnings', []):
             self.report_warning(msg)
+
+        if 'list-formats' in self.params.get('compat_opts', []):
+            self.params['listformats_table'] = False
 
         if 'overwrites' not in self.params and self.params.get('nooverwrites') is not None:
             # nooverwrites was unnecessarily changed to overwrites
@@ -636,7 +644,9 @@ class YoutubeDL(object):
                 self._output_channel = os.fdopen(master, 'rb')
             except OSError as ose:
                 if ose.errno == errno.ENOENT:
-                    self.report_warning('Could not find fribidi executable, ignoring --bidi-workaround . Make sure that  fribidi  is an executable file in one of the directories in your $PATH.')
+                    self.report_warning(
+                        'Could not find fribidi executable, ignoring --bidi-workaround. '
+                        'Make sure that  fribidi  is an executable file in one of the directories in your $PATH.')
                 else:
                     raise
 
@@ -683,7 +693,7 @@ class YoutubeDL(object):
             """Preload the archive, if any is specified"""
             if fn is None:
                 return False
-            self.write_debug('Loading archive file %r\n' % fn)
+            self.write_debug(f'Loading archive file {fn!r}')
             try:
                 with locked_file(fn, 'r', encoding='utf-8') as archive_file:
                     for line in archive_file:
@@ -710,7 +720,7 @@ class YoutubeDL(object):
             )
             self.report_warning(
                 'Long argument string detected. '
-                'Use -- to separate parameters and URLs, like this:\n%s\n' %
+                'Use -- to separate parameters and URLs, like this:\n%s' %
                 args_to_str(correct_argv))
 
     def add_info_extractor(self, ie):
@@ -879,10 +889,32 @@ class YoutubeDL(object):
         self.to_stdout(
             message, skip_eol, quiet=self.params.get('quiet', False))
 
-    def _color_text(self, text, color):
-        if self.params.get('no_color'):
-            return text
-        return f'{TERMINAL_SEQUENCES[color.upper()]}{text}{TERMINAL_SEQUENCES["RESET_STYLE"]}'
+    class Styles(Enum):
+        HEADERS = 'yellow'
+        EMPHASIS = 'blue'
+        ID = 'green'
+        DELIM = 'blue'
+        ERROR = 'red'
+        WARNING = 'yellow'
+
+    def __format_text(self, out, text, f, fallback=None, *, test_encoding=False):
+        assert out in ('screen', 'err')
+        if test_encoding:
+            original_text = text
+            handle = self._screen_file if out == 'screen' else self._err_file
+            encoding = self.params.get('encoding') or getattr(handle, 'encoding', 'ascii')
+            text = text.encode(encoding, 'ignore').decode(encoding)
+            if fallback is not None and text != original_text:
+                text = fallback
+        if isinstance(f, self.Styles):
+            f = f._value_
+        return format_text(text, f) if self._allow_colors[out] else text if fallback is None else fallback
+
+    def _format_screen(self, *args, **kwargs):
+        return self.__format_text('screen', *args, **kwargs)
+
+    def _format_err(self, *args, **kwargs):
+        return self.__format_text('err', *args, **kwargs)
 
     def report_warning(self, message, only_once=False):
         '''
@@ -894,14 +926,14 @@ class YoutubeDL(object):
         else:
             if self.params.get('no_warnings'):
                 return
-            self.to_stderr(f'{self._color_text("WARNING:", "yellow")} {message}', only_once)
+            self.to_stderr(f'{self._format_err("WARNING:", self.Styles.WARNING)} {message}', only_once)
 
     def report_error(self, message, tb=None):
         '''
         Do the same as trouble, but prefixes the message with 'ERROR:', colored
         in red if stderr is a tty file.
         '''
-        self.trouble(f'{self._color_text("ERROR:", "red")} {message}', tb)
+        self.trouble(f'{self._format_err("ERROR:", self.Styles.ERROR)} {message}', tb)
 
     def write_debug(self, message, only_once=False):
         '''Log debug message or Print message to stderr'''
@@ -1030,8 +1062,8 @@ class YoutubeDL(object):
         # For fields playlist_index, playlist_autonumber and autonumber convert all occurrences
         # of %(field)s to %(field)0Nd for backward compatibility
         field_size_compat_map = {
-            'playlist_index': len(str(info_dict.get('_last_playlist_index') or '')),
-            'playlist_autonumber': len(str(info_dict.get('n_entries') or '')),
+            'playlist_index': number_of_digits(info_dict.get('_last_playlist_index') or 0),
+            'playlist_autonumber': number_of_digits(info_dict.get('n_entries') or 0),
             'autonumber': self.params.get('autonumber_size') or 5,
         }
 
@@ -1617,7 +1649,7 @@ class YoutubeDL(object):
             playlistitems = list(range(playliststart, playliststart + n_entries))
         ie_result['requested_entries'] = playlistitems
 
-        if self.params.get('allow_playlist_files', True):
+        if not self.params.get('simulate') and self.params.get('allow_playlist_files', True):
             ie_copy = {
                 'playlist': playlist,
                 'playlist_id': ie_result.get('id'),
@@ -1625,6 +1657,7 @@ class YoutubeDL(object):
                 'playlist_uploader': ie_result.get('uploader'),
                 'playlist_uploader_id': ie_result.get('uploader_id'),
                 'playlist_index': 0,
+                'n_entries': n_entries,
             }
             ie_copy.update(dict(ie_result))
 
@@ -1947,6 +1980,7 @@ class YoutubeDL(object):
                     'height': the_only_video.get('height'),
                     'resolution': the_only_video.get('resolution') or self.format_resolution(the_only_video),
                     'fps': the_only_video.get('fps'),
+                    'dynamic_range': the_only_video.get('dynamic_range'),
                     'vcodec': the_only_video.get('vcodec'),
                     'vbr': the_only_video.get('vbr'),
                     'stretched_ratio': the_only_video.get('stretched_ratio'),
@@ -2475,7 +2509,7 @@ class YoutubeDL(object):
                 new_info['__original_infodict'] = info_dict
                 new_info.update(fmt)
                 self.process_info(new_info)
-        # We update the info dict with the best quality format (backwards compatibility)
+        # We update the info dict with the selected best quality format (backwards compatibility)
         if formats_to_download:
             info_dict.update(formats_to_download[-1])
         return info_dict
@@ -3321,13 +3355,16 @@ class YoutubeDL(object):
             res += '~' + format_bytes(fdict['filesize_approx'])
         return res
 
+    def _list_format_headers(self, *headers):
+        if self.params.get('listformats_table', True) is not False:
+            return [self._format_screen(header, self.Styles.HEADERS) for header in headers]
+        return headers
+
     def list_formats(self, info_dict, format_selector):
         formats = info_dict.get('formats', [info_dict])
         verbose = format_selector and self.params.get('verbose') and len(formats) > 1
 
-        new_format = (
-            'list-formats' not in self.params.get('compat_opts', [])
-            and self.params.get('listformats_table', True) is not False)
+        new_format = self.params.get('listformats_table', True) is not False
 
         if verbose:
             # taken from process_video_result
@@ -3368,6 +3405,11 @@ class YoutubeDL(object):
         debug_info_title = []
 
         if new_format:
+            tbr_digits = number_of_digits(max(f.get('tbr') or 0 for f in formats))
+            vbr_digits = number_of_digits(max(f.get('vbr') or 0 for f in formats))
+            abr_digits = number_of_digits(max(f.get('abr') or 0 for f in formats))
+            delim = self._format_screen('\u2502', self.Styles.DELIM, '|', test_encoding=True)
+
             def format_protocol(f):
                 proto = shorten_protocol_name(f.get('protocol', '').replace("native", "n"))
                 exp_proto = shorten_protocol_name(f.get('expected_protocol', '').replace("native", "n"))
@@ -3378,34 +3420,34 @@ class YoutubeDL(object):
 
             if verbose:
                 debug_info_title = ['|', 'DEBUG']
-
             table = [
                 [
-                    format_field(f, 'format_id'),
+                    self._format_screen(format_field(f, 'format_id'), self.Styles.ID),
                     format_field(f, 'ext'),
                     self.format_resolution(f),
                     format_field(f, 'fps', '%d'),
                     format_field(f, 'dynamic_range', '%s', ignore=(None, 'SDR')).replace('HDR', ''),
-                    '|',
+                    delim,
                     format_field(f, 'filesize', ' %s', func=format_bytes) + format_field(f, 'filesize_approx', '~%s', func=format_bytes),
-                    format_field(f, 'tbr', '%4dk'),
+                    format_field(f, 'tbr', f'%{tbr_digits}dk'),
                     format_protocol(f),
-                    '|',
+                    delim,
                     format_field(f, 'vcodec', default='unknown').replace('none', ''),
-                    format_field(f, 'vbr', '%4dk'),
+                    format_field(f, 'vbr', f'%{vbr_digits}dk'),
                     format_field(f, 'acodec', default='unknown').replace('none', ''),
-                    format_field(f, 'abr', '%3dk'),
+                    format_field(f, 'abr', f'%{abr_digits}dk'),
                     format_field(f, 'asr', '%5dHz'),
                     ', '.join(filter(None, (
-                        'UNSUPPORTED' if f.get('ext') in ('f4f', 'f4m') else '',
+                        self._format_screen('UNSUPPORTED', 'light red') if f.get('ext') in ('f4f', 'f4m') else '',
                         format_field(f, 'language', '[%s]'),
                         format_field(f, 'format_note'),
                         format_field(f, 'container', ignore=(None, f.get('ext'))),
                     ))),
                     *debug_info(f),
                 ] for f in formats if f.get('preference') is None or f['preference'] >= -1000]
-            header_line = ['ID', 'EXT', 'RESOLUTION', 'FPS', 'HDR', '|', ' FILESIZE', '  TBR', 'PROTO',
-                           '|', 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'MORE INFO', *debug_info_title]
+            header_line = self._list_format_headers(
+                'ID', 'EXT', 'RESOLUTION', 'FPS', 'HDR', delim, ' FILESIZE', '  TBR', 'PROTO',
+                delim, 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'MORE INFO', *debug_info_title)
         else:
             if verbose:
                 debug_info_title = ['debug']
@@ -3423,7 +3465,11 @@ class YoutubeDL(object):
         self.to_screen(
             '[info] Available formats for %s:' % info_dict['id'])
         self.to_stdout(render_table(
-            header_line, table, delim=new_format, extraGap=(0 if new_format else 1), hideEmpty=new_format))
+            header_line, table,
+            extraGap=(0 if new_format else 1),
+            hideEmpty=new_format,
+            delim=new_format and self._format_screen('\u2500', self.Styles.DELIM, '-', test_encoding=True)))
+
         if verbose and unknown_formats:
             self.to_screen('[debugger] Specs not matched: %s' % ', '.join(unknown_formats))
 
@@ -3436,7 +3482,7 @@ class YoutubeDL(object):
         self.to_screen(
             '[info] Thumbnails for %s:' % info_dict['id'])
         self.to_stdout(render_table(
-            ['ID', 'width', 'height', 'URL'],
+            self._list_format_headers('ID', 'Width', 'Height', 'URL'),
             [[t['id'], t.get('width', 'unknown'), t.get('height', 'unknown'), t['url']] for t in thumbnails]))
 
     def list_subtitles(self, video_id, subtitles, name='subtitles'):
@@ -3453,7 +3499,7 @@ class YoutubeDL(object):
             return [lang, ', '.join(names), ', '.join(exts)]
 
         self.to_stdout(render_table(
-            ['Language', 'Name', 'Formats'],
+            self._list_format_headers('Language', 'Name', 'Formats'),
             [_row(lang, formats) for lang, formats in subtitles.items()],
             hideEmpty=True))
 
@@ -3466,24 +3512,29 @@ class YoutubeDL(object):
     def print_debug_header(self):
         if not self.params.get('verbose'):
             return
-        get_encoding = lambda stream: getattr(stream, 'encoding', 'missing (%s)' % type(stream).__name__)
-        encoding_str = (
-            '[debug] Encodings: locale %s, fs %s, stdout %s, stderr %s, pref %s\n' % (
-                locale.getpreferredencoding(),
-                sys.getfilesystemencoding(),
-                get_encoding(self._screen_file), get_encoding(self._err_file),
-                self.get_encoding()))
+
+        def get_encoding(stream):
+            ret = getattr(stream, 'encoding', 'missing (%s)' % type(stream).__name__)
+            if not supports_terminal_sequences(stream):
+                ret += ' (No ANSI)'
+            return ret
+
+        encoding_str = 'Encodings: locale %s, fs %s, out %s, err %s, pref %s' % (
+            locale.getpreferredencoding(),
+            sys.getfilesystemencoding(),
+            get_encoding(self._screen_file), get_encoding(self._err_file),
+            self.get_encoding())
 
         logger = self.params.get('logger')
         if logger:
             write_debug = lambda msg: logger.debug(f'[debug] {msg}')
             write_debug(encoding_str)
         else:
-            write_debug = lambda msg: self._write_string(f'[debug] {msg}')
-            write_string(encoding_str, encoding=None)
+            write_string(f'[debug] {encoding_str}', encoding=None)
+            write_debug = lambda msg: self._write_string(f'[debug] {msg}\n')
 
         source = detect_variant()
-        write_debug('ytdl-patched version %s %s\n' % (__version__, source))
+        write_debug('ytdl-patched version %s %s\n' % (__version__, '' if source == 'unknown' else f' ({source})'))
         if git_commit:
             write_debug('     from commit %s\n' % git_commit)
         if git_upstream_commit:
@@ -3493,16 +3544,15 @@ class YoutubeDL(object):
 
         if not _LAZY_LOADER:
             if os.environ.get('YTDLP_NO_LAZY_EXTRACTORS'):
-                write_debug('Lazy loading extractors is forcibly disabled\n')
+                write_debug('Lazy loading extractors is forcibly disabled')
             else:
-                write_debug('Lazy loading extractors is disabled\n')
-
+                write_debug('Lazy loading extractors is disabled')
         if plugin_extractors or plugin_postprocessors:
-            write_debug('Plugins: %s\n' % [
+            write_debug('Plugins: %s' % [
                 '%s%s' % (klass.__name__, '' if klass.__name__ == name else f' as {name}')
                 for name, klass in itertools.chain(plugin_extractors.items(), plugin_postprocessors.items())])
         if self.params.get('compat_opts'):
-            write_debug('Compatibility options: %s\n' % ', '.join(self.params.get('compat_opts')))
+            write_debug('Compatibility options: %s' % ', '.join(self.params.get('compat_opts')))
         try:
             sp = Popen(
                 ['git', 'rev-parse', '--short', 'HEAD'],
@@ -3511,7 +3561,7 @@ class YoutubeDL(object):
             out, err = sp.communicate_or_kill()
             out = out.decode().strip()
             if re.match('[0-9a-f]+', out):
-                write_debug('Git HEAD: %s\n' % out)
+                write_debug('Git HEAD: %s' % out)
         except Exception:
             try:
                 sys.exc_clear()
@@ -3524,7 +3574,7 @@ class YoutubeDL(object):
                 return impl_name + ' version %d.%d.%d' % sys.pypy_version_info[:3]
             return impl_name
 
-        write_debug('Python version %s (%s %s) - %s\n' % (
+        write_debug('Python version %s (%s %s) - %s' % (
             platform.python_version(),
             python_implementation(),
             platform.architecture()[0],
@@ -3536,7 +3586,7 @@ class YoutubeDL(object):
         exe_str = ', '.join(
             f'{exe} {v}' for exe, v in sorted(exe_versions.items()) if v
         ) or 'none'
-        write_debug('exe versions: %s\n' % exe_str)
+        write_debug('exe versions: %s' % exe_str)
 
         from .downloader.websocket import has_websockets
         from .postprocessor.embedthumbnail import has_mutagen
@@ -3549,21 +3599,18 @@ class YoutubeDL(object):
             SQLITE_AVAILABLE and 'sqlite',
             KEYRING_AVAILABLE and 'keyring',
         )))) or 'none'
-        write_debug('Optional libraries: %s\n' % lib_str)
-        write_debug('ANSI escape support: stdout = %s, stderr = %s\n' % (
-            supports_terminal_sequences(self._screen_file),
-            supports_terminal_sequences(self._err_file)))
+        write_debug('Optional libraries: %s' % lib_str)
 
         proxy_map = {}
         for handler in self._opener.handlers:
             if hasattr(handler, 'proxies'):
                 proxy_map.update(handler.proxies)
-        write_debug('Proxy map: ' + compat_str(proxy_map) + '\n')
+        write_debug(f'Proxy map: {proxy_map}')
 
-        if self.params.get('call_home', False):
+        # Not implemented
+        if False and self.params.get('call_home'):
             ipaddr = self.urlopen('https://yt-dl.org/ip').read().decode('utf-8')
-            write_debug('Public IP address: %s\n' % ipaddr)
-            return
+            write_debug('Public IP address: %s' % ipaddr)
             latest_version = self.urlopen(
                 'https://yt-dl.org/latest/version').read().decode('utf-8')
             if version_tuple(latest_version) > version_tuple(__version__):

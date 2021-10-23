@@ -1007,7 +1007,7 @@
  - **SonyLIVSeries**
  - **soundcloud**
  - **soundcloud:playlist**
- - **soundcloud:search**: Soundcloud search
+ - **soundcloud:search**: Soundcloud search, "scsearch" keyword
  - **soundcloud:set**
  - **soundcloud:trackstation**
  - **soundcloud:user**
