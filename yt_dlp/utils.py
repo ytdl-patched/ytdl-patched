@@ -2526,6 +2526,8 @@ class LazyList(collections.abc.Sequence):
 
     def __exhaust(self):
         self.__cache.extend(self.__iterable)
+        # Discard the emptied iterable to make it pickle-able
+        self.__iterable = []
         return self.__cache
 
     def exhaust(self):
