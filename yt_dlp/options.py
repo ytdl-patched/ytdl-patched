@@ -1680,7 +1680,9 @@ def parseOpts(overrideArguments=None):
                     config = _readOptions(current_path, default=None)
                 if config is not None:
                     configs[name], paths[name] = config, current_path
-                    return parser.parse_args(config)[0].ignoreconfig
+                    parsed_conf = parser.parse_args(config)[0]
+                    update_insert_config(parsed_conf.insert_config)
+                    return parsed_conf.ignoreconfig
             return False
 
         def update_insert_config(values):
