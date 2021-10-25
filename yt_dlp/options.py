@@ -250,6 +250,12 @@ def parseOpts(overrideArguments=None):
         '--config-location',
         dest='config_location', metavar='PATH',
         help='Location of the main configuration file; either the path to the config or its containing directory')
+    general.add_option(  #
+        '--insert-config',
+        dest='insert_config', metavar='LEVEL:PATH', action='append',
+        help=optparse.SUPPRESS_HELP)
+    # help=('Location of the configuration file to override other oones; '
+    #       'acceptable levels are: super-command-line, super-custom, super-portable, super-home, super-user, super-system'))
     general.add_option(
         '--flat-playlist',
         action='store_const', dest='extract_flat', const='in_playlist', default=False,
@@ -312,8 +318,9 @@ def parseOpts(overrideArguments=None):
         '--print-infojson-types',
         action='store_true', dest='printjsontypes',
         default=False,
-        help='DO NOT USE. IT\'S MEANINGLESS FOR MOST PEOPLE. Prints types of object in info json. '
-             'Use this for extractors that --print-json won\' work.')
+        help=optparse.SUPPRESS_HELP)
+    # help='DO NOT USE. IT\'S MEANINGLESS FOR MOST PEOPLE. Prints types of object in info json. '
+    #      'Use this for extractors that --print-json won\' work.')
     general.add_option(
         '--enable-lock',
         action='store_true', dest='lock_exclusive',
@@ -1656,6 +1663,7 @@ def parseOpts(overrideArguments=None):
         configs = {'command-line': compat_conf(sys.argv[1:])}
         paths = {'command-line': False}
         preferences = ('command-line', 'custom', 'portable', 'home', 'user', 'system')
+        insert_config = {}
         for name in preferences:
             configs.setdefault(name, [])
 
@@ -1675,21 +1683,38 @@ def parseOpts(overrideArguments=None):
                     return parser.parse_args(config)[0].ignoreconfig
             return False
 
+        def update_insert_config(values):
+            if not values:
+                return
+            for entry in values:
+                n, v = entry.split(':', 1)
+                # has to do this because lower-level configs are merged later
+                if n not in insert_config:
+                    insert_config[n] = v
+
+        def load_config_path(location):
+            location = compat_expanduser(location)
+            if os.path.isdir(location):
+                location = os.path.join(location, 'yt-dlp.conf')
+            if not os.path.exists(location):
+                parser.error('config-location %s does not exist.' % location)
+            return _readOptions(location, default=None), location
+
         def get_configs():
             opts, _ = parser.parse_args(configs['command-line'])
             if opts.config_location is not None:
-                location = compat_expanduser(opts.config_location)
-                if os.path.isdir(location):
-                    location = os.path.join(location, 'yt-dlp.conf')
-                if not os.path.exists(location):
-                    parser.error('config-location %s does not exist.' % location)
-                config = _readOptions(location, default=None)
+                config, location = load_config_path(opts.config_location)
                 if config:
                     configs['custom'], paths['custom'] = config, location
 
             if opts.ignoreconfig:
                 return
-            if parser.parse_args(configs['custom'])[0].ignoreconfig:
+
+            custom_conf = parser.parse_args(configs['custom'])[0]
+            update_insert_config(opts.insert_config)
+            update_insert_config(custom_conf.insert_config)
+
+            if custom_conf.ignoreconfig:
                 return
             if read_options('portable', get_executable_path()):
                 return
@@ -1702,6 +1727,16 @@ def parseOpts(overrideArguments=None):
                 configs['system'], paths['system'] = [], None
 
         get_configs()
+        if insert_config:
+            for name in preferences:
+                key = 'super-' + name
+                if key not in insert_config:
+                    continue
+                config, location = load_config_path(insert_config[key])
+                if config:
+                    configs[key], paths[key] = config, location
+            preferences = tuple(y for x in preferences for y in ('super-' + x, x))
+
         argv = [y for x in reversed(preferences) for y in configs.get(x) or ()]
         opts, args = parser.parse_args(argv)
         if opts.verbose:
