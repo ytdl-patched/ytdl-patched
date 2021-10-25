@@ -1653,10 +1653,11 @@ def parseOpts(overrideArguments=None):
                 return [a.decode(preferredencoding(), 'replace') for a in conf]
             return conf
 
-        configs = {
-            'command-line': compat_conf(sys.argv[1:]),
-            'custom': [], 'home': [], 'portable': [], 'user': [], 'system': []}
+        configs = {'command-line': compat_conf(sys.argv[1:])}
         paths = {'command-line': False}
+        preferences = ('command-line', 'custom', 'portable', 'home', 'user', 'system')
+        for name in preferences:
+            configs.setdefault(name, [])
 
         def read_options(name, path, user=False):
             ''' loads config files and returns ignoreconfig '''
@@ -1701,11 +1702,11 @@ def parseOpts(overrideArguments=None):
                 configs['system'], paths['system'] = [], None
 
         get_configs()
-        argv = configs['system'] + configs['user'] + configs['home'] + configs['portable'] + configs['custom'] + configs['command-line']
+        argv = [y for x in reversed(preferences) for y in configs.get(x) or ()]
         opts, args = parser.parse_args(argv)
         if opts.verbose:
-            for label in ('Command-line', 'Custom', 'Portable', 'Home', 'User', 'System'):
-                key = label.lower()
+            for key in preferences:
+                label = key[0].upper() + key[1:]
                 if paths.get(key):
                     write_string(f'[debug] {label} config file: {paths[key]}\n')
                 if paths.get(key) is not None:
