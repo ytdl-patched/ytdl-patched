@@ -3547,13 +3547,13 @@ class YoutubeDL(object):
             write_debug = lambda msg: self._write_string(f'[debug] {msg}\n')
 
         source = detect_variant()
-        write_debug('ytdl-patched version %s %s\n' % (__version__, '' if source == 'unknown' else f' ({source})'))
+        write_debug('ytdl-patched version %s %s' % (__version__, '' if source == 'unknown' else f' ({source})'))
         if git_commit:
-            write_debug('     from commit %s\n' % git_commit)
+            write_debug('     from commit %s' % git_commit)
         if git_upstream_commit:
-            write_debug('     based on %s\n' % git_upstream_commit)
-        write_debug('** The command you are running is not yt-dlp. \n')
-        write_debug('** Please make bug reports at https://github.com/ytdl-patched/ytdl-patched instead. \n')
+            write_debug('     based on %s' % git_upstream_commit)
+        write_debug('** The command you are running is not yt-dlp.')
+        write_debug('** Please make bug reports at https://github.com/ytdl-patched/ytdl-patched/issues/new/choose instead.')
 
         if not _LAZY_LOADER:
             if os.environ.get('YTDLP_NO_LAZY_EXTRACTORS'):
