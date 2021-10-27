@@ -2671,18 +2671,21 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         for f in formats:
             url_qs = parse_qs(f['url'])
             client_name = traverse_obj(url_qs, ('c', 0)) or ''
+            ratebypass = traverse_obj(url_qs, ('ratebypass', 0))
+            n = traverse_obj(url_qs, ('n', 0))
             if client_name:
                 f['format_note'] = format_field(f, 'format_note', '%s ') + f'({client_name[:3]})'
             if client_name.startswith('WEB'):  # web client which requires decrypting n params
                 try:
                     if 'nparams' in self._configuration_arg('player_skip'):
                         raise DummyError()
-                    old_n = url_qs['n'][0]
+                    assert n and ratebypass != 'yes'
+                    old_n = n
                     new_n = self._decrypt_n_params(old_n, player_url, video_id)
                     assert new_n != old_n
                     f['url'] = update_url_query(f['url'], {'n': new_n})
                     n_decrypted = True
-                except DummyError:
+                except (DummyError, AssertionError):
                     n_decrypted = False
                 except Exception as e:
                     self.report_warning(e)
