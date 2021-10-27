@@ -991,6 +991,7 @@
  - **Sina**
  - **sky.it**
  - **sky:news**
+ - **sky:news:story**
  - **sky:sports**
  - **sky:sports:news**
  - **skyacademy.it**
