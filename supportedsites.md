@@ -1110,6 +1110,8 @@
  - **ThisAmericanLife**
  - **ThisAV**
  - **ThisOldHouse**
+ - **ThreeSpeak**
+ - **ThreeSpeakUser**
  - **TikTok**
  - **tiktok:user**
  - **tinypic**: tinypic.com videos
