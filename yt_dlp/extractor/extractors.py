@@ -1334,6 +1334,7 @@ from .skynewsarabia import (
 from .skynewsau import SkyNewsAUIE
 from .sky import (
     SkyNewsIE,
+    SkyNewsStoryIE,
     SkySportsIE,
     SkySportsNewsIE,
 )
