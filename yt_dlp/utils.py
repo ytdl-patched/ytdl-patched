@@ -930,9 +930,9 @@ class GeoRestrictedError(ExtractorError):
     geographic location due to geographic restrictions imposed by a website.
     """
 
-    def __init__(self, msg, countries=None):
-        super(GeoRestrictedError, self).__init__(msg, expected=True)
-        self.msg = msg
+    def __init__(self, msg, countries=None, **kwargs):
+        kwargs['expected'] = True
+        super(GeoRestrictedError, self).__init__(msg, **kwargs)
         self.countries = countries
 
 
@@ -989,14 +989,19 @@ class PostProcessingError(YoutubeDLError):
         self.msg = msg
 
 
-class ExistingVideoReached(YoutubeDLError):
-    """ --max-downloads limit has been reached. """
-    pass
+class DownloadCancelled(YoutubeDLError):
+    """ Exception raised when the download queue should be interrupted """
+    msg = 'The download was cancelled'
+
+    def __init__(self, msg=None):
+        if msg is not None:
+            self.msg = msg
+        YoutubeDLError.__init__(self, self.msg)
 
 
-class RejectedVideoReached(YoutubeDLError):
-    """ --max-downloads limit has been reached. """
-    pass
+class ExistingVideoReached(DownloadCancelled):
+    """ --break-on-existing triggered """
+    msg = 'Encountered a video that is already in the archive, stopping due to --break-on-existing'
 
 
 class ReextractRequested(YoutubeDLError):
@@ -1018,9 +1023,14 @@ class UnrecoverableHttpError(ReextractRequested):
         super().__init__('An unrecoverable error has been detected.')
 
 
-class MaxDownloadsReached(YoutubeDLError):
+class RejectedVideoReached(DownloadCancelled):
+    """ --break-on-reject triggered """
+    msg = 'Encountered a video that did not match filter, stopping due to --break-on-reject'
+
+
+class MaxDownloadsReached(DownloadCancelled):
     """ --max-downloads limit has been reached. """
-    pass
+    msg = 'Maximum number of downloads reached, stopping due to --max-downloads'
 
 
 class UnavailableVideoError(YoutubeDLError):
@@ -2981,6 +2991,7 @@ OUTTMPL_TYPES = {
     'description': 'description',
     'annotation': 'annotations.xml',
     'infojson': 'info.json',
+    'link': None,
     'pl_thumbnail': None,
     'pl_description': 'description',
     'pl_infojson': 'info.json',
@@ -3209,7 +3220,7 @@ def determine_protocol(info_dict):
     if protocol is not None:
         return protocol
 
-    url = info_dict['url']
+    url = sanitize_url(info_dict['url'])
     if url.startswith('rtmp'):
         return 'rtmp'
     elif url.startswith('mms'):
@@ -4715,6 +4726,12 @@ Type=Link
 URL=%(url)s
 Icon=text-html
 '''.lstrip()
+
+LINK_TEMPLATES = {
+    'url': DOT_URL_LINK_TEMPLATE,
+    'desktop': DOT_DESKTOP_LINK_TEMPLATE,
+    'webloc': DOT_WEBLOC_LINK_TEMPLATE,
+}
 
 
 def iri_to_uri(iri):
