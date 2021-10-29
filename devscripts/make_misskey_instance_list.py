@@ -15,7 +15,10 @@ class TestIE(InfoExtractor):
     pass
 
 
-ie = TestIE(FakeYDL({'verbose': False}))
+ie = TestIE(FakeYDL({
+    'verbose': False,
+    'socket_timeout': 120,
+}))
 script_id = 'misskey'
 results = set()
 

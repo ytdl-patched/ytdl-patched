@@ -16,7 +16,10 @@ class TestIE(InfoExtractor):
     pass
 
 
-ie = TestIE(FakeYDL({'verbose': False}))
+ie = TestIE(FakeYDL({
+    'verbose': False,
+    'socket_timeout': 120,
+}))
 script_id = 'mastodon'
 results = set()
 
@@ -29,23 +32,23 @@ def sanitize_hostname(hostname):
     return hostname
 
 
-instance_social_api_key = os.environ['INSTANCE_SOCIAL_API_SECRET']
-if not instance_social_api_key:
-    raise ExtractorError('You must set INSTANCE_SOCIAL_API_SECRET to work')
-
-min_id = None
-while True:
-    url = 'https://instances.social/api/1.0/instances/list'
-    if min_id:
-        url = f'{url}?min_id={min_id}'
-    data = ie._download_json(
-        url, script_id, note=f'Paging {min_id}, len(results)={len(results)}',
-        headers={'Authorization': f'Bearer {instance_social_api_key}'})
-    for instance in data['instances']:
-        results.add(sanitize_hostname(instance['name']))
-    min_id = data['pagination'].get('next_id')
-    if not min_id:
-        break
+instance_social_api_key = os.environ.get('INSTANCE_SOCIAL_API_SECRET')
+if instance_social_api_key:
+    min_id = None
+    while True:
+        url = 'https://instances.social/api/1.0/instances/list'
+        if min_id:
+            url = f'{url}?min_id={min_id}'
+        data = ie._download_json(
+            url, script_id, note=f'Paging {min_id}, len(results)={len(results)}',
+            headers={'Authorization': f'Bearer {instance_social_api_key}'})
+        for instance in data['instances']:
+            results.add(sanitize_hostname(instance['name']))
+        min_id = data['pagination'].get('next_id')
+        if not min_id:
+            break
+else:
+    ie.report_warning('instances.social fetching is disabled!!!')
 
 joinmastodon_categories = [
     'general', 'regional', 'art', 'music',
@@ -71,8 +74,18 @@ if True:
             })
         for instance in data['data']['nodes']:
             results.add(sanitize_hostname(instance['host']))
-    except BaseException:
-        pass
+    except BaseException as ex:
+        ie.report_warning(ex)
+
+if True:
+    try:
+        url = 'https://mastodon.fediverse.observer/tabledata.php?software=mastodon'
+        data = ie._download_webpage(
+            url, script_id, note=f'Scraping https://mastodon.fediverse.observer, len(results)={len(results)}')
+        for instance in re.finditer(r'href="/go\.php\?domain=([a-z0-9\.-]+)">\1</a>', data):
+            results.add(sanitize_hostname(instance.group(1)))
+    except BaseException as ex:
+        ie.report_warning(ex)
 
 ie.to_screen(f'{script_id}: len(results)={len(results)}')
 

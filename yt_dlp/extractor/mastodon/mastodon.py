@@ -47,7 +47,7 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
         if skip:
             return False
 
-        ie.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social or joinmastodon.org.' % hostname)
+        ie.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social, joinmastodon.org, the-federation.info or fediverse.observer.' % hostname)
 
         try:
             # try /api/v1/instance

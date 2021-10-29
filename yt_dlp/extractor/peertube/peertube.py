@@ -45,7 +45,7 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
         if skip:
             return False
 
-        ie.report_warning('Testing if %s is a PeerTube instance because it is not listed in joinpeertube.org.' % hostname)
+        ie.report_warning('Testing if %s is a PeerTube instance because it is not listed in either joinpeertube.org, the-federation.info or fediverse.observer.' % hostname)
 
         try:
             # try /api/v1/config

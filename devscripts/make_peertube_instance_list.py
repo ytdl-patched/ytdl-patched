@@ -15,7 +15,10 @@ class TestIE(InfoExtractor):
     pass
 
 
-ie = TestIE(FakeYDL({'verbose': False}))
+ie = TestIE(FakeYDL({
+    'verbose': False,
+    'socket_timeout': 120,
+}))
 script_id = 'peertube'
 results = set()
 
@@ -32,7 +35,7 @@ begin, page_size = 0, 10
 while True:
     url = 'https://instances.joinpeertube.org/api/v1/instances?start=%d&count=%d&sort=-createdAt' % (begin, page_size)
     data = ie._download_json(
-        url, script_id, note=f'Paging {begin}, len(results)={len(results)}')
+        url, script_id, note=f'Paging https://instances.joinpeertube.org {begin}, len(results)={len(results)}')
     for instance in data['data']:
         results.add(sanitize_hostname(instance['host']))
     begin += page_size
@@ -51,9 +54,18 @@ while True:
         for instance in data['data']['nodes']:
             results.add(sanitize_hostname(instance['host']))
         break
-    except BaseException:
-        continue
+    except BaseException as ex:
+        ie.report_warning(ex)
 
+if True:
+    try:
+        url = 'https://peertube.fediverse.observer/tabledata.php?software=peertube'
+        data = ie._download_webpage(
+            url, script_id, note=f'Scraping https://peertube.fediverse.observer, len(results)={len(results)}')
+        for instance in re.finditer(r'href="/go\.php\?domain=([a-z0-9\.-]+)">\1</a>', data):
+            results.add(sanitize_hostname(instance.group(1)))
+    except BaseException as ex:
+        ie.report_warning(ex)
 
 if not results:
     raise ExtractorError('no instances found')
