@@ -28,9 +28,9 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
 
     @staticmethod
     def _test_peertube_instance(ie, hostname, skip, prefix):
-        hostname = hostname.encode('idna')
         if not isinstance(hostname, compat_str):
             hostname = hostname.decode(preferredencoding())
+        hostname = hostname.encode('idna').decode('utf-8')
 
         if hostname in instances:
             return True
