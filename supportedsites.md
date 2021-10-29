@@ -610,6 +610,7 @@
  - **mixcloud:user**
  - **MLB**
  - **MLBVideo**
+ - **MLSSoccer**
  - **Mnet**
  - **MNetTV**
  - **MoeVideo**: LetitBit video services: moevideo.net, playreplay.net and videochart.net
