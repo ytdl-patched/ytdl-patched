@@ -4,22 +4,38 @@ from __future__ import unicode_literals
 import itertools
 import re
 
+
 from .instances import instances
 from ..common import InfoExtractor, SelfHostedInfoExtractor
-from ...utils import ExtractorError, clean_html, preferredencoding
+from ..peertube.peertube import PeerTubeIE
+from ...utils import ExtractorError, clean_html, preferredencoding, get_first_group
 
 
 known_valid_instances = set()
 
 
 class MastodonBaseIE(SelfHostedInfoExtractor):
+    _SH_VALID_CONTENT_STRINGS = (
+        ',"settings":{"known_fediverse":',  # Mastodon initial-state
+        '<li><a href="https://docs.joinmastodon.org/">Documentation</a></li>',
+        '<title>Pleroma</title>',
+        '<noscript>To use Pleroma, please enable JavaScript.</noscript>',
+        '<noscript>To use Soapbox, please enable JavaScript.</noscript>',
+        'Alternatively, try one of the <a href="https://apps.gab.com">native apps</a> for Gab Social for your platform.',
+    )
+    _SH_VALID_CONTENT_SOFTWARES = ('mastodon', 'mastodon', 'pleroma', 'pleroma', 'pleroma', 'gab')
+    _SH_VALID_CONTENT_REGEXES = (
+        # double quotes on Mastodon, single quotes on Gab Social
+        r'<script id=[\'"]initial-state[\'"] type=[\'"]application/json[\'"]>{"meta":{"streaming_api_base_url":"wss://',
+    )
 
     @classmethod
     def suitable(cls, url):
         mobj = cls._match_valid_url(url)
         if not mobj:
             return False
-        prefix, hostname = mobj.group('prefix', 'domain')
+        prefix = mobj.group('prefix')
+        hostname = get_first_group(mobj, 'domain_1', 'domain_2', 'domain')
         return cls._test_mastodon_instance(None, hostname, True, prefix)
 
     @staticmethod
@@ -84,10 +100,61 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
             url, 'mastodon test', group='prefix', default=None)
         return MastodonIE._test_mastodon_instance(ie, hostname, False, prefix)
 
+    def _determine_instance_software(self, host, webpage=None):
+        if webpage:
+            for i, string in enumerate(self._SH_VALID_CONTENT_STRINGS):
+                if string in webpage:
+                    return self._SH_VALID_CONTENT_SOFTWARES[i]
+            if any(s in webpage for s in PeerTubeIE._SH_VALID_CONTENT_STRINGS):
+                return 'peertube'
+
+        nodeinfo_href = self._download_json(
+            f'https://{host}/.well-known/nodeinfo', host, 'Downloading instance nodeinfo link')
+
+        nodeinfo = self._download_json(
+            nodeinfo_href['links'][-1]['href'], host, 'Downloading instance nodeinfo')
+
+        return nodeinfo['software']['name']
+
 
 class MastodonIE(MastodonBaseIE):
+    # NOTE: currently, compatible self-hosted products like Gab Social requires probing for each instances.
+    # TODO: include all these compatible products into instance list
     IE_NAME = 'mastodon'
-    _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/(?:@(?P<username>[a-zA-Z0-9_-]+)|web/statuses)/(?P<id>\d+)'
+    _VALID_URL = r'''(?x)
+        (?P<prefix>(?:mastodon|mstdn|mtdn):)?
+        (?:
+            # URL with or without prefix
+            https?://(?P<domain_1>[^/\s]+)/
+            (?:
+                # mastodon
+                @(?P<username_1>[a-zA-Z0-9_-]+)
+                |web/statuses
+                # gab social
+                |(?P<username_2>[a-zA-Z0-9_-]+)/posts
+                # mastodon legacy (?)
+                |users/(?P<username_3>[a-zA-Z0-9_-]+)/statuses
+                # pleroma
+                |notice
+                # pleroma (OStatus standard?) - https://git.pleroma.social/pleroma/pleroma/-/blob/e9859b68fcb9c38b2ec27a45ffe0921e8d78b5e1/lib/pleroma/web/router.ex#L607
+                |objects
+                |activities
+            )/
+        # haruhi-dl compatible: "mastodon:example.com:blablabla"
+        |(?P<domain_2>[^:\s]+)(?P<short_form>:))
+        (?P<id>[0-9a-zA-Z-]+)
+    '''
+
+    @classmethod
+    def suitable(cls, url):
+        mobj = cls._match_valid_url(url)
+        if not mobj:
+            return False
+        prefix, is_short = mobj.group('prefix', 'short_form')
+        if is_short and prefix:
+            return True
+        return super(MastodonIE, cls).suitable(url)
+
     _TESTS = [{
         'note': 'embed video without NSFW',
         'url': 'https://mstdn.jp/@nao20010128nao/105395495018076252',
@@ -137,10 +204,23 @@ class MastodonIE(MastodonBaseIE):
             'id': '103997543924688111',
             'uploader_id': 'm',
         },
+    }, {
+        'note': 'short form, compatible with haruhi-dl\'s usage',
+        'url': 'mastodon:mstdn.jp:105395495018076252',
+        'info_dict': {
+            'id': '105395495018076252',
+            'title': 'てすや\nhttps://www.youtube.com/watch?v=jx0fBBkaF1w',
+            'uploader': 'nao20010128nao',
+            'uploader_id': 'nao20010128nao',
+            'age_limit': 0,
+        },
     }]
 
     def _real_extract(self, url):
-        domain, uploader_id, video_id = self._match_valid_url(url).group('domain', 'username', 'id')
+        mobj = self._match_valid_url(url)
+        video_id = mobj.group('id')
+        domain = get_first_group(mobj, 'domain_1', 'domain_2')
+        uploader_id = get_first_group(mobj, 'username_1', 'username_2', 'username_3')
 
         api_response = self._download_json('https://%s/api/v1/statuses/%s' % (domain, video_id), video_id)
 
@@ -170,9 +250,7 @@ class MastodonIE(MastodonBaseIE):
             uploader = account.get('display_name')
             uploader_id = uploader_id or account.get('username')
 
-        age_limit = 0
-        if api_response.get('sensitive'):
-            age_limit = 18
+        age_limit = 18 if api_response.get('sensitive') else 0
 
         card = api_response.get('card')
         if not formats and card:

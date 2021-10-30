@@ -5110,3 +5110,14 @@ def remove_terminal_sequences(string):
 
 def number_of_digits(number):
     return len('%d' % number)
+
+
+def get_first_group(match, *groups, default=None):
+    for g in groups:
+        try:
+            m = match.group(g)
+            if m:
+                return m
+        except IndexError:
+            continue
+    return default
