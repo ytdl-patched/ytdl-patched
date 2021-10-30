@@ -2,13 +2,33 @@
 from __future__ import unicode_literals
 
 import itertools
+import json
 import re
 
 
 from .instances import instances
-from ..common import InfoExtractor, SelfHostedInfoExtractor
+from ..common import (
+    InfoExtractor,
+    SelfHostedInfoExtractor
+)
 from ..peertube.peertube import PeerTubeIE
-from ...utils import ExtractorError, clean_html, preferredencoding, get_first_group
+from ...utils import (
+    ExtractorError,
+    clean_html,
+    preferredencoding,
+    get_first_group,
+    str_or_none,
+    int_or_none,
+    float_or_none,
+    unescapeHTML,
+    try_get,
+    parse_qs,
+    url_or_none,
+)
+from ...compat import (
+    compat_urllib_parse_urlencode as urlencode,
+    compat_urlparse as urlparse,
+)
 
 
 known_valid_instances = set()
@@ -28,6 +48,7 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
         # double quotes on Mastodon, single quotes on Gab Social
         r'<script id=[\'"]initial-state[\'"] type=[\'"]application/json[\'"]>{"meta":{"streaming_api_base_url":"wss://',
     )
+    _NETRC_MACHINE = 'mastodon'
 
     @classmethod
     def suitable(cls, url):
@@ -86,6 +107,103 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
         known_valid_instances.add(hostname)
         return True
 
+    def _login(self):
+        username, password = self._get_login_info()
+        if not username:
+            return False
+
+        # very basic regex, but the instance domain (the one where user has an account)
+        # must be separated from the user login
+        mobj = re.match(r'^(?P<username>[^@]+(?:@[^@]+)?)@(?P<instance>.+)$', username)
+        if not mobj:
+            self.report_error(
+                'Invalid login format - must be in format [username or email]@[instance]')
+        username, instance = mobj.group('username', 'instance')
+
+        app_info = self._downloader.cache.load('mastodon-apps', instance)
+        if not app_info:
+            app_info = self._download_json(
+                f'https://{instance}/api/v1/apps', None, 'Creating an app', headers={
+                    'Content-Type': 'application/json',
+                }, data=bytes(json.dumps({
+                    'client_name': 'ytdl-patched Mastodon Extractor',
+                    'redirect_uris': 'urn:ietf:wg:oauth:2.0:oob',
+                    'scopes': 'read',
+                    'website': 'https://github.com/ytdl-patched/ytdl-patched',
+                }).encode('utf-8')))
+            self._downloader.cache.store('mastodon-apps', instance, app_info)
+
+        login_webpage = self._download_webpage(
+            f'https://{instance}/oauth/authorize', None, 'Downloading login page', query={
+                'client_id': app_info['client_id'],
+                'scope': 'read',
+                'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+                'response_type': 'code',
+            })
+        oauth_token = None
+        # this needs to be codebase-specific, as the HTML page differs between codebases
+        if 'xlink:href="#mastodon-svg-logo-full"' in login_webpage:
+            # mastodon
+            if '@' not in username:
+                self.report_warning(
+                    'Invalid login format - for Mastodon instances e-mail address is required')
+            login_form = self._hidden_inputs(login_webpage)
+            login_form['user[email]'] = username
+            login_form['user[password]'] = password
+            login_req, urlh = self._download_webpage_handle(
+                f'https://{instance}/auth/sign_in', None, 'Sending login details',
+                headers={
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }, data=bytes(urlencode(login_form).encode('utf-8')))
+            # cached apps may already be authorized
+            if '/oauth/authorize/native' in urlh.url:
+                oauth_token = parse_qs(urlparse(urlh.url).query)['code'][0]
+            else:
+                auth_form = self._hidden_inputs(
+                    self._search_regex(
+                        r'(?s)(<form\b[^>]+>.+?>Authorize</.+?</form>)',
+                        login_req, 'authorization form'))
+                _, urlh = self._download_webpage_handle(
+                    f'https://{instance}/oauth/authorize', None, 'Confirming authorization',
+                    headers={
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }, data=bytes(urlencode(auth_form).encode('utf-8')))
+                oauth_token = parse_qs(urlparse(urlh.url).query)['code'][0]
+        elif 'content: "✔\\fe0e";' in login_webpage:
+            # pleroma
+            login_form = self._hidden_inputs(login_webpage)
+            login_form['authorization[scope][]'] = 'read'
+            login_form['authorization[name]'] = username
+            login_form['authorization[password]'] = password
+            login_req = self._download_webpage(
+                f'https://{instance}/oauth/authorize', None, 'Sending login details',
+                headers={
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }, data=bytes(urlencode(login_form).encode('utf-8')))
+            # TODO: 2FA, error handling
+            oauth_token = self._search_regex(
+                r'<h2>\s*Token code is\s*<br>\s*([a-zA-Z\d_-]+)\s*</h2>',
+                login_req, 'oauth token')
+        else:
+            raise ExtractorError('Unknown instance type')
+
+        actual_token = self._download_json(
+            f'https://{instance}/oauth/token', None, 'Downloading the actual token',
+            headers={
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }, data=bytes(urlencode({
+                'client_id': app_info['client_id'],
+                'client_secret': app_info['client_secret'],
+                'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+                'scope': 'read',
+                'code': oauth_token,
+                'grant_type': 'authorization_code',
+            }).encode('utf-8')))
+        return {
+            'instance': instance,
+            'authorization': f"{actual_token['token_type']} {actual_token['access_token']}",
+        }
+
     @staticmethod
     def _is_probe_enabled(ydl):
         return ydl.params.get('check_mastodon_instance', False)
@@ -128,12 +246,12 @@ class MastodonIE(MastodonBaseIE):
             https?://(?P<domain_1>[^/\s]+)/
             (?:
                 # mastodon
-                @(?P<username_1>[a-zA-Z0-9_-]+)
+                @[a-zA-Z0-9_-]+
                 |web/statuses
                 # gab social
-                |(?P<username_2>[a-zA-Z0-9_-]+)/posts
+                |[a-zA-Z0-9_-]+/posts
                 # mastodon legacy (?)
-                |users/(?P<username_3>[a-zA-Z0-9_-]+)/statuses
+                |users/[a-zA-Z0-9_-]+/statuses
                 # pleroma
                 |notice
                 # pleroma (OStatus standard?) - https://git.pleroma.social/pleroma/pleroma/-/blob/e9859b68fcb9c38b2ec27a45ffe0921e8d78b5e1/lib/pleroma/web/router.ex#L607
@@ -217,55 +335,116 @@ class MastodonIE(MastodonBaseIE):
     }]
 
     def _real_extract(self, url):
+        webpage = None
         mobj = self._match_valid_url(url)
+        ap_censorship_circuvement = False
+        if not mobj and self._downloader.params.get('force_use_mastodon'):
+            mobj = PeerTubeIE._match_valid_url(url)
+            if mobj:
+                ap_censorship_circuvement = 'peertube'
+        # regex must match when execution reaches here
+
         video_id = mobj.group('id')
         domain = get_first_group(mobj, 'domain_1', 'domain_2')
-        uploader_id = get_first_group(mobj, 'username_1', 'username_2', 'username_3')
 
-        api_response = self._download_json('https://%s/api/v1/statuses/%s' % (domain, video_id), video_id)
+        login_info = self._login()
 
-        formats = []
-        thumbnail, description = None, None
-        for atch in api_response.get('media_attachments', []):
-            if atch.get('type') != 'video':
-                continue
-            meta = atch.get('meta')
-            if not meta:
-                continue
-            thumbnail = meta.get('preview_url')
-            description = atch.get('description')
-            formats.append({
-                'format_id': atch.get('id'),
-                'protocol': 'http',
-                'url': atch.get('url'),
-                'fps': meta.get('fps'),
-                'width': meta.get('width'),
-                'height': meta.get('height'),
-                'duration': meta.get('duration'),
-            })
-            break
+        if login_info and domain != login_info['instance']:
+            wf_url = url
+            if not url.startswith('http'):
+                software = ap_censorship_circuvement
+                if not software:
+                    software = self._determine_instance_software(domain, webpage)
+                url_part = None
+                if software == 'pleroma':
+                    if '-' in video_id:   # UUID
+                        url_part = 'objects'
+                    else:
+                        url_part = 'notice'
+                elif software == 'peertube':
+                    url_part = 'videos/watch'
+                elif software in ('mastodon', 'gab'):
+                    # mastodon and gab social require usernames in the url,
+                    # but we can't determine the username without fetching the post,
+                    # but we can't fetch the post without determining the username...
+                    raise ExtractorError(f'Use the full url with --force-use-mastodon to download from {software}', expected=True)
+                else:
+                    raise ExtractorError(f'Unknown software: {software}')
+                wf_url = f'https://{domain}/{url_part}/{video_id}'
+            search = self._download_json(
+                f"https://{login_info['instance']}/api/v2/search", '%s:%s' % (domain, video_id),
+                query={
+                    'q': wf_url,
+                    'type': 'statuses',
+                    'resolve': True,
+                }, headers={
+                    'Authorization': login_info['authorization'],
+                })
+            assert len(search['statuses']) == 1
+            metadata = search['statuses'][0]
+        else:
+            if not login_info and any(frag in url for frag in ('/objects/', '/activities/')):
+                if not webpage:
+                    webpage = self._download_webpage(url, '%s:%s' % (domain, video_id), expected_status=302)
+                real_url = self._og_search_property('url', webpage, default=None)
+                if real_url:
+                    return self.url_result(real_url, ie='MastodonSH')
+            metadata = self._download_json(
+                'https://%s/api/v1/statuses/%s' % (domain, video_id), '%s:%s' % (domain, video_id),
+                headers={
+                    'Authorization': login_info['authorization'],
+                } if login_info else {})
 
-        account, uploader = api_response.get('account'), None
-        if account:
-            uploader = account.get('display_name')
-            uploader_id = uploader_id or account.get('username')
+        entries = []
+        for media in metadata.get('media_attachments') or ():
+            if media['type'] in ('video', 'audio'):
+                entries.append({
+                    'id': media['id'],
+                    'title': str_or_none(media['description']),
+                    'url': str_or_none(media['url']),
+                    'thumbnail': str_or_none(media['preview_url']) if media['type'] == 'video' else None,
+                    'vcodec': 'none' if media['type'] == 'audio' else None,
+                    'duration': float_or_none(try_get(media, lambda x: x['meta']['original']['duration'])),
+                    'width': int_or_none(try_get(media, lambda x: x['meta']['original']['width'])),
+                    'height': int_or_none(try_get(media, lambda x: x['meta']['original']['height'])),
+                    'tbr': int_or_none(try_get(media, lambda x: x['meta']['original']['bitrate'])),
+                })
 
-        age_limit = 18 if api_response.get('sensitive') else 0
+        title = clean_html(metadata.get('content'))
+        if ap_censorship_circuvement == 'peertube':
+            title = unescapeHTML(
+                self._search_regex(
+                    r'^<p><a href="[^"]+">(.+?)</a></p>',
+                    metadata['content'], 'video title'))
 
-        card = api_response.get('card')
-        if not formats and card:
-            return self.url_result(card.get('url'))
+        if len(entries) == 0:
+            card = metadata.get('card')
+            if card:
+                return {
+                    '_type': 'url_transparent',
+                    'url': card['url'],
+                    'title': title,
+                    'thumbnail': url_or_none(card.get('image')),
+                }
+            raise ExtractorError('No audio/video attachments')
 
-        return {
-            'id': video_id,
-            'title': clean_html(api_response.get('content')),
-            'description': description,
-            'formats': formats,
-            'thumbnail': thumbnail,
-            'uploader': uploader,
-            'uploader_id': uploader_id,
-            'age_limit': age_limit,
+        info_dict = {
+            "id": video_id,
+            "title": title,
         }
+        if len(entries) == 1:
+            info_dict.update(entries[0])
+            info_dict.update({
+                'id': video_id,
+                'title': title,
+            })
+        else:
+            info_dict.update({
+                "_type": "playlist",
+                "entries": entries,
+            })
+
+        return info_dict
 
 
 class MastodonUserIE(MastodonBaseIE):
