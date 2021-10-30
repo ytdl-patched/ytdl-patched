@@ -85,7 +85,7 @@ class PeerTubeIE(PeerTubeBaseIE):
     _UUID_RE = r'[\da-zA-Z]{22}|[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
     _API_BASE = 'https://%s/api/v1/videos/%s/%s'
     _VALID_URL = r'''(?x)
-                    (?P<prefix>peertube:)(?:
+                    (?P<prefix>peertube:)?(?:
                         (?P<host>[^:]+):|
                         https?://(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos|w)/
                     )
