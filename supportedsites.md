@@ -575,6 +575,7 @@
  - **MediaKlikk**
  - **Medialaan**
  - **Mediaset**
+ - **MediasetShow**
  - **Mediasite**
  - **MediasiteCatalog**
  - **MediasiteNamedCatalog**
