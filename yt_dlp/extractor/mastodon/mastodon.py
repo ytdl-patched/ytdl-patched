@@ -7,7 +7,6 @@ import re
 from .instances import instances
 from ..common import InfoExtractor, SelfHostedInfoExtractor
 from ...utils import ExtractorError, clean_html, preferredencoding
-from ...compat import compat_str
 
 
 known_valid_instances = set()
@@ -20,13 +19,12 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
         mobj = cls._match_valid_url(url)
         if not mobj:
             return False
-        prefix = mobj.group('prefix')
-        hostname = mobj.group('domain')
+        prefix, hostname = mobj.group('prefix', 'domain')
         return cls._test_mastodon_instance(None, hostname, True, prefix)
 
     @staticmethod
     def _test_mastodon_instance(ie, hostname, skip, prefix):
-        if not isinstance(hostname, compat_str):
+        if isinstance(hostname, bytes):
             hostname = hostname.decode(preferredencoding())
         hostname = hostname.encode('idna').decode('utf-8')
 

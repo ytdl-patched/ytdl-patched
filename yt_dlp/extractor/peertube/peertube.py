@@ -28,7 +28,7 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
 
     @staticmethod
     def _test_peertube_instance(ie, hostname, skip, prefix):
-        if not isinstance(hostname, compat_str):
+        if isinstance(hostname, bytes):
             hostname = hostname.decode(preferredencoding())
         hostname = hostname.encode('idna').decode('utf-8')
 
@@ -85,8 +85,8 @@ class PeerTubeIE(PeerTubeBaseIE):
     _UUID_RE = r'[\da-zA-Z]{22}|[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
     _API_BASE = 'https://%s/api/v1/videos/%s/%s'
     _VALID_URL = r'''(?x)
-                    (?:
-                        (?P<prefix>peertube:)(?P<host>[^:]+):|
+                    (?P<prefix>peertube:)(?:
+                        (?P<host>[^:]+):|
                         https?://(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos|w)/
                     )
                     (?P<id>%s)
@@ -238,7 +238,7 @@ class PeerTubeIE(PeerTubeBaseIE):
         return subtitles
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
+        mobj = self._match_valid_url(url)
         host = mobj.group('host') or mobj.group('host_2')
         video_id = mobj.group('id')
 
@@ -341,7 +341,7 @@ class PeerTubePlaylistIE(PeerTubeBaseIE):
         'w/p': 'video-playlists',
     }
     _VALID_URL = r'''(?x)
-                        https?://(?P<host>[^/]+)/(?P<type>(?:%s))/
+                        (?P<prefix>peertube:)?https?://(?P<host>[^/]+)/(?P<type>(?:%s))/
                     (?P<id>[^/]+)
                     ''' % ('|'.join(_TYPES.keys()), )
     _TESTS = [{
@@ -404,8 +404,8 @@ class PeerTubePlaylistIE(PeerTubeBaseIE):
         mobj = cls._match_valid_url(url)
         if not mobj:
             return False
-        hostname = mobj.group('host')
-        return cls._test_peertube_instance(None, hostname, True, False)
+        hostname, prefix = mobj.group('host', 'prefix')
+        return cls._test_peertube_instance(None, hostname, True, prefix)
 
     def call_api(self, host, name, path, base, **kwargs):
         return self._download_json(

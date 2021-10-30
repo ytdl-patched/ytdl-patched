@@ -30,13 +30,12 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
         mobj = cls._match_valid_url(url)
         if not mobj:
             return False
-        prefix = mobj.group('prefix')
-        hostname = mobj.group('instance')
+        prefix, hostname = mobj.group('prefix', 'instance')
         return cls._test_misskey_instance(None, hostname, True, prefix)
 
     @staticmethod
     def _test_misskey_instance(ie, hostname, skip, prefix):
-        if not isinstance(hostname, compat_str):
+        if isinstance(hostname, bytes):
             hostname = hostname.decode(preferredencoding())
         hostname = hostname.encode('idna').decode('utf-8')
 
