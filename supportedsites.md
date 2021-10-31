@@ -187,7 +187,6 @@
  - **CCTV**: 央视网
  - **CDA**
  - **CeskaTelevize**
- - **CeskaTelevizePorady**
  - **CGTN**
  - **channel9**: Channel 9
  - **CharlieRose**
@@ -832,6 +831,7 @@
  - **pixiv:sketch**
  - **pixiv:sketch:user**
  - **Pladform**
+ - **PlanetMarathi**
  - **Platzi**
  - **PlatziCourse**
  - **play.fm**
