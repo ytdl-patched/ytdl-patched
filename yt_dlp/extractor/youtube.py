@@ -2669,15 +2669,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 self.raise_no_formats(reason, expected=True)
 
         for f in formats:
-            url_qs = parse_qs(f['url'])
-            client_name = traverse_obj(url_qs, ('c', 0)) or ''
-            if client_name:
-                f['format_note'] = format_field(f, 'format_note', '%s ') + f'({client_name[:3]})'
-            if client_name.startswith('WEB'):  # web client which requires decrypting n params
+            if '&c=WEB' in f['url'] and '&ratebypass=yes&' not in f['url']:  # throttled
                 try:
-                    if 'nparams' in self._configuration_arg('player_skip'):
-                        raise DummyError()
-                    old_n = url_qs['n'][0]
+                    old_n = parse_qs(f['url'])['n'][0]
                     new_n = self._decrypt_n_params(old_n, player_url, video_id)
                     assert new_n != old_n
                     f['url'] = update_url_query(f['url'], {'n': new_n})
@@ -2690,7 +2684,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 if not n_decrypted:
                     f['source_preference'] = -10
                     # TODO: this method is not reliable
-                    f['format_note'] = format_field(f, 'format_note', '%s (maybe throttled)')
+                    f['format_note'] = format_field(f, 'format_note', '%s ') + '(maybe throttled)'
 
         # Source is given priority since formats that throttle are given lower source_preference
         # When throttling issue is fully fixed, remove this
