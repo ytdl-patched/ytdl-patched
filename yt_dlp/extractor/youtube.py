@@ -2497,6 +2497,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 except ExtractorError as e:
                     self.report_warning(f'nsig extraction failed: You may experience throttling for some formats\n{e}', only_once=True)
                     throttled = True
+            client_name = traverse_obj(query, ('c', 0), expected_type=compat_str)
+            if client_name:
+                client_name = client_name[0:3]
 
             if itag:
                 itags.append(itag)
@@ -2512,7 +2515,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     '%s%s' % (audio_track.get('displayName') or '',
                               ' (default)' if audio_track.get('audioIsDefault') else ''),
                     fmt.get('qualityLabel') or quality.replace('audio_quality_', ''),
-                    throttled and 'THROTTLED'))),
+                    throttled and 'THROTTLED', client_name))),
                 'source_preference': -10 if not throttled else -1,
                 'fps': int_or_none(fmt.get('fps')),
                 'height': height,
