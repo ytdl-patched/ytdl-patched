@@ -1888,6 +1888,25 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         return lambda s: jsi.extract_function_from_code(*func_code)([s])
 
+    def _decrypt_nsig_2(self, n, video_id, player_url):
+        """Turn the encrypted n field into a working signature, for fallbacks"""
+        if player_url is None:
+            raise ExtractorError('Cannot decrypt nsig without player_url')
+
+        try:
+            sig_id = ('nsig_value', n)
+            if sig_id not in self._player_cache:
+                response_data = self._download_json(
+                    'https://bookish-octo-barnacle-nao20010128nao.vercel.app/youtube/nparams/decrypt', video_id,
+                    query={'player': player_url, 'n': n},
+                    note='Delegating n-param decryption and waiting for result')
+                assert response_data['status'] == 'ok'
+                self._player_cache[sig_id] = response_data['data']
+                self.write_debug(f'Decrypted nsig {n} => {self._player_cache[sig_id]} [fallback]')
+            return self._player_cache[sig_id]
+        except Exception as e:
+            raise ExtractorError(traceback.format_exc(), cause=e)
+
     def _extract_signature_timestamp(self, video_id, player_url, ytcfg=None, fatal=False):
         """
         Extract signatureTimestamp (sts)
@@ -2491,12 +2510,18 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             query = parse_qs(fmt_url)
             throttled = False
             if query.get('ratebypass') != ['yes'] and query.get('n'):
+                old_n, new_n = query['n'][0], None
                 try:
-                    fmt_url = update_url_query(fmt_url, {
-                        'n': self._decrypt_nsig(query['n'][0], video_id, player_url)})
+                    new_n = self._decrypt_nsig(old_n, video_id, player_url)
                 except ExtractorError as e:
-                    self.report_warning(f'nsig extraction failed: You may experience throttling for some formats\n{e}', only_once=True)
-                    throttled = True
+                    self.report_warning(f'[yt-dlp] nsig extraction failed.\n{e}', only_once=True)
+                    try:
+                        new_n = self._decrypt_nsig_2(old_n, video_id, player_url)
+                    except ExtractorError as e2:
+                        self.report_warning(f'[ytdl-patched] nsig extraction failed: You may experience throttling for some formats\n{e2}', only_once=True)
+                        throttled = True
+                if new_n:
+                    fmt_url = update_url_query(fmt_url, {'n': new_n})
             client_name = traverse_obj(query, ('c', 0), expected_type=compat_str)
             if client_name:
                 client_name = client_name[0:3]
