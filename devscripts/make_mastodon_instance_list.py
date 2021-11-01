@@ -101,6 +101,9 @@ ie.to_screen(f'{script_id}: excluded domain names without dot, len(results)={len
 results = {x for x in results if not (x.endswith('.ngrok.io') or x.endswith('.localhost.run') or x.endswith('.serveo.net'))}
 ie.to_screen(f'{script_id}: excluded temporary domain names, len(results)={len(results)}')
 
+# Ohsawa, it's your shame that you forgot removing P2P features.
+results.add('sns-sakura.jp')
+
 # for it in list(results):
 #     try:
 #         if not socket.getaddrinfo(it, None):

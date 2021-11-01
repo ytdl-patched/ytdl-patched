@@ -96,8 +96,8 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * Self-hosted service support (Mastodon, PeerTube and Misskey)
         * For supported self-hosted services, ytdl-patched contains a huge list of instances. But you can opt-in for instance checking, in case of undiscovered instance.  To opt-in, use these flags: `--check-mastodon-instance`, `--check-peertube-instance`, `--check-misskey-instance`
 
-* **More YouTube improvements**:
-    * More rate-limit bypass attempt: decrypting `n` params using external service I've made
+* ~~**More YouTube improvements**~~:
+    * More rate-limit bypass attempt: decrypting `n` params using external service I've made (as fallback after yt-dlp/yt-dlp#1437 is merged)
 
 * **NicoNico comments as subtitles**: Now you can download NicoNico comments as a subtitle.
     * No dependency required. Just use ytdl-patched.
