@@ -140,7 +140,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 * **Format debugger**: You can debug `-f FORMAT` specs, by just adding `-Fv`. This doesn't work if specs passed to `-f` is malformed.
 You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens.
 
-* **Streamlink integration**: You can download video sites that ytdl-patched don't support but Streamlink do. Currently works with Streamlink 2.3.0.
+* ~~**Streamlink integration**: You can download video sites that ytdl-patched don't support but Streamlink do. Currently works with Streamlink 2.3.0.~~
     * **You have to install Streamlink via pip: `pip install -U streamlink`**
     * ytdl-patched's extractor **takes precedence** even if Streamlink has appropriate plugin for the input URLs. To force Streamlink, prefix URL with `streamlink:`
     * Format selections, extracting titles don't work at all due to limitation of Streamlink. Formats are sorted by Streamlink, and ytdl-patched is just providing it as returned. Filenames are automatically guessed from URLs.

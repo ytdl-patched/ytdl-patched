@@ -41,7 +41,7 @@ class YtdlHandler(logging.Handler):
 
 # Extractors in yt-dlp and ytdl-patched must take precedence over plugins in Streamlink
 # ... but GenericIE
-class StreamlinkIE(InfoExtractor):
+class BasedStreamlinkIE(InfoExtractor):
     _IE_DESC = 'Streamlink integration. Requires Streamlink installed via pip'
     _TESTS = [{
         'url': 'https://abema.tv/now-on-air/abema-news',
@@ -149,3 +149,15 @@ class StreamlinkIE(InfoExtractor):
             if count >= retries:
                 raise ExtractorError('Stream extraction failed.', expected=True, cause=last_error)
         return None
+
+
+class StreamlinkIE(InfoExtractor):
+    _IE_DESC = False
+    _TESTS = []
+
+    @classmethod
+    def suitable(cls, url):
+        return False
+
+    def _real_extract(self, url):
+        pass
