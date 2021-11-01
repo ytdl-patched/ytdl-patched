@@ -7,7 +7,7 @@ on:
     inputs:
 
 jobs:
-  merge:
+  push:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -33,7 +33,38 @@ jobs:
         kbfsfuse &
     - name: Push to Keybase
       run: |
-        git push --all  --force keybase
+        git push --all --force keybase
+    - name: GC repository on Keybase
+      continue-on-error: true
+      run: keybase git gc ytdl-patched
+
+  tags:
+    needs: [push]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Pull all bracnhes
+      run: |
+        git push --all origin
+        for i in $(git branch -a | grep remote | grep -v HEAD | grep -v master); do git branch --track ${i#remotes/origin/} $i; done
+      continue-on-error: true
+    - name: Install Keybase
+      run: |
+        wget https://prerelease.keybase.io/keybase_amd64.deb -O keybase.deb
+        sudo apt install -y ./keybase.deb && sudo apt install -fy
+    - name: Configure git
+      run: |
+        git remote add keybase keybase://public/nao20010128nao/ytdl-patched
+        git remote set-url --add keybase keybase://private/nao20010128nao/ytdl-patched
+        git branch -d gh-pages || true
+    - name: Configure Keybase
+      run: |
+        keybase oneshot --username nao20010128nao --paperkey "${{ secrets.KEYBASE_PAPER_KEY }}"
+        kbfsfuse &
+    - name: Push to Keybase
+      run: |
         git push --tags --force keybase
     - name: GC repository on Keybase
       continue-on-error: true
