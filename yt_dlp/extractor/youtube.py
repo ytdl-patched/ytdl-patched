@@ -1713,13 +1713,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         return '.'.join(compat_str(len(part)) for part in example_sig.split('.'))
 
     @classmethod
-    def _extract_player_info(cls, player_url):
+    def _extract_player_info(cls, player_url, fatal=True):
         for player_re in cls._PLAYER_INFO_RE:
             id_m = re.search(player_re, player_url)
             if id_m:
                 return id_m.group('id')
         else:
-            raise ExtractorError('Cannot identify player %r' % player_url)
+            if fatal:
+                raise ExtractorError('Cannot identify player %r' % player_url)
 
     def _load_player(self, video_id, player_url, fatal=True):
         player_id = self._extract_player_info(player_url)
@@ -2511,17 +2512,21 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             throttled = False
             if query.get('ratebypass') != ['yes'] and query.get('n'):
                 old_n, new_n = query['n'][0], None
+                warn_message, err = None, None
                 try:
                     new_n = self._decrypt_nsig(old_n, video_id, player_url)
                 except ExtractorError as e:
-                    self.report_warning(f'[yt-dlp] nsig extraction failed.\n{e}', only_once=True)
+                    warn_message, err = 'please report this to yt-dlp issue tracker', e
                     try:
                         new_n = self._decrypt_nsig_2(old_n, video_id, player_url)
-                    except ExtractorError as e2:
-                        self.report_warning(f'[ytdl-patched] nsig extraction failed: You may experience throttling for some formats\n{e2}', only_once=True)
+                    except ExtractorError:
+                        warn_message = 'please report this to yt-dlp issue tracker first, and mention @nao20010128nao in description'
                         throttled = True
                 if new_n:
                     fmt_url = update_url_query(fmt_url, {'n': new_n})
+                elif warn_message:
+                    player_id = self._extract_player_info(player_url, fatal=False) or player_url or 'PLAYER UNKNOWN'
+                    self.report_warning(f'nsig extraction failed. {warn_message}\nplayer id: {player_id} , nsig value: {old_n}\n{err}', only_once=True)
             client_name = traverse_obj(query, ('c', 0), expected_type=compat_str)
             if client_name:
                 client_name = client_name[0:3]
