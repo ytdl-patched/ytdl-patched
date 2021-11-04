@@ -12,6 +12,8 @@ values = {
     'git_upstream_commit': '',
     # only used by Windows executables
     'variant': None,
+    # only used by Linux installations, but not on build
+    'is_brew': False,
 }
 
 for arg in sys.argv[1:]:
