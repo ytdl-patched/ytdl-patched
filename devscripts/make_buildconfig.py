@@ -58,6 +58,8 @@ from __future__ import unicode_literals
 def to_string(o):
     if isinstance(o, str):
         return "'%s'" % o
+    elif isinstance(o, bool):
+        return f'{o}'
     elif o is None:
         return 'None'
     else:
