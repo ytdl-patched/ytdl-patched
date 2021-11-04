@@ -12,6 +12,8 @@ values = {
     'git_upstream_commit': '',
     # only used by Windows executables
     'variant': None,
+    # only used by Linux installations, but not on build
+    'is_brew': False,
 }
 
 for arg in sys.argv[1:]:
@@ -56,6 +58,8 @@ from __future__ import unicode_literals
 def to_string(o):
     if isinstance(o, str):
         return "'%s'" % o
+    elif isinstance(o, bool):
+        return f'{o}'
     elif o is None:
         return 'None'
     else:

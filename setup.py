@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
+import os
 import os.path
 import warnings
 import sys
@@ -140,3 +141,11 @@ setup(
     cmdclass={'build_lazy_extractors': build_lazy_extractors},
     **params
 )
+
+if os.getenv('YTDL_PATCHED_INSTALLED_VIA_HOMEBREW') == 'yes':
+    # flag this installation as homebrew cellar
+    with open('yt_dlp/build_config.py', 'a') as w:
+        w.write('''
+# Appended by ./setup.py
+is_brew = True
+''')

@@ -18,6 +18,11 @@ try:
 except ImportError:
     variant = 'red'
 
+try:
+    from .build_config import is_brew
+except ImportError:
+    is_brew = False
+
 
 def detect_variant():
     if hasattr(sys, 'frozen'):
@@ -33,6 +38,8 @@ def detect_variant():
         return 'zip'
     elif os.path.basename(sys.argv[0]) == '__main__.py':
         return 'source'
+    elif is_brew:
+        return 'homebrew'
     return 'unknown'
 
 
@@ -43,6 +50,7 @@ _NON_UPDATEABLE_REASONS = {
     'zip': None,
     'mac_exe': None,
     'py2exe': None,
+    'homebrew': None,
     'win_dir': 'Auto-update is not supported for unpackaged windows executable; Re-download the latest release',
     'mac_dir': 'Auto-update is not supported for unpackaged MacOS executable; Re-download the latest release',
     'source': 'You cannot update when running from source code; Use git to pull the latest changes',
@@ -244,6 +252,9 @@ def run_update(ydl):
 
         ydl.to_screen('Updated ytdl-patched to version %s; Restart yt-dlp to use the new version' % version_id)
         return
+
+    elif variant == 'homebrew':
+        os.execve('brew', ['upgrade', 'nao20010128nao/my/ytdl-patched'])
 
     assert False, f'Unhandled variant: {variant}'
 
