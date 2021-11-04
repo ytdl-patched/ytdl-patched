@@ -25,6 +25,8 @@ def detect_variant():
         if getattr(sys, '_MEIPASS', None):
             if sys._MEIPASS == os.path.dirname(sys.executable):
                 return f'{prefix}_dir'
+            if prefix == 'win' and variant:
+                return f'exe_{variant}'
             return f'{prefix}_exe'
         return 'py2exe'
     elif isinstance(globals().get('__loader__'), zipimporter):
@@ -35,6 +37,8 @@ def detect_variant():
 
 
 _NON_UPDATEABLE_REASONS = {
+    'exe_red': None,
+    'exe_white': None,
     'win_exe': None,
     'zip': None,
     'mac_exe': None,
@@ -157,7 +161,7 @@ def run_update(ydl):
 
     # PyInstaller
     variant = detect_variant()
-    if variant in ('win_exe', 'py2exe'):
+    if variant in ('win_exe', 'exe_red', 'exe_white', 'py2exe'):
         directory = os.path.dirname(filename)
         if not os.access(directory, os.W_OK):
             return report_permission_error(directory)
