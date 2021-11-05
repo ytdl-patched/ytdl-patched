@@ -211,6 +211,9 @@ class NiconicoIE(NiconicoBaseIE):
     _URL_BEFORE_ID_PART = r'(?:https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/|nico(?:nico|video)?:)'
     _VALID_URL = r'%s(?P<id>(?P<alphabet>[a-z]{2})?[0-9]+)' % _URL_BEFORE_ID_PART
     _NETRC_MACHINE = 'niconico'
+    _COMMENT_API_ENDPOINTS = (
+        'https://nvcomment.nicovideo.jp/legacy/api.json',
+        'https://nmsg.nicovideo.jp/api.json',)
 
     @classmethod
     def suitable(cls, url):
@@ -532,35 +535,35 @@ class NiconicoIE(NiconicoBaseIE):
             if try_get(watch_request_response, lambda x: x['meta']['status'], int) != 200:
                 self.report_warning('Failed to acquire permission for playing video. Video download may fail.')
 
+        subtitles = None
         if self._downloader.params.get('getcomments', False) or self._downloader.params.get('writesubtitles', False):
             player_size = try_get(self._configuration_arg('player_size'), lambda x: x[0], compat_str)
             w, h = self._parse_player_size(player_size)
 
-            comment_api_url = 'https://nmsg.nicovideo.jp/api.json'
             comment_user_key = traverse_obj(api_data, ('comment', 'keys', 'userKey'))
             user_id_str = session_api_data.get('serviceUserId')
 
             thread_ids = [x for x in traverse_obj(api_data, ('comment', 'threads')) if x['isActive']]
-            raw_danmaku = self._extract_all_comments(comment_api_url, video_id, thread_ids, 0, user_id_str, comment_user_key)
+            raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0, user_id_str, comment_user_key)
+            if raw_danmaku:
+                raw_danmaku = json.dumps(raw_danmaku)
+                danmaku = load_comments(raw_danmaku, 'NiconicoJson', w, h, report_warning=self.report_warning)
+                xml_danmaku = convert_niconico_json_to_xml(raw_danmaku)
 
-            raw_danmaku = json.dumps(raw_danmaku)
-            danmaku = load_comments(raw_danmaku, 'NiconicoJson', w, h, report_warning=self.report_warning)
-            xml_danmaku = convert_niconico_json_to_xml(raw_danmaku)
-
-            subtitles = {
-                'jpn': [{
-                    'ext': 'json',
-                    'data': raw_danmaku,
-                }, {
-                    'ext': 'xml',
-                    'data': xml_danmaku,
-                }, {
-                    'ext': 'ass',
-                    'data': danmaku
-                }],
-            }
-        else:
-            subtitles = None
+                subtitles = {
+                    'jpn': [{
+                        'ext': 'json',
+                        'data': raw_danmaku,
+                    }, {
+                        'ext': 'xml',
+                        'data': xml_danmaku,
+                    }, {
+                        'ext': 'ass',
+                        'data': danmaku
+                    }],
+                }
+            else:
+                self.report_warning('Failed to get comments. Skipping, but make sure to report it as bugs!')
 
         return {
             'id': video_id,
@@ -580,7 +583,7 @@ class NiconicoIE(NiconicoBaseIE):
             'subtitles': subtitles,
         }
 
-    def _extract_all_comments(self, api_url, video_id, threads, language_id, user_id, user_key):
+    def _extract_all_comments(self, video_id, threads, language_id, user_id, user_key):
         if user_id and user_key:
             # authenticate as an user
             auth_data = {
@@ -629,15 +632,20 @@ class NiconicoIE(NiconicoBaseIE):
         # Request Final
         post_data.append({'ping': {'content': 'rf:0'}})
 
-        return self._download_json(
-            api_url, video_id,
-            headers={
-                'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
-                'Origin': 'https://www.nicovideo.jp',
-                'Content-Type': 'text/plain;charset=UTF-8',
-            },
-            data=json.dumps(post_data).encode(),
-            note='Downloading comments (%s)' % ('jp', 'en', 'cn')[language_id])
+        for api_url in self._COMMENT_API_ENDPOINTS:
+            try:
+                return self._download_json(
+                    api_url, video_id,
+                    headers={
+                        'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
+                        'Origin': 'https://www.nicovideo.jp',
+                        'Content-Type': 'text/plain;charset=UTF-8',
+                    },
+                    data=json.dumps(post_data).encode(),
+                    note='Downloading comments (%s)' % ('jp', 'en', 'cn')[language_id])
+            except ExtractorError as e:
+                self.report_warning(f'Failed to access endpoint {api_url} .\n{e}')
+        return None
 
 
 class NiconicoPlaylistBaseIE(NiconicoBaseIE):
