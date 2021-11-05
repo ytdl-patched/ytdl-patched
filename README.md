@@ -1655,31 +1655,36 @@ $ yt-dlp --replace-in-metadata 'title,uploader' '[ _]' '-'
 Some extractors accept additional arguments which can be passed using `--extractor-args KEY:ARGS`. `ARGS` is a `;` (semicolon) separated string of `ARG=VAL1,VAL2`. Eg: `--extractor-args "youtube:player_client=android_agegate,web;include_live_dash" --extractor-args "funimation:version=uncut"`
 
 The following extractors use this feature:
-* **youtube**
-    * `skip`: `hls` or `dash` (or both) to skip download of the respective manifests
-    * `player_client`: Clients to extract video data from. The main clients are `web`, `android`, `ios`, `mweb`. These also have `_music`, `_embedded`, `_agegate`, and `_creator` variants (Eg: `web_embedded`) (`mweb` has only `_agegate`). By default, `android,web` is used, but the agegate and creator variants are added as required for age-gated videos. Similarly the music variants are added for `music.youtube.com` urls. You can also use `all` to use all the clients
-    * `player_skip`: Skip some network requests that are generally needed for robust extraction. One or more of `configs` (skip client configs), `webpage` (skip initial webpage), `js` (skip js player), `nparams` (skip n-params decryption). While these options can help reduce the number of requests needed or avoid some rate-limiting, they could cause some issues. See [#860](https://github.com/yt-dlp/yt-dlp/pull/860) for more details
-    * `include_live_dash`: Include live dash formats (These formats don't download properly)
-    * `comment_sort`: `top` or `new` (default) - choose comment sorting mode (on YouTube's side).
-    * `max_comments`: Maximum amount of comments to download (default all).
-    * `max_comment_depth`: Maximum depth for nested comments. YouTube supports depths 1 or 2 (default).
-* **youtubetab**
-  (YouTube playlists, channels, feeds, etc.)
-   * `skip`: One or more of `webpage` (skip initial webpage download), `authcheck` (allow the download of playlists requiring authentication when no initial webpage is downloaded. This may cause unwanted behavior, see [#1122](https://github.com/yt-dlp/yt-dlp/pull/1122) for more details)
 
-* **funimation**
-    * `language`: Languages to extract. Eg: `funimation:language=english,japanese`
-    * `version`: The video version to extract - `uncut` or `simulcast`
+#### youtube
+* `skip`: `hls` or `dash` (or both) to skip download of the respective manifests
+* `player_client`: Clients to extract video data from. The main clients are `web`, `android`, `ios`, `mweb`. These also have `_music`, `_embedded`, `_agegate`, and `_creator` variants (Eg: `web_embedded`) (`mweb` has only `_agegate`). By default, `android,web` is used, but the agegate and creator variants are added as required for age-gated videos. Similarly the music variants are added for `music.youtube.com` urls. You can also use `all` to use all the clients
+* `player_skip`: Skip some network requests that are generally needed for robust extraction. One or more of `configs` (skip client configs), `webpage` (skip initial webpage), `js` (skip js player). While these options can help reduce the number of requests needed or avoid some rate-limiting, they could cause some issues. See [#860](https://github.com/yt-dlp/yt-dlp/pull/860) for more details
+* `include_live_dash`: Include live dash formats (These formats don't download properly)
+* `comment_sort`: `top` or `new` (default) - choose comment sorting mode (on YouTube's side)
+* `max_comments`: Maximum amount of comments to download (default all)
+* `max_comment_depth`: Maximum depth for nested comments. YouTube supports depths 1 or 2 (default)
 
-* **vikiChannel**
-    * `video_types`: Types of videos to download - one or more of `episodes`, `movies`, `clips`, `trailers`
+#### youtubetab (YouTube playlists, channels, feeds, etc.)
+* `skip`: One or more of `webpage` (skip initial webpage download), `authcheck` (allow the download of playlists requiring authentication when no initial webpage is downloaded. This may cause unwanted behavior, see [#1122](https://github.com/yt-dlp/yt-dlp/pull/1122) for more details)
 
-* **niconico**
-    * `segment_duration` *1: Changes segment duration (in **milliseconds**) for DMC formats. Only have effects for HLS formats.
-    * `player_size`: Modifies the simulated size of player, needed to convert comments to subtitles. `16:9`, `4:3` and size specification (`WIDTHxHEIGHT`) are accepted.
+#### funimation
+* `language`: Languages to extract. Eg: `funimation:language=english,japanese`
+* `version`: The video version to extract - `uncut` or `simulcast`
 
-* **y2mate**
-    * `mode`: Changes mode for extraction. One of `normal` and `rush`. Defaults to `normal`.
+#### crunchyroll
+* `language`: Languages to extract. Eg: `crunchyroll:language=jaJp`
+* `hardsub`: Which hard-sub versions to extract. Eg: `crunchyroll:hardsub=None,enUS`
+
+#### vikichannel
+* `video_types`: Types of videos to download - one or more of `episodes`, `movies`, `clips`, `trailers`
+
+#### niconico
+* `segment_duration` *1: Changes segment duration (in **milliseconds**) for DMC formats. Only have effects for HLS formats.
+* `player_size`: Modifies the simulated size of player, needed to convert comments to subtitles. `16:9`, `4:3` and size specification (`WIDTHxHEIGHT`) are accepted.
+
+#### y2mate
+* `mode`: Changes mode for extraction. One of `normal` and `rush`. Defaults to `normal`.
 
 NOTE: These options may be changed/removed in the future without concern for backward compatibility
 
