@@ -329,10 +329,9 @@ def parse_comments(input_text, input_format, font_size=25.0, report_warning=noop
 
 
 def load_comments(input_text, input_format, stage_width, stage_height, reserve_blank=0, font_face='sans-serif', font_size=25.0, text_opacity=1.0, duration_marquee=5.0, duration_still=5.0, report_warning=noop):
-    filters_regex = []
     comments = parse_comments(input_text, input_format, font_size, report_warning)
     with io.StringIO() as fo:
-        process_comments(comments, fo, stage_width, stage_height, reserve_blank, font_face, font_size, text_opacity, duration_marquee, duration_still, filters_regex)
+        process_comments(comments, fo, stage_width, stage_height, reserve_blank, font_face, font_size, text_opacity, duration_marquee, duration_still, report_warning)
         return fo.getvalue()
 
 
