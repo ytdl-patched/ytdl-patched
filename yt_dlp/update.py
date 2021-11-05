@@ -254,7 +254,7 @@ def run_update(ydl):
         return
 
     elif variant == 'homebrew':
-        os.execve('brew', ['upgrade', 'nao20010128nao/my/ytdl-patched'])
+        os.execv('brew', ['upgrade', 'nao20010128nao/my/ytdl-patched'])
 
     assert False, f'Unhandled variant: {variant}'
 
