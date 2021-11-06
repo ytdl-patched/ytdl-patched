@@ -48,6 +48,7 @@
  - **Alura**
  - **AluraCourse**
  - **Amara**
+ - **AmazonStore**
  - **AMCNetworks**
  - **AmericasTestKitchen**
  - **AmericasTestKitchenSeason**
@@ -456,6 +457,7 @@
  - **Instagram**
  - **instagram:tag**: Instagram hashtag search
  - **instagram:user**: Instagram user profile
+ - **InstagramIOS**
  - **Internazionale**
  - **InternetVideoArchive**
  - **IPrima**
@@ -898,6 +900,8 @@
  - **RaiPlay**
  - **RaiPlayLive**
  - **RaiPlayPlaylist**
+ - **RaiPlayRadio**
+ - **RaiPlayRadioPlaylist**
  - **RayWenderlich**
  - **RayWenderlichCourse**
  - **RBMARadio**
