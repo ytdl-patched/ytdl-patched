@@ -1059,6 +1059,7 @@ class YoutubeDL(object):
         info_dict['autonumber'] = self.params.get('autonumber_start', 1) - 1 + self._num_downloads
         if info_dict.get('resolution') is None:
             info_dict['resolution'] = self.format_resolution(info_dict, default=None)
+        info_dict['thumbnail_filepaths'] = list(filter(None, traverse_obj(info_dict, ('thumbnails', ..., 'filepath'))))
 
         # For fields playlist_index, playlist_autonumber and autonumber convert all occurrences
         # of %(field)s to %(field)0Nd for backward compatibility
