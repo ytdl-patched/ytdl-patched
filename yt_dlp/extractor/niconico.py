@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import functools
 import itertools
-import math
 import re
 import json
 import datetime
@@ -734,7 +733,6 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         })
         entries = OnDemandPagedList(
             functools.partial(self._fetch_page, list_id),
-            math.ceil(mylist['totalItemCount'] / self._PAGE_SIZE),
             self._PAGE_SIZE)
         result = self.playlist_result(
             entries, list_id, mylist.get('name'), mylist.get('description'))
@@ -792,7 +790,6 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         })
         entries = OnDemandPagedList(
             functools.partial(self._fetch_page, list_id),
-            math.ceil(mylist['totalCount'] / self._PAGE_SIZE),
             self._PAGE_SIZE)
         result = self.playlist_result(
             entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
@@ -877,7 +874,6 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
         })
         entries = OnDemandPagedList(
             functools.partial(self._fetch_page, list_id),
-            math.ceil(mylist['totalCount'] / self._PAGE_SIZE),
             self._PAGE_SIZE)
         result = self.playlist_result(entries, list_id)
         result.update(self._parse_owner(mylist))
