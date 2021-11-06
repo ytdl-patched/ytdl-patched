@@ -62,6 +62,7 @@ from ..utils import (
     GeoRestrictedError,
     GeoUtils,
     int_or_none,
+    join_nonempty,
     js_to_json,
     JSON_LD_RE,
     mimetype2ext,
@@ -1959,7 +1960,7 @@ class InfoExtractor(object):
             tbr = int_or_none(media_el.attrib.get('bitrate'))
             width = int_or_none(media_el.attrib.get('width'))
             height = int_or_none(media_el.attrib.get('height'))
-            format_id = '-'.join(filter(None, [f4m_id, compat_str(i if tbr is None else tbr)]))
+            format_id = join_nonempty(f4m_id, tbr or i)
             # If <bootstrapInfo> is present, the specified f4m is a
             # stream-level manifest, and only set-level manifests may refer to
             # external resources.  See section 11.4 and section 4 of F4M spec
@@ -2021,7 +2022,7 @@ class InfoExtractor(object):
 
     def _m3u8_meta_format(self, m3u8_url, ext=None, preference=None, quality=None, m3u8_id=None):
         return {
-            'format_id': '-'.join(filter(None, [m3u8_id, 'meta'])),
+            'format_id': join_nonempty(m3u8_id, 'meta'),
             'url': m3u8_url,
             'ext': ext,
             'protocol': 'm3u8',
@@ -2121,7 +2122,7 @@ class InfoExtractor(object):
 
         if '#EXT-X-TARGETDURATION' in m3u8_doc:  # media playlist, return as is
             formats = [{
-                'format_id': '-'.join(map(str, filter(None, [m3u8_id, idx]))),
+                'format_id': join_nonempty(m3u8_id, idx),
                 'format_index': idx,
                 'url': m3u8_url,
                 'ext': ext,
@@ -2170,7 +2171,7 @@ class InfoExtractor(object):
             if media_url:
                 manifest_url = format_url(media_url)
                 formats.extend({
-                    'format_id': '-'.join(map(str, filter(None, (m3u8_id, group_id, name, idx)))),
+                    'format_id': join_nonempty(m3u8_id, group_id, name, idx),
                     'format_note': name,
                     'format_index': idx,
                     'url': manifest_url,
@@ -2227,9 +2228,9 @@ class InfoExtractor(object):
                     # format_id intact.
                     if not live:
                         stream_name = build_stream_name()
-                        format_id[1] = stream_name if stream_name else '%d' % (tbr if tbr else len(formats))
+                        format_id[1] = stream_name or '%d' % (tbr or len(formats))
                     f = {
-                        'format_id': '-'.join(map(str, filter(None, format_id))),
+                        'format_id': join_nonempty(*format_id),
                         'format_index': idx,
                         'url': manifest_url,
                         'manifest_url': m3u8_url,
@@ -3019,13 +3020,6 @@ class InfoExtractor(object):
                         })
                         fragment_ctx['time'] += fragment_ctx['duration']
 
-                format_id = []
-                if ism_id:
-                    format_id.append(ism_id)
-                if stream_name:
-                    format_id.append(stream_name)
-                format_id.append(compat_str(tbr))
-
                 if stream_type == 'text':
                     subtitles.setdefault(stream_language, []).append({
                         'ext': 'ismt',
@@ -3044,7 +3038,7 @@ class InfoExtractor(object):
                     })
                 elif stream_type in ('video', 'audio'):
                     formats.append({
-                        'format_id': '-'.join(format_id),
+                        'format_id': join_nonempty(ism_id, stream_name, tbr),
                         'url': ism_url,
                         'manifest_url': ism_url,
                         'ext': 'ismv' if stream_type == 'video' else 'isma',

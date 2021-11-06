@@ -610,7 +610,10 @@ from .instagram import (
 )
 from .internazionale import InternazionaleIE
 from .internetvideoarchive import InternetVideoArchiveIE
-from .iprima import IPrimaIE
+from .iprima import (
+    IPrimaIE,
+    IPrimaCNNIE
+)
 from .iqiyi import IqiyiIE
 from .ir90tv import Ir90TvIE
 from .itv import (
@@ -1244,7 +1247,7 @@ from .rice import RICEIE
 from .rmcdecouverte import RMCDecouverteIE
 from .ro220 import Ro220IE
 from .rockstargames import RockstarGamesIE
-from .roosterteeth import RoosterTeethIE
+from .roosterteeth import RoosterTeethIE, RoosterTeethSeriesIE
 from .rottentomatoes import RottenTomatoesIE
 from .roxwel import RoxwelIE
 from .rozhlas import RozhlasIE
