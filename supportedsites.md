@@ -461,6 +461,7 @@
  - **Internazionale**
  - **InternetVideoArchive**
  - **IPrima**
+ - **IPrimaCNN**
  - **iqiyi**: 爱奇艺
  - **Ir90Tv**
  - **ITTF**
@@ -929,6 +930,7 @@
  - **RMCDecouverte**
  - **RockstarGames**
  - **RoosterTeeth**
+ - **RoosterTeethSeries**
  - **RottenTomatoes**
  - **Roxwel**
  - **Rozhlas**
