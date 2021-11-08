@@ -1167,7 +1167,10 @@ class YoutubeDL(object):
             elif fmt[-1] == 'j':  # json
                 value, fmt = json.dumps(value, default=_dumpjson_default), str_fmt
             elif fmt[-1] == 'q':  # quoted
-                value, fmt = compat_shlex_quote(str(value)), str_fmt
+                if isinstance(value, (tuple, list)):
+                    value, fmt = ' '.join(compat_shlex_quote(str(x)) for x in value), str_fmt
+                else:
+                    value, fmt = compat_shlex_quote(str(value)), str_fmt
             elif fmt[-1] == 'B':  # bytes
                 value = f'%{str_fmt}'.encode('utf-8') % str(value).encode('utf-8')
                 value, fmt = value.decode('utf-8', 'ignore'), 's'
