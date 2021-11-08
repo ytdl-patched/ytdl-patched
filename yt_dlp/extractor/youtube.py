@@ -2379,6 +2379,24 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         return orderedSet(requested_clients)
 
+    def get_localized_title_and_description(self, video_id, languages):
+        languages = tuple(orderedSet(itertools.chain(languages, (x.split('_')[0] for x in languages))))
+        # find more keys that work
+        api_token = INNERTUBE_CLIENTS['mweb']['INNERTUBE_API_KEY']
+        lang_response = self._download_json(
+            f'https://youtube.googleapis.com/youtube/v3/videos?part=localizations&id={video_id}&key={api_token}', video_id,
+            note='Requesting localized title', fatal=False, headers={
+                'Accept': 'application/json',
+            })
+        if not lang_response:
+            return None, None
+        extracted_lang = traverse_obj(
+            lang_response, ('items', ..., 'localizations', languages),
+            expected_type=dict, get_all=False)
+        if not extracted_lang:
+            return None, None
+        return extracted_lang.get('title'), extracted_lang.get('description')
+
     def _extract_player_ytcfg(self, client, video_id):
         url = {
             'web_music': 'https://music.youtube.com',
@@ -2659,6 +2677,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             or self._get_text(microformats, (..., 'title'))
             or search_meta(['og:title', 'twitter:title', 'title']))
         video_description = get_first(video_details, 'shortDescription')
+        orig_video_title, orig_description = None, None
+
+        localized_languages = self._configuration_arg('preferred_langs')
+        if localized_languages:
+            vt, dt = self.get_localized_title_and_description(video_id, localized_languages)
+            if vt:
+                video_title, orig_video_title = vt, video_title
+            if dt:
+                video_description, orig_description = dt, video_description
 
         multifeed_metadata_list = get_first(
             player_responses,
@@ -2824,12 +2851,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         info = {
             'id': video_id,
             'title': self._live_title(video_title) if is_live else video_title,
+            'orig_title': self._live_title(orig_video_title) if is_live else orig_video_title,
             'formats': formats,
             'thumbnails': thumbnails,
             # The best thumbnail that we are sure exists. Prevents unnecessary
             # URL checking if user don't care about getting the best possible thumbnail
             'thumbnail': traverse_obj(original_thumbnails, (-1, 'url')),
             'description': video_description,
+            'orig_description': orig_description,
             'upload_date': unified_strdate(
                 get_first(microformats, 'uploadDate')
                 or search_meta('uploadDate')),
