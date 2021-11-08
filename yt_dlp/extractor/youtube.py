@@ -2681,9 +2681,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         localized_languages = self._configuration_arg('preferred_langs')
         if localized_languages:
             vt, dt = self.get_localized_title_and_description(video_id, localized_languages)
-            if vt:
+            if vt and vt != video_title:
                 video_title, orig_video_title = vt, video_title
-            if dt:
+            if dt and dt != video_description:
                 video_description, orig_description = dt, video_description
 
         multifeed_metadata_list = get_first(
