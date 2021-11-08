@@ -2381,7 +2381,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     def get_localized_title_and_description(self, video_id, languages):
         languages = tuple(orderedSet(itertools.chain(languages, (x.split('_')[0] for x in languages))))
-        # find more keys that work
         api_token = INNERTUBE_CLIENTS['mweb']['INNERTUBE_API_KEY']
         lang_response = self._download_json(
             f'https://youtube.googleapis.com/youtube/v3/videos?part=localizations&id={video_id}&key={api_token}', video_id,
