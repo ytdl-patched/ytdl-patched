@@ -434,9 +434,12 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     def _call_api(self, ep, query, video_id, fatal=True, headers=None,
                   note='Downloading API JSON', errnote='Unable to download API page',
-                  context=None, api_key=None, api_hostname=None, default_client='web'):
+                  context=None, api_key=None, api_hostname=None, default_client='web',
+                  hl=None):
 
         data = {'context': context} if context else {'context': self._extract_context(default_client=default_client)}
+        if hl:
+            data['context']['client']['hl'] = hl
         data.update(query)
         real_headers = self.generate_api_headers(default_client=default_client)
         real_headers.update({'content-type': 'application/json'})
@@ -661,7 +664,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     def _extract_response(self, item_id, query, note='Downloading API JSON', headers=None,
                           ytcfg=None, check_get_keys=None, ep='browse', fatal=True, api_hostname=None,
-                          default_client='web'):
+                          default_client='web', hl=None):
         response = None
         last_error = None
         count = -1
@@ -679,6 +682,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
                     context=self._extract_context(ytcfg, default_client),
                     api_key=self._extract_api_key(ytcfg, default_client),
                     api_hostname=api_hostname, default_client=default_client,
+                    hl=hl,
                     note='%s%s' % (note, ' (retry #%d)' % count if count else ''))
             except ExtractorError as e:
                 if isinstance(e.cause, network_exceptions):
@@ -2341,7 +2345,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
     def _is_unplayable(player_response):
         return traverse_obj(player_response, ('playabilityStatus', 'status')) == 'UNPLAYABLE'
 
-    def _extract_player_response(self, client, video_id, master_ytcfg, player_ytcfg, player_url, initial_pr):
+    def _extract_player_response(self, client, video_id, master_ytcfg, player_ytcfg, player_url, initial_pr, hl=None):
 
         session_index = self._extract_session_index(player_ytcfg, master_ytcfg)
         syncid = self._extract_account_syncid(player_ytcfg, master_ytcfg, initial_pr)
@@ -2355,7 +2359,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             item_id=video_id, ep='player', query=yt_query,
             ytcfg=player_ytcfg, headers=headers, fatal=True,
             default_client=client,
-            note='Downloading %s player API JSON' % client.replace('_', ' ').strip()
+            note='Downloading %s player API JSON' % client.replace('_', ' ').strip(),
+            hl=hl,
         ) or None
 
     def _get_requested_clients(self, url, smuggled_data):
@@ -2406,7 +2411,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         webpage = self._download_webpage(url, video_id, fatal=False, note=f'Downloading {client} config')
         return self.extract_ytcfg(video_id, webpage) or {}
 
-    def _extract_player_responses(self, clients, video_id, webpage, master_ytcfg):
+    def _extract_player_responses(self, clients, video_id, webpage, master_ytcfg, hl=None):
         initial_pr = None
         if webpage:
             initial_pr = self._extract_yt_initial_variable(
@@ -2451,7 +2456,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
             try:
                 pr = initial_pr if client == 'web' and initial_pr else self._extract_player_response(
-                    client, video_id, player_ytcfg or master_ytcfg, player_ytcfg, player_url if require_js_player else None, initial_pr)
+                    client, video_id, player_ytcfg or master_ytcfg, player_ytcfg, player_url if require_js_player else None, initial_pr, hl=hl)
             except ExtractorError as e:
                 if last_error:
                     self.report_warning(last_error)
@@ -2646,9 +2651,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         master_ytcfg = self.extract_ytcfg(video_id, webpage) or self._get_default_ytcfg()
 
+        localized_languages = self._configuration_arg('preferred_langs')
+        primary_language = try_get(localized_languages, lambda x: x[0].split('_')[0], compat_str)
         player_responses, player_url = self._extract_player_responses(
             self._get_requested_clients(url, smuggled_data),
-            video_id, webpage, master_ytcfg)
+            video_id, webpage, master_ytcfg, hl=primary_language)
 
         get_first = lambda obj, keys, **kwargs: traverse_obj(obj, (..., *variadic(keys)), **kwargs, get_all=False)
 
@@ -2678,7 +2685,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         video_description = get_first(video_details, 'shortDescription')
         orig_video_title, orig_description = None, None
 
-        localized_languages = self._configuration_arg('preferred_langs')
         if localized_languages:
             vt, dt = self.get_localized_title_and_description(video_id, localized_languages)
             if vt and vt != video_title:
