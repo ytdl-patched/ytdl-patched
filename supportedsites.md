@@ -370,6 +370,7 @@
  - **Funk**
  - **Fusion**
  - **Fux**
+ - **Gab**
  - **GabTV**
  - **Gaia**
  - **GameInformer**
@@ -457,7 +458,7 @@
  - **Instagram**
  - **instagram:tag**: Instagram hashtag search
  - **instagram:user**: Instagram user profile
- - **InstagramIOS**
+ - **InstagramIOS**: IOS instagram:// URL
  - **Internazionale**
  - **InternetVideoArchive**
  - **IPrima**
@@ -851,7 +852,12 @@
  - **podomatic**
  - **Pokemon**
  - **PokemonWatch**
+ - **PolsatGo**
  - **PolskieRadio**
+ - **polskieradio:kierowcow**
+ - **polskieradio:player**
+ - **polskieradio:podcast**
+ - **polskieradio:podcast:list**
  - **PolskieRadioCategory**
  - **Popcorntimes**
  - **PopcornTV**
@@ -894,6 +900,8 @@
  - **radiocanada:audiovideo**
  - **radiofrance**
  - **RadioJavan**
+ - **radiokapital**
+ - **radiokapital:show**
  - **radlive**
  - **radlive:channel**
  - **radlive:season**
@@ -1188,6 +1196,7 @@
  - **tvp**: Telewizja Polska
  - **tvp:embed**: Telewizja Polska
  - **tvp:series**
+ - **tvp:stream**
  - **TVPlayer**
  - **TVPlayHome**
  - **Tweakers**
@@ -1342,6 +1351,8 @@
  - **WistiaPlaylist**
  - **wnl**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
  - **WorldStarHipHop**
+ - **wppilot**
+ - **wppilot:channels**
  - **WSJ**: Wall Street Journal
  - **WSJArticle**
  - **WWE**
