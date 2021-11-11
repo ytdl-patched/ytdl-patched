@@ -135,6 +135,7 @@ class NiconicoLiveFD(FileDownloader):
                         print(data)
                         return True
                     elif data.get('type') == 'error':
+                        print(data)
                         message = try_get(data, lambda x: x["body"]["code"], compat_str) or recv
                         return DownloadError(message)
                     elif self.ydl.params.get('verbose', False):

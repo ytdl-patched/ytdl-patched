@@ -3506,9 +3506,13 @@ class InfoExtractor(object):
 
     def _get_cookies(self, url):
         """ Return a compat_cookies_SimpleCookie with the cookies for the url """
+        return compat_cookies_SimpleCookie(self._get_cookie_header(url))
+
+    def _get_cookie_header(self, url):
+        """ Return the cookies for the url """
         req = sanitized_Request(url)
         self._downloader.cookiejar.add_cookie_header(req)
-        return compat_cookies_SimpleCookie(req.get_header('Cookie'))
+        return req.get_header('Cookie')
 
     def _apply_first_set_cookie_header(self, url_handle, cookie):
         """
