@@ -239,7 +239,8 @@
  - **cu.ntv.co.jp**: Nippon Television Network
  - **CultureUnplugged**
  - **curiositystream**
- - **curiositystream:collection**
+ - **curiositystream:collections**
+ - **curiositystream:series**
  - **CWTV**
  - **DagelijkseKost**: dagelijksekost.een.be
  - **DailyMail**
