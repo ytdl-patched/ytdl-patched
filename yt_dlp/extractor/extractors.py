@@ -310,7 +310,8 @@ from .ctvnews import CTVNewsIE
 from .cultureunplugged import CultureUnpluggedIE
 from .curiositystream import (
     CuriosityStreamIE,
-    CuriosityStreamCollectionIE,
+    CuriosityStreamCollectionsIE,
+    CuriosityStreamSeriesIE,
 )
 from .cwtv import CWTVIE
 from .dailymail import DailyMailIE

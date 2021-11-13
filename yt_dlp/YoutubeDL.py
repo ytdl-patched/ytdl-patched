@@ -1571,10 +1571,12 @@ class YoutubeDL(object):
 
         if 'entries' not in ie_result:
             raise EntryNotInPlaylist('There are no entries')
+
+        MissingEntry = object()
         incomplete_entries = bool(ie_result.get('requested_entries'))
         if incomplete_entries:
             def fill_missing_entries(entries, indices):
-                ret = [None] * max(indices)
+                ret = [MissingEntry] * max(indices)
                 for i, entry in zip(indices, entries):
                     ret[i - 1] = entry
                 return ret
@@ -1628,7 +1630,7 @@ class YoutubeDL(object):
             entry = None
             try:
                 entry = get_entry(i)
-                if entry is None:
+                if entry is MissingEntry:
                     raise EntryNotInPlaylist()
             except (IndexError, EntryNotInPlaylist):
                 if incomplete_entries:
@@ -1722,7 +1724,6 @@ class YoutubeDL(object):
                 self.report_error(
                     'Skipping the remaining entries in playlist "%s" since %d items failed extraction' % (playlist, failures))
                 break
-            # TODO: skip failed (empty) entries?
             playlist_results.append(entry_result)
         ie_result['entries'] = playlist_results
 
