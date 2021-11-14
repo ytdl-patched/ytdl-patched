@@ -1,6 +1,7 @@
 # https://docs.python.org/ja/3/library/urllib.request.html
 # https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/urllib/request.py#L510
 # https://gist.github.com/zhenyi2697/5252805
+# https://github.com/streamlink/streamlink/blob/master/src/streamlink/plugins/abematv.py#L39
 
 from .common import InfoExtractor
 from ..compat import compat_urllib_request
@@ -13,7 +14,7 @@ class AbemaLicenseHandler(compat_urllib_request.BaseHandler):
     _LICENSE_API = 'https://license.abema.io/abematv-hls'
 
     def __init__(self, ie: 'AbemaTVIE'):
-        # the protcol that this should handle is "abematv-license://"
+        # the protcol that this should really handle is "abematv-license://"
         # abematv_license_open is just a placeholder for development purposes
         # ref. https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/urllib/request.py#L510
         setattr(self, 'abematv-license_open', getattr(self, 'abematv_license_open'))
