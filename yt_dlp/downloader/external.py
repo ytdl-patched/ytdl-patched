@@ -485,6 +485,7 @@ class FFmpegFD(ExternalFD):
         if url in ('-', 'pipe:'):
             self.on_process_started(proc, proc.stdin)
         try:
+            retval = -1
             retval = proc.wait()
         except BaseException as e:
             # subprocces.run would send the SIGKILL signal to ffmpeg and the
