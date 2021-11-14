@@ -3471,6 +3471,8 @@ class InfoExtractor(object):
 
     def _live_title(self, name):
         """ Generate the title for a live video """
+        if name is None:
+            return None
         now = datetime.datetime.now()
         now_str = now.strftime('%Y-%m-%d %H:%M')
         return name + ' ' + now_str
