@@ -15,7 +15,6 @@ from ..utils import (
 class CuriosityStreamBaseIE(InfoExtractor):
     _NETRC_MACHINE = 'curiositystream'
     _auth_token = None
-    _API_BASE_URL = 'https://api.curiositystream.com/v1/'
 
     def _handle_errors(self, result):
         error = result.get('error', {}).get('message')
@@ -39,7 +38,8 @@ class CuriosityStreamBaseIE(InfoExtractor):
         if email is None:
             return
         result = self._download_json(
-            self._API_BASE_URL + 'login', None, data=urlencode_postdata({
+            'https://api.curiositystream.com/v1/login', None,
+            note='Logging in', data=urlencode_postdata({
                 'email': email,
                 'password': password,
             }))
@@ -50,26 +50,32 @@ class CuriosityStreamBaseIE(InfoExtractor):
 class CuriosityStreamIE(CuriosityStreamBaseIE):
     IE_NAME = 'curiositystream'
     _VALID_URL = r'https?://(?:app\.)?curiositystream\.com/video/(?P<id>\d+)'
-    _TEST = {
+    _TESTS = [{
         'url': 'https://app.curiositystream.com/video/2',
         'info_dict': {
             'id': '2',
             'ext': 'mp4',
             'title': 'How Did You Develop The Internet?',
             'description': 'Vint Cerf, Google\'s Chief Internet Evangelist, describes how he and Bob Kahn created the internet.',
+            'channel': 'Curiosity Stream',
+            'categories': ['Technology', 'Interview'],
+            'average_rating': 96.79,
+            'series_id': '2',
         },
         'params': {
             # m3u8 download
             'skip_download': True,
         },
-    }
+    }]
+
+    _API_BASE_URL = 'https://api.curiositystream.com/v1/media/'
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
         formats = []
         for encoding_format in ('m3u8', 'mpd'):
-            media = self._call_api('media/' + video_id, video_id, query={
+            media = self._call_api(video_id, video_id, query={
                 'encodingsNew': 'true',
                 'encodingsFormat': encoding_format,
             })
@@ -139,6 +145,10 @@ class CuriosityStreamIE(CuriosityStreamBaseIE):
             'duration': int_or_none(media.get('duration')),
             'tags': media.get('tags'),
             'subtitles': subtitles,
+            'channel': media.get('producer'),
+            'categories': [media.get('primary_category'), media.get('type')],
+            'average_rating': media.get('rating_percentage'),
+            'series_id': str(media.get('collection_id') or '') or None,
         }
 
 
