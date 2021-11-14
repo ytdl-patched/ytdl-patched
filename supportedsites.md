@@ -407,8 +407,6 @@
  - **GPUTechConf**
  - **Gronkh**
  - **Groupon**
- - **Hanimetv**
- - **HanimetvPlaylist**
  - **hbo**
  - **HearThisAt**
  - **Heise**
