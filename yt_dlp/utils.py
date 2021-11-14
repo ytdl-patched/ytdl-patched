@@ -1039,21 +1039,17 @@ class ExistingVideoReached(DownloadCancelled):
 
 class ReextractRequested(YoutubeDLError):
     """ Request re-extraction in any reason. """
-    def __init__(self, msg='Re-extraction requested.') -> None:
-        super().__init__(msg)
-        self.msg = msg
+    msg = 'Re-extraction requested'
 
 
 class ThrottledDownload(ReextractRequested):
     """ Download speed below --throttled-rate. """
-    def __init__(self) -> None:
-        super().__init__('The download speed is below throttle limit.')
+    msg = 'The download speed is below throttle limit'
 
 
 class UnrecoverableHttpError(ReextractRequested):
     """ Unrecoverable errors defined by each format has been reported by downloader. """
-    def __init__(self) -> None:
-        super().__init__('An unrecoverable error has been detected.')
+    msg = 'An unrecoverable error has been detected'
 
 
 class RejectedVideoReached(DownloadCancelled):
