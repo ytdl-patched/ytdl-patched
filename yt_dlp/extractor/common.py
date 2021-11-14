@@ -1395,6 +1395,8 @@ class InfoExtractor(object):
                 continue
             if isinstance(json_ld_item, dict):
                 json_ld.append(json_ld_item)
+                if '@graph' in json_ld_item:
+                    json_ld.extend(json_ld_item['@graph'])
             elif isinstance(json_ld_item, (list, tuple)):
                 json_ld.extend(json_ld_item)
         if json_ld:

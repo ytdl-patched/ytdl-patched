@@ -542,11 +542,6 @@ from .gputechconf import GPUTechConfIE
 from .gronkh import GronkhIE
 from .groupon import GrouponIE
 from .hbo import HBOIE
-from .hanimetv import (
-    HanimetvIE,
-    HanimetvPlaylistIE,
-    HanimeAllIE,
-)
 from .hearthisat import HearThisAtIE
 from .heise import HeiseIE
 from .hellporno import HellPornoIE
@@ -1966,3 +1961,12 @@ from .zingmp3 import (
 )
 from .zoom import ZoomIE
 from .zype import ZypeIE
+
+
+from ._trashed import (
+    HANMIE,
+    HANMPLIE,
+    HANMALLIE,
+    GANMIE,
+    VDSIE,
+)

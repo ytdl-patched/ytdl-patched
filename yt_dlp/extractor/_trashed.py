@@ -4,16 +4,23 @@ import itertools
 import json
 
 from .common import InfoExtractor
+from ..compat import compat_str
 from ..utils import (
+    ExtractorError,
     clean_html,
     int_or_none,
+    parse_qs,
+    smuggle_url,
+    unsmuggle_url,
     time_millis,
     traverse_obj,
 )
 
 
-class HanimetvIE(InfoExtractor):
-    _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?hanime\.tv)/videos/hentai/(?P<id>[a-zA-Z0-9-]+$)'
+class HANMIE(InfoExtractor):
+    IE_DESC = False
+    _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?han' \
+        r'ime\.tv)/videos/hentai/(?P<id>[a-zA-Z0-9-]+$)'
     _TESTS = [{
         'url': 'https://hanime.tv/videos/hentai/enjo-kouhai-1',
         'md5': 'a3a08ac2180ed75ee731aff92d16f447',
@@ -90,7 +97,7 @@ class HanimetvIE(InfoExtractor):
 
     @classmethod
     def suitable(cls, url):
-        return super(HanimetvIE, cls).suitable(url) and not HanimetvPlaylistIE.suitable(url)
+        return super(HANMIE, cls).suitable(url) and not HANMPLIE.suitable(url)
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -154,8 +161,10 @@ class HanimetvIE(InfoExtractor):
         }
 
 
-class HanimetvPlaylistIE(InfoExtractor):
-    _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?hanime\.tv)/videos/hentai/(?P<vid>[a-zA-Z0-9-]+?)\?playlist_id=(?P<id>[a-zA-Z0-9-]+)'
+class HANMPLIE(InfoExtractor):
+    IE_DESC = False
+    _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?han' \
+        r'ime\.tv)/videos/hentai/(?P<vid>[a-zA-Z0-9-]+?)\?playlist_id=(?P<id>[a-zA-Z0-9-]+)'
 
     def _entries(self, url, host, playlist_id):
         for page_num in itertools.count(1):
@@ -190,7 +199,7 @@ class HanimetvPlaylistIE(InfoExtractor):
 
         if self.get_param('noplaylist'):
             self.to_screen('Downloading just video %s because of --no-playlist' % video_id)
-            return self.url_result(f'https://{host}/videos/hentai/{video_id}', ie=HanimetvIE.ie_key(), video_id=video_id)
+            return self.url_result(f'https://{host}/videos/hentai/{video_id}', ie=HANMIE.ie_key(), video_id=video_id)
         # self.to_screen('Downloading playlist %s; add --no-playlist to just download video %s' % (playlist_id, video_id))
 
         entries = self._entries(url, host, playlist_id)
@@ -199,9 +208,10 @@ class HanimetvPlaylistIE(InfoExtractor):
             entries, playlist_id, playlist_title=playlist_info['title'])
 
 
-class HanimeAllIE(InfoExtractor):
+class HANMALLIE(InfoExtractor):
     IE_DESC = False
-    _VALID_URL = r'hanime-all'
+    _VALID_URL = r'han' \
+        'ime-all'
 
     def _entries(self):
         for i in itertools.count(0):
@@ -228,3 +238,80 @@ class HanimeAllIE(InfoExtractor):
 
     def _real_extract(self, url):
         return self.playlist_result(self._entries())
+
+
+class GANMIE(InfoExtractor):
+    IE_DESC = False
+    _VALID_URL = r'https?://gog' 'oan' \
+        r'ime\.be/watch/(?P<id>[^/]+)'
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage(url, video_id)
+
+        json_ld = self._search_json_ld(webpage, video_id)
+
+        embed_vids = self._search_regex(
+            (r'(?x)"embedUrl": "(https?://vids[^"]+?)",',
+             r'(?x)data-embed="(https?://vids[^"]+?)"'),
+            webpage, 'embed player url')
+        if not embed_vids:
+            raise ExtractorError('Boomer moment')
+        embed_vids = smuggle_url(embed_vids, {
+            'referrer': url,
+        })
+
+        json_ld.update({
+            '_type': 'url',
+            'url': embed_vids,
+            'ie_key': VDSIE.ie_key(),
+        })
+
+        return json_ld
+
+
+class VDSIE(InfoExtractor):
+    IE_DESC = False
+    _VALID_URL = r'https?://vidst' \
+        r'ream\.pro/e/(?P<id>[^/?]+)'
+
+    def _real_extract(self, url):
+        url, data = unsmuggle_url(url)
+        video_id = self._match_id(url)
+        referrer = traverse_obj(data, 'referrer', expected_type=compat_str)
+        request_header = {}
+        if referrer:
+            request_header['Referer'] = referrer
+        origin_domain = traverse_obj(parse_qs(url), ('domain', 0))
+
+        webpage = self._download_webpage(
+            url, video_id, headers=request_header)
+        title = self._html_extract_title(webpage, video_id)
+        skey = self._search_regex(
+            r'window\.skey\s*=\s*(["\'])(?P<skey>[a-zA-Z0-9]+?)\1', webpage, 'skey',
+            group='skey')
+
+        info_response = self._download_json(
+            f'https://v' 'idst' f'ream.pro/info/{video_id}', video_id,
+            query={
+                'domain': origin_domain,
+                'skey': skey,
+            }, headers={
+                'Accept': 'application/json, text/javascript',
+                'Referer': url,
+                'X-Requested-With': 'XMLHttpRequest',
+            })
+        if not info_response.get('success'):
+            raise ExtractorError('There was an error in info request')
+
+        print(info_response)
+        formats = []
+        for fm in traverse_obj(info_response, ('media', 'sources', ..., 'file'), default=[]):
+            formats.extend(self._extract_m3u8_formats(fm, video_id, ext='mp4'))
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'formats': formats,
+        }
