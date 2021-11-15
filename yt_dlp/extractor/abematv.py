@@ -9,13 +9,17 @@ import hashlib
 import hmac
 from base64 import urlsafe_b64encode
 
-from yt_dlp.utils import traverse_obj
 from .common import InfoExtractor
-from ..compat import compat_urllib_request
-from ..utils import ExtractorError, random_uuidv4, update_url_query
+from ..utils import (
+    ExtractorError,
+    random_uuidv4,
+    update_url_query,
+    traverse_obj,
+    YoutubeDLExtractorHandler,
+)
 
 
-class AbemaLicenseHandler(compat_urllib_request.BaseHandler):
+class AbemaLicenseHandler(YoutubeDLExtractorHandler):
     STRTABLE = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
     HKEY = b'3AF0298C219469522A313570E8583005A642E73EDD58E3EA2FB7339D3DF1597E'
     _MEDIATOKEN_API = 'https://api.abema.io/v1/media/token'
@@ -107,6 +111,9 @@ class AbemaTVIE(InfoExtractor):
                 'Content-Type': 'application/json',
             })
         self._USERTOKEN = user_data['token']
+
+        self._downloader.remove_opener(AbemaLicenseHandler)
+        self._downloader.add_opener(AbemaLicenseHandler(self))
 
     def _real_extract(self, url):
         video_id, video_type = self._match_valid_url(url).group('id', 'type')
