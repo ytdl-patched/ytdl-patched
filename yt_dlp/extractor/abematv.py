@@ -18,9 +18,12 @@ from ..compat import compat_urllib_response, compat_urllib_parse_urlparse
 from ..utils import (
     ExtractorError,
     random_uuidv4,
+    request_to_url,
     update_url_query,
     traverse_obj,
     YoutubeDLExtractorHandler,
+    intlist_to_bytes,
+    bytes_to_intlist,
 )
 
 
@@ -65,7 +68,7 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
 
         res = sum([self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i))
                   for i in range(len(k))])
-        encvideokey = struct.pack('>QQ', res >> 64, res & 0xffffffffffffffff)
+        encvideokey = bytes_to_intlist(struct.pack('>QQ', res >> 64, res & 0xffffffffffffffff))
 
         # HKEY:
         # RC4KEY = unhexlify('DB98A8E7CECA3424D975280F90BD03EE')
@@ -77,22 +80,17 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
             unhexlify(self.HKEY),
             (cid + self.ie._DEVICE_ID).encode("utf-8"),
             digestmod=hashlib.sha256)
-        enckey = h.digest()
+        enckey = bytes_to_intlist(h.digest())
 
-        return aes_ecb_decrypt(encvideokey, enckey)
+        return intlist_to_bytes(aes_ecb_decrypt(encvideokey, enckey))
 
     def abematv_license_open(self, url):
-        try:
-            ticket = compat_urllib_parse_urlparse(url).netloc
-            response_data = self._get_videokey_from_ticket(ticket)
-            return compat_urllib_response.addinfourl(io.BytesIO(response_data), headers={
-                'Content-Length': len(response_data),
-            }, url=url, code=200)
-        except BaseException as ex:
-            response_data = str(ex)
-            return compat_urllib_response.addinfourl(io.BytesIO(response_data), headers={
-                'Content-Length': len(response_data),
-            }, url=url, code=403)
+        url = request_to_url(url)
+        ticket = compat_urllib_parse_urlparse(url).netloc
+        response_data = self._get_videokey_from_ticket(ticket)
+        return compat_urllib_response.addinfourl(io.BytesIO(response_data), headers={
+            'Content-Length': len(response_data),
+        }, url=url, code=200)
 
 
 class AbemaTVIE(InfoExtractor):
