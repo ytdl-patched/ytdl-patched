@@ -143,10 +143,11 @@ class AbemaTVIE(InfoExtractor):
             self.report_warning("This is a livestream; yt-dlp doesn't support downloading natively, and FFmpeg cannot handle m3u8 manifests from AbemaTV")
             self.report_warning('Please consider using Streamlink to download these streams (https://github.com/streamlink/streamlink)')
         formats = self._extract_m3u8_formats(
-            m3u8_url, video_id, ext='mp4', is_live=is_live)
+            m3u8_url, video_id, ext='mp4', live=is_live)
 
         return {
             'id': video_id,
             'title': 'hello',
             'formats': formats,
+            'is_live': is_live,
         }
