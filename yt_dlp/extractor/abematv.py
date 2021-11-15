@@ -23,6 +23,7 @@ from ..utils import (
     YoutubeDLExtractorHandler,
     intlist_to_bytes,
     bytes_to_intlist,
+    urljoin,
 )
 
 
@@ -82,8 +83,23 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
         }, url=url, code=200)
 
 
-class AbemaTVIE(InfoExtractor):
-    _VALID_URL = r'https?://abema\.tv/(?P<type>now-on-air|video/episode|channels/.+?/slots)/(?P<id>[^?]+)'
+class AbemaTVBaseIE(InfoExtractor):
+    def _extract_breadcrumb_list(self, webpage, video_id):
+        for jld in re.finditer(
+                r'(?is)</span></li></ul><script[^>]+type=(["\']?)application/ld\+json\1[^>]*>(?P<json_ld>.+?)</script>',
+                webpage):
+            jsonld = self._parse_json(jld.group('json_ld'), video_id, fatal=False)
+            if jsonld:
+                if jsonld.get('@type') != 'BreadcrumbList':
+                    continue
+                trav = traverse_obj(jsonld, ('itemListElement', ..., 'name'))
+                if trav:
+                    return trav
+        return []
+
+
+class AbemaTVIE(AbemaTVBaseIE):
+    _VALID_URL = r'https?://abema\.tv/(?P<type>now-on-air|video/episode|channels/.+?/slots)/(?P<id>[^?/]+)'
     _TESTS = [{
         'url': 'https://abema.tv/video/episode/194-25_s2_p1',
         'info_dict': {
@@ -166,7 +182,7 @@ class AbemaTVIE(InfoExtractor):
 
     def _get_device_token(self):
         if self._USERTOKEN:
-            return
+            return self._USERTOKEN
 
         self._DEVICE_ID = random_uuidv4()
         aks = self._generate_aks(self._DEVICE_ID)
@@ -230,19 +246,13 @@ class AbemaTVIE(InfoExtractor):
                     break
 
         # read breadcrumb on top of page
-        jsonld = None
-        for jld in re.finditer(
-                r'(?is)</span></li></ul><script[^>]+type=(["\']?)application/ld\+json\1[^>]*>(?P<json_ld>.+?)</script>',
-                webpage):
-            jsonld = self._parse_json(jld.group('json_ld'), video_id, fatal=False)
-            if jsonld:
-                break
-        if jsonld:
+        breadcrumb = self._extract_breadcrumb_list(webpage, video_id)
+        if breadcrumb:
             # breadcrumb list translates to: (example is 1st test for this IE)
             # Home > Anime (genre) > Isekai Shokudo 2 (series name) > Episode 1 "Cheese cakes" "Morning again" (episode title)
             # hence this works
-            info['series'] = traverse_obj(jsonld, ('itemListElement', -2, 'name'))
-            info['episode'] = traverse_obj(jsonld, ('itemListElement', -1, 'name'))
+            info['series'] = breadcrumb[-2]
+            info['episode'] = breadcrumb[-1]
             if not title:
                 title = info['episode']
 
@@ -324,3 +334,27 @@ class AbemaTVIE(InfoExtractor):
             'is_live': is_live,
         })
         return info
+
+
+class AbemaTVTitleIE(AbemaTVBaseIE):
+    _VALID_URL = r'https?://abema\.tv/video/title/(?P<id>[^?/]+)'
+
+    _TESTS = [{
+        'url': 'https://abema.tv/video/title/90-1597',
+    }, {
+        'url': 'https://abema.tv/video/title/193-132',
+    }]
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage(url, video_id)
+
+        playlist_title, breadcrumb = None, self._extract_breadcrumb_list(webpage, video_id)
+        if breadcrumb:
+            playlist_title = breadcrumb[-1]
+
+        playlist = []
+        for mobj in re.finditer(r'<li\s*class=".+?EpisodeList.+?"><a\s*href="(/[^"]+?)"', webpage):
+            playlist.append(self.url_result(urljoin('https://abema.tv/', mobj.group(1))))
+
+        return self.playlist_result(playlist, playlist_title=playlist_title, playlist_id=video_id)
