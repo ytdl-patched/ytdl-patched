@@ -107,8 +107,7 @@ class AbemaTVIE(InfoExtractor):
     _USERTOKEN = None
     _DEVICE_ID = None
 
-    SECRETKEY = (b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9B'
-                 b'Rbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$'
+    SECRETKEY = (b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9BRbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$'
                  b'k9cD=3TxwWe86!x#Zyhe')
 
     def _generate_aks(self, deviceid):
@@ -230,7 +229,7 @@ class AbemaTVIE(InfoExtractor):
             webpage, 'description', fatal=False)
 
         # some video ID contain series and episode number
-        mobj = re.match(r'_s(\d+)_p(\d+)/?$', video_id)
+        mobj = re.search(r's(\d+)_p(\d+)$', video_id)
         if mobj:
             info['series_number'] = int_or_none(mobj.group(1))
             info['episode_number'] = int_or_none(mobj.group(2))
