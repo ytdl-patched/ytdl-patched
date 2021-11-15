@@ -107,8 +107,7 @@ class AbemaTVIE(InfoExtractor):
     _USERTOKEN = None
     _DEVICE_ID = None
 
-    SECRETKEY = (b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9BRbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$'
-                 b'k9cD=3TxwWe86!x#Zyhe')
+    SECRETKEY = b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9BRbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$k9cD=3TxwWe86!x#Zyhe'
 
     def _generate_aks(self, deviceid):
         deviceid = deviceid.encode('utf-8')
@@ -218,8 +217,9 @@ class AbemaTVIE(InfoExtractor):
             # Home > Anime (genre) > Isekai Shokudo 2 (series name) > Episode 1 "Cheese cakes" "Morning again" (episode title)
             # hence this works
             info['series'] = traverse_obj(jsonld, ('itemListElement', -2, 'name'))
+            info['episode'] = traverse_obj(jsonld, ('itemListElement', -1, 'name'))
             if not title:
-                title = traverse_obj(jsonld, ('itemListElement', -1, 'name'))
+                title = info['episode']
 
         if title:
             info['title'] = title
