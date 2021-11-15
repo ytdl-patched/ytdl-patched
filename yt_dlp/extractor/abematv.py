@@ -13,6 +13,7 @@ from ..aes import aes_ecb_decrypt
 from ..compat import compat_urllib_response, compat_urllib_parse_urlparse
 from ..utils import (
     ExtractorError,
+    decode_base,
     int_or_none,
     random_uuidv4,
     request_to_url,
@@ -37,8 +38,9 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
         self.ie = ie
 
     def _get_videokey_from_ticket(self, ticket):
+        to_show = self.ie._downloader.params.get('verbose', False)
         media_token_response = self.ie._download_json(
-            'https://api.abema.io/v1/media/token', None, note='Fetching media token',
+            'https://api.abema.io/v1/media/token', None, note='Fetching media token' if to_show else False,
             query={
                 'osName': 'android',
                 'osVersion': '6.0.1',
@@ -50,7 +52,7 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
             headers={'Authorization': 'Bearer ' + self.ie._USERTOKEN})
 
         license_response = self.ie._download_json(
-            'https://license.abema.io/abematv-hls', None, note='Requesting playback license',
+            'https://license.abema.io/abematv-hls', None, note='Requesting playback license' if to_show else False,
             query={'t': media_token_response['token']},
             data=json.dumps({
                 'kv': 'a',
@@ -59,10 +61,8 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
             headers={
                 'Content-Type': 'application/json',
             })
-        k = license_response['k']
 
-        res = sum([self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i))
-                  for i in range(len(k))])
+        res = decode_base(license_response['k'], self.STRTABLE)
         encvideokey = bytes_to_intlist(struct.pack('>QQ', res >> 64, res & 0xffffffffffffffff))
 
         h = hmac.new(
