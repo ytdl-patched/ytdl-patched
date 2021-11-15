@@ -116,7 +116,7 @@ class AbemaTVIE(InfoExtractor):
             'episode': '第5話『光射す』',
         }
     }, {
-        'url': 'https://abema.tv/video/episode/87-877_s1282_p31047',
+        'url': 'https://abema.tv/now-on-air/abema-anime',
         'info_dict': {
             'id': 'abema-anime',
             # this varies
