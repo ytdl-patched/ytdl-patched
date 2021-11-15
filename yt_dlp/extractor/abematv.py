@@ -65,12 +65,6 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
                   for i in range(len(k))])
         encvideokey = bytes_to_intlist(struct.pack('>QQ', res >> 64, res & 0xffffffffffffffff))
 
-        # HKEY:
-        # RC4KEY = unhexlify('DB98A8E7CECA3424D975280F90BD03EE')
-        # RC4DATA = unhexlify(b'D4B718BBBA9CFB7D0192A58F9E2D146A'
-        #                     b'FC5DB29E4352DE05FC4CF2C1005804BB')
-        # rc4 = ARC4.new(RC4KEY)
-        # HKEY = rc4.decrypt(RC4DATA)
         h = hmac.new(
             unhexlify(self.HKEY),
             (cid + self.ie._DEVICE_ID).encode('utf-8'),
