@@ -27,8 +27,6 @@ from ..utils import (
 class AbemaLicenseHandler(YoutubeDLExtractorHandler):
     STRTABLE = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
     HKEY = b'3AF0298C219469522A313570E8583005A642E73EDD58E3EA2FB7339D3DF1597E'
-    _MEDIATOKEN_API = 'https://api.abema.io/v1/media/token'
-    _LICENSE_API = 'https://license.abema.io/abematv-hls'
 
     def __init__(self, ie: 'AbemaTVIE'):
         # the protcol that this should really handle is 'abematv-license://'
@@ -39,7 +37,7 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
 
     def _get_videokey_from_ticket(self, ticket):
         media_token_response = self.ie._download_json(
-            self._MEDIATOKEN_API, None, note='Fetching media token',
+            'https://api.abema.io/v1/media/token', None, note='Fetching media token',
             query={
                 'osName': 'android',
                 'osVersion': '6.0.1',
@@ -51,7 +49,7 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
             headers={'Authorization': 'Bearer ' + self.ie._USERTOKEN})
 
         license_response = self.ie._download_json(
-            self._LICENSE_API, None, note='Requesting playback license',
+            'https://license.abema.io/abematv-hls', None, note='Requesting playback license',
             query={'t': media_token_response['token']},
             data=json.dumps({
                 'kv': 'a',
