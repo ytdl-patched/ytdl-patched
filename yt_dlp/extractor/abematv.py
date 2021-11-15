@@ -133,23 +133,6 @@ class AbemaTVIE(InfoExtractor):
 
         return urlsafe_b64encode(tmp).rstrip(b'=').decode('utf-8')
 
-    def _is_playable(self, vtype, vid):
-        if vtype == 'episode':
-            api_response = self._download_json(
-                f'https://api.abema.io/v1/video/programs/{vid}', vid,
-                headers={
-                    'Authorization': 'Bearer ' + self._USERTOKEN
-                })
-            ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'), default=[])
-            return 3 in ondemand_types
-        elif vtype == 'slots':
-            api_response = self._download_json(
-                f'https://api.abema.io/v1/media/slots/{vid}', vid,
-                headers={
-                    'Authorization': 'Bearer ' + self._USERTOKEN
-                })
-            return traverse_obj(api_response, ('slot', 'flags', 'timeshiftFree'), default=False)
-
     def _get_device_token(self):
         if self._USERTOKEN:
             return
@@ -239,13 +222,28 @@ class AbemaTVIE(InfoExtractor):
             else:
                 raise ExtractorError(f'Cannot find on-air {video_id} channel.', expected=True)
         elif video_type == 'episode':
-            if not self._is_playable('episode', video_id):
+            api_response = self._download_json(
+                f'https://api.abema.io/v1/video/programs/{video_id}', video_id,
+                note='Checking playability',
+                headers={
+                    'Authorization': 'Bearer ' + self._USERTOKEN
+                })
+            ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'), default=[])
+            if 3 not in ondemand_types:
                 # --allow-unplayable-formats is a devil; we don't care about it
                 raise ExtractorError("Premium stream can't be played.", expected=True)
+
             m3u8_url = f'https://vod-abematv.akamaized.net/program/{video_id}/playlist.m3u8'
         elif video_type == 'slots':
-            if not self._is_playable('slots', video_id):
+            api_response = self._download_json(
+                f'https://api.abema.io/v1/media/slots/{video_id}', video_id,
+                note='Checking playability',
+                headers={
+                    'Authorization': 'Bearer ' + self._USERTOKEN
+                })
+            if not traverse_obj(api_response, ('slot', 'flags', 'timeshiftFree'), default=False):
                 raise ExtractorError("Premium stream can't be played.", expected=True)
+
             m3u8_url = f'https://vod-abematv.akamaized.net/slot/{video_id}/playlist.m3u8'
         else:
             raise ExtractorError('Unreachable')
