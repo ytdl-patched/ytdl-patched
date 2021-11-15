@@ -306,6 +306,9 @@ jobs:
             - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
+            - for pip - `yt_dlp-wheel.tar.gz`
+
+            This release is built from commit ${{ github.sha }}
 
             **ytdl-patched is now yt-dlp-based version**
       - name: Create release
