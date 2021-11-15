@@ -16,6 +16,7 @@ from ..utils import (
     int_or_none,
     random_uuidv4,
     request_to_url,
+    time_millis,
     update_url_query,
     traverse_obj,
     YoutubeDLExtractorHandler,
@@ -87,7 +88,6 @@ class AbemaTVIE(InfoExtractor):
         'url': 'https://abema.tv/video/episode/194-25_s2_p1',
         'info_dict': {
             'id': '194-25_s2_p1',
-            # it's assumed to be formatted in combination with %(series)s
             'title': '第1話 「チーズケーキ」　「モーニング再び」',
             'series': '異世界食堂２',
             'series_number': 2,
@@ -102,35 +102,34 @@ class AbemaTVIE(InfoExtractor):
 
     def _generate_aks(self, deviceid):
         deviceid = deviceid.encode('utf-8')
-        # plus 1 hour and drop minute and secs
-        ts_1hour = (int(time.time()) + 60 * 60) // 3600 * 3600
+        # add 1 hour and then drop minute and secs
+        ts_1hour = (time_millis() // 3600000 + 1) * 3600
         time_struct = time.gmtime(ts_1hour)
         ts_1hour_str = str(ts_1hour).encode('utf-8')
 
-        h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-        h.update(self.SECRETKEY)
-        tmp = h.digest()
+        tmp = None
 
-        def mix_1():
+        def mix_once(nonce):
             nonlocal tmp
             h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-            h.update(tmp)
+            h.update(nonce)
             tmp = h.digest()
 
-        def mix_2(nonce):
+        def mix_tmp(count):
             nonlocal tmp
-            h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-            h.update(urlsafe_b64encode(tmp).rstrip(b'=') + nonce)
-            tmp = h.digest()
+            for i in range(count):
+                mix_once(tmp)
 
-        for i in range(time_struct.tm_mon):
-            mix_1()
-        mix_2(deviceid)
-        for i in range(time_struct.tm_mday % 5):
-            mix_1()
-        mix_2(ts_1hour_str)
-        for i in range(time_struct.tm_hour % 5):
-            mix_1()
+        def mix_twist(nonce):
+            nonlocal tmp
+            mix_once(urlsafe_b64encode(tmp).rstrip(b'=') + nonce)
+
+        mix_once(self.SECRETKEY)
+        mix_tmp(time_struct.tm_mon)
+        mix_twist(deviceid)
+        mix_tmp(time_struct.tm_mday % 5)
+        mix_twist(ts_1hour_str)
+        mix_tmp(time_struct.tm_hour % 5)
 
         return urlsafe_b64encode(tmp).rstrip(b'=').decode('utf-8')
 
