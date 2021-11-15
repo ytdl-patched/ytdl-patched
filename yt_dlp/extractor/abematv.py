@@ -16,7 +16,7 @@ from ..utils import (
     int_or_none,
     random_uuidv4,
     request_to_url,
-    time_millis,
+    time_seconds,
     update_url_query,
     traverse_obj,
     YoutubeDLExtractorHandler,
@@ -94,16 +94,47 @@ class AbemaTVIE(InfoExtractor):
             'episode': '第1話 「チーズケーキ」　「モーニング再び」',
             'episode_number': 1,
         }
+    }, {
+        'url': 'https://abema.tv/channels/anime-live2/slots/E8tvAnMJ7a9a5d',
+        'info_dict': {
+            'id': 'E8tvAnMJ7a9a5d',
+            'title': 'ゆるキャン△ SEASON２ 全話一挙【無料ビデオ72時間】',
+            'series': 'ゆるキャン△ SEASON２',
+            'episode': 'ゆるキャン△ SEASON２ 全話一挙【無料ビデオ72時間】',
+            'series_number': 2,
+            'episode_number': 1,
+            'description': 'md5:9c5a3172ae763278f9303922f0ea5b17',
+        }
+    }, {
+        'url': 'https://abema.tv/video/episode/87-877_s1282_p31047',
+        'info_dict': {
+            'id': 'E8tvAnMJ7a9a5d',
+            'title': '第5話『光射す』',
+            'description': 'md5:56d4fc1b4f7769ded5f923c55bb4695d',
+            'thumbnail': r're:https://hayabusa\.io/.+',
+            'series': '相棒',
+            'episode': '第5話『光射す』',
+        }
+    }, {
+        'url': 'https://abema.tv/video/episode/87-877_s1282_p31047',
+        'info_dict': {
+            'id': 'abema-anime',
+            # this varies
+            # 'title': '女子高生の無駄づかい 全話一挙【無料ビデオ72時間】',
+            'description': '24時間アニメを放送中！ABEMA アニメチャンネルでは、今期のアニメ最新作から懐かしの名作、ABEMAオリジナルの声優番組まで充実なラインナップを無料で視聴できます。その他にもABEMAでは、ニュースやオリジナルドラマ、恋愛番組、アニメ、スポーツなど、多彩な番組をいつでもお楽しみいただけます。',
+            'is_live': True,
+        }
     }]
     _USERTOKEN = None
     _DEVICE_ID = None
+    _TIMETABLE = None
 
-    SECRETKEY = b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9BRbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$k9cD=3TxwWe86!x#Zyhe'
+    _SECRETKEY = b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9BRbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$k9cD=3TxwWe86!x#Zyhe'
 
     def _generate_aks(self, deviceid):
         deviceid = deviceid.encode('utf-8')
         # add 1 hour and then drop minute and secs
-        ts_1hour = (time_millis() // 3600000 + 1) * 3600
+        ts_1hour = int((time_seconds(hours=9) // 3600 + 1) * 3600)
         time_struct = time.gmtime(ts_1hour)
         ts_1hour_str = str(ts_1hour).encode('utf-8')
 
@@ -111,7 +142,7 @@ class AbemaTVIE(InfoExtractor):
 
         def mix_once(nonce):
             nonlocal tmp
-            h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
+            h = hmac.new(self._SECRETKEY, digestmod=hashlib.sha256)
             h.update(nonce)
             tmp = h.digest()
 
@@ -124,7 +155,7 @@ class AbemaTVIE(InfoExtractor):
             nonlocal tmp
             mix_once(urlsafe_b64encode(tmp).rstrip(b'=') + nonce)
 
-        mix_once(self.SECRETKEY)
+        mix_once(self._SECRETKEY)
         mix_tmp(time_struct.tm_mon)
         mix_twist(deviceid)
         mix_tmp(time_struct.tm_mday % 5)
@@ -154,15 +185,23 @@ class AbemaTVIE(InfoExtractor):
         self._downloader.remove_opener(AbemaLicenseHandler)
         self._downloader.add_opener(AbemaLicenseHandler(self))
 
+        return self._USERTOKEN
+
     def _real_extract(self, url):
         # starting download using infojson from this extractor is undefined behavior,
         # and never be fixed in the future; you must trigger downloads by directly specifing URL.
         # (unless there's a way to hook before downloading by extractor)
         video_id, video_type = self._match_valid_url(url).group('id', 'type')
-        self._get_device_token()
+        headers = {
+            'Authorization': 'Bearer ' + self._get_device_token(),
+        }
+        video_type = video_type.split('/')[-1]
 
         webpage = self._download_webpage(url, video_id)
-        info = self._search_json_ld(webpage, video_id)
+        canonical_url = self._search_regex(
+            r'<link\s+rel="canonical"\s*href="(.+?)"', webpage, 'canonical URL',
+            default=url)
+        info = self._search_json_ld(webpage, video_id, default={})
 
         title = self._search_regex(
             r'<span\s*class=".+?EpisodeTitleBlock__title">(.+?)</span>', webpage, 'title', default=None)
@@ -176,6 +215,19 @@ class AbemaTVIE(InfoExtractor):
                     break
             if jsonld:
                 title = jsonld.get('caption')
+        if not title and video_type == 'now-on-air':
+            if not self._TIMETABLE:
+                # cache the timetable because it goes to 5MiB in size (!!)
+                self._TIMETABLE = self._download_json(
+                    'https://api.abema.io/v1/timetable/dataSet?debug=false', video_id,
+                    headers=headers)
+            now = time_seconds(hours=9)
+            for slot in self._TIMETABLE.get('slots', []):
+                if slot.get('channelId') != video_id:
+                    continue
+                if slot['startAt'] <= now and now < slot['endAt']:
+                    title = slot['title']
+                    break
 
         # read breadcrumb on top of page
         jsonld = None
@@ -194,20 +246,34 @@ class AbemaTVIE(InfoExtractor):
             if not title:
                 title = info['episode']
 
-        if title:
-            info['title'] = title
+        description = self._html_search_regex(
+            (r'<p\s+class="com-video-EpisodeDetailsBlock__content"><span\s+class=".+?">(.+?)</span></p><div',
+             r'<span\s+class=".+?SlotSummary.+?">(.+?)</span></div><div',),
+            webpage, 'description', default=None, group=1)
+        if not description:
+            og_desc = self._html_search_meta(
+                ('description', 'og:description', 'twitter:description'), webpage)
+            if og_desc:
+                description = re.sub(r'''(?sx)
+                    ^(.+?)(?:
+                        アニメの動画を無料で見るならABEMA！| # anime
+                        等、ABEMAでは韓流・華流番組| # korean drama
+                        等、女子高生の3人に1人が|  # romance
+                        等、今期の最新ドラマ # drama
+                        # TODO: add more
+                    )
+                ''', r'\1', og_desc)
 
-        info['description'] = self._html_search_regex(
-            r'<p\s+class="com-video-EpisodeDetailsBlock__content"><span\s+class=".+?">(.+?)</span></p><div',
-            webpage, 'description', fatal=False)
-
-        # some video ID contain series and episode number
-        mobj = re.search(r's(\d+)_p(\d+)$', video_id)
+        # canonical URL may contain series and episode number
+        mobj = re.search(r's(\d+)_p(\d+)$', canonical_url)
         if mobj:
-            info['series_number'] = int_or_none(mobj.group(1))
-            info['episode_number'] = int_or_none(mobj.group(2))
+            seri = int_or_none(mobj.group(1), default=float('inf'))
+            epis = int_or_none(mobj.group(2), default=float('inf'))
+            info['series_number'] = seri if seri < 100 else None
+            # some anime like Detective Conan (though not available in AbemaTV)
+            # has more than 1000 episodes (1026 as of 2021/11/15)
+            info['episode_number'] = epis if epis < 2000 else None
 
-        video_type = video_type.split('/')[-1]
         is_live, m3u8_url = False, None
         if video_type == 'now-on-air':
             is_live = True
@@ -225,9 +291,7 @@ class AbemaTVIE(InfoExtractor):
             api_response = self._download_json(
                 f'https://api.abema.io/v1/video/programs/{video_id}', video_id,
                 note='Checking playability',
-                headers={
-                    'Authorization': 'Bearer ' + self._USERTOKEN
-                })
+                headers=headers)
             ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'), default=[])
             if 3 not in ondemand_types:
                 # --allow-unplayable-formats is a devil; we don't care about it
@@ -238,9 +302,7 @@ class AbemaTVIE(InfoExtractor):
             api_response = self._download_json(
                 f'https://api.abema.io/v1/media/slots/{video_id}', video_id,
                 note='Checking playability',
-                headers={
-                    'Authorization': 'Bearer ' + self._USERTOKEN
-                })
+                headers=headers)
             if not traverse_obj(api_response, ('slot', 'flags', 'timeshiftFree'), default=False):
                 raise ExtractorError("Premium stream can't be played.", expected=True)
 
@@ -256,6 +318,8 @@ class AbemaTVIE(InfoExtractor):
 
         info.update({
             'id': video_id,
+            'title': title,
+            'description': description,
             'formats': formats,
             'is_live': is_live,
         })

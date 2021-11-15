@@ -5108,6 +5108,11 @@ def time_millis():
     return round(time.time() * 1000)
 
 
+def time_seconds(**kwargs):
+    t = datetime.datetime.now(datetime.timezone(datetime.timedelta(**kwargs)))
+    return t.timestamp()
+
+
 # create a JSON Web Signature (jws) with HS256 algorithm
 # the resulting format is in JWS Compact Serialization
 # implemented following JWT https://www.rfc-editor.org/rfc/rfc7519.html
