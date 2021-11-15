@@ -58,7 +58,6 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
             headers={
                 'Content-Type': 'application/json',
             })
-        cid = license_response['cid']
         k = license_response['k']
 
         res = sum([self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i))
@@ -67,7 +66,7 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
 
         h = hmac.new(
             unhexlify(self.HKEY),
-            (cid + self.ie._DEVICE_ID).encode('utf-8'),
+            (license_response['cid'] + self.ie._DEVICE_ID).encode('utf-8'),
             digestmod=hashlib.sha256)
         enckey = bytes_to_intlist(h.digest())
 
@@ -104,7 +103,6 @@ class AbemaTVIE(InfoExtractor):
     def _generate_aks(self, deviceid):
         deviceid = deviceid.encode('utf-8')
         # plus 1 hour and drop minute and secs
-        # for python3 : floor division
         ts_1hour = (int(time.time()) + 60 * 60) // 3600 * 3600
         time_struct = time.gmtime(ts_1hour)
         ts_1hour_str = str(ts_1hour).encode('utf-8')
@@ -112,26 +110,27 @@ class AbemaTVIE(InfoExtractor):
         h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
         h.update(self.SECRETKEY)
         tmp = h.digest()
+
+        def mix_1():
+            nonlocal tmp
+            h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
+            h.update(tmp)
+            tmp = h.digest()
+
+        def mix_2(nonce):
+            nonlocal tmp
+            h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
+            h.update(urlsafe_b64encode(tmp).rstrip(b'=') + nonce)
+            tmp = h.digest()
+
         for i in range(time_struct.tm_mon):
-            h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-            h.update(tmp)
-            tmp = h.digest()
-        h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-        h.update(urlsafe_b64encode(tmp).rstrip(b'=') + deviceid)
-        tmp = h.digest()
+            mix_1()
+        mix_2(deviceid)
         for i in range(time_struct.tm_mday % 5):
-            h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-            h.update(tmp)
-            tmp = h.digest()
-
-        h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-        h.update(urlsafe_b64encode(tmp).rstrip(b'=') + ts_1hour_str)
-        tmp = h.digest()
-
-        for i in range(time_struct.tm_hour % 5):  # utc hour
-            h = hmac.new(self.SECRETKEY, digestmod=hashlib.sha256)
-            h.update(tmp)
-            tmp = h.digest()
+            mix_1()
+        mix_2(ts_1hour_str)
+        for i in range(time_struct.tm_hour % 5):
+            mix_1()
 
         return urlsafe_b64encode(tmp).rstrip(b'=').decode('utf-8')
 
