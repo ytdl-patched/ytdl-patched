@@ -1,13 +1,9 @@
-# https://docs.python.org/ja/3/library/urllib.request.html
-# https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/urllib/request.py#L510
-# https://gist.github.com/zhenyi2697/5252805
-# https://github.com/streamlink/streamlink/blob/master/src/streamlink/plugins/abematv.py#L39
-
 import io
 import json
 import time
 import hashlib
 import hmac
+import re
 import struct
 from base64 import urlsafe_b64encode
 from binascii import unhexlify
@@ -17,6 +13,7 @@ from ..aes import aes_ecb_decrypt
 from ..compat import compat_urllib_response, compat_urllib_parse_urlparse
 from ..utils import (
     ExtractorError,
+    int_or_none,
     random_uuidv4,
     request_to_url,
     update_url_query,
@@ -44,21 +41,21 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
         media_token_response = self.ie._download_json(
             self._MEDIATOKEN_API, None, note='Fetching media token',
             query={
-                "osName": "android",
-                "osVersion": "6.0.1",
-                "osLang": "ja_JP",
-                "osTimezone": "Asia/Tokyo",
-                "appId": "tv.abema",
-                "appVersion": "3.27.1"
+                'osName': 'android',
+                'osVersion': '6.0.1',
+                'osLang': 'ja_JP',
+                'osTimezone': 'Asia/Tokyo',
+                'appId': 'tv.abema',
+                'appVersion': '3.27.1'
             },
-            headers={"Authorization": "Bearer " + self.ie._USERTOKEN})
+            headers={'Authorization': 'Bearer ' + self.ie._USERTOKEN})
 
         license_response = self.ie._download_json(
             self._LICENSE_API, None, note='Requesting playback license',
-            query={"t": media_token_response['token']},
+            query={'t': media_token_response['token']},
             data=json.dumps({
-                "kv": "a",
-                "lt": ticket
+                'kv': 'a',
+                'lt': ticket
             }).encode('utf-8'),
             headers={
                 'Content-Type': 'application/json',
@@ -78,7 +75,7 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
         # HKEY = rc4.decrypt(RC4DATA)
         h = hmac.new(
             unhexlify(self.HKEY),
-            (cid + self.ie._DEVICE_ID).encode("utf-8"),
+            (cid + self.ie._DEVICE_ID).encode('utf-8'),
             digestmod=hashlib.sha256)
         enckey = bytes_to_intlist(h.digest())
 
@@ -95,6 +92,18 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
 
 class AbemaTVIE(InfoExtractor):
     _VALID_URL = r'https?://abema\.tv/(?P<type>now-on-air|video/episode|channels/.+?/slots)/(?P<id>[^?]+)'
+    _TESTS = [{
+        'url': 'https://abema.tv/video/episode/194-25_s2_p1',
+        'info_dict': {
+            'id': '194-25_s2_p1',
+            # it's assumed to be formatted in combination with %(series)s
+            'title': '第1話 「チーズケーキ」　「モーニング再び」',
+            'series': '異世界食堂２',
+            'series_number': 2,
+            'episode': '第1話 「チーズケーキ」　「モーニング再び」',
+            'episode_number': 1,
+        }
+    }]
     _USERTOKEN = None
     _DEVICE_ID = None
 
@@ -170,6 +179,7 @@ class AbemaTVIE(InfoExtractor):
             })
         self._USERTOKEN = user_data['token']
 
+        # don't allow adding it 2 times or more, though it's guarded
         self._downloader.remove_opener(AbemaLicenseHandler)
         self._downloader.add_opener(AbemaLicenseHandler(self))
 
@@ -179,6 +189,51 @@ class AbemaTVIE(InfoExtractor):
         # (unless there's a way to hook before downloading by extractor)
         video_id, video_type = self._match_valid_url(url).group('id', 'type')
         self._get_device_token()
+
+        webpage = self._download_webpage(url, video_id)
+        info = self._search_json_ld(webpage, video_id)
+
+        title = self._search_regex(
+            r'<span\s*class=".+?EpisodeTitleBlock__title">(.+?)</span>', webpage, 'title', default=None)
+        if not title:
+            jsonld = None
+            for jld in re.finditer(
+                    r'(?is)<span\s*class="com-m-Thumbnail__image">(?:</span>)?<script[^>]+type=(["\']?)application/ld\+json\1[^>]*>(?P<json_ld>.+?)</script>',
+                    webpage):
+                jsonld = self._parse_json(jld.group('json_ld'), video_id, fatal=False)
+                if jsonld:
+                    break
+            if jsonld:
+                title = jsonld.get('caption')
+
+        # read breadcrumb on top of page
+        jsonld = None
+        for jld in re.finditer(
+                r'(?is)</span></li></ul><script[^>]+type=(["\']?)application/ld\+json\1[^>]*>(?P<json_ld>.+?)</script>',
+                webpage):
+            jsonld = self._parse_json(jld.group('json_ld'), video_id, fatal=False)
+            if jsonld:
+                break
+        if jsonld:
+            # breadcrumb list translates to: (example is 1st test for this IE)
+            # Home > Anime (genre) > Isekai Shokudo 2 (series name) > Episode 1 "Cheese cakes" "Morning again" (episode title)
+            # hence this works
+            info['series'] = traverse_obj(jsonld, ('itemListElement', -2, 'name'))
+            if not title:
+                title = traverse_obj(jsonld, ('itemListElement', -1, 'name'))
+
+        if title:
+            info['title'] = title
+
+        info['description'] = self._html_search_regex(
+            r'<p\s+class="com-video-EpisodeDetailsBlock__content"><span\s+class=".+?">(.+?)</span></p><div',
+            webpage, 'description', fatal=False)
+
+        # some video ID contain series and episode number
+        mobj = re.match(r'_s(\d+)_p(\d+)/?$', video_id)
+        if mobj:
+            info['series_number'] = int_or_none(mobj.group(1))
+            info['episode_number'] = int_or_none(mobj.group(2))
 
         video_type = video_type.split('/')[-1]
         is_live, m3u8_url = False, None
@@ -196,12 +251,11 @@ class AbemaTVIE(InfoExtractor):
                 raise ExtractorError(f'Cannot find on-air {video_id} channel.', expected=True)
         elif video_type == 'episode':
             if not self._is_playable('episode', video_id):
-                # ignore --allow-unplayable-formats, fuck it
+                # --allow-unplayable-formats is a devil; we don't care about it
                 raise ExtractorError("Premium stream can't be played.", expected=True)
             m3u8_url = f'https://vod-abematv.akamaized.net/program/{video_id}/playlist.m3u8'
         elif video_type == 'slots':
             if not self._is_playable('slots', video_id):
-                # ignore --allow-unplayable-formats, fuck it
                 raise ExtractorError("Premium stream can't be played.", expected=True)
             m3u8_url = f'https://vod-abematv.akamaized.net/slot/{video_id}/playlist.m3u8'
         else:
@@ -213,9 +267,9 @@ class AbemaTVIE(InfoExtractor):
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id, ext='mp4', live=is_live)
 
-        return {
+        info.update({
             'id': video_id,
-            'title': 'hello',
             'formats': formats,
             'is_live': is_live,
-        }
+        })
+        return info
