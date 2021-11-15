@@ -3,13 +3,18 @@
 # https://gist.github.com/zhenyi2697/5252805
 # https://github.com/streamlink/streamlink/blob/master/src/streamlink/plugins/abematv.py#L39
 
+import io
 import json
 import time
 import hashlib
 import hmac
+import struct
 from base64 import urlsafe_b64encode
+from binascii import unhexlify
 
 from .common import InfoExtractor
+from ..aes import aes_ecb_decrypt
+from ..compat import compat_urllib_response, compat_urllib_parse_urlparse
 from ..utils import (
     ExtractorError,
     random_uuidv4,
@@ -30,9 +35,64 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
         # abematv_license_open is just a placeholder for development purposes
         # ref. https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/urllib/request.py#L510
         setattr(self, 'abematv-license_open', getattr(self, 'abematv_license_open'))
+        self.ie = ie
+
+    def _get_videokey_from_ticket(self, ticket):
+        media_token_response = self.ie._download_json(
+            self._MEDIATOKEN_API, None, note='Fetching media token',
+            query={
+                "osName": "android",
+                "osVersion": "6.0.1",
+                "osLang": "ja_JP",
+                "osTimezone": "Asia/Tokyo",
+                "appId": "tv.abema",
+                "appVersion": "3.27.1"
+            },
+            headers={"Authorization": "Bearer " + self.ie._USERTOKEN})
+
+        license_response = self.ie._download_json(
+            self._LICENSE_API, None, note='Requesting playback license',
+            query={"t": media_token_response['token']},
+            data=json.dumps({
+                "kv": "a",
+                "lt": ticket
+            }).encode('utf-8'),
+            headers={
+                'Content-Type': 'application/json',
+            })
+        cid = license_response['cid']
+        k = license_response['k']
+
+        res = sum([self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i))
+                  for i in range(len(k))])
+        encvideokey = struct.pack('>QQ', res >> 64, res & 0xffffffffffffffff)
+
+        # HKEY:
+        # RC4KEY = unhexlify('DB98A8E7CECA3424D975280F90BD03EE')
+        # RC4DATA = unhexlify(b'D4B718BBBA9CFB7D0192A58F9E2D146A'
+        #                     b'FC5DB29E4352DE05FC4CF2C1005804BB')
+        # rc4 = ARC4.new(RC4KEY)
+        # HKEY = rc4.decrypt(RC4DATA)
+        h = hmac.new(
+            unhexlify(self.HKEY),
+            (cid + self.ie._DEVICE_ID).encode("utf-8"),
+            digestmod=hashlib.sha256)
+        enckey = h.digest()
+
+        return aes_ecb_decrypt(encvideokey, enckey)
 
     def abematv_license_open(self, url):
-        pass
+        try:
+            ticket = compat_urllib_parse_urlparse(url).netloc
+            response_data = self._get_videokey_from_ticket(ticket)
+            return compat_urllib_response.addinfourl(io.BytesIO(response_data), headers={
+                'Content-Length': len(response_data),
+            }, url=url, code=200)
+        except BaseException as ex:
+            response_data = str(ex)
+            return compat_urllib_response.addinfourl(io.BytesIO(response_data), headers={
+                'Content-Length': len(response_data),
+            }, url=url, code=403)
 
 
 class AbemaTVIE(InfoExtractor):
@@ -116,6 +176,9 @@ class AbemaTVIE(InfoExtractor):
         self._downloader.add_opener(AbemaLicenseHandler(self))
 
     def _real_extract(self, url):
+        # starting download using infojson from this extractor is undefined behavior,
+        # and never be fixed in the future; you must trigger downloads by directly specifing URL.
+        # (unless there's a way to hook before downloading by extractor)
         video_id, video_type = self._match_valid_url(url).group('id', 'type')
         self._get_device_token()
 
@@ -147,7 +210,7 @@ class AbemaTVIE(InfoExtractor):
             raise ExtractorError('Unreachable')
 
         if is_live:
-            self.report_warning("This is a livestream; yt-dlp doesn't support downloading natively, and FFmpeg cannot handle m3u8 manifests from AbemaTV")
+            self.report_warning("This is a livestream; yt-dlp doesn't support downloading natively, but FFmpeg cannot handle m3u8 manifests from AbemaTV")
             self.report_warning('Please consider using Streamlink to download these streams (https://github.com/streamlink/streamlink)')
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id, ext='mp4', live=is_live)
