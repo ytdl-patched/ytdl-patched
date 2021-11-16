@@ -696,7 +696,7 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
                 **self._parse_owner(video),
             }
 
-    def _entries(self, pagefunc, page_size=None):
+    def _entries(self, pagefunc):
         NO_ENTRY = object()
         for i in itertools.count(0):
             r = pagefunc(i)
@@ -740,9 +740,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = self._entries(
-            functools.partial(self._fetch_page, list_id),
-            self._PAGE_SIZE)
+        entries = self._entries(functools.partial(self._fetch_page, list_id))
         result = self.playlist_result(
             entries, list_id, mylist.get('name'), mylist.get('description'))
         result.update(self._parse_owner(mylist))
@@ -797,9 +795,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = self._entries(
-            functools.partial(self._fetch_page, list_id),
-            self._PAGE_SIZE)
+        entries = self._entries(functools.partial(self._fetch_page, list_id))
         result = self.playlist_result(
             entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
         result.update(self._parse_owner(mylist))
@@ -881,9 +877,7 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = self._entries(
-            functools.partial(self._fetch_page, list_id),
-            self._PAGE_SIZE)
+        entries = self._entries(functools.partial(self._fetch_page, list_id))
         result = self.playlist_result(entries, list_id)
         result.update(self._parse_owner(mylist))
         return result
