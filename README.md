@@ -105,6 +105,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * To embed comments without problems: `--sub-format ass --write-subs --embed-subs --remux-video mkv`
 
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
+    * `AbemaTV` and `AbemaTVTitle`
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
     * `disneychris`
     * `dnatube`
