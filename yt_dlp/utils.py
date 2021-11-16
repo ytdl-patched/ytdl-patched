@@ -2422,6 +2422,13 @@ def url_or_none(url):
     return url if re.match(r'^(?:(?:https?|rt(?:m(?:pt?[es]?|fp)|sp[su]?)|mms|ftps?):)?//', url) else None
 
 
+def request_to_url(req):
+    if isinstance(req, compat_urllib_request.Request):
+        return req.get_full_url()
+    else:
+        return req
+
+
 def strftime_or_none(timestamp, date_format, default=None):
     datetime_object = None
     try:
@@ -5101,6 +5108,11 @@ def time_millis():
     return round(time.time() * 1000)
 
 
+def time_seconds(**kwargs):
+    t = datetime.datetime.now(datetime.timezone(datetime.timedelta(**kwargs)))
+    return t.timestamp()
+
+
 # create a JSON Web Signature (jws) with HS256 algorithm
 # the resulting format is in JWS Compact Serialization
 # implemented following JWT https://www.rfc-editor.org/rfc/rfc7519.html
@@ -5154,3 +5166,8 @@ def join_nonempty(*values, delim='-', from_dict=None):
     if from_dict is not None:
         values = map(from_dict.get, values)
     return delim.join(map(str, filter(None, values)))
+
+
+class YoutubeDLExtractorHandler(compat_urllib_request.BaseHandler):
+    # Have a common class for ease of removal of handlers
+    handler_order = 499

@@ -3,8 +3,6 @@ from __future__ import unicode_literals
 
 import re
 import base64
-import calendar
-import datetime
 
 from .common import InfoExtractor
 from ..utils import (
@@ -12,6 +10,7 @@ from ..utils import (
     update_url_query,
     clean_html,
     unified_timestamp,
+    time_seconds,
 )
 from ..compat import compat_urllib_parse
 
@@ -208,8 +207,7 @@ class RadikoRadioIE(RadikoBaseIE):
 
         auth_token, area_id = self._auth_client()
         # get current time in JST (GMT+9:00 w/o DST)
-        vid_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
-        vid_now = calendar.timegm(vid_now.timetuple())
+        vid_now = time_seconds(hours=9)
 
         prog, station_program, ft, _, _ = self._find_program(station, station, vid_now)
 

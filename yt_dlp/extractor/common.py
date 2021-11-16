@@ -76,6 +76,7 @@ from ..utils import (
     parse_m3u8_attributes,
     parse_resolution,
     RegexNotFoundError,
+    request_to_url,
     sanitize_filename,
     sanitized_Request,
     str_or_none,
@@ -740,11 +741,7 @@ class InfoExtractor(object):
             if data is not None or headers:
                 url_or_request = sanitized_Request(url_or_request, data, headers)
         if self._downloader.params.get('verbose', False):
-            if isinstance(url_or_request, compat_urllib_request.Request):
-                url = url_or_request.get_full_url()
-            else:
-                url = url_or_request
-            self.to_screen('[debug] Fetching webpage from %s' % url)
+            self.to_screen('[debug] Fetching webpage from %s' % request_to_url(url_or_request))
         try:
             return self._downloader.urlopen(url_or_request)
         except network_exceptions as err:
