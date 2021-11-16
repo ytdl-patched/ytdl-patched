@@ -25,6 +25,8 @@
  - **abcnews:video**
  - **abcotvs**: ABC Owned Television Stations
  - **abcotvs:clips**
+ - **AbemaTV**
+ - **AbemaTVTitle**
  - **AcademicEarth:Course**
  - **acast**
  - **acast:channel**
