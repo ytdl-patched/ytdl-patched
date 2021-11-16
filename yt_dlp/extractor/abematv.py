@@ -305,7 +305,7 @@ class AbemaTVIE(AbemaTVBaseIE):
             ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'), default=[])
             if 3 not in ondemand_types:
                 # --allow-unplayable-formats is a devil; we don't care about it
-                raise ExtractorError("Premium stream can't be played.", expected=True)
+                raise ExtractorError("Premium stream is not supported", expected=True)
 
             m3u8_url = f'https://vod-abematv.akamaized.net/program/{video_id}/playlist.m3u8'
         elif video_type == 'slots':
@@ -314,7 +314,7 @@ class AbemaTVIE(AbemaTVBaseIE):
                 note='Checking playability',
                 headers=headers)
             if not traverse_obj(api_response, ('slot', 'flags', 'timeshiftFree'), default=False):
-                raise ExtractorError("Premium stream can't be played.", expected=True)
+                raise ExtractorError("Premium stream is not supported", expected=True)
 
             m3u8_url = f'https://vod-abematv.akamaized.net/slot/{video_id}/playlist.m3u8'
         else:
@@ -341,8 +341,18 @@ class AbemaTVTitleIE(AbemaTVBaseIE):
 
     _TESTS = [{
         'url': 'https://abema.tv/video/title/90-1597',
+        'info_dict': {
+            'id': '90-1597',
+            'title': 'シャッフルアイランド',
+        },
+        'playlist_mincount': 2,
     }, {
         'url': 'https://abema.tv/video/title/193-132',
+        'info_dict': {
+            'id': '193-132',
+            'title': '真心が届く~僕とスターのオフィス・ラブ!?~',
+        },
+        'playlist_mincount': 16,
     }]
 
     def _real_extract(self, url):
