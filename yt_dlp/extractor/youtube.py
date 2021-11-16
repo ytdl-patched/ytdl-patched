@@ -2586,6 +2586,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'width': int_or_none(fmt.get('width')),
                 'language': audio_track.get('id', '').split('.')[0],
                 'language_preference': 1 if audio_track.get('audioIsDefault') else -1,
+                # retry when 401 is returned; no mmore fragments can be downloaded anymore
+                'unrecoverable_http_error': (401, ),
             }
             mime_mobj = re.match(
                 r'((?:[^/]+)/(?:[^;]+))(?:;\s*codecs="([^"]+)")?', fmt.get('mimeType') or '')
