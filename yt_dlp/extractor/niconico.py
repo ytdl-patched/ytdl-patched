@@ -24,7 +24,6 @@ from ..utils import (
     dict_get,
     float_or_none,
     int_or_none,
-    OnDemandPagedList,
     parse_duration,
     parse_iso8601,
     remove_start,
@@ -697,6 +696,16 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
                 **self._parse_owner(video),
             }
 
+    def _entries(self, pagefunc, page_size=None):
+        NO_ENTRY = object()
+        for i in itertools.count(0):
+            r = pagefunc(i)
+            n = next(r, NO_ENTRY)
+            if n is NO_ENTRY:
+                break
+            yield n
+            yield from r
+
 
 class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:playlist'
@@ -731,7 +740,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = OnDemandPagedList(
+        entries = self._entries(
             functools.partial(self._fetch_page, list_id),
             self._PAGE_SIZE)
         result = self.playlist_result(
@@ -788,7 +797,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = OnDemandPagedList(
+        entries = self._entries(
             functools.partial(self._fetch_page, list_id),
             self._PAGE_SIZE)
         result = self.playlist_result(
@@ -872,7 +881,7 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = OnDemandPagedList(
+        entries = self._entries(
             functools.partial(self._fetch_page, list_id),
             self._PAGE_SIZE)
         result = self.playlist_result(entries, list_id)
