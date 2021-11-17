@@ -1069,7 +1069,6 @@
  - **Streamanity**
  - **streamcloud.eu**
  - **StreamCZ**
- - **Streamlink**
  - **StreetVoice**
  - **StretchInternet**
  - **stv:player**
