@@ -129,7 +129,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `whowatch` (merged in upstream)
     * `damtomo:video`, `damtomo:record` (merged in upstream)
     * `17live`, `17live:clip` (merged in upstream)
-    * `streamlink` (See below)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
@@ -140,11 +139,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 
 * **Format debugger**: You can debug `-f FORMAT` specs, by just adding `-Fv`. This doesn't work if specs passed to `-f` is malformed.
 You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens.
-
-* ~~**Streamlink integration**: You can download video sites that ytdl-patched don't support but Streamlink do. Currently works with Streamlink 2.3.0.~~
-    * **You have to install Streamlink via pip: `pip install -U streamlink`**
-    * ytdl-patched's extractor **takes precedence** even if Streamlink has appropriate plugin for the input URLs. To force Streamlink, prefix URL with `streamlink:`
-    * Format selections, extracting titles don't work at all due to limitation of Streamlink. Formats are sorted by Streamlink, and ytdl-patched is just providing it as returned. Filenames are automatically guessed from URLs.
 
 
 ## NEW FEATURES IN YT-DLP
