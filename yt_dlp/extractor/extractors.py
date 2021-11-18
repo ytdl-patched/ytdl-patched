@@ -200,6 +200,7 @@ from .camdemy import (
 )
 from .cammodels import CamModelsIE
 from .camwithher import CamWithHerIE
+from .canalalpha import CanalAlphaIE
 from .canalplus import CanalplusIE
 from .canalc2 import Canalc2IE
 from .canvas import (
@@ -426,6 +427,7 @@ from .espn import (
     ESPNIE,
     ESPNArticleIE,
     FiveThirtyEightIE,
+    ESPNCricInfoIE,
 )
 from .esri import EsriVideoIE
 from .europa import EuropaIE
@@ -1032,6 +1034,7 @@ from .oktoberfesttv import OktoberfestTVIE
 from .olympics import OlympicsReplayIE
 from .on24 import On24IE
 from .ondemandkorea import OnDemandKoreaIE
+from .onefootball import OneFootballIE
 from .onet import (
     OnetIE,
     OnetChannelIE,
