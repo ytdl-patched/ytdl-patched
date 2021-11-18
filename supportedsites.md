@@ -168,6 +168,7 @@
  - **CamdemyFolder**
  - **CamModels**
  - **CamWithHer**
+ - **CanalAlpha**
  - **canalc2.tv**
  - **Canalplus**: mycanal.fr and piwiplus.fr
  - **Canvas**
@@ -323,6 +324,7 @@
  - **Escapist**
  - **ESPN**
  - **ESPNArticle**
+ - **ESPNCricInfo**
  - **EsriVideo**
  - **Europa**
  - **EUScreen**
@@ -773,6 +775,7 @@
  - **OlympicsReplay**
  - **on24**: ON24
  - **OnDemandKorea**
+ - **OneFootball**
  - **onet.pl**
  - **onet.tv**
  - **onet.tv:channel**
