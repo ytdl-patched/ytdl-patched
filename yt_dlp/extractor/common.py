@@ -454,15 +454,15 @@ class InfoExtractor(object):
     _GEO_COUNTRIES = None
     _GEO_IP_BLOCKS = None
     _WORKING = True
-    """ True if it's self-hosted service. DO NOT SET IT TRUE MANUALLY """
     _SELF_HOSTED = False
+    """ True if it's self-hosted service. DO NOT SET IT TRUE MANUALLY """
+    _FEATURE_DEPENDENCY = tuple()
     """
     Feature dependency declaration. Case sensitive.
     Following features are known and recognized:
     - websocket - Requires WebSocket-related package/command
     - yaml - pyyaml package
     """
-    _FEATURE_DEPENDENCY = tuple()
 
     _LOGIN_HINTS = {
         'any': 'Use --cookies, --username and --password, or --netrc to provide account credentials',
