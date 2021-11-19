@@ -1459,6 +1459,7 @@ from .svt import (
     SVTPlayIE,
     SVTSeriesIE,
 )
+from .swipevideo import SwipeVideoIE
 from .swrmediathek import SWRMediathekIE
 from .syfy import SyfyIE
 from .sztvhu import SztvHuIE
