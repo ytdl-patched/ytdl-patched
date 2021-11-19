@@ -1,6 +1,6 @@
 import re
 from .common import InfoExtractor
-from ..utils import determine_ext, number_of_digits, urljoin
+from ..utils import determine_ext, number_of_digits
 
 
 class SwipeVideoIE(InfoExtractor):
@@ -29,28 +29,30 @@ class SwipeVideoIE(InfoExtractor):
         secset_digits = number_of_digits(len(srcsets))
         for idx, srcset in enumerate(srcsets):
             resolved_pattern = re.sub(r'\\?\${src}', srcset, pattern)
-            images = [urljoin(base_url, resolved_pattern % (x + 1)) for x in range(frames)]
+            images = [dict(
+                url=f'{base_url}/{resolved_pattern % (x + 1)}') for x in range(frames)]
             formats.append({
                 'format_id': f'%0{secset_digits}d-%s' % (idx, srcset),
-                'protocol': 'images',
+                'protocol': 'image_series',
                 'vcodec': 'jpg',
                 'acodec': 'none',
                 # FileDownloader is resposible for converting to this format
                 'ext': 'mp4',
-                'url': images[0],
-                'urls': images,
+                'url': images[0]['url'],
+                'fragments': images,
                 'duration': duration,
-                'frames': frames,
+                'frame_count': frames,
                 'fps': approx_framerate,
                 'format_note': f'Angle {idx + 1}',
                 'preference': -idx,
+                'fragment_base_url': base_url,
             })
 
         audio_path = info_data.get('audio')
         if audio_path:
             formats.append({
                 'format_id': 'audio',
-                'url': urljoin(base_url, audio_path),
+                'url': f'{base_url}/{audio_path}',
                 'vcodec': 'none',
                 'acodec': None,
                 'ext': determine_ext(audio_path),

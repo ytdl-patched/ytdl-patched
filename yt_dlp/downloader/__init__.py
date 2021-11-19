@@ -35,6 +35,7 @@ from .niconico import NiconicoDmcFD, NiconicoLiveFD
 from .websocket import WebSocketFragmentFD
 from .youtube_live_chat import YoutubeLiveChatFD
 from .serial import SerialFD
+from .images import ImageSeriesFD
 from .external import (
     get_external_downloader,
     FFmpegFD,
@@ -57,6 +58,7 @@ PROTOCOL_MAP = {
     'niconico_live': NiconicoLiveFD,
     'websocket_frag': WebSocketFragmentFD,
     'serial': SerialFD,
+    'image_series': ImageSeriesFD,
     'youtube_live_chat': YoutubeLiveChatFD,
     'youtube_live_chat_replay': YoutubeLiveChatFD,
 }
@@ -67,7 +69,7 @@ LDM_EXCEPTIONS = (
     'http_dash_segments', 'serial',
     'niconico_live',
     'youtube_live_chat', 'youtube_live_chat_replay',
-    'websocket_frag',
+    'websocket_frag', 'image_series',
 )
 
 

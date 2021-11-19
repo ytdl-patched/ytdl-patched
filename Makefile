@@ -15,7 +15,8 @@ pypi-files: AUTHORS Changelog.md LICENSE README.md README.txt supportedsites com
 clean-test:
 	rm -rf *.3gp *.annotations.xml *.ape *.avi *.description *.dump *.flac *.flv *.frag *.frag.aria2 *.frag.urls \
 	*.info.json *.jpeg *.jpg *.live_chat.json *.m4a *.m4v *.mkv *.mp3 *.mp4 *.ogg *.opus *.part* *.png *.sbv *.srt \
-	*.swf *.swp *.ttml *.vtt *.wav *.webm *.webp *.ytdl test/testdata/player-*.js
+	*.swf *.swp *.ttml *.vtt *.wav *.webm *.webp *.ytdl test/testdata/player-*.js \
+	*.images
 clean-dist:
 	rm -rf youtube-dl.1.temp.md youtube-dl.1 README.txt MANIFEST build/ dist/ .coverage cover/ youtube-dl.tar.gz completions/ yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp youtube-dl youtube-dl.exe yt_dlp.egg-info/ AUTHORS .mailmap
 clean-cache:
