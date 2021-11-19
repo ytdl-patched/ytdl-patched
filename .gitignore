@@ -39,6 +39,7 @@ cookies
 *.jpeg
 *.png
 *.webp
+*.images
 *.annotations.xml
 *.description
 .cache/
