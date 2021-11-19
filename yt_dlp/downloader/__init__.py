@@ -35,7 +35,6 @@ from .niconico import NiconicoDmcFD, NiconicoLiveFD
 from .websocket import WebSocketFragmentFD
 from .youtube_live_chat import YoutubeLiveChatFD
 from .serial import SerialFD
-from .streamlink import StreamlinkFD
 from .external import (
     get_external_downloader,
     FFmpegFD,
@@ -58,7 +57,6 @@ PROTOCOL_MAP = {
     'niconico_live': NiconicoLiveFD,
     'websocket_frag': WebSocketFragmentFD,
     'serial': SerialFD,
-    'streamlink': StreamlinkFD,
     'youtube_live_chat': YoutubeLiveChatFD,
     'youtube_live_chat_replay': YoutubeLiveChatFD,
 }
@@ -69,7 +67,7 @@ LDM_EXCEPTIONS = (
     'http_dash_segments', 'serial',
     'niconico_live',
     'youtube_live_chat', 'youtube_live_chat_replay',
-    'streamlink', 'websocket_frag',
+    'websocket_frag',
 )
 
 
@@ -80,7 +78,6 @@ def shorten_protocol_name(proto, simplify=False):
         'http_dash_segments': 'dash',
         'niconico_dmc': 'dmc',
         'websocket_frag': 'WSfrag',
-        'streamlink': 'SLink',
     }
     if simplify:
         short_protocol_names.update({
