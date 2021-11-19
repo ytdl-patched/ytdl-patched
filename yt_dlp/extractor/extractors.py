@@ -173,6 +173,7 @@ from .bleacherreport import (
     BleacherReportIE,
     BleacherReportCMSIE,
 )
+from .blogger import BloggerIE
 from .bloomberg import BloombergIE
 from .bokecc import BokeCCIE
 from .bongacams import BongaCamsIE
@@ -723,6 +724,7 @@ from .line import (
     LineLiveChannelIE,
 )
 from .linkedin import (
+    LinkedInIE,
     LinkedInLearningIE,
     LinkedInLearningCourseIE,
 )
@@ -1095,6 +1097,7 @@ from .peertube import (
     PeerTubeIE,
     PeerTubePlaylistIE,
 )
+from .peertv import PeerTVIE
 from .peloton import (
     PelotonIE,
     PelotonLiveIE
@@ -1244,10 +1247,7 @@ from .redbulltv import (
     RedBullTVRrnContentIE,
     RedBullIE,
 )
-from .reddit import (
-    RedditIE,
-    RedditRIE,
-)
+from .reddit import RedditIE
 from .redtube import RedTubeIE
 from .regiotv import RegioTVIE
 from .rentv import (
@@ -1274,6 +1274,7 @@ from .rtl2 import (
     RTL2YouSeriesIE,
 )
 from .rtp import RTPIE
+from .rtrfm import RTRFMIE
 from .rts import RTSIE
 from .rtve import RTVEALaCartaIE, RTVELiveIE, RTVEInfantilIE, RTVELiveIE, RTVETelevisionIE
 from .rtvnh import RTVNHIE
@@ -1445,6 +1446,7 @@ from .streamcloud import StreamcloudIE
 from .streamcz import StreamCZIE
 from .streetvoice import StreetVoiceIE
 from .stretchinternet import StretchInternetIE
+from .stripchat import StripchatIE
 from .stv import STVPlayerIE
 from .sunporno import SunPornoIE
 from .sverigesradio import (

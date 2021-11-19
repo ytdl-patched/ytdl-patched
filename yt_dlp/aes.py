@@ -56,7 +56,7 @@ def aes_ecb_decrypt(data, key, iv=None):
     @param {int[]} data        cleartext
     @param {int[]} key         16/24/32-Byte cipher key
     @param {int[]} iv          Unused for this mode
-    @returns {int[]}           encrypted data
+    @returns {int[]}           decrypted data
     """
     expanded_key = key_expansion(key)
     block_count = int(ceil(float(len(data)) / BLOCK_SIZE_BYTES))

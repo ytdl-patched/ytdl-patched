@@ -9,13 +9,9 @@ from ..utils import (
 
 class MixchIE(InfoExtractor):
     IE_NAME = 'mixch'
-    # allow omitting last /live in the URL, though it's likely uncommon
     _VALID_URL = r'https?://(?:www\.)?mixch\.tv/u/(?P<id>\d+)'
 
     TESTS = [{
-        'url': 'https://mixch.tv/u/16137876/live',
-        'skip': 'live has ended',
-    }, {
         'url': 'https://mixch.tv/u/16236849/live',
         'skip': 'don\'t know if this live persists',
         'info_dict': {
@@ -27,22 +23,19 @@ class MixchIE(InfoExtractor):
             'uploader': '🦥伊咲👶🏻#フレアワ',
             'uploader_id': '16236849',
         }
+    }, {
+        'url': 'https://mixch.tv/u/16137876/live',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        url = 'https://mixch.tv/u/%s/live' % video_id
-        webpage = self._download_webpage(url, video_id)
+        webpage = self._download_webpage(f'https://mixch.tv/u/{video_id}/live', video_id)
 
         initial_js_state = self._parse_json(self._search_regex(
             r'(?m)^\s*window\.__INITIAL_JS_STATE__\s*=\s*(\{.+?\});\s*$', webpage, 'initial JS state'), video_id)
         if not initial_js_state.get('liveInfo'):
-            raise ExtractorError('Live has ended.', expected=True)
-
-        # the service does not provide alternative resolutions
-        hls_url = traverse_obj(initial_js_state, ('liveInfo', 'hls')) or 'https://d1hd0ww6piyb43.cloudfront.net/hls/torte_%s.m3u8' % video_id
-        formats = self._extract_m3u8_formats(
-            hls_url, video_id, ext='mp4', m3u8_id='hls')
+            raise ExtractorError('Livestream has ended.', expected=True)
 
         return {
             'id': video_id,
@@ -52,7 +45,11 @@ class MixchIE(InfoExtractor):
             'timestamp': traverse_obj(initial_js_state, ('liveInfo', 'created')),
             'uploader': traverse_obj(initial_js_state, ('broadcasterInfo', 'name')),
             'uploader_id': video_id,
-            'formats': formats,
+            'formats': [{
+                'format_id': 'hls',
+                'url': traverse_obj(initial_js_state, ('liveInfo', 'hls')) or 'https://d1hd0ww6piyb43.cloudfront.net/hls/torte_%s.m3u8' % video_id,
+                'ext': 'mp4',
+                'protocol': 'm3u8',
+            }],
             'is_live': True,
-            'webpage_url': url,
         }
