@@ -1086,6 +1086,7 @@
  - **SVTPage**
  - **SVTPlay**: SVT Play and Öppet arkiv
  - **SVTSeries**
+ - **SwipeVideo**
  - **SWRMediathek**
  - **Syfy**
  - **SztvHu**
