@@ -8,6 +8,12 @@ class SwipeVideoIE(InfoExtractor):
     _VALID_URL = r'swipevideo:(?P<id>[0-9a-zA-Z]+)'
     _TESTS = [{
         'url': 'swipevideo:3027850cf6',
+        'info_dict': {
+            'id': '3027850cf6',
+            'title': 'MUSICAL「Party」',
+            'duration': 183.019,
+            'fps': 29.996885569257834,
+        },
     }]
 
     def _real_extract(self, url):
