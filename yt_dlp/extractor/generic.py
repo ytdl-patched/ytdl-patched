@@ -138,6 +138,7 @@ from .medialaan import MedialaanIE
 from .simplecast import SimplecastIE
 from .wimtv import WimTVIE
 from .tvp import TVPEmbedIE
+from .swipevideo import SwipeVideoIE
 from .blogger import BloggerIE
 
 
@@ -3655,7 +3656,11 @@ class GenericIE(InfoExtractor):
 
         tvp_urls = TVPEmbedIE._extract_urls(webpage)
         if tvp_urls:
-            return self.playlist_from_matches(tvp_urls, video_id, video_title, ie=TVPEmbedIE.ie_key())
+            waitlist.append(self.playlist_from_matches(tvp_urls, video_id, video_title, ie=TVPEmbedIE.ie_key()))
+
+        swipevideo_urls = SwipeVideoIE._extract_urls(webpage)
+        if swipevideo_urls:
+            waitlist.append(self.playlist_from_matches(swipevideo_urls, video_id, video_title, ie=SwipeVideoIE.ie_key()))
 
         # Look for HTML5 media
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')

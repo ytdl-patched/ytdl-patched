@@ -16,6 +16,21 @@ class SwipeVideoIE(InfoExtractor):
         },
     }]
 
+    @classmethod
+    def _extract_urls(cls, webpage):
+        if 'https://swipevideo.site/libs/embedcdn.js' not in webpage:
+            return []
+
+        # the query selector used by the script is ".sv-embed"
+        urls = []
+        for i in re.finditer(r'<[a-zA-Z0-9_:-]+?\s+class=(["\']?)sv-embed\1[^>]+?>', webpage):
+            mobj = re.search(r'data-cid=(["\']?)(?P<id>[0-9a-zA-Z]+)\1', i.group(0))
+            if not mobj:
+                continue
+            urls.append('swipevideo:' + mobj.group('id'))
+
+        return urls
+
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
@@ -26,8 +41,6 @@ class SwipeVideoIE(InfoExtractor):
         pattern = info_data.get('pattern') or '\\${src}/%d.jpg'
         duration = info_data.get('duration')
         frames = info_data.get('frame')
-        # we'll feed ffmpeg framerate with fraction instead
-        # (e.g. -r '5490/183.019')
         approx_framerate = frames / duration
 
         formats = []
