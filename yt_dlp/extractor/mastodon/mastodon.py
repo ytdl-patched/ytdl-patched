@@ -20,7 +20,6 @@ from ...utils import (
     str_or_none,
     int_or_none,
     float_or_none,
-    unescapeHTML,
     try_get,
     parse_qs,
     url_or_none,
@@ -401,24 +400,15 @@ class MastodonIE(MastodonBaseIE):
     def _real_extract(self, url):
         webpage = None
         mobj = self._match_valid_url(url)
-        ap_censorship_circuvement = False
-        if not mobj and self._downloader.params.get('force_use_mastodon'):
-            mobj = PeerTubeIE._match_valid_url(url)
-            if mobj:
-                ap_censorship_circuvement = 'peertube'
-        # regex must match when execution reaches here
 
         video_id = mobj.group('id')
         domain = get_first_group(mobj, 'domain_1', 'domain_2')
 
         login_info = self._login()
-
         if login_info and domain != login_info['instance']:
             wf_url = url
             if not url.startswith('http'):
-                software = ap_censorship_circuvement
-                if not software:
-                    software = self._determine_instance_software(domain, webpage)
+                software = self._determine_instance_software(domain, webpage)
                 url_part = None
                 if software == 'pleroma':
                     if '-' in video_id:   # UUID
@@ -475,11 +465,6 @@ class MastodonIE(MastodonBaseIE):
                 })
 
         title = clean_html(metadata.get('content'))
-        if ap_censorship_circuvement == 'peertube':
-            title = unescapeHTML(
-                self._search_regex(
-                    r'^<p><a href="[^"]+">(.+?)</a></p>',
-                    metadata['content'], 'video title'))
 
         if len(entries) == 0:
             card = metadata.get('card')
@@ -493,15 +478,11 @@ class MastodonIE(MastodonBaseIE):
             raise ExtractorError('No audio/video attachments')
 
         info_dict = {
-            "id": video_id,
-            "title": title,
+            'id': video_id,
+            'title': title,
         }
         if len(entries) == 1:
             info_dict.update(entries[0])
-            info_dict.update({
-                'id': video_id,
-                'title': title,
-            })
         else:
             info_dict.update({
                 "_type": "playlist",
