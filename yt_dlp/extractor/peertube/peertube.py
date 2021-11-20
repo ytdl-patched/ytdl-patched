@@ -14,6 +14,7 @@ from ...utils import (
     int_or_none,
     parse_resolution,
     str_or_none,
+    traverse_obj,
     try_get,
     unified_timestamp,
     url_or_none,
@@ -213,7 +214,7 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
             info_dict.update({
                 '_type': 'url_transparent',
                 'url': 'peertube:%s:%s' % (host, video['uuid']),
-                'ie_key': 'PeerTubeSH',
+                'ie_key': 'PeerTube',
             })
 
         def data(section, field, type_):
@@ -484,7 +485,7 @@ class PeerTubePlaylistIE(PeerTubeBaseIE):
             (?P<proto>https?://)(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)/playlist|api/v\d/video-playlists|w/p)/
         )
         (?P<id>%s)
-        ''' % PeerTubeBaseIE._UUID_RE
+    ''' % PeerTubeBaseIE._UUID_RE
 
     _TESTS = [{
         'url': 'https://peertube.tux.ovh/w/p/3af94cba-95e8-4b74-b37a-807ab6d82526',
@@ -574,15 +575,17 @@ class PeerTubePlaylistIE(PeerTubeBaseIE):
         return {
             '_type': 'playlist',
             'entries': entries,
-            'id': playlist_data['uuid'],
-            'title': playlist_data['displayName'],
+            'id': playlist_data.get('uuid'),
+            'title': playlist_data.get('displayName'),
             'description': playlist_data.get('description'),
-            'channel': playlist_data['videoChannel']['displayName'],
-            'channel_id': playlist_data['videoChannel']['id'],
-            'channel_url': playlist_data['videoChannel']['url'],
-            'uploader': playlist_data['ownerAccount']['displayName'],
-            'uploader_id': playlist_data['ownerAccount']['id'],
-            'uploader_url': playlist_data['ownerAccount']['url'],
+
+            'channel': traverse_obj(playlist_data, ('videoChannel', 'displayName')),
+            'channel_id': traverse_obj(playlist_data, ('videoChannel', 'id')),
+            'channel_url': traverse_obj(playlist_data, ('videoChannel', 'url')),
+
+            'uploader': traverse_obj(playlist_data, ('ownerAccount', 'displayName')),
+            'uploader_id': traverse_obj(playlist_data, ('ownerAccount', 'displayName')),
+            'uploader_url': traverse_obj(playlist_data, ('ownerAccount', 'displayName')),
         }
 
 
@@ -594,7 +597,7 @@ class PeerTubeChannelIE(PeerTubeBaseIE):
             (?P<proto>https?://)(?P<host_2>[^/]+)/(?:(?:api/v\d/)?video-channels|c)/
         )
         (?P<id>[^/?#]+)(?:/videos)?
-        '''
+    '''
 
     _TESTS = [{
         'url': 'https://video.internet-czas-dzialac.pl/video-channels/internet_czas_dzialac/videos',
@@ -635,22 +638,30 @@ class PeerTubeChannelIE(PeerTubeBaseIE):
         return {
             '_type': 'playlist',
             'entries': entries,
-            'id': str(channel_data['id']),
-            'title': channel_data['displayName'],
-            'display_id': channel_data['name'],
+            'id': str_or_none(channel_data.get('id')),
+            'title': channel_data.get('displayName'),
+            'display_id': channel_data.get('name'),
             'description': channel_data.get('description'),
-            'channel': channel_data['displayName'],
-            'channel_id': channel_data['id'],
-            'channel_url': channel_data['url'],
-            'uploader': channel_data['ownerAccount']['displayName'],
-            'uploader_id': channel_data['ownerAccount']['id'],
-            'uploader_url': channel_data['ownerAccount']['url'],
+
+            'channel': channel_data.get('displayName'),
+            'channel_id': channel_data.get('id'),
+            'channel_url': channel_data.get('url'),
+
+            'uploader': traverse_obj(channel_data, ('ownerAccount', 'displayName')),
+            'uploader_id': traverse_obj(channel_data, ('ownerAccount', 'displayName')),
+            'uploader_url': traverse_obj(channel_data, ('ownerAccount', 'displayName')),
         }
 
 
 class PeerTubeAccountIE(PeerTubeBaseIE):
-    _VALID_URL = r'peertube:account:(?P<host>[^:]+):(?P<id>.+)'
-    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:(?:api/v\d/)?accounts|a)/(?P<id>[^/?#]+)(?:/video(?:s|-channels))?'
+    _VALID_URL = r'''
+        (?x)
+        (?P<prefix>peertube:account:)?(?:
+            (?P<host>[^:]+):|
+            (?P<proto>https?://)(?P<host_2>[^/]+)/(?:(?:api/v\d/)?accounts|a)/
+        )
+        (?P<id>[^/?#]+)(?:/video(?:s|-channels))?
+    '''
 
     _TESTS = [{
         'url': 'https://video.internet-czas-dzialac.pl/accounts/icd/video-channels',
@@ -691,11 +702,11 @@ class PeerTubeAccountIE(PeerTubeBaseIE):
         return {
             '_type': 'playlist',
             'entries': entries,
-            'id': str(account_data['id']),
-            'title': account_data['displayName'],
-            'display_id': account_data['name'],
+            'id': str_or_none(account_data.get('id')),
+            'title': account_data.get('displayName'),
+            'display_id': account_data.get('name'),
             'description': account_data.get('description'),
-            'uploader': account_data['displayName'],
-            'uploader_id': account_data['id'],
-            'uploader_url': account_data['url'],
+            'uploader': account_data.get('displayName'),
+            'uploader_id': account_data.get('id'),
+            'uploader_url': account_data.get('url'),
         }
