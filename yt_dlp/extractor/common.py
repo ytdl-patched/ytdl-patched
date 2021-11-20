@@ -3771,7 +3771,7 @@ class SelfHostedInfoExtractor(InfoExtractor):
         return False
 
     @classmethod
-    def _probe_selfhosted_service(cls, ie, url, webpage=None):
+    def _probe_selfhosted_service(cls, ie, url, hostname, webpage=None):
         """
         True if it's acceptable URL for the service.
         Extractors may cache its result whenever possible.
