@@ -332,6 +332,70 @@ class MastodonIE(MastodonBaseIE):
             'uploader_id': 'nao20010128nao',
             'age_limit': 0,
         },
+    }, {
+        # mastodon, video description
+        'url': 'https://mastodon.technology/@BadAtNames/104254332187004304',
+        'info_dict': {
+            'id': '104254332187004304',
+            'title': 're:.+ - Mfw trump supporters complain about twitter',
+            'ext': 'mp4',
+        },
+    }, {
+        # pleroma, /objects/ redirect, empty content
+        'url': 'https://fedi.valkyrie.world/objects/386d2d68-090f-492e-81bd-8d32a3a65627',
+        'info_dict': {
+            'id': '9xLMO1BcEEbaM54LBI',
+            'title': 're:.+ - ',
+            'ext': 'mp4',
+        },
+    }, {
+        # pleroma, multiple videos in single post
+        'url': 'https://donotsta.re/notice/9xN1v6yM7WhzE7aIIC',
+        'info_dict': {
+            'id': '9xN1v6yM7WhzE7aIIC',
+            'title': 're:.+ - ',
+        },
+        'playlist': [{
+            'info_dict': {
+                'id': '1264363435',
+                'title': 'Cherry Gold💭 - French is one interesting language but this is so funny 🤣🤣🤣🤣-1258667021920845824.mp4',
+                'ext': 'mp4',
+            },
+        }, {
+            'info_dict': {
+                'id': '825092418',
+                'title': 'Santi 🇨🇴 - @mhizgoldbedding same guy but i liked this one better-1259242534557167617.mp4',
+                'ext': 'mp4',
+            },
+        }]
+    }, {
+        # gab social
+        'url': 'https://gab.com/ACT1TV/posts/104450493441154721',
+        'info_dict': {
+            'id': '104450493441154721',
+            'title': 're:.+ - He shoots, he scores and the crowd went wild.... #Animal #Sports',
+            'ext': 'mp4',
+        },
+    }, {
+        # Soapbox, audio file
+        'url': 'https://gleasonator.com/notice/9zvJY6h7jJzwopKAIi',
+        'info_dict': {
+            'id': '9zvJY6h7jJzwopKAIi',
+            'title': 're:.+ - #FEDIBLOCK',
+            'ext': 'oga',
+        },
+    }, {
+        # mastodon, card to youtube
+        'url': 'https://mstdn.social/@polamatysiak/106183574509332910',
+        'info_dict': {
+            'id': 'RWDU0BjcYp0',
+            'ext': 'mp4',
+            'title': 'polamatysiak - Moje wczorajsze wystąpienie w Sejmie, koniecznie zobaczcie do końca 🙂 \n#pracaposłanki\n\nhttps://youtu.be/RWDU0BjcYp0',
+            'description': 'md5:0c16fa11a698d5d1b171963fd6833297',
+            'uploader': 'Paulina Matysiak',
+            'uploader_id': 'UCLRAd9-Hw6kEI1aPBrSaF9A',
+            'upload_date': '20210505',
+        },
     }]
 
     def _real_extract(self, url):
