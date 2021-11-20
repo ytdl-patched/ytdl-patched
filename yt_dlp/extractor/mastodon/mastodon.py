@@ -103,7 +103,7 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
                     note='Testing Mastodon API /api/v1/directory')
                 if not isinstance(api_request_directory, (tuple, list)):
                     raise DummyError()
-            except BaseException:
+            except (IOError, ExtractorError):
                 known_failed_instances.add(hostname)
                 return False
 

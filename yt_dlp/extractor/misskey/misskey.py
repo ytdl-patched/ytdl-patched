@@ -49,6 +49,8 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
             return True
         if hostname in known_valid_instances:
             return True
+        if hostname in known_failed_instances:
+            return False
 
         # continue anyway if "misskey:" is added to URL
         if prefix:
@@ -71,6 +73,7 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
                 if not isinstance(api_request_stats.get('instances'), int):
                     return False
             except (IOError, ExtractorError):
+                known_failed_instances.add(hostname)
                 return False
 
         # this is probably misskey instance
