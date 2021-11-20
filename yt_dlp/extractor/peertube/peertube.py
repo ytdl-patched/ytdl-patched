@@ -36,7 +36,7 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
         '>We are sorry but it seems that PeerTube is not compatible with your web browser.<',
         '<meta property="og:platform" content="PeerTube"',
     )
-    _API_BASE = 'https://%s/api/v1/videos/%s/%s'
+    _API_BASE = 'https://%s/api/v1/%s/%s/%s'
     _NETRC_MACHINE = 'peertube'
     _LOGIN_INFO = None
 
@@ -138,12 +138,12 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
         return ydl.params.get('check_peertube_instance', False)
 
     @classmethod
-    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname):
+    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname, webpage=None):
         prefix = ie._search_regex(
             # (PeerTubeIE._VALID_URL, PeerTubePlaylistIE._VALID_URL),
             cls._VALID_URL,
             url, 'peertube test', group='prefix', default=None)
-        return cls._test_peertube_instance(ie, hostname, False, prefix)
+        return cls._test_peertube_instance(ie, hostname, False, prefix, webpage=None)
 
     def _call_api(self, host, resource, resource_id, path, note=None, errnote=None, fatal=True):
         return self._download_json(
@@ -263,8 +263,7 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
 
 
 class PeerTubeIE(PeerTubeBaseIE):
-    _VALID_URL = r'''
-        (?x)
+    _VALID_URL = r'''(?x)
         (?P<prefix>peertube:)?(?:
             (?P<host>[^:]+):|
             (?P<proto>https?://)(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos|w)/
@@ -454,7 +453,7 @@ class PeerTubeIE(PeerTubeBaseIE):
             host, video_id = self._LOGIN_INFO['instance'], video_search['data'][0]['uuid']
 
         video = self._call_api(
-            host, video_id, '', note='Downloading video JSON')
+            host, 'videos', video_id, '', note='Downloading video JSON')
 
         info_dict = self._parse_video(video, url)
 
@@ -478,11 +477,10 @@ class PeerTubeIE(PeerTubeBaseIE):
 
 
 class PeerTubePlaylistIE(PeerTubeBaseIE):
-    _VALID_URL = r'''
-        (?x)
+    _VALID_URL = r'''(?x)
         (?P<prefix>peertube:playlist:)?(?:
             (?P<host>[^:]+):|
-            (?P<proto>https?://)(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)/playlist|api/v\d/video-playlists|w/p)/
+            https?://(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)/playlist|api/v\d/video-playlists|w/p)/
         )
         (?P<id>%s)
     ''' % PeerTubeBaseIE._UUID_RE
@@ -590,11 +588,10 @@ class PeerTubePlaylistIE(PeerTubeBaseIE):
 
 
 class PeerTubeChannelIE(PeerTubeBaseIE):
-    _VALID_URL = r'''
-        (?x)
+    _VALID_URL = r'''(?x)
         (?P<prefix>peertube:channel:)?(?:
             (?P<host>[^:]+):|
-            (?P<proto>https?://)(?P<host_2>[^/]+)/(?:(?:api/v\d/)?video-channels|c)/
+            https?://(?P<host_2>[^/]+)/(?:(?:api/v\d/)?video-channels|c)/
         )
         (?P<id>[^/?#]+)(?:/videos)?
     '''
@@ -654,11 +651,10 @@ class PeerTubeChannelIE(PeerTubeBaseIE):
 
 
 class PeerTubeAccountIE(PeerTubeBaseIE):
-    _VALID_URL = r'''
-        (?x)
+    _VALID_URL = r'''(?x)
         (?P<prefix>peertube:account:)?(?:
             (?P<host>[^:]+):|
-            (?P<proto>https?://)(?P<host_2>[^/]+)/(?:(?:api/v\d/)?accounts|a)/
+            https?://(?P<host_2>[^/]+)/(?:(?:api/v\d/)?accounts|a)/
         )
         (?P<id>[^/?#]+)(?:/video(?:s|-channels))?
     '''
