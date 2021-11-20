@@ -13,6 +13,7 @@ from ..common import (
 )
 from ..peertube.peertube import PeerTubeIE
 from ...utils import (
+    DummyError,
     ExtractorError,
     clean_html,
     preferredencoding,
@@ -30,7 +31,7 @@ from ...compat import (
 )
 
 
-known_valid_instances = set()
+known_valid_instances, known_failed_instances = set(), set()
 
 
 class MastodonBaseIE(SelfHostedInfoExtractor):
@@ -58,8 +59,8 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
         hostname = get_first_group(mobj, 'domain_1', 'domain_2', 'domain')
         return cls._test_mastodon_instance(None, hostname, True, prefix)
 
-    @staticmethod
-    def _test_mastodon_instance(ie, hostname, skip, prefix):
+    @classmethod
+    def _test_mastodon_instance(cls, ie, hostname, skip, prefix, webpage=None):
         if isinstance(hostname, bytes):
             hostname = hostname.decode(preferredencoding())
         hostname = hostname.encode('idna').decode('utf-8')
@@ -68,6 +69,8 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
             return True
         if hostname in known_valid_instances:
             return True
+        if hostname in known_failed_instances:
+            return False
 
         # HELP: more cases needed
         if hostname in ['medium.com', 'lbry.tv']:
@@ -83,24 +86,26 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
 
         ie.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social, joinmastodon.org, the-federation.info or fediverse.observer.' % hostname)
 
-        try:
-            # try /api/v1/instance
-            api_request_instance = ie._download_json(
-                'https://%s/api/v1/instance' % hostname, hostname,
-                note='Testing Mastodon API /api/v1/instance')
-            if api_request_instance.get('uri') != hostname:
-                return False
-            if not api_request_instance.get('title'):
-                return False
+        if not cls._probe_webpage(webpage):
+            try:
+                # try /api/v1/instance
+                api_request_instance = ie._download_json(
+                    'https://%s/api/v1/instance' % hostname, hostname,
+                    note='Testing Mastodon API /api/v1/instance')
+                if api_request_instance.get('uri') != hostname:
+                    raise DummyError()
+                if not api_request_instance.get('title'):
+                    raise DummyError()
 
-            # try /api/v1/directory
-            api_request_directory = ie._download_json(
-                'https://%s/api/v1/directory' % hostname, hostname,
-                note='Testing Mastodon API /api/v1/directory')
-            if not isinstance(api_request_directory, (tuple, list)):
+                # try /api/v1/directory
+                api_request_directory = ie._download_json(
+                    'https://%s/api/v1/directory' % hostname, hostname,
+                    note='Testing Mastodon API /api/v1/directory')
+                if not isinstance(api_request_directory, (tuple, list)):
+                    raise DummyError()
+            except BaseException:
+                known_failed_instances.add(hostname)
                 return False
-        except (IOError, ExtractorError):
-            return False
 
         # this is probably mastodon instance
         known_valid_instances.add(hostname)
@@ -208,14 +213,14 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
         return ydl.params.get('check_mastodon_instance', False)
 
     @classmethod
-    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname):
+    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname, webpage=None):
         prefix = ie._search_regex(
             # (MastodonIE._VALID_URL,
             #  MastodonUserIE._VALID_URL,
             #  MastodonUserNumericIE._VALID_URL),
             cls._VALID_URL,
             url, 'mastodon test', group='prefix', default=None)
-        return MastodonIE._test_mastodon_instance(ie, hostname, False, prefix)
+        return MastodonIE._test_mastodon_instance(ie, hostname, False, prefix, webpage)
 
     def _determine_instance_software(self, host, webpage=None):
         if webpage:
