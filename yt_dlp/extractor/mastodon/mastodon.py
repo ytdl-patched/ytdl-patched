@@ -496,13 +496,6 @@ class MastodonUserIE(MastodonBaseIE):
     IE_NAME = 'mastodon:user'
     _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)/?(?:\?.*)?$'
     _TESTS = [{
-        'url': 'https://mstdn.jp/@kris57',
-        'info_dict': {
-            'title': 'Toots from @kris57@mstdn.jp',
-            'id': 'kris57',
-        },
-        'playlist_mincount': 261,
-    }, {
         'url': 'https://pawoo.net/@iriomote_yamaneko',
         'info_dict': {
             'title': 'Toots from @iriomote_yamaneko@pawoo.net',
