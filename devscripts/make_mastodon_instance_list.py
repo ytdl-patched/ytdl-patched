@@ -4,10 +4,11 @@ from __future__ import unicode_literals, print_function
 import sys
 import os
 import re
+import itertools
 
 sys.path[:0] = ['.']
 
-from yt_dlp.utils import ExtractorError
+from yt_dlp.utils import ExtractorError, parse_qs
 from yt_dlp.extractor.common import InfoExtractor
 from test.helper import FakeYDL
 
@@ -30,6 +31,8 @@ def sanitize_hostname(hostname):
     # trim port number
     hostname = re.sub(r':\d+$', '', hostname)
     return hostname
+
+# Mastodon
 
 
 instance_social_api_key = os.environ.get('INSTANCE_SOCIAL_API_SECRET')
@@ -74,6 +77,8 @@ if True:
             })
         for instance in data['data']['nodes']:
             results.add(sanitize_hostname(instance['host']))
+    except KeyboardInterrupt:
+        raise
     except BaseException as ex:
         ie.report_warning(ex)
 
@@ -84,8 +89,91 @@ if True:
             url, script_id, note=f'Scraping https://mastodon.fediverse.observer, len(results)={len(results)}')
         for instance in re.finditer(r'href="/go\.php\?domain=([a-z0-9\.-]+)">\1</a>', data):
             results.add(sanitize_hostname(instance.group(1)))
+    except KeyboardInterrupt:
+        raise
     except BaseException as ex:
         ie.report_warning(ex)
+
+for i in itertools.count(1):
+    try:
+        url = 'https://fedidb.org/network?s=mastodon'
+        data, urlh = ie._download_webpage_handle(
+            url, script_id, note=f'Scraping https://fedidb.org/network?s=mastodon (Page {i}), len(results)={len(results)}',
+            query={'page': str(i)})
+        if parse_qs(urlh.geturl())['page'][0] != str(i):
+            break
+        matches = re.findall(r'(?s)href="/network/instance\?domain=([a-z0-9\.-]+)">\s*\1\s*</a>', data)
+        if not matches:
+            break
+        results.update(sanitize_hostname(instance) for instance in matches)
+    except KeyboardInterrupt:
+        raise
+    except BaseException as ex:
+        ie.report_warning(ex)
+        break
+
+# Gab Social
+ie.to_screen(f'Adding Gab Social to the list, len(results)={len(results)}')
+results.add('gab.com')
+
+# Pleroma
+if True:
+    try:
+        url = 'https://pleroma.social/'
+        webpage = ie._download_webpage(
+            url, script_id, note=f'Scraping https://pleroma.social/, len(results)={len(results)}')
+        for mobj in re.finditer(r'href="https?://([^/]+)/?">\1</a>', webpage):
+            results.add(mobj.group(1))
+    except KeyboardInterrupt:
+        raise
+    except BaseException as ex:
+        ie.report_warning(ex)
+
+if True:
+    try:
+        url = 'https://the-federation.info/graphql?query=query%20Platform(%24name%3A%20String!)%20%7B%0A%20%20platforms(name%3A%20%24name)%20%7B%0A%20%20%20%20name%0A%20%20%20%20code%0A%20%20%20%20displayName%0A%20%20%20%20description%0A%20%20%20%20tagline%0A%20%20%20%20website%0A%20%20%20%20icon%0A%20%20%20%20__typename%0A%20%20%7D%0A%20%20nodes(platform%3A%20%24name)%20%7B%0A%20%20%20%20id%0A%20%20%20%20name%0A%20%20%20%20version%0A%20%20%20%20openSignups%0A%20%20%20%20host%0A%20%20%20%20platform%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%20%20icon%0A%20%20%20%20%20%20__typename%0A%20%20%20%20%7D%0A%20%20%20%20countryCode%0A%20%20%20%20countryFlag%0A%20%20%20%20countryName%0A%20%20%20%20services%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%20%20__typename%0A%20%20%20%20%7D%0A%20%20%20%20__typename%0A%20%20%7D%0A%20%20statsGlobalToday(platform%3A%20%24name)%20%7B%0A%20%20%20%20usersTotal%0A%20%20%20%20usersHalfYear%0A%20%20%20%20usersMonthly%0A%20%20%20%20localPosts%0A%20%20%20%20localComments%0A%20%20%20%20__typename%0A%20%20%7D%0A%20%20statsNodes(platform%3A%20%24name)%20%7B%0A%20%20%20%20node%20%7B%0A%20%20%20%20%20%20id%0A%20%20%20%20%20%20__typename%0A%20%20%20%20%7D%0A%20%20%20%20usersTotal%0A%20%20%20%20usersHalfYear%0A%20%20%20%20usersMonthly%0A%20%20%20%20localPosts%0A%20%20%20%20localComments%0A%20%20%20%20__typename%0A%20%20%7D%0A%7D%0A&operationName=Platform&variables=%7B%22name%22%3A%22pleroma%22%7D'
+        data = ie._download_json(
+            url, script_id, note=f'Scraping https://the-federation.info/pleroma, len(results)={len(results)}',
+            headers={
+                'content-type': 'application/json, application/graphql',
+                'accept': 'application/json, application/graphql',
+            })
+        for instance in data['data']['nodes']:
+            results.add(sanitize_hostname(instance['host']))
+    except KeyboardInterrupt:
+        raise
+    except BaseException as ex:
+        ie.report_warning(ex)
+
+if True:
+    try:
+        url = 'https://pleroma.fediverse.observer/tabledata.php?software=pleroma'
+        data = ie._download_webpage(
+            url, script_id, note=f'Scraping https://pleroma.fediverse.observer, len(results)={len(results)}')
+        for instance in re.finditer(r'href="/go\.php\?domain=([a-z0-9\.-]+)">\1</a>', data):
+            results.add(sanitize_hostname(instance.group(1)))
+    except KeyboardInterrupt:
+        raise
+    except BaseException as ex:
+        ie.report_warning(ex)
+
+for i in itertools.count(1):
+    try:
+        url = 'https://fedidb.org/network?s=pleroma'
+        data, urlh = ie._download_webpage_handle(
+            url, script_id, note=f'Scraping https://fedidb.org/network?s=pleroma (Page {i}), len(results)={len(results)}',
+            query={'page': str(i)})
+        if parse_qs(urlh.geturl())['page'][0] != str(i):
+            break
+        matches = re.findall(r'(?s)href="/network/instance\?domain=([a-z0-9\.-]+)">\s*\1\s*</a>', data)
+        if not matches:
+            break
+        results.update(sanitize_hostname(instance) for instance in matches)
+    except KeyboardInterrupt:
+        raise
+    except BaseException as ex:
+        ie.report_warning(ex)
+        break
 
 ie.to_screen(f'{script_id}: len(results)={len(results)}')
 
@@ -100,9 +188,6 @@ ie.to_screen(f'{script_id}: excluded domain names without dot, len(results)={len
 
 results = {x for x in results if not (x.endswith('.ngrok.io') or x.endswith('.localhost.run') or x.endswith('.serveo.net'))}
 ie.to_screen(f'{script_id}: excluded temporary domain names, len(results)={len(results)}')
-
-# Ohsawa, it's your shame that you forgot removing P2P features.
-results.add('sns-sakura.jp')
 
 # for it in list(results):
 #     try:
