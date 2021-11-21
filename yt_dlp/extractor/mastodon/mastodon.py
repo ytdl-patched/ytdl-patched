@@ -345,14 +345,6 @@ class MastodonIE(MastodonBaseIE):
             'ext': 'mp4',
         },
     }, {
-        # pleroma, /objects/ redirect, empty content
-        'url': 'https://fedi.valkyrie.world/objects/386d2d68-090f-492e-81bd-8d32a3a65627',
-        'info_dict': {
-            'id': '9xLMO1BcEEbaM54LBI',
-            'title': 're:.+ - ',
-            'ext': 'mp4',
-        },
-    }, {
         # pleroma, multiple videos in single post
         'url': 'https://donotsta.re/notice/9xN1v6yM7WhzE7aIIC',
         'info_dict': {
