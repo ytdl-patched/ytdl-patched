@@ -269,7 +269,7 @@ class PeerTubeIE(PeerTubeBaseIE):
             (?P<proto>https?://)(?P<host_2>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos|w)/
         )
         (?P<id>%s)
-    '''
+    ''' % PeerTubeBaseIE._UUID_RE
 
     _TESTS = [{
         'url': 'https://framatube.org/videos/watch/9c9de5e8-0a1e-484a-b099-e80766180a6d',
