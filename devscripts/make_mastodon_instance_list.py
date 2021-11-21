@@ -113,6 +113,7 @@ for i in itertools.count(1):
         break
 
 # Gab Social
+ie.to_screen(f'Adding Gab Social to the list, len(results)={len(results)}')
 results.add('gab.com')
 
 # Pleroma
