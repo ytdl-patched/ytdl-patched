@@ -2605,8 +2605,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'width': int_or_none(fmt.get('width')),
                 'language': audio_track.get('id', '').split('.')[0],
                 'language_preference': 1 if audio_track.get('audioIsDefault') else -1,
-                # retry when 401 is returned; no mmore fragments can be downloaded anymore
-                'unrecoverable_http_error': (401, ),
             }
             mime_mobj = re.match(
                 r'((?:[^/]+)/(?:[^;]+))(?:;\s*codecs="([^"]+)")?', fmt.get('mimeType') or '')
@@ -2821,6 +2819,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 reason += f'. {subreason}'
             if reason:
                 self.raise_no_formats(reason, expected=True)
+
+        for fmt in formats:
+            # retry when 401 is returned; no mmore fragments can be downloaded anymore
+            fmt['unrecoverable_http_error'] = (401, )
 
         keywords = get_first(video_details, 'keywords', expected_type=list) or []
         if not keywords and webpage:
