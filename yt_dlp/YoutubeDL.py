@@ -1383,7 +1383,7 @@ class YoutubeDL(object):
                 self.to_stderr('\r')
                 self.report_warning(f'{e}; Re-extracting data')
                 return wrapper(self, *args, **kwargs)
-            except (DownloadCancelled, LazyList.IndexError):
+            except (DownloadCancelled, LazyList.IndexError, PagedList.IndexError):
                 raise
             except Exception as e:
                 if self.params.get('ignoreerrors'):
@@ -2258,7 +2258,7 @@ class YoutubeDL(object):
             t['url'] = sanitize_url(t['url'])
 
         if self.params.get('check_formats') is True:
-            info_dict['thumbnails'] = LazyList(check_thumbnails(thumbnails[::-1])).reverse()
+            info_dict['thumbnails'] = LazyList(check_thumbnails(thumbnails[::-1]), reverse=True)
         else:
             info_dict['thumbnails'] = thumbnails
 
@@ -2453,7 +2453,7 @@ class YoutubeDL(object):
         # TODO Central sorting goes here
 
         if self.params.get('check_formats') is True:
-            formats = LazyList(self._check_formats(formats[::-1])).reverse()
+            formats = LazyList(self._check_formats(formats[::-1]), reverse=True)
 
         if not formats or formats[0] is not info_dict:
             # only set the 'formats' fields if the original info_dict list them
@@ -3428,14 +3428,11 @@ class YoutubeDL(object):
         debug_info_title = []
 
         if new_format:
-            tbr_digits = number_of_digits(max(f.get('tbr') or 0 for f in formats))
-            vbr_digits = number_of_digits(max(f.get('vbr') or 0 for f in formats))
-            abr_digits = number_of_digits(max(f.get('abr') or 0 for f in formats))
             delim = self._format_screen('\u2502', self.Styles.DELIM, '|', test_encoding=True)
 
             def format_protocol(f):
-                proto = shorten_protocol_name(f.get('protocol', '').replace("native", "n"))
-                exp_proto = shorten_protocol_name(f.get('expected_protocol', '').replace("native", "n"))
+                proto = shorten_protocol_name(f.get('protocol', '').replace('native', 'n'))
+                exp_proto = shorten_protocol_name(f.get('expected_protocol', '').replace('native', 'n'))
                 if exp_proto:
                     return f'{exp_proto} ({proto})'
                 else:
@@ -3448,29 +3445,31 @@ class YoutubeDL(object):
                     self._format_screen(format_field(f, 'format_id'), self.Styles.ID),
                     format_field(f, 'ext'),
                     self.format_resolution(f),
-                    format_field(f, 'fps', '%3d'),
+                    format_field(f, 'fps', '\t%d'),
                     format_field(f, 'dynamic_range', '%s', ignore=(None, 'SDR')).replace('HDR', ''),
                     delim,
-                    format_field(f, 'filesize', ' %s', func=format_bytes) + format_field(f, 'filesize_approx', '~%s', func=format_bytes),
-                    format_field(f, 'tbr', f'%{tbr_digits}dk'),
+                    format_field(f, 'filesize', ' \t%s', func=format_bytes) + format_field(f, 'filesize_approx', '~\t%s', func=format_bytes),
+                    format_field(f, 'tbr', '\t%dk'),
                     format_protocol(f),
                     delim,
                     format_field(f, 'vcodec', default='unknown').replace('none', ''),
-                    format_field(f, 'vbr', f'%{vbr_digits}dk'),
+                    format_field(f, 'vbr', '\t%dk'),
                     format_field(f, 'acodec', default='unknown').replace('none', ''),
-                    format_field(f, 'abr', f'%{abr_digits}dk'),
-                    format_field(f, 'asr', '%5dHz'),
+                    format_field(f, 'abr', '\t%dk'),
+                    format_field(f, 'asr', '\t%dHz'),
                     join_nonempty(
                         self._format_screen('UNSUPPORTED', 'light red') if f.get('ext') in ('f4f', 'f4m') else None,
                         format_field(f, 'language', '[%s]'),
-                        format_field(f, 'format_note'),
-                        format_field(f, 'container', ignore=(None, f.get('ext'))),
+                        join_nonempty(
+                            format_field(f, 'format_note'),
+                            format_field(f, 'container', ignore=(None, f.get('ext'))),
+                            delim=', '),
                         *debug_info(f),
                         delim=', '),
                 ] for f in formats if f.get('preference') is None or f['preference'] >= -1000]
             header_line = self._list_format_headers(
-                'ID', 'EXT', 'RESOLUTION', 'FPS', 'HDR', delim, ' FILESIZE', '  TBR', 'PROTO',
-                delim, 'VCODEC', '  VBR', 'ACODEC', ' ABR', ' ASR', 'MORE INFO', *debug_info_title)
+                'ID', 'EXT', 'RESOLUTION', '\tFPS', 'HDR', delim, '\tFILESIZE', '\tTBR', 'PROTO',
+                delim, 'VCODEC', '\tVBR', 'ACODEC', '\tABR', '\tASR', 'MORE INFO', *debug_info_title)
         else:
             if verbose:
                 debug_info_title = ['debug']
@@ -3489,8 +3488,8 @@ class YoutubeDL(object):
             '[info] Available formats for %s:' % info_dict['id'])
         self.to_stdout(render_table(
             header_line, table,
-            extraGap=(0 if new_format else 1),
-            hideEmpty=new_format,
+            extra_gap=(0 if new_format else 1),
+            hide_empty=new_format,
             delim=new_format and self._format_screen('\u2500', self.Styles.DELIM, '-', test_encoding=True)))
 
         if verbose and unknown_formats:
@@ -3524,7 +3523,7 @@ class YoutubeDL(object):
         self.to_stdout(render_table(
             self._list_format_headers('Language', 'Name', 'Formats'),
             [_row(lang, formats) for lang, formats in subtitles.items()],
-            hideEmpty=True))
+            hide_empty=True))
 
     def urlopen(self, req):
         """ Start an HTTP download """
