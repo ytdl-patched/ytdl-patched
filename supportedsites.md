@@ -229,6 +229,7 @@
  - **CONtv**
  - **Corus**
  - **Coub**
+ - **CozyTV**
  - **Cracked**
  - **Crackle**
  - **CrooksAndLiars**
@@ -1354,6 +1355,7 @@
  - **WeiboMobile**
  - **WeiqiTV**: WQTV
  - **whowatch**
+ - **Willow**
  - **WimTV**
  - **Wistia**
  - **WistiaPlaylist**
