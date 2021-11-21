@@ -16,11 +16,13 @@ from ...utils import (
     DummyError,
     ExtractorError,
     clean_html,
+    parse_duration,
     preferredencoding,
     get_first_group,
     str_or_none,
     int_or_none,
     float_or_none,
+    traverse_obj,
     try_get,
     parse_qs,
     url_or_none,
@@ -392,6 +394,29 @@ class MastodonIE(MastodonBaseIE):
             'uploader_id': 'UCLRAd9-Hw6kEI1aPBrSaF9A',
             'upload_date': '20210505',
         },
+    }, {
+        'url': 'https://gab.com/SomeBitchIKnow/posts/107163961867310434',
+        'md5': '8ca34fb00f1e1033b5c5988d79ec531d',
+        'info_dict': {
+            'id': '107163961867310434',
+            'ext': 'mp4',
+            'title': 'md5:204055fafd5e1a519f5d6db953567ca3',
+            'uploader_id': '946600',
+            'uploader': 'SomeBitchIKnow',
+            'timestamp': 1635192289,
+            'upload_date': '20211025',
+        }
+    }, {
+        'url': 'https://gab.com/TheLonelyProud/posts/107045884469287653',
+        'md5': 'f9cefcfdff6418e392611a828d47839d',
+        'info_dict': {
+            'id': '107045884469287653',
+            'ext': 'mp4',
+            'uploader_id': '1390705',
+            'timestamp': 1633390571,
+            'upload_date': '20211004',
+            'uploader': 'TheLonelyProud',
+        }
     }]
 
     def _real_extract(self, url):
@@ -439,19 +464,35 @@ class MastodonIE(MastodonBaseIE):
                     webpage = self._download_webpage(url, '%s:%s' % (domain, video_id), expected_status=302)
                 real_url = self._og_search_property('url', webpage, default=None)
                 if real_url:
-                    return self.url_result(real_url, ie='MastodonSH')
+                    return self.url_result(real_url, ie='Mastodon')
             metadata = self._download_json(
                 'https://%s/api/v1/statuses/%s' % (domain, video_id), '%s:%s' % (domain, video_id),
                 headers={
                     'Authorization': login_info['authorization'],
                 } if login_info else {})
 
+        title = clean_html(metadata.get('content'))
+
+        info_dict = {
+            'id': video_id,
+            'title': title,
+
+            'duration': metadata.get('duration') or parse_duration(metadata.get('length')),
+            'like_count': metadata.get('favourites_count'),
+            'comment_count': metadata.get('replies_count'),
+            'repost_count': metadata.get('reblogs_count'),
+
+            'uploader': traverse_obj(metadata, ('account', 'display_name')),
+            'uploader_id': traverse_obj(metadata, ('account', 'username')),
+            'uploader_url': traverse_obj(metadata, ('account', 'url')),
+        }
+
         entries = []
         for media in metadata.get('media_attachments') or ():
             if media['type'] in ('video', 'audio'):
                 entries.append({
                     'id': media['id'],
-                    'title': str_or_none(media['description']),
+                    'title': str_or_none(media['description']) or title,
                     'url': str_or_none(media['url']),
                     'thumbnail': str_or_none(media['preview_url']) if media['type'] == 'video' else None,
                     'vcodec': 'none' if media['type'] == 'audio' else None,
@@ -461,8 +502,6 @@ class MastodonIE(MastodonBaseIE):
                     'tbr': int_or_none(try_get(media, lambda x: x['meta']['original']['bitrate'])),
                 })
 
-        title = clean_html(metadata.get('content'))
-
         if len(entries) == 0:
             card = metadata.get('card')
             if card:
@@ -471,14 +510,12 @@ class MastodonIE(MastodonBaseIE):
                     'url': card['url'],
                     'title': title,
                     'thumbnail': url_or_none(card.get('image')),
+                    **info_dict,
                 }
             raise ExtractorError('No audio/video attachments')
 
-        info_dict = {
-            'id': video_id,
-            'title': title,
-        }
         if len(entries) == 1:
+            del entries[0]['id']
             info_dict.update(entries[0])
         else:
             info_dict.update({

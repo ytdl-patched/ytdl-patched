@@ -509,7 +509,6 @@ from .funk import FunkIE
 from .fusion import FusionIE
 from .gab import (
     GabTVIE,
-    GabIE,
 )
 from .gaia import GaiaIE
 from .gameinformer import GameInformerIE
