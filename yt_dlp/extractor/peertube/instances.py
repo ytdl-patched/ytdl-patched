@@ -394,7 +394,6 @@ instances = {
     "peertube.tangentfox.com",
     "peertube.taxinachtegel.de",
     "peertube.terranout.mine.nu",
-    "peertube.the-penguin.de",
     "peertube.thele.me",
     "peertube.thenewoil.xyz",
     "peertube.ti-fr.com",
