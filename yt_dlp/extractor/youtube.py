@@ -2821,7 +2821,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 self.raise_no_formats(reason, expected=True)
 
         for fmt in formats:
-            # retry when 401 is returned; no mmore fragments can be downloaded anymore
+            # retry when 401 is returned; no more fragments can be downloaded anymore
             fmt['unrecoverable_http_error'] = (401, )
 
         keywords = get_first(video_details, 'keywords', expected_type=list) or []
