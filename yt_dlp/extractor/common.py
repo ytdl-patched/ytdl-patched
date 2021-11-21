@@ -3777,9 +3777,31 @@ class SelfHostedInfoExtractor(InfoExtractor):
         return False
 
     @classmethod
-    def _probe_selfhosted_service(cls, ie, url):
+    def _probe_selfhosted_service(cls, ie, url, hostname, webpage=None):
         """
         True if it's acceptable URL for the service.
         Extractors may cache its result whenever possible.
         """
         return False
+
+    @classmethod
+    def _probe_webpage(cls, webpage):
+        """
+        Receives a URL and webpage contents, and returns True if suitable for this IE.
+        """
+
+        if webpage is None:
+            # there's nothing to check
+            return False
+
+        if any(p in webpage for p in (cls._SH_VALID_CONTENT_STRINGS or ())):
+            return True
+
+        # no strings? check regexes!
+        if '_SH_CONTENT_REGEXES_RES' not in cls.__dict__:
+            cls._SH_VALID_CONTENT_REGEXES_RES = (re.compile(rgx)
+                                                 for rgx in cls._SH_VALID_CONTENT_REGEXES or ())
+        if not any(rgx.match(webpage) is not None for rgx in cls._SH_VALID_CONTENT_REGEXES_RES):
+            return False
+
+        return True

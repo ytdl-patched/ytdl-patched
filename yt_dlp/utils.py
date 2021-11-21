@@ -5188,6 +5188,17 @@ def join_nonempty(*values, delim='-', from_dict=None):
     return delim.join(map(str, filter(None, values)))
 
 
+def get_first_group(match, *groups, default=None):
+    for g in groups:
+        try:
+            m = match.group(g)
+            if m:
+                return m
+        except IndexError:
+            continue
+    return default
+
+
 class YoutubeDLExtractorHandler(compat_urllib_request.BaseHandler):
     # Have a common class for ease of removal of handlers
     handler_order = 499

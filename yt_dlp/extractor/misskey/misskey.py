@@ -15,15 +15,21 @@ from ...utils import (
     smuggle_url,
     traverse_obj,
     unified_timestamp,
-    unsmuggle_url
+    unsmuggle_url,
+    parse_iso8601,
 )
 from ...compat import compat_str
 
 
-known_valid_instances = set()
+known_valid_instances, known_failed_instances = set(), set()
 
 
 class MisskeyBaseIE(SelfHostedInfoExtractor):
+    _SH_VALID_CONTENT_STRINGS = (
+        '<meta name="application-name" content="Misskey"',
+        '<meta name="misskey:',
+        '<!-- If you are reading this message... how about joining the development of Misskey? -->',
+    )
 
     @classmethod
     def suitable(cls, url):
@@ -33,8 +39,8 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
         prefix, hostname = mobj.group('prefix', 'instance')
         return cls._test_misskey_instance(None, hostname, True, prefix)
 
-    @staticmethod
-    def _test_misskey_instance(ie, hostname, skip, prefix):
+    @classmethod
+    def _test_misskey_instance(cls, ie, hostname, skip, prefix, webpage=None):
         if isinstance(hostname, bytes):
             hostname = hostname.decode(preferredencoding())
         hostname = hostname.encode('idna').decode('utf-8')
@@ -43,6 +49,8 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
             return True
         if hostname in known_valid_instances:
             return True
+        if hostname in known_failed_instances:
+            return False
 
         # continue anyway if "misskey:" is added to URL
         if prefix:
@@ -54,17 +62,19 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
 
         ie.report_warning('Testing if %s is a Misskey instance because it is not listed in join.misskey.page.' % hostname)
 
-        try:
-            # try /api/stats
-            api_request_stats = ie._download_json(
-                'https://%s/api/stats' % hostname, hostname,
-                note='Testing Misskey API /api/stats', data=b'{}')
-            if not isinstance(api_request_stats.get('usersCount'), int):
+        if not cls._probe_webpage(webpage):
+            try:
+                # try /api/stats
+                api_request_stats = ie._download_json(
+                    'https://%s/api/stats' % hostname, hostname,
+                    note='Testing Misskey API /api/stats', data=b'{}')
+                if not isinstance(api_request_stats.get('usersCount'), int):
+                    return False
+                if not isinstance(api_request_stats.get('instances'), int):
+                    return False
+            except (IOError, ExtractorError):
+                known_failed_instances.add(hostname)
                 return False
-            if not isinstance(api_request_stats.get('instances'), int):
-                return False
-        except (IOError, ExtractorError):
-            return False
 
         # this is probably misskey instance
         known_valid_instances.add(hostname)
@@ -75,12 +85,12 @@ class MisskeyBaseIE(SelfHostedInfoExtractor):
         return ydl.params.get('check_misskey_instance', False)
 
     @classmethod
-    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname):
+    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname, webpage=None):
         prefix = ie._search_regex(
             # (MisskeyIE._VALID_URL, MisskeyUserIE._VALID_URL),
             cls._VALID_URL,
             url, 'misskey test', group='prefix', default=None)
-        return cls._test_misskey_instance(ie, hostname, False, prefix)
+        return cls._test_misskey_instance(ie, hostname, False, prefix, webpage)
 
 
 class MisskeyIE(MisskeyBaseIE):
@@ -122,6 +132,15 @@ class MisskeyIE(MisskeyBaseIE):
         'note': 'no video',
         'url': 'https://misskey.io/notes/8pp04mprzx',
         'only_matching': True,
+    }, {
+        'url': 'https://catgirl.life/notes/8lh52dlrii',
+        'info_dict': {
+            'id': '8lh52dlrii',
+            'ext': 'mp4',
+            'timestamp': 1604387877,
+            'upload_date': '20201103',
+            'title': '@graf@poa.st @Moon@shitposter.club \n*kickstarts your federation*',
+        },
     }]
 
     def _real_extract(self, url):
@@ -139,9 +158,6 @@ class MisskeyIE(MisskeyBaseIE):
         uploader = traverse_obj(api_response, ('user', 'name'), ('user', 'username'), expected_type=compat_str)
         uploader_id = traverse_obj(api_response, ('userId', ), ('user', 'id'), expected_type=compat_str)
         visibility = api_response.get('visibility')
-
-        thumbnail = traverse_obj(api_response, ('files', 0, 'thumbnailUrl'), expected_type=compat_str)
-        age_limit = 18 if traverse_obj(api_response, ('files', 0, 'isSensitive'), expected_type=bool) else 0
 
         from .complement import _COMPLEMENTS
         complements = [x() for x in _COMPLEMENTS if re.match(x._INSTANCE_RE, instance)]
@@ -174,6 +190,9 @@ class MisskeyIE(MisskeyBaseIE):
                 'id': '%s-%d' % (video_id, idx),
                 'title': title,
                 'formats': formats,
+                'thumbnail': file.get('thumbnailUrl'),
+                'age_limit': 18 if file.get('isSensitive') else 0,
+                'timestamp': parse_iso8601(file.get('createdAt')),
             })
 
         base = {
@@ -183,8 +202,6 @@ class MisskeyIE(MisskeyBaseIE):
             'uploader': uploader,
             'uploader_id': uploader_id,
             'visibility': visibility,
-            'thumbnail': thumbnail,
-            'age_limit': age_limit,
         }
         if not files:
             raise ExtractorError('This note does not have any media file.', expected=True)
