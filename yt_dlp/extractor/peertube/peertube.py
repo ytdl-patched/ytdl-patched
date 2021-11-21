@@ -380,17 +380,11 @@ class PeerTubeIE(PeerTubeBaseIE):
         'url': 'peertube:peertube2.cpy.re:3fbif9S3WmtTP8gGsC5HBd',
         'only_matching': True,
     }, {
-        'url': 'https://peertube.tamanoir.foucry.net/videos/watch/0b04f13d-1e18-4f1d-814e-4979aa7c9c44',
-        'only_matching': True,
-    }, {
         # nsfw
         'url': 'https://tube.22decembre.eu/videos/watch/9bb88cd3-9959-46d9-9ab9-33d2bb704c39',
         'only_matching': True,
     }, {
         'url': 'https://tube.22decembre.eu/videos/embed/fed67262-6edb-4d1c-833b-daa9085c71d7',
-        'only_matching': True,
-    }, {
-        'url': 'https://tube.openalgeria.org/api/v1/videos/c1875674-97d0-4c94-a058-3f7e64c962e8',
         'only_matching': True,
     }, {
         'url': 'peertube:video.blender.org:b37a5b9f-e6b5-415c-b700-04a5cd6ec205',
@@ -513,30 +507,6 @@ class PeerTubePlaylistIE(PeerTubeBaseIE):
         },
         'playlist_mincount': 9,
     }, {
-        'url': 'https://peertube2.cpy.re/a/chocobozzz/videos',
-        'info_dict': {
-            'id': 'chocobozzz',
-            'timestamp': 1553874564,
-            'title': 'chocobozzz',
-        },
-        'playlist_mincount': 2,
-    }, {
-        'url': 'https://framatube.org/c/bf54d359-cfad-4935-9d45-9d6be93f63e8/videos',
-        'info_dict': {
-            'id': 'bf54d359-cfad-4935-9d45-9d6be93f63e8',
-            'timestamp': 1519917377,
-            'title': 'Les vidéos de Framasoft',
-        },
-        'playlist_mincount': 345,
-    }, {
-        'url': 'https://peertube2.cpy.re/c/blender_open_movies@video.blender.org/videos',
-        'info_dict': {
-            'id': 'blender_open_movies@video.blender.org',
-            'timestamp': 1542287810,
-            'title': 'Official Blender Open Movies',
-        },
-        'playlist_mincount': 11,
-    }, {
         'url': 'https://video.internet-czas-dzialac.pl/videos/watch/playlist/3c81b894-acde-4539-91a2-1748b208c14c?playlistPosition=1',
         'info_dict': {
             'id': '3c81b894-acde-4539-91a2-1748b208c14c',
@@ -607,6 +577,22 @@ class PeerTubeChannelIE(PeerTubeBaseIE):
         },
         'playlist_mincount': 14,
     }, {
+        'url': 'https://framatube.org/c/bf54d359-cfad-4935-9d45-9d6be93f63e8/videos',
+        'info_dict': {
+            'id': 'bf54d359-cfad-4935-9d45-9d6be93f63e8',
+            'timestamp': 1519917377,
+            'title': 'Les vidéos de Framasoft',
+        },
+        'playlist_mincount': 345,
+    }, {
+        'url': 'https://peertube2.cpy.re/c/blender_open_movies@video.blender.org/videos',
+        'info_dict': {
+            'id': 'blender_open_movies@video.blender.org',
+            'timestamp': 1542287810,
+            'title': 'Official Blender Open Movies',
+        },
+        'playlist_mincount': 11,
+    }, {
         'url': 'https://video.internet-czas-dzialac.pl/c/internet_czas_dzialac',
         'only_matching': True,
     }]
@@ -669,6 +655,14 @@ class PeerTubeAccountIE(PeerTubeBaseIE):
             'uploader_id': 3,
         },
         'playlist_mincount': 14,
+    }, {
+        'url': 'https://peertube2.cpy.re/a/chocobozzz/videos',
+        'info_dict': {
+            'id': 'chocobozzz',
+            'timestamp': 1553874564,
+            'title': 'chocobozzz',
+        },
+        'playlist_mincount': 2,
     }, {
         'url': 'https://video.internet-czas-dzialac.pl/a/icd',
         'only_matching': True,
