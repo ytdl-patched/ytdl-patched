@@ -316,11 +316,13 @@ jobs:
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
 
       - name: Install ia command and configure
-        if: ${{ success() && false }}
         run: |
+          sudo apt update
+          sudo apt install -y squashfs-tools
           brew install internetarchive
           ia configure -u "${{ secrets.IA_USERNAME }}" -p "${{ secrets.IA_PASSWORD }}"
-  
+          mkdir exe_files/
+
 
       - name: Create release (for non-master)
         id: create_release_nm
@@ -369,17 +371,15 @@ jobs:
           asset_name: youtube-dl.tar.gz
           asset_content_type: application/gzip
       - name: Upload bin (IA)
-        if: ${{ success() && false }}
         run: |
-          ia upload ytdl-patched \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
             ./artifacts/youtube-dl
       - name: Upload source tar (IA)
-        if: ${{ success() && false }}
         run: |
-          ia upload ytdl-patched \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
@@ -400,14 +400,9 @@ jobs:
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-red.exe
           asset_content_type: application/vnd.microsoft.portable-executable
-      - name: Upload red exe (IA)
-        if: ${{ success() && false }}
+      - name: Prepare red exe (IA)
         run: |
-          ia upload ytdl-patched \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-red.exe" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            ./artifacts/youtube-dl.exe
+          cp ./artifacts/youtube-dl.exe exe_files/youtube-dl-red.exe
 
 
       - name: Download builds for Windows (white icon)
@@ -424,14 +419,20 @@ jobs:
           asset_path: ./artifacts/youtube-dl.exe
           asset_name: youtube-dl-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
-      - name: Upload white exe (IA)
+      - name: Prepare white exe (IA)
         if: ${{ success() && false }}
         run: |
-          ia upload ytdl-patched \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl-white.exe" \
+          cp ./artifacts/youtube-dl.exe exe_files/youtube-dl-white.exe
+
+
+      - name: Upload compressed exe files (IA)
+        run: |
+          mksquashfs exe_files/ win_exe.sqfs -comp xz -progress -no-xattrs -b 1M -Xdict-size 50%
+          ia upload ytdl-patched-binaries \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/win_exe.sqfs" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
-            ./artifacts/youtube-dl.exe
+            win_exe.sqfs
 
 
       - name: Download wheel
@@ -459,17 +460,15 @@ jobs:
           asset_name: yt_dlp-wheel.tar.gz
           asset_content_type: application/gzip
       - name: Upload wheel (IA)
-        if: ${{ success() && false }}
         run: |
-          ia upload ytdl-patched \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-py2.py3-none-any.whl" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
             ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
       - name: Upload wheel tar (IA)
-        if: ${{ success() && false }}
         run: |
-          ia upload ytdl-patched \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-wheel.tar.gz" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
