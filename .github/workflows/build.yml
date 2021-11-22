@@ -227,6 +227,8 @@ jobs:
       - name: Calculate hash
         id: hash
         run: echo "::set-output name=filehash_exe_${{ matrix.icon }}::$((Get-FileHash artifacts/youtube-dl.exe -Algorithm SHA256).Hash.ToLower())"
+      - name: Rename file
+        run: mv artifacts/youtube-dl.exe artifacts/youtube-dl-${{ matrix.icon }}.exe
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -321,7 +323,6 @@ jobs:
           sudo apt install -y squashfs-tools
           brew install internetarchive
           ia configure -u "${{ secrets.IA_USERNAME }}" -p "${{ secrets.IA_PASSWORD }}"
-          mkdir exe_files/
 
 
       - name: Create release (for non-master)
@@ -370,20 +371,6 @@ jobs:
           asset_path: ./artifacts/youtube-dl.tar.gz
           asset_name: youtube-dl.tar.gz
           asset_content_type: application/gzip
-      - name: Upload bin (IA)
-        run: |
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            ./artifacts/youtube-dl
-      - name: Upload source tar (IA)
-        run: |
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            ./artifacts/youtube-dl.tar.gz
 
 
       - name: Download builds for Windows (red icon)
@@ -397,12 +384,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./artifacts/youtube-dl.exe
+          asset_path: ./artifacts/youtube-dl-red.exe
           asset_name: youtube-dl-red.exe
           asset_content_type: application/vnd.microsoft.portable-executable
-      - name: Prepare red exe (IA)
-        run: |
-          cp ./artifacts/youtube-dl.exe exe_files/youtube-dl-red.exe
 
 
       - name: Download builds for Windows (white icon)
@@ -416,23 +400,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./artifacts/youtube-dl.exe
+          asset_path: ./artifacts/youtube-dl-white.exe
           asset_name: youtube-dl-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
-      - name: Prepare white exe (IA)
-        if: ${{ success() && false }}
-        run: |
-          cp ./artifacts/youtube-dl.exe exe_files/youtube-dl-white.exe
-
-
-      - name: Upload compressed exe files (IA)
-        run: |
-          mksquashfs exe_files/ win_exe.sqfs -comp xz -progress -no-xattrs -b 1M -Xdict-size 50%
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/win_exe.sqfs" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            win_exe.sqfs
 
 
       - name: Download wheel
@@ -459,6 +429,34 @@ jobs:
           asset_path: ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
           asset_name: yt_dlp-wheel.tar.gz
           asset_content_type: application/gzip
+
+
+      - name: Upload bin (IA)
+        run: |
+          ia upload ytdl-patched-binaries \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
+            -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
+            ./artifacts/youtube-dl
+      - name: Upload source tar (IA)
+        run: |
+          ia upload ytdl-patched-binaries \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
+            -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
+            ./artifacts/youtube-dl.tar.gz
+
+      - name: Upload compressed exe files (IA)
+        run: |
+          mkdir exe_files/
+          cp ./artifacts/youtube-dl-red.exe ./artifacts/youtube-dl-white.exe exe_files/
+          mksquashfs exe_files/ win_exe.sqfs -comp xz -progress -no-xattrs -b 1M -Xdict-size 50%
+          ia upload ytdl-patched-binaries \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/win_exe.sqfs" \
+            -H x-archive-keep-old-version:0 \
+            -H x-archive-queue-derive:0 \
+            win_exe.sqfs
+
       - name: Upload wheel (IA)
         run: |
           ia upload ytdl-patched-binaries \
@@ -633,6 +631,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-windows-${{ env.windows_icon }}-PyInstaller
+      - run: mv artifacts/youtube-dl-${{ env.windows_icon }}.exe artifacts/youtube-dl.exe
       - run: ls artifacts/
       - name: Login
         run: docker login --username nao20010128nao --password ${{ secrets.DHUB_TOKEN }}
