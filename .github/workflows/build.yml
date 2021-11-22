@@ -542,6 +542,8 @@ jobs:
           # { os: "windows-2016", artifact: windows-white-py2exe },
           { os: "windows-2019", artifact: windows-white-PyInstaller },
           # { os: "windows-2019", artifact: windows-white-py2exe },
+          { os: "windows-2022", artifact: windows-white-PyInstaller },
+          # { os: "windows-2022", artifact: windows-white-py2exe },
         ]
         python_version: ["3.9", "3.8", "3.7"]
     steps:
@@ -554,6 +556,10 @@ jobs:
         if: ${{ startsWith(runner.os, 'ubuntu') || startsWith(runner.os, 'macos') }}
         with:
           python-version: ${{ matrix.python_version }}
+      - name: Move executable file
+        if: ${{ startsWith(runner.os, 'windows') }}
+        run: |
+          mv ./artifacts/youtube-dl-white.exe ./artifacts/youtube-dl.exe
       - name: youtube-dl --help and --version
         shell: bash
         run: |
