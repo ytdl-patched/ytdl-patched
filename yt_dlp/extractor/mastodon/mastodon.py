@@ -367,6 +367,16 @@ class MastodonIE(MastodonBaseIE):
             },
         }]
     }, {
+        # pleroma, with /objects/
+        'url': 'https://outerheaven.club/objects/a5046e74-07b4-49a3-9f1c-da11cf97e939',
+        'info_dict': {
+            'id': 'ADbaHO2V0zmsFFjlTM',
+            'title': 'ah yes\nthe legendary stealth tactics of sam fisher',
+            'uploader': 'Hans',
+            'uploader_id': 'Talloran',
+        },
+        'add_ie': ['Mastodon'],
+    }, {
         # gab social
         'url': 'https://gab.com/ACT1TV/posts/104450493441154721',
         'info_dict': {
