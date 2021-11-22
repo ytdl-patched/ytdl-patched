@@ -369,21 +369,26 @@ class HttpFD(FileDownloader):
 
             return True
 
-        while count <= retries:
-            try:
-                establish_connection()
-                return download()
-            except RetryDownload as e:
-                count += 1
-                if count <= retries:
-                    self.report_retry(e.source_error, count, retries)
-                else:
-                    self.to_screen(f'[download] Got server HTTP error: {e.source_error}')
-                continue
-            except NextFragment:
-                continue
-            except SucceedDownload:
-                return True
+        try:
+            while count <= retries:
+                try:
+                    establish_connection()
+                    return download()
+                except RetryDownload as e:
+                    count += 1
+                    if count <= retries:
+                        self.report_retry(e.source_error, count, retries)
+                    else:
+                        self.to_screen(f'[download] Got server HTTP error: {e.source_error}')
+                    continue
+                except NextFragment:
+                    continue
+                except SucceedDownload:
+                    return True
+        finally:
+            if ctx.stream:
+                ctx.stream.close()
+                ctx.stream = None
 
         self.report_error('giving up after %s retries' % retries)
         return False
