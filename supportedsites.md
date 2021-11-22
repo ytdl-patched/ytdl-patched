@@ -377,7 +377,6 @@
  - **Funk**
  - **Fusion**
  - **Fux**
- - **Gab**
  - **GabTV**
  - **Gaia**
  - **GameInformer**
@@ -823,7 +822,9 @@
  - **PearVideo**
  - **peer.tv**
  - **PeerTube**
- - **PeerTube:Playlist**
+ - **PeerTubeAccount**
+ - **PeerTubeChannel**
+ - **PeerTubePlaylist**
  - **peing**
  - **peloton**
  - **peloton:live**: Peloton Live
