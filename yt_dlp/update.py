@@ -141,8 +141,8 @@ def run_update(ydl):
 
     version_labels = {
         'zip_3': '',
-        'exe_red': '-red.exe',
-        'exe_white': '-white.exe',
+        'exe_red_64': '-red.exe',
+        'exe_white_64': '-white.exe',
         'win_exe_64': '.exe',
         'py2exe_64': '_min.exe',
         'win_exe_32': '_x86.exe',
