@@ -572,6 +572,7 @@ class YoutubeDL(object):
         self._post_hooks = []
         self._progress_hooks = []
         self._postprocessor_hooks = []
+        self._opened_streams = []
         self._download_retcode = 0
         self._num_downloads = 0
         self._screen_file = [sys.stdout, sys.stderr][params.get('logtostderr', False)]
@@ -2708,7 +2709,40 @@ class YoutubeDL(object):
 
         return process_info
 
+    def __fd(stream_indexing=None):
+        def _inner(func):
+            def wrapper(self: 'YoutubeDL', *args, **kwargs):
+                result = func(self, *args, **kwargs)
+                if stream_indexing is not None:
+                    self._opened_streams.append(result[stream_indexing])
+                else:
+                    self._opened_streams.append(result)
+                return result
+            return wrapper
+        return _inner
+
+    def __clean_fd(func):
+        @functools.wraps(func)
+        def wrapper(self: 'YoutubeDL', *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)
+            finally:
+                streams = list(self._opened_streams)
+                if streams:
+                    self._opened_streams[:] = []
+                    self.write_debug(f'Cleaning up {len(streams)} streams')
+                    for st in streams:
+                        if not st:
+                            continue
+                        try:
+                            st.close()
+                        except BaseException:
+                            pass
+
+        return wrapper
+
     @__process_info_lock
+    @__clean_fd
     def process_info(self, info_dict):
         """Process a single resolved IE result."""
 
@@ -3069,6 +3103,7 @@ class YoutubeDL(object):
                     self.to_stdout(json.dumps(self.sanitize_info(res)))
         return wrapper
 
+    @__clean_fd
     def download(self, url_list):
         """Download a given list of URLs."""
         url_list = variadic(url_list)  # Passing a single URL is a common mistake
@@ -3239,15 +3274,13 @@ class YoutubeDL(object):
 
         cmd = cmd.replace('{}', compat_shlex_quote(filename))
 
-        if self.params.get('verbose'):
-            self.to_screen('[debug] Testing: %s' % cmd)
+        self.write_debug('Testing: %s' % cmd)
         try:
             # True when retcode==0
             retCode = subprocess.call(encodeArgument(cmd), shell=True)
             return retCode == 0
         except (IOError, OSError):
-            if self.params.get('verbose'):
-                self.to_screen('[debug] Testing: %s' % cmd)
+            self.write_debug('Skipping: %s' % cmd)
             return True
 
     def in_download_archive(self, info_dict):
@@ -3278,8 +3311,7 @@ class YoutubeDL(object):
         if not vid_id:
             return
         vid_id = re.sub(r'[/\\: ]+', '_', vid_id) + '.lock'
-        if self.params.get('verbose'):
-            self.to_screen('[debug] locking %s' % vid_id)
+        self.write_debug('locking %s' % vid_id)
         if self.exists(vid_id):
             raise ExclusivelyLockedError()
         try:
@@ -3298,8 +3330,7 @@ class YoutubeDL(object):
         if not vid_id:
             return
         vid_id = re.sub(r'[/\\: ]', '_', vid_id) + '.lock'
-        if self.params.get('verbose'):
-            self.to_screen('[debug] unlocking %s' % vid_id)
+        self.to_screen('unlocking %s' % vid_id)
         try:
             os.remove(vid_id)
         except IOError:
@@ -3910,12 +3941,14 @@ class YoutubeDL(object):
                 break
         return ret
 
+    @__fd
     def open(self, filename, open_mode, **kwargs):
         if self.params.get('escape_long_names', False):
             return escaped_open(filename, open_mode, **kwargs)
         else:
             return open(filename, open_mode, **kwargs)
 
+    @__fd(stream_indexing=0)
     def sanitize_open(self, filename, open_mode):
         if self.params.get('escape_long_names', False):
             return escaped_sanitize_open(filename, open_mode)
