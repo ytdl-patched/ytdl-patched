@@ -3558,6 +3558,7 @@ class YoutubeDL(object):
             [_row(lang, formats) for lang, formats in subtitles.items()],
             hide_empty=True))
 
+    @__fd()
     def urlopen(self, req):
         """ Start an HTTP download """
         if isinstance(req, compat_basestring):
@@ -3941,7 +3942,7 @@ class YoutubeDL(object):
                 break
         return ret
 
-    @__fd
+    @__fd()
     def open(self, filename, open_mode, **kwargs):
         if self.params.get('escape_long_names', False):
             return escaped_open(filename, open_mode, **kwargs)
