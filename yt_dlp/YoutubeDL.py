@@ -903,6 +903,7 @@ class YoutubeDL(object):
         DELIM = 'blue'
         ERROR = 'red'
         WARNING = 'yellow'
+        SUPPRESS = 'light black'
 
     def __format_text(self, out, text, f, fallback=None, *, test_encoding=False):
         assert out in ('screen', 'err')
@@ -3342,22 +3343,17 @@ class YoutubeDL(object):
 
     @staticmethod
     def format_resolution(format, default='unknown'):
-        is_images = format.get('vcodec') == 'none' and format.get('acodec') == 'none'
         if format.get('vcodec') == 'none' and format.get('acodec') != 'none':
             return 'audio only'
         if format.get('resolution') is not None:
             return format['resolution']
         if format.get('width') and format.get('height'):
-            res = '%dx%d' % (format['width'], format['height'])
+            return '%dx%d' % (format['width'], format['height'])
         elif format.get('height'):
-            res = '%sp' % format['height']
+            return '%sp' % format['height']
         elif format.get('width'):
-            res = '%dx?' % format['width']
-        elif is_images:
-            return 'images'
-        else:
-            return default
-        return f'img {res}' if is_images else res
+            return '%dx?' % format['width']
+        return default
 
     def _format_note(self, fdict):
         res = ''
@@ -3481,7 +3477,7 @@ class YoutubeDL(object):
                 [
                     self._format_screen(format_field(f, 'format_id'), self.Styles.ID),
                     format_field(f, 'ext'),
-                    self.format_resolution(f),
+                    format_field(f, func=self.format_resolution, ignore=('audio only', 'images')),
                     format_field(f, 'fps', '\t%d'),
                     format_field(f, 'dynamic_range', '%s', ignore=(None, 'SDR')).replace('HDR', ''),
                     delim,
@@ -3489,9 +3485,15 @@ class YoutubeDL(object):
                     format_field(f, 'tbr', '\t%dk'),
                     format_protocol(f),
                     delim,
-                    format_field(f, 'vcodec', default='unknown').replace('none', ''),
+                    format_field(f, 'vcodec', default='unknown').replace(
+                        'none',
+                        'images' if f.get('acodec') == 'none'
+                        else self._format_screen('audio only', self.Styles.SUPPRESS)),
                     format_field(f, 'vbr', '\t%dk'),
-                    format_field(f, 'acodec', default='unknown').replace('none', ''),
+                    format_field(f, 'acodec', default='unknown').replace(
+                        'none',
+                        '' if f.get('vcodec') == 'none'
+                        else self._format_screen('video only', self.Styles.SUPPRESS)),
                     format_field(f, 'abr', '\t%dk'),
                     format_field(f, 'asr', '\t%dHz'),
                     join_nonempty(
