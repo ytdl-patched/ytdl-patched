@@ -2727,9 +2727,9 @@ class YoutubeDL(object):
             try:
                 return func(self, *args, **kwargs)
             finally:
-                streams = list(self._opened_streams)
+                streams = list(x for x in self._opened_streams if not getattr(x, 'closed', False))
+                self._opened_streams[:] = []
                 if streams:
-                    self._opened_streams[:] = []
                     self.write_debug(f'Cleaning up {len(streams)} streams')
                     for st in streams:
                         if not st:
