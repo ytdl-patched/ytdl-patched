@@ -375,7 +375,15 @@ class MastodonIE(MastodonBaseIE):
             'uploader': 'Hans',
             'uploader_id': 'Talloran',
         },
-        'add_ie': ['Mastodon'],
+    }, {
+        # pleroma, with /objects/
+        'url': 'https://stereophonic.space/objects/e0779154-ebbe-4b55-911b-03a03eba7c71',
+        'info_dict': {
+            'id': 'ADcmeAWAoQlsEg1KFs',
+            'title': 'this is the test case for stereophonic.space',
+            'uploader': 'lesmi',
+            'uploader_id': 'lesmi',
+        },
     }, {
         # gab social
         'url': 'https://gab.com/ACT1TV/posts/104450493441154721',
