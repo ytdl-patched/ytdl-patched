@@ -2721,23 +2721,27 @@ class YoutubeDL(object):
             return wrapper
         return _inner
 
+    def clean_fd(self):
+        streams = list(x for x in self._opened_streams if not getattr(x, 'closed', False))
+        self._opened_streams[:] = []
+        if not streams:
+            return
+        self.write_debug(f'Cleaning up {len(streams)} streams')
+        for st in streams:
+            if not st:
+                continue
+            try:
+                st.close()
+            except BaseException:
+                pass
+
     def __clean_fd(func):
         @functools.wraps(func)
         def wrapper(self: 'YoutubeDL', *args, **kwargs):
             try:
                 return func(self, *args, **kwargs)
             finally:
-                streams = list(x for x in self._opened_streams if not getattr(x, 'closed', False))
-                self._opened_streams[:] = []
-                if streams:
-                    self.write_debug(f'Cleaning up {len(streams)} streams')
-                    for st in streams:
-                        if not st:
-                            continue
-                        try:
-                            st.close()
-                        except BaseException:
-                            pass
+                self.clean_fd()
 
         return wrapper
 
@@ -3330,7 +3334,7 @@ class YoutubeDL(object):
         if not vid_id:
             return
         vid_id = re.sub(r'[/\\: ]', '_', vid_id) + '.lock'
-        self.to_screen('unlocking %s' % vid_id)
+        self.write_debug('unlocking %s' % vid_id)
         try:
             os.remove(vid_id)
         except IOError:

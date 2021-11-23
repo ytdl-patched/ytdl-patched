@@ -389,6 +389,9 @@ class HttpFD(FileDownloader):
             if ctx.stream:
                 ctx.stream.close()
                 ctx.stream = None
+            if ctx.data:
+                ctx.data.close()
+                ctx.data = None
 
         self.report_error('giving up after %s retries' % retries)
         return False
