@@ -1417,8 +1417,8 @@
  - **youtube:history**: Youtube watch history; ":ythis" keyword (requires cookies)
  - **youtube:playlist**: YouTube playlists
  - **youtube:recommended**: YouTube recommended videos; ":ytrec" keyword
- - **youtube:search**: YouTube searches; "ytsearch:" prefix
- - **youtube:search:date**: YouTube searches, newest videos first; "ytsearchdate:" prefix
+ - **youtube:search**: YouTube search; "ytsearch:" prefix
+ - **youtube:search:date**: YouTube search, newest videos first; "ytsearchdate:" prefix
  - **youtube:search_url**: YouTube search URLs with sorting and filter support
  - **youtube:subscriptions**: YouTube subscriptions feed; ":ytsubs" keyword (requires cookies)
  - **youtube:tab**: YouTube Tabs
