@@ -2,7 +2,7 @@ import os
 
 from ..utils import load_plugins
 
-from typing import TYPE_CHECKING, List, Tuple, Type
+from typing import TYPE_CHECKING, List, Type
 if TYPE_CHECKING:
     from .common import SelfHostedInfoExtractor
 
