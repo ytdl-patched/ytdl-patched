@@ -156,6 +156,7 @@
  - **BR**: Bayerischer Rundfunk
  - **BravoTV**
  - **Break**
+ - **BreitBart**
  - **brightcove:legacy**
  - **brightcove:new**
  - **BRMediathek**: Bayerischer Rundfunk Mediathek
@@ -1078,6 +1079,7 @@
  - **Streamanity**
  - **streamcloud.eu**
  - **StreamCZ**
+ - **StreamFF**
  - **StreetVoice**
  - **StretchInternet**
  - **Stripchat**
