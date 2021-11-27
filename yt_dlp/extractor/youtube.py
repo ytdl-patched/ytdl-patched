@@ -2556,8 +2556,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 fmt_url += '&' + sp + '=' + signature
 
             query = parse_qs(fmt_url)
+            client_name = traverse_obj(query, ('c', 0), expected_type=compat_str, default='')
             throttled = False
-            if query.get('ratebypass') != ['yes'] and query.get('n'):
+            if (query.get('ratebypass') != ['yes'] or 'WEB' in client_name) and query.get('n'):
                 old_n, new_n = query['n'][0], None
                 warn_message, err = None, None
                 try:
@@ -2575,7 +2576,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     player_id = self._extract_player_info(player_url, fatal=False) or player_url or 'PLAYER UNKNOWN'
                     self.report_warning(f'nsig extraction failed: You may experience throttling for some formats. {warn_message}\nplayer id: {player_id} , nsig value: {old_n}\n{err}', only_once=True)
 
-            client_name = traverse_obj(query, ('c', 0), expected_type=compat_str)
             if client_name:
                 client_name = client_name[0:3]
 
