@@ -2574,9 +2574,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 elif warn_message:
                     player_id = self._extract_player_info(player_url, fatal=False) or player_url or 'PLAYER UNKNOWN'
                     self.report_warning(f'nsig extraction failed: You may experience throttling for some formats. {warn_message}\nplayer id: {player_id} , nsig value: {old_n}\n{err}', only_once=True)
-                    self.report_warning(
-                        f'nsig extraction failed: You may experience throttling for some formats\n'
-                        f'n = {old_n} ; player = {player_url}\n{err}', only_once=True)
 
             client_name = traverse_obj(query, ('c', 0), expected_type=compat_str)
             if client_name:
