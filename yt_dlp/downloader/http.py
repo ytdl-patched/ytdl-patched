@@ -200,6 +200,8 @@ class HttpFD(FileDownloader):
                     # Connection reset is no problem, just retry
                     raise RetryDownload(err)
                 raise
+            except KeyboardInterrupt:
+                raise
             except BaseException as err:
                 if self.params.get('continue_on_any_sock_error', False):
                     raise RetryDownload(err)
@@ -258,6 +260,8 @@ class HttpFD(FileDownloader):
                     # no errno set but this error message
                     if e.errno in (errno.ECONNRESET, errno.ETIMEDOUT) or self.params.get('continue_on_any_sock_error', False):
                         retry(e)
+                    raise
+                except KeyboardInterrupt:
                     raise
                 except BaseException as err:
                     if self.params.get('continue_on_any_sock_error', False):
