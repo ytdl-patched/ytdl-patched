@@ -196,7 +196,7 @@ class HttpFD(FileDownloader):
             except socket.timeout as err:
                 raise RetryDownload(err)
             except socket.error as err:
-                if err.errno in (errno.ECONNRESET, errno.ETIMEDOUT):
+                if err.errno in (errno.ECONNRESET, errno.ETIMEDOUT) or self.params.get('continue_on_any_sock_error', False):
                     # Connection reset is no problem, just retry
                     raise RetryDownload(err)
                 raise

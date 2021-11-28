@@ -815,6 +815,14 @@ def parseOpts(overrideArguments=None):
             'For ffmpeg, arguments can be passed to different positions using the same syntax as --postprocessor-args. '
             'You can use this option multiple times to give different arguments to different downloaders '
             '(Alias: --external-downloader-args)'))
+    downloader.add_option(
+        '--continue-on-any-socket-error',
+        dest='continue_on_any_sock_error', action='store_true', default=None,
+        help='Continue (retry) on any socket errors')
+    downloader.add_option(
+        '--abort-on-socket-error',
+        dest='continue_on_any_sock_error', action='store_false', default=None,
+        help='Continue (retry) only on ECONNRESET or ETIMEDOUT socket error')
 
     workarounds = optparse.OptionGroup(parser, 'Workarounds')
     workarounds.add_option(
