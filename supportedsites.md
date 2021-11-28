@@ -231,6 +231,7 @@
  - **Corus**
  - **Coub**
  - **CozyTV**
+ - **cp24**
  - **Cracked**
  - **Crackle**
  - **CrooksAndLiars**
@@ -688,6 +689,7 @@
  - **ndr:embed:base**
  - **NDTV**
  - **Nebula**
+ - **nebula:collection**
  - **NerdCubedFeed**
  - **netease:album**: 网易云音乐 - 专辑
  - **netease:djradio**: 网易云音乐 - 电台
@@ -937,6 +939,7 @@
  - **RedBullTV**
  - **RedBullTVRrnContent**
  - **Reddit**
+ - **RedGifs**
  - **RedTube**
  - **RegioTV**
  - **RENTV**
@@ -1000,6 +1003,7 @@
  - **SCTE**
  - **SCTECourse**
  - **Seeker**
+ - **SenateGov**
  - **SenateISVP**
  - **SendtoNews**
  - **Servus**
