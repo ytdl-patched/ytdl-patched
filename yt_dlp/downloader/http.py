@@ -196,8 +196,12 @@ class HttpFD(FileDownloader):
             except socket.timeout as err:
                 raise RetryDownload(err)
             except socket.error as err:
-                if err.errno in (errno.ECONNRESET, errno.ETIMEDOUT):
+                if err.errno in (errno.ECONNRESET, errno.ETIMEDOUT) or self.params.get('continue_on_any_sock_error', False):
                     # Connection reset is no problem, just retry
+                    raise RetryDownload(err)
+                raise
+            except BaseException as err:
+                if self.params.get('continue_on_any_sock_error', False):
                     raise RetryDownload(err)
                 raise
 
@@ -252,8 +256,12 @@ class HttpFD(FileDownloader):
                 except socket.error as e:
                     # SSLError on python 2 (inherits socket.error) may have
                     # no errno set but this error message
-                    if e.errno in (errno.ECONNRESET, errno.ETIMEDOUT) or getattr(e, 'message', None) == 'The read operation timed out':
+                    if e.errno in (errno.ECONNRESET, errno.ETIMEDOUT) or self.params.get('continue_on_any_sock_error', False):
                         retry(e)
+                    raise
+                except BaseException as err:
+                    if self.params.get('continue_on_any_sock_error', False):
+                        raise RetryDownload(err)
                     raise
 
                 byte_counter += len(data_block)
