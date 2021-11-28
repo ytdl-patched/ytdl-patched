@@ -913,7 +913,10 @@ from .ndr import (
     NJoyEmbedIE,
 )
 from .ndtv import NDTVIE
-from .nebula import NebulaIE
+from .nebula import (
+    NebulaIE,
+    NebulaCollectionIE,
+)
 from .nerdcubed import NerdCubedFeedIE
 from .netzkino import NetzkinoIE
 from .neteasemusic import (
@@ -973,7 +976,10 @@ from .niconico import (
     NiconicoLiveIE,
 )
 from .niconico_smile import NiconicoSmileIE
-from .ninecninemedia import NineCNineMediaIE
+from .ninecninemedia import (
+    NineCNineMediaIE,
+    CPTwentyFourIE,
+)
 from .ninegag import NineGagIE
 from .ninenow import NineNowIE
 from .nintendo import NintendoIE
@@ -1252,6 +1258,7 @@ from .redbulltv import (
     RedBullIE,
 )
 from .reddit import RedditIE
+from .redgifs import RedGifsIE
 from .redtube import RedTubeIE
 from .regiotv import RegioTVIE
 from .rentv import (
@@ -1320,7 +1327,7 @@ from .scte import (
     SCTECourseIE,
 )
 from .seeker import SeekerIE
-from .senateisvp import SenateISVPIE
+from .senategov import SenateISVPIE, SenateGovIE
 from .sendtonews import SendtoNewsIE
 from .servus import ServusIE
 from .sevenplus import SevenPlusIE

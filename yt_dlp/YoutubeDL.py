@@ -1808,9 +1808,10 @@ class YoutubeDL(object):
     def _check_formats(self, formats):
         for f in formats:
             self.to_screen('[info] Testing format %s' % f['format_id'])
-            temp_file = tempfile.NamedTemporaryFile(
-                suffix='.tmp', delete=False,
-                dir=self.get_output_path('temp') or None)
+            path = self.get_output_path('temp')
+            if not self._ensure_dir_exists(f'{path}/'):
+                continue
+            temp_file = tempfile.NamedTemporaryFile(suffix='.tmp', delete=False, dir=path or None)
             temp_file.close()
             try:
                 success, _ = self.dl(temp_file.name, f, test=True)
@@ -3068,9 +3069,10 @@ class YoutubeDL(object):
                     downloader = get_suitable_downloader(info_dict, self.params) if 'protocol' in info_dict else None
                     downloader = downloader.__name__ if downloader else None
                     ffmpeg_fixup(info_dict.get('requested_formats') is None and downloader == 'HlsFD',
-                                 'malformed AAC bitstream detected', FFmpegFixupM3u8PP)
-                    ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'malformed timestamps detected', FFmpegFixupTimestampPP)
-                    ffmpeg_fixup(downloader in ('WebSocketFragmentFD', 'SteamlinkFD'), 'malformed duration detected', FFmpegFixupDurationPP)
+                                 'Possible MPEG-TS in MP4 container or malformed AAC timestamps',
+                                 FFmpegFixupM3u8PP)
+                    ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'Malformed timestamps detected', FFmpegFixupTimestampPP)
+                    ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'Malformed duration detected', FFmpegFixupDurationPP)
 
                 fixup()
                 try:
