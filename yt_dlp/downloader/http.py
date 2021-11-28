@@ -200,6 +200,10 @@ class HttpFD(FileDownloader):
                     # Connection reset is no problem, just retry
                     raise RetryDownload(err)
                 raise
+            except BaseException as err:
+                if self.params.get('continue_on_any_sock_error', False):
+                    raise RetryDownload(err)
+                raise
 
         def download():
             nonlocal throttle_start
