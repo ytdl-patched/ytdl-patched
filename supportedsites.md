@@ -940,6 +940,8 @@
  - **RedBullTVRrnContent**
  - **Reddit**
  - **RedGifs**
+ - **RedGifsSearch**: Redgifs search
+ - **RedGifsUser**: Redgifs user
  - **RedTube**
  - **RegioTV**
  - **RENTV**
