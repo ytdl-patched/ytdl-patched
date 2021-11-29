@@ -48,10 +48,10 @@ if NPM_IS_SANE:
     3. All outbound frames are converted into HEX and printed to N's stdin.
     """
     class NodeJsWrapperBase():
-        def __init__(self, url, headers={}):
+        def __init__(self, url, headers=None):
             self.proc = start_node_process(['-e', self.EVAL_CODE % (json.dumps(url), json.dumps({
                 # any JSON is valid for JS object/array/string/number
-                'headers': headers,
+                'headers': headers or {},
             }))])
             while True:
                 if to_str(self.proc.stdout.readline()).strip() == 'OPENED':
