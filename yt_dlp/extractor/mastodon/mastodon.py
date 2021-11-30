@@ -5,19 +5,17 @@ import itertools
 import json
 import re
 
+try:
+    from .instances import instances
+except ImportError:
+    instances = ('gab.com', )
 
-from .instances import instances
-from ..common import (
-    InfoExtractor,
-    SelfHostedInfoExtractor
-)
+from ..common import SelfHostedInfoExtractor
 from ..peertube.peertube import PeerTubeIE
 from ...utils import (
-    DummyError,
     ExtractorError,
     clean_html,
     parse_duration,
-    preferredencoding,
     get_first_group,
     str_or_none,
     int_or_none,
@@ -33,7 +31,7 @@ from ...compat import (
 )
 
 
-known_valid_instances, known_failed_instances = set(), set()
+known_valid_instances = set()
 
 
 class MastodonBaseIE(SelfHostedInfoExtractor):
@@ -52,66 +50,12 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
     )
     _NETRC_MACHINE = 'mastodon'
 
-    @classmethod
-    def suitable(cls, url):
-        mobj = cls._match_valid_url(url)
-        if not mobj:
-            return False
-        prefix = mobj.group('prefix')
-        hostname = get_first_group(mobj, 'domain_1', 'domain_2', 'domain')
-        return cls._test_mastodon_instance(None, hostname, True, prefix)
-
-    @classmethod
-    def _test_mastodon_instance(cls, ie, hostname, skip, prefix, webpage=None):
-        if isinstance(hostname, bytes):
-            hostname = hostname.decode(preferredencoding())
-        hostname = hostname.encode('idna').decode('utf-8')
-
-        if hostname in instances:
-            return True
-        if hostname in known_valid_instances:
-            return True
-        if hostname in known_failed_instances:
-            return False
-
-        # HELP: more cases needed
-        if hostname in ['medium.com', 'lbry.tv']:
-            return False
-
-        # continue anyway if "mastodon:" is added to URL
-        if prefix:
-            return True
-        # without --check-mastodon-instance,
-        #   skip further instance check
-        if skip:
-            return False
-
-        ie.report_warning('Testing if %s is a Mastodon instance because it is not listed in either instances.social, joinmastodon.org, the-federation.info or fediverse.observer.' % hostname)
-
-        if not cls._probe_webpage(webpage):
-            try:
-                # try /api/v1/instance
-                api_request_instance = ie._download_json(
-                    'https://%s/api/v1/instance' % hostname, hostname,
-                    note='Testing Mastodon API /api/v1/instance')
-                if api_request_instance.get('uri') != hostname:
-                    raise DummyError()
-                if not api_request_instance.get('title'):
-                    raise DummyError()
-
-                # try /api/v1/directory
-                api_request_directory = ie._download_json(
-                    'https://%s/api/v1/directory' % hostname, hostname,
-                    note='Testing Mastodon API /api/v1/directory')
-                if not isinstance(api_request_directory, (tuple, list)):
-                    raise DummyError()
-            except (IOError, ExtractorError):
-                known_failed_instances.add(hostname)
-                return False
-
-        # this is probably mastodon instance
-        known_valid_instances.add(hostname)
-        return True
+    _IMPOSSIBLE_HOSTNAMES = ('medium.com', 'lbry.tv')
+    _HOSTNAME_GROUPS = ('domain_1', 'domain_2', 'domain')
+    _INSTANCE_LIST = instances
+    _DYNAMIC_INSTANCE_LIST = known_valid_instances
+    _NODEINFO_SOFTWARE = ('mastodon', 'pleroma', 'gab')
+    _SOFTWARE_NAME = 'Mastodon'
 
     def _login(self):
         username, password = self._get_login_info()
@@ -214,16 +158,6 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
     def _is_probe_enabled(ydl):
         return ydl.params.get('check_mastodon_instance', False)
 
-    @classmethod
-    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname, webpage=None):
-        prefix = ie._search_regex(
-            # (MastodonIE._VALID_URL,
-            #  MastodonUserIE._VALID_URL,
-            #  MastodonUserNumericIE._VALID_URL),
-            cls._VALID_URL,
-            url, 'mastodon test', group='prefix', default=None)
-        return MastodonIE._test_mastodon_instance(ie, hostname, False, prefix, webpage)
-
     def _determine_instance_software(self, host, webpage=None):
         if webpage:
             for i, string in enumerate(self._SH_VALID_CONTENT_STRINGS):
@@ -232,18 +166,11 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
             if any(s in webpage for s in PeerTubeIE._SH_VALID_CONTENT_STRINGS):
                 return 'peertube'
 
-        nodeinfo_href = self._download_json(
-            f'https://{host}/.well-known/nodeinfo', host, 'Downloading instance nodeinfo link')
-
-        nodeinfo = self._download_json(
-            nodeinfo_href['links'][-1]['href'], host, 'Downloading instance nodeinfo')
-
-        return nodeinfo['software']['name']
+        return self._fetch_nodeinfo_software(self, host)
 
 
 class MastodonIE(MastodonBaseIE):
     # NOTE: currently, compatible self-hosted products like Gab Social requires probing for each instances.
-    # TODO: include all these compatible products into instance list
     IE_NAME = 'mastodon'
     _VALID_URL = r'''(?x)
         (?P<prefix>(?:mastodon|mstdn|mtdn):)?

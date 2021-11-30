@@ -6,8 +6,13 @@ import re
 
 from urllib.parse import urlencode
 
-from .instances import instances
-from ..common import InfoExtractor, SelfHostedInfoExtractor
+
+try:
+    from .instances import instances
+except ImportError:
+    instances = ()
+
+from ..common import SelfHostedInfoExtractor
 from ...compat import compat_str
 from ...utils import (
     get_first_group,
@@ -20,11 +25,10 @@ from ...utils import (
     url_or_none,
     urljoin,
     ExtractorError,
-    preferredencoding,
 )
 
 
-known_valid_instances, known_failed_instances = set(), set()
+known_valid_instances = set()
 
 
 class PeerTubeBaseIE(SelfHostedInfoExtractor):
@@ -39,6 +43,12 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
     _API_BASE = 'https://%s/api/v1/%s/%s/%s'
     _NETRC_MACHINE = 'peertube'
     _LOGIN_INFO = None
+
+    _HOSTNAME_GROUPS = ('host', 'host_2')
+    _INSTANCE_LIST = instances
+    _DYNAMIC_INSTANCE_LIST = known_valid_instances
+    _NODEINFO_SOFTWARE = ('peertube', )
+    _SOFTWARE_NAME = 'PeerTube'
 
     def _login(self):
         if self._LOGIN_INFO:
@@ -87,63 +97,9 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
         video_id = mobj.group('id')
         return host, video_id
 
-    @classmethod
-    def _test_peertube_instance(cls, ie, hostname, skip, prefix, webpage=None):
-        if isinstance(hostname, bytes):
-            hostname = hostname.decode(preferredencoding())
-        hostname = hostname.encode('idna').decode('utf-8')
-
-        if hostname in instances:
-            return True
-        if hostname in known_valid_instances:
-            return True
-        if hostname in known_failed_instances:
-            return False
-
-        # continue anyway if "peertube:" is used
-        if prefix:
-            return True
-        # without --check-peertube-instance,
-        #   skip further instance check
-        if skip:
-            return False
-
-        ie.report_warning('Testing if %s is a PeerTube instance because it is not listed in either joinpeertube.org, the-federation.info or fediverse.observer.' % hostname)
-
-        if not cls._probe_webpage(webpage):
-            try:
-                # try /api/v1/config
-                api_request_config = ie._download_json(
-                    'https://%s/api/v1/config' % hostname, hostname,
-                    note='Testing PeerTube API /api/v1/config')
-                if not api_request_config.get('instance', {}).get('name'):
-                    return False
-
-                # try /api/v1/videos
-                api_request_videos = ie._download_json(
-                    'https://%s/api/v1/videos' % hostname, hostname,
-                    note='Testing PeerTube API /api/v1/videos')
-                if not isinstance(api_request_videos.get('data'), (tuple, list)):
-                    return False
-            except (IOError, ExtractorError):
-                known_failed_instances.add(hostname)
-                return False
-
-        # this is probably peertube instance
-        known_valid_instances.add(hostname)
-        return True
-
     @staticmethod
     def _is_probe_enabled(ydl):
         return ydl.params.get('check_peertube_instance', False)
-
-    @classmethod
-    def _probe_selfhosted_service(cls, ie: InfoExtractor, url, hostname, webpage=None):
-        prefix = ie._search_regex(
-            # (PeerTubeIE._VALID_URL, PeerTubePlaylistIE._VALID_URL),
-            cls._VALID_URL,
-            url, 'peertube test', group='prefix', default=None)
-        return cls._test_peertube_instance(ie, hostname, False, prefix, webpage=None)
 
     def _call_api(self, host, resource, resource_id, path, note=None, errnote=None, fatal=True):
         return self._download_json(
@@ -152,15 +108,6 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
                 'Authorization': f'Bearer {self._LOGIN_INFO["access_token"]}',
             } if self._LOGIN_INFO and self._LOGIN_INFO['instance'] == host else {},
             note=note, errnote=errnote, fatal=fatal)
-
-    @classmethod
-    def suitable(cls, url):
-        mobj = cls._match_valid_url(url)
-        if not mobj:
-            return False
-        prefix = mobj.group('prefix')
-        hostname = get_first_group(mobj, 'host', 'host_2')
-        return cls._test_peertube_instance(None, hostname, True, prefix)
 
     def _parse_video(self, video, url):
         mobj = self._match_valid_url(url)
