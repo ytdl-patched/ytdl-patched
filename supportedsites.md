@@ -277,6 +277,7 @@
  - **DiscoveryPlus**
  - **DiscoveryPlusIndia**
  - **DiscoveryPlusIndiaShow**
+ - **DiscoveryPlusItalyShow**
  - **DiscoveryVR**
  - **Disney**
  - **disneychris**
