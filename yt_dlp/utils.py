@@ -1022,10 +1022,6 @@ class PostProcessingError(YoutubeDLError):
     indicate an error in the postprocessing task.
     """
 
-    def __init__(self, msg):
-        super(PostProcessingError, self).__init__(msg)
-        self.msg = msg
-
 
 class DownloadCancelled(YoutubeDLError):
     """ Exception raised when the download queue should be interrupted """
@@ -1037,21 +1033,6 @@ class ExistingVideoReached(DownloadCancelled):
     msg = 'Encountered a video that is already in the archive, stopping due to --break-on-existing'
 
 
-class ReextractRequested(YoutubeDLError):
-    """ Request re-extraction in any reason. """
-    msg = 'Re-extraction requested'
-
-
-class ThrottledDownload(ReextractRequested):
-    """ Download speed below --throttled-rate. """
-    msg = 'The download speed is below throttle limit'
-
-
-class UnrecoverableHttpError(ReextractRequested):
-    """ Unrecoverable errors defined by each format has been reported by downloader. """
-    msg = 'An unrecoverable error has been detected'
-
-
 class RejectedVideoReached(DownloadCancelled):
     """ --break-on-reject triggered """
     msg = 'Encountered a video that did not match filter, stopping due to --break-on-reject'
@@ -1060,6 +1041,21 @@ class RejectedVideoReached(DownloadCancelled):
 class MaxDownloadsReached(DownloadCancelled):
     """ --max-downloads limit has been reached. """
     msg = 'Maximum number of downloads reached, stopping due to --max-downloads'
+
+
+class ReExtractInfo(YoutubeDLError):
+    """ Request re-extraction in any reason. """
+    msg = 'Re-extraction requested'
+
+
+class ThrottledDownload(ReExtractInfo):
+    """ Download speed below --throttled-rate. """
+    msg = 'The download speed is below throttle limit'
+
+
+class UnrecoverableHttpError(ReExtractInfo):
+    """ Unrecoverable errors defined by each format has been reported by downloader. """
+    msg = 'An unrecoverable error has been detected'
 
 
 class UnavailableVideoError(YoutubeDLError):
@@ -5026,10 +5022,11 @@ def traverse_obj(
     return default
 
 
+# Deprecated
 def traverse_dict(dictn, keys, casesense=True):
-    ''' For backward compatibility. Do not use '''
-    return traverse_obj(dictn, keys, casesense=casesense,
-                        is_user_input=True, traverse_string=True)
+    write_string('DeprecationWarning: yt_dlp.utils.traverse_dict is deprecated '
+                 'and may be removed in a future version. Use yt_dlp.utils.traverse_obj instead')
+    return traverse_obj(dictn, keys, casesense=casesense, is_user_input=True, traverse_string=True)
 
 
 def variadic(x, allowed_types=(str, bytes)):

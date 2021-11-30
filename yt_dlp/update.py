@@ -10,7 +10,7 @@ import platform
 from zipimport import zipimporter
 
 from .compat import compat_realpath
-from .utils import encode_compat_str, Popen
+from .utils import encode_compat_str, Popen, write_string
 
 from .version import __version__
 try:
@@ -122,6 +122,7 @@ def run_update(ydl):
         return tuple(map(int, version_str.split('.')))
 
     version_id = version_info['name']
+    ydl.to_screen(f'Latest version: {version_id}, Current version: {__version__}')
     if version_tuple(__version__) >= version_tuple(version_id):
         ydl.to_screen(f'ytdl-patched is up to date ({__version__})')
         return
@@ -259,13 +260,13 @@ def run_update(ydl):
     assert False, f'Unhandled variant: {variant}'
 
 
+# Deprecated
 def update_self(to_screen, verbose, opener):
-    ''' Exists for backward compatibility '''
 
     printfn = to_screen
 
-    printfn(
-        'WARNING: "yt_dlp.update.update_self" is deprecated and may be removed in a future version. '
+    write_string(
+        'DeprecationWarning: "yt_dlp.update.update_self" is deprecated and may be removed in a future version. '
         'Use "yt_dlp.update.run_update(ydl)" instead')
 
     class FakeYDL():

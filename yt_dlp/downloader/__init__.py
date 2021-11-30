@@ -43,6 +43,7 @@ from .external import (
 
 PROTOCOL_MAP = {
     'rtmp': RtmpFD,
+    'rtmpe': RtmpFD,
     'rtmp_ffmpeg': FFmpegFD,
     'ffmpeg': FFmpegFD,  # for backward compatibility with old code
     'live_ffmpeg': FFmpegFD,
