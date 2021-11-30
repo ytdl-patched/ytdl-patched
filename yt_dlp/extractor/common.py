@@ -1642,6 +1642,7 @@ class InfoExtractor(object):
             'framerate': {'type': 'alias', 'field': 'fps'},
             'language_preference': {'type': 'alias', 'field': 'lang'},
             'protocol': {'type': 'alias', 'field': 'proto'},
+            'expected_protocol': {'type': 'alias', 'field': 'proto'},
             'source_preference': {'type': 'alias', 'field': 'source'},
             'filesize_approx': {'type': 'alias', 'field': 'fs_approx'},
             'filesize_estimate': {'type': 'alias', 'field': 'size'},
