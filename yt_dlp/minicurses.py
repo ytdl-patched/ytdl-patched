@@ -170,6 +170,7 @@ class MultilinePrinter(MultilinePrinterBase):
         text = self._move_cursor(self.maximum) if self._HAVE_FULLCAP else []
         if self.preserve_output:
             self.write(*text, '\n')
+            self._lastline = self._lastlength = 0
             return
 
         if self._HAVE_FULLCAP:
@@ -178,3 +179,4 @@ class MultilinePrinter(MultilinePrinterBase):
                 f'{CONTROL_SEQUENCES["UP"]}{CONTROL_SEQUENCES["ERASE_LINE"]}' * self.maximum)
         else:
             self.write(*text, ' ' * self._lastlength)
+        self._lastline = self._lastlength = 0
