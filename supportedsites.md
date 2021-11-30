@@ -462,7 +462,7 @@
  - **IndavideoEmbed**
  - **InfoQ**
  - **Instagram**
- - **instagram:tag**: Instagram hashtag search
+ - **instagram:tag**: Instagram hashtag search URLs
  - **instagram:user**: Instagram user profile
  - **InstagramIOS**: IOS instagram:// URL
  - **Internazionale**
@@ -730,8 +730,8 @@
  - **niconico:series**
  - **niconico:smile** (Currently broken)
  - **niconico:user**
- - **nicovideo:search**: Nico video searches; "nicosearch:" prefix
- - **nicovideo:search:date**: Nico video searches, newest first; "nicosearchdate:" prefix
+ - **nicovideo:search**: Nico video search; "nicosearch:" prefix
+ - **nicovideo:search:date**: Nico video search, newest first; "nicosearchdate:" prefix
  - **nicovideo:search_url**: Nico video search URLs
  - **Nintendo**
  - **Nitter**
