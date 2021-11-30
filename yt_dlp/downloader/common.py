@@ -406,6 +406,7 @@ class FileDownloader(object):
                     'status': 'finished',
                     'total_bytes': self.ydl.getsize(encodeFilename(filename)),
                 }, info_dict)
+                self._finish_multiline_status()
                 return True, False
 
         if subtitle is False:
@@ -455,10 +456,9 @@ class FileDownloader(object):
             heartbeat()
 
         try:
-            ret = self.real_download(filename, info_dict)
-            self._finish_multiline_status()
-            return ret, True
+            return self.real_download(filename, info_dict), True
         finally:
+            self._finish_multiline_status()
             if heartbeat_lock:
                 with heartbeat_lock:
                     timer[0].cancel()
