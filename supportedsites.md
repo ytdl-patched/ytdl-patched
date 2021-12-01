@@ -165,6 +165,7 @@
  - **BusinessInsider**
  - **BuzzFeed**
  - **BYUtv**
+ - **CableAV**
  - **CAM4**
  - **Camdemy**
  - **CamdemyFolder**
@@ -725,12 +726,6 @@
  - **nickelodeonru**
  - **nicknight**
  - **niconico**: ニコニコ動画
- - **niconico:history**: NicoNico user history. Requires cookies.
- - **niconico:live**: ニコニコ生放送
- - **niconico:playlist**
- - **niconico:series**
- - **niconico:smile** (Currently broken)
- - **niconico:user**
  - **nicovideo:search**: Nico video search; "nicosearch:" prefix
  - **nicovideo:search:date**: Nico video search, newest first; "nicosearchdate:" prefix
  - **nicovideo:search_url**: Nico video search URLs
