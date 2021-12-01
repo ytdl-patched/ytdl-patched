@@ -1596,7 +1596,7 @@ class InfoExtractor(object):
             # sort with multiple:ordered from "expected_protocol", "protocol" in this order to make DMC formats properly sorted
             'proto': {'type': 'multiple:ordered', 'regex': True, 'field': ('expected_protocol', 'protocol'),
                       'order': ['m3u8.*', '(ht|f)tps', '(ht|f)tp$', '.*dash', 'websocket_frag', 'rtmpe?', '', 'mms|rtsp', 'ws|websocket', 'f4'],
-                      'function': lambda *x: x[0]},
+                      'function': lambda x: next(filter(None, x), None)},
             'vext': {'type': 'ordered', 'field': 'video_ext',
                      'order': ('mp4', 'webm', 'flv', '', 'none'),
                      'order_free': ('webm', 'mp4', 'flv', '', 'none')},
@@ -1829,9 +1829,9 @@ class InfoExtractor(object):
             multiple_match = re.match(r'multiple(?::([a-z]+))?', type)
             if multiple_match:
                 type = multiple_match.group(1) or 'field'
-                actual_fields = self._get_field_setting(field, 'field')
+                actual_fields = variadic(self._get_field_setting(field, 'field'))
 
-                value = self._get_field_setting(field, 'function')(get_value(f) for f in actual_fields)
+                value = self._get_field_setting(field, 'function')(format.get(f) for f in actual_fields)
             else:
                 value = get_value(field)
             return self._calculate_field_preference_from_value(format, field, type, value)
