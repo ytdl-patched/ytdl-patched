@@ -125,6 +125,7 @@ class MultilinePrinter(MultilinePrinterBase):
         self.preserve_output = preserve_output
         self._lastline = self._lastlength = 0
         self._movelock = Lock()
+        self._dirty = False
 
     def lock(func):
         @functools.wraps(func)
@@ -145,6 +146,7 @@ class MultilinePrinter(MultilinePrinterBase):
 
     @lock
     def print_at_line(self, text, pos):
+        self._dirty = True
         if self._HAVE_FULLCAP:
             self.write(*self._move_cursor(pos), CONTROL_SEQUENCES['ERASE_LINE'], text)
 
@@ -165,6 +167,9 @@ class MultilinePrinter(MultilinePrinterBase):
 
     @lock
     def end(self):
+        # don't do anything if the terminal is not under MultilinePrinter
+        if not self._dirty:
+            return
         # move cursor to the end of the last line, and write line break
         # so that other to_screen calls can precede
         text = self._move_cursor(self.maximum) if self._HAVE_FULLCAP else []
@@ -180,3 +185,4 @@ class MultilinePrinter(MultilinePrinterBase):
         else:
             self.write(*text, ' ' * self._lastlength)
         self._lastline = self._lastlength = 0
+        self._dirty = False
