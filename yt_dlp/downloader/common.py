@@ -304,6 +304,8 @@ class FileDownloader(object):
             if s.get('elapsed') is not None:
                 s['_elapsed_str'] = self.format_seconds(s['elapsed'])
                 msg_template += ' in %(_elapsed_str)s'
+            if s.get('fragment_count') is not None:
+                msg_template += ' (%(fragment_count)d fragments total)'
             s['_percent_str'] = self.format_percent(100)
             self._report_progress_status(s, msg_template)
             return
