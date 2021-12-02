@@ -149,6 +149,7 @@ class MultilinePrinter(MultilinePrinterBase):
         self._dirty = True
         if self._HAVE_FULLCAP:
             self.write(*self._move_cursor(pos), CONTROL_SEQUENCES['ERASE_LINE'], text)
+            return
 
         text = self._add_line_number(text, pos)
         textlen = len(text)
