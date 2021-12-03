@@ -38,6 +38,7 @@ import time
 import traceback
 import xml.etree.ElementTree
 import zlib
+import mimetypes
 try:
     import dateutil.parser
     HAVE_DATEUTIL = True
@@ -3187,6 +3188,14 @@ def mimetype2ext(mt):
         return ext
 
     return subtype.replace('+', '.')
+
+
+def ext2mimetype(ext_or_url):
+    if not ext_or_url:
+        return None
+    if '.' not in ext_or_url:
+        ext_or_url = f'file.{ext_or_url}'
+    return mimetypes.guess_type(ext_or_url)[0]
 
 
 def parse_codecs(codecs_str):
