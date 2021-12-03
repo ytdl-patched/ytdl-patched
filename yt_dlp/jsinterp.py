@@ -91,8 +91,19 @@ class JSInterpreter(object):
         if not expr:
             return
         counters = {k: 0 for k in _MATCHING_PARENS.values()}
-        start, splits, pos, delim_len = 0, 0, 0, len(delim) - 1
+        start, splits, pos, delim_len, in_quote, quote_escape = 0, 0, 0, len(delim) - 1, False, False
         for idx, char in enumerate(expr):
+            if quote_escape:
+                quote_escape = False
+                continue
+            elif char == '\\' and expr[start] in '"\'':
+                quote_escape = True
+                continue
+            elif char in '"\'':
+                in_quote = not in_quote
+                continue
+            elif in_quote:
+                continue
             if char in _MATCHING_PARENS:
                 counters[_MATCHING_PARENS[char]] += 1
             elif char in counters:
@@ -131,6 +142,7 @@ class JSInterpreter(object):
         should_abort = False
         stmt = stmt.lstrip()
         stmt_m = re.match(r'var\s', stmt)
+        is_value = False
         if stmt_m:
             expr = stmt[len(stmt_m.group(0)):]
         else:
@@ -138,19 +150,20 @@ class JSInterpreter(object):
             if return_m:
                 expr = stmt[len(return_m.group(0)):]
                 should_abort = True
+                is_value = True
             else:
                 # Try interpreting it as an expression
                 expr = stmt
 
-        v = self.interpret_expression(expr, local_vars, allow_recursion)
+        v = self.interpret_expression(expr, local_vars, allow_recursion, is_value)
         return v, should_abort
 
-    def interpret_expression(self, expr, local_vars, allow_recursion):
+    def interpret_expression(self, expr, local_vars, allow_recursion, is_value=False):
         expr = expr.strip()
         if expr == '':  # Empty expression
             return None
 
-        if expr.startswith('{'):
+        if expr.startswith('{') and not is_value:
             inner, outer = self._seperate_at_paren(expr, '}')
             inner, should_abort = self.interpret_statement(inner, local_vars, allow_recursion - 1)
             if not outer or should_abort:
@@ -158,7 +171,7 @@ class JSInterpreter(object):
             else:
                 expr = json.dumps(inner) + outer
 
-        if expr.startswith('('):
+        if expr.startswith('(') and not is_value:
             inner, outer = self._seperate_at_paren(expr, ')')
             inner = self.interpret_expression(inner, local_vars, allow_recursion)
             if not outer:
@@ -166,7 +179,7 @@ class JSInterpreter(object):
             else:
                 expr = json.dumps(inner) + outer
 
-        if expr.startswith('['):
+        if expr.startswith('[') and not is_value:
             inner, outer = self._seperate_at_paren(expr, ']')
             name = self._named_object(local_vars, [
                 self.interpret_expression(item, local_vars, allow_recursion)
@@ -250,10 +263,11 @@ class JSInterpreter(object):
             return self.interpret_statement(expr, local_vars, allow_recursion - 1)[0]
 
         # Comma seperated statements
-        sub_expressions = list(self._seperate(expr))
-        expr = sub_expressions.pop().strip() if sub_expressions else ''
-        for sub_expr in sub_expressions:
-            self.interpret_expression(sub_expr, local_vars, allow_recursion)
+        if not is_value:
+            sub_expressions = list(self._seperate(expr))
+            expr = sub_expressions.pop().strip() if sub_expressions else ''
+            for sub_expr in sub_expressions:
+                self.interpret_expression(sub_expr, local_vars, allow_recursion)
 
         for m in re.finditer(rf'''(?x)
                 (?P<pre_sign>\+\+|--)(?P<var1>{_NAME_RE})|
@@ -309,6 +323,12 @@ class JSInterpreter(object):
             return json.loads(expr)
         except ValueError:
             pass
+
+        if is_value:
+            try:
+                return self.parse_literal(expr, local_vars)
+            except ValueError:
+                pass
 
         m = re.match(
             r'(?P<in>%s)\[(?P<idx>.+)\]$' % _NAME_RE, expr)
@@ -486,22 +506,24 @@ class JSInterpreter(object):
 
         return obj
 
-    def extract_function_code(self, funcname):
+    def extract_function_code(self, funcname, code=None):
         """ @returns argnames, code """
+        if code is None:
+            code = self.code
         func_m = re.search(
             r'''(?x)
                 (?:function\s+%s|[{;,]\s*%s\s*=\s*function|var\s+%s\s*=\s*function)\s*
                 \((?P<args>[^)]*)\)\s*
                 (?P<code>\{(?:(?!};)[^"]|"([^"]|\\")*")+\})''' % (
                 re.escape(funcname), re.escape(funcname), re.escape(funcname)),
-            self.code)
+            code)
         code, _ = self._seperate_at_paren(func_m.group('code'), '}')  # refine the match
         if func_m is None:
             raise ExtractorError('Could not find JS function %r' % funcname)
         return func_m.group('args').split(','), code
 
-    def extract_function(self, funcname):
-        return self.extract_function_from_code(*self.extract_function_code(funcname))
+    def extract_function(self, funcname, code=None):
+        return self.extract_function_from_code(*self.extract_function_code(funcname, code))
 
     def extract_function_from_code(self, argnames, code, *global_stack):
         local_vars = {}
@@ -538,3 +560,83 @@ class JSInterpreter(object):
                     break
             return ret
         return resf
+
+    def parse_literal(self, expr, local_vars, in_literal=False):
+        expr = expr.strip()
+        if not expr:
+            if in_literal:
+                raise ValueError('Giving up: you get nothing')
+            return None
+
+        if expr.isdigit():
+            return int(expr)
+
+        if expr[0] == "'":
+            # fix escapes ("\'" doesn't hurt in JS)
+            expr = '"' + expr[1:-1].replace('"', r'\"') + '"'
+        try:
+            return json.loads(expr)
+        except ValueError:
+            pass
+
+        if expr[0] == '{':
+            return self.parse_object(expr, local_vars)
+
+        if expr[0] == '[':
+            return self.parse_array(expr, local_vars)
+
+        if expr.startswith('function'):
+            # funcname can be empty
+            funcname = expr[8:expr.index('(')].strip()
+            return self.extract_function(funcname, expr)
+
+        if expr in local_vars:
+            return local_vars[expr]
+
+        raise ValueError(f'Giving up: unrecognized expression: {expr}')
+
+    def parse_object(self, expr, local_vars):
+        expr = expr.strip()[1:-1]
+        result = {}
+        for entry in self._seperate(expr, ','):
+            colon_loc = 0
+            while True:
+                try:
+                    colon_loc = entry.index(':', colon_loc + 1)
+                except ValueError as e:
+                    if colon_loc == 0:
+                        raise ValueError(f'Giving up: there\'s no colon in the object entry: {entry}') from e
+                    raise
+                key = entry[:colon_loc].strip()
+                if not key:
+                    raise ValueError(f'Giving up: key is empty: {entry}')
+                if key[0] not in '"\'':
+                    # fastest path: there is no colon in the key
+                    break
+                if key[0] == '[':
+                    # sad path: the key is also expression
+                    keyexpr = entry[1:entry.index(']')]
+                    raise ValueError(f'Giving up: the key is also expression: {keyexpr}')
+                if key[0] == key[-1]:
+                    print(key)
+                    # fast path: there's really no colon ('\x3a' is okay) in the key
+                    if key[0] == "'":
+                        # fix escapes ("\'" doesn't hurt in JS)
+                        key = '"' + key[1:-1].replace('"', r'\"') + '"'
+                    key = json.loads(key)
+                    break
+                # slow path: go through until colon outside string literal appears
+
+            value = self.parse_literal(entry[colon_loc + 1:], local_vars)
+            result[key] = value
+
+        return result
+
+    def parse_array(self, expr, local_vars):
+        expr = expr.strip()[1:-1]
+        result = []
+
+        for entry in self._seperate(expr, ','):
+            result.append(self.parse_literal(entry, local_vars))
+
+        return result

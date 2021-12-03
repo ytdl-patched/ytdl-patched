@@ -177,6 +177,37 @@ class TestJSInterpreter(unittest.TestCase):
         ''')
         self.assertEqual(jsi.call_function('x'), 7)
 
+    def test_object_literal(self):
+        if 0 == 0:
+            return
+        jsi = JSInterpreter('')
+        obj = jsi.parse_literal(r'''
+            {
+                key_without_quotes: 42,
+                'key_with_quotes_1': 42,
+                "penpineappleapplepen": 42,
+                'key_with_:': 42,
+                "key_with_:_2": 42,
+                "key_with_\" <- this": 42,
+                'key_with_\' <- this': 42,
+                "": 42,
+                "mixed \"\"\"\'\'\'':::": 42,
+                "mixed \",\'':": 'we have , and : here'
+            }
+        ''', local_vars={})
+        self.assertDictEqual(obj, {
+            'key_without_quotes': 42,
+            'key_with_quotes_1': 42,
+            'penpineappleapplepen': 42,
+            'key_with_:': 42,
+            'key_with_:_2': 42,
+            'key_with_" <- this': 42,
+            'key_with_\' <- this': 42,
+            '': 42,
+            'mixed """\'\'\'\':::': 42,
+            'mixed ",\'\':': 'we have , and : here'
+        })
+
 
 if __name__ == '__main__':
     unittest.main()
