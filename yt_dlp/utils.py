@@ -1046,11 +1046,16 @@ class MaxDownloadsReached(DownloadCancelled):
 class ReExtractInfo(YoutubeDLError):
     """ Request re-extraction in any reason. """
     msg = 'Re-extraction requested'
+    expected = True
+
+    def __init__(self):
+        super().__init__(self.msg, expected=self.expected)
 
 
 class ThrottledDownload(ReExtractInfo):
     """ Download speed below --throttled-rate. """
     msg = 'The download speed is below throttle limit'
+    expected = False
 
 
 class UnrecoverableHttpError(ReExtractInfo):
