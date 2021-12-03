@@ -2570,7 +2570,7 @@ class GenericIE(InfoExtractor):
             return self.url_result(self.http_scheme() + url)
         mobj = re.match(r'^view-source:(.+)$', url)
         if mobj:
-            self._downloader.report_warning('URL is pasted with "view-source:" appended')
+            self._downloader.report_warning('URL is pasted with "view-source:" prepended')
             return self.url_result(mobj.group(1))
 
         parsed_url = compat_urlparse.urlparse(url)
