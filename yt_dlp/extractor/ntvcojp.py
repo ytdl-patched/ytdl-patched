@@ -19,7 +19,7 @@ class NTVCoJpCUIE(InfoExtractor):
             'ext': 'mp4',
             'title': '桜エビと炒り卵がポイント！ 「中華風 エビチリおにぎり」──『美虎』五十嵐美幸',
             'upload_date': '20181213',
-            'description': 'md5:211b52f4fd60f3e0e72b68b0c6ba52a9',
+            'description': 'md5:1985b51a9abc285df0104d982a325f2a',
             'uploader_id': '3855502814001',
             'timestamp': 1544669941,
         },
@@ -28,21 +28,33 @@ class NTVCoJpCUIE(InfoExtractor):
             'skip_download': True,
         },
     }
+
     BRIGHTCOVE_URL_TEMPLATE = 'http://players.brightcove.net/%s/default_default/index.html?videoId=%s'
+    _NUXT_TEMPLATE = r'(?s)window\s*\.\s*__NUXT__\s*=\s*\(\s*function\s*\([^)]+?\)\s*{\s*return\s*{.*%s'
 
     def _real_extract(self, url):
         display_id = self._match_id(url)
         webpage = self._download_webpage(url, display_id)
         player_config = self._parse_json(self._search_regex(
-            r'(?s)PLAYER_CONFIG\s*=\s*({.+?})',
+            (self._NUXT_TEMPLATE % r'{\s*player\s*:\s*({.+?})\s*,',
+             r'(?s)PLAYER_CONFIG\s*=\s*({.+?})'),
             webpage, 'player config'), display_id, js_to_json)
-        video_id = player_config['videoId']
+        video_id = player_config.get('videoId')
+        if video_id is None:
+            video_id = self._search_regex(
+                self._NUXT_TEMPLATE % r'video_id\s*:\s*"(\d+)"\s*,',
+                webpage, 'video_id')
         account_id = player_config.get('account') or '3855502814001'
+        title = self._og_search_title(webpage, fatal=False)
+        if title:
+            title = title.split('(', 1)[0]
+        if not title:
+            title = self._html_search_regex(r'<h1[^>]+class="title"[^>]*>([^<]+)', webpage, 'title').strip()
         return {
             '_type': 'url_transparent',
             'id': video_id,
             'display_id': display_id,
-            'title': self._search_regex(r'<h1[^>]+class="title"[^>]*>([^<]+)', webpage, 'title').strip(),
+            'title': title,
             'description': self._html_search_meta(['description', 'og:description'], webpage),
             'url': smuggle_url(self.BRIGHTCOVE_URL_TEMPLATE % (account_id, video_id), {'geo_countries': ['JP']}),
             'ie_key': 'BrightcoveNew',
