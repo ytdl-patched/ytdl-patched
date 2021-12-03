@@ -1024,6 +1024,7 @@
  - **simplecast:episode**
  - **simplecast:podcast**
  - **Sina**
+ - **Skeb**
  - **sky.it**
  - **sky:news**
  - **sky:news:story**
