@@ -1579,6 +1579,7 @@ from .trovo import (
     TrovoChannelVodIE,
     TrovoChannelClipIE,
 )
+from .trueid import TrueIDIE
 from .trunews import TruNewsIE
 from .trutv import TruTVIE
 from .tube8 import Tube8IE
