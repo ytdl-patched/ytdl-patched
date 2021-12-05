@@ -1050,7 +1050,7 @@ class ReExtractInfo(YoutubeDLError):
     expected = True
 
     def __init__(self):
-        super().__init__(self.msg, expected=self.expected)
+        super().__init__(self.msg)
 
 
 class ThrottledDownload(ReExtractInfo):
@@ -1062,6 +1062,7 @@ class ThrottledDownload(ReExtractInfo):
 class UnrecoverableHttpError(ReExtractInfo):
     """ Unrecoverable errors defined by each format has been reported by downloader. """
     msg = 'An unrecoverable error has been detected'
+    expected = False
 
 
 class UnavailableVideoError(YoutubeDLError):
