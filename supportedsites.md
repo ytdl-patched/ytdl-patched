@@ -1174,6 +1174,7 @@
  - **TrovoChannelClip**: All Clips of a trovo.live channel; "trovoclip:" prefix
  - **TrovoChannelVod**: All VODs of a trovo.live channel; "trovovod:" prefix
  - **TrovoVod**
+ - **TrueID**
  - **TruNews**
  - **TruTV**
  - **Tube8**
