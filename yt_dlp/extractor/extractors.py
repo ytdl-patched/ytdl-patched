@@ -531,6 +531,7 @@ from .globo import (
 )
 from .go import GoIE
 from .godtube import GodTubeIE
+from .gofile import GofileIE
 from .golem import GolemIE
 from .googledrive import GoogleDriveIE
 from .googlepodcasts import (
