@@ -121,7 +121,8 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
-    * `mixch`
+    * `mixch` (merged in upstream)
+    * `skeb` (merged in upstream)
     * `mirrativ`, `mirrativ:user` (merged in upstream)
     * `openrec`, `openrec:capture` (merged in upstream)
     * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!) (merged in upstream)
