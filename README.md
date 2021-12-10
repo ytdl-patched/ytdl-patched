@@ -1698,6 +1698,10 @@ The following extractors use this feature:
 #### y2mate
 * `mode`: Changes mode for extraction. One of `normal` and `rush`. Defaults to `normal`.
 
+#### youtubewebarchive
+* `check_all`: Try to check more at the cost of more requests. One or more of `thumbnails`, `captures`
+
+
 NOTE: These options may be changed/removed in the future without concern for backward compatibility
 
 *1: **READ CAREFULLY**: Using it will make non-standard DMC request(s). You may be being banned of your account or IP address by using it. Use it at your own risk. <!-- It's better to use this option with `-N` if you really don't mind. -->
