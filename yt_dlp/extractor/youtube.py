@@ -447,6 +447,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         data = {'context': context} if context else {'context': self._extract_context(default_client=default_client)}
         if hl:
             data['context']['client']['hl'] = hl
+        else:
+            data['context']['client'].pop('hl', None)
         data.update(query)
         real_headers = self.generate_api_headers(default_client=default_client)
         real_headers.update({'content-type': 'application/json'})
@@ -530,7 +532,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     def generate_api_headers(
             self, *, ytcfg=None, account_syncid=None, session_index=None,
-            visitor_data=None, identity_token=None, api_hostname=None, default_client='web'):
+            visitor_data=None, identity_token=None, api_hostname=None, default_client='web',
+            hl=None):
 
         origin = 'https://' + (api_hostname if api_hostname else self._get_innertube_host(default_client))
         headers = {
@@ -542,6 +545,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             'X-Goog-PageId': account_syncid or self._extract_account_syncid(ytcfg),
             'X-Goog-Visitor-Id': visitor_data or self._extract_visitor_data(ytcfg)
         }
+        if hl:
+            headers['Accept-Language'] = hl
         if session_index is None:
             session_index = self._extract_session_index(ytcfg)
         if account_syncid or session_index is not None:
@@ -2371,7 +2376,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         syncid = self._extract_account_syncid(player_ytcfg, master_ytcfg, initial_pr)
         sts = self._extract_signature_timestamp(video_id, player_url, master_ytcfg, fatal=False) if player_url else None
         headers = self.generate_api_headers(
-            ytcfg=player_ytcfg, account_syncid=syncid, session_index=session_index, default_client=client)
+            ytcfg=player_ytcfg, account_syncid=syncid, session_index=session_index, default_client=client, hl=hl)
 
         yt_query = {'videoId': video_id}
         yt_query.update(self._generate_player_context(sts))
@@ -2709,8 +2714,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         master_ytcfg = self.extract_ytcfg(video_id, webpage) or self._get_default_ytcfg()
 
-        localized_languages = self._configuration_arg('preferred_langs')
-        primary_language = try_get(localized_languages, lambda x: x[0].split('_')[0], compat_str)
+        preferred_langs = self._configuration_arg('preferred_langs')
+        primary_language = try_get(preferred_langs, lambda x: x[0].split('_')[0], compat_str)
         player_responses, player_url = self._extract_player_responses(
             self._get_requested_clients(url, smuggled_data),
             video_id, webpage, master_ytcfg, hl=primary_language)
@@ -2741,8 +2746,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         video_description = get_first(video_details, 'shortDescription')
         orig_video_title, orig_description = None, None
 
-        if localized_languages:
-            vt, dt = self.get_localized_title_and_description(video_id, localized_languages)
+        if preferred_langs:
+            vt, dt = self.get_localized_title_and_description(video_id, preferred_langs)
             if vt and vt != video_title:
                 video_title, orig_video_title = vt, video_title
             if dt and dt != video_description:
