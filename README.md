@@ -236,7 +236,7 @@ You can install yt-dlp using one of the following methods:
 
 ### Using the release binary
 
-You can simply download the [correct binary file](#release-files) for your OS: **[[Windows](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe)] [[UNIX-like](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp)]**
+You can simply download the [correct binary file](#release-files) for your OS: **[[Windows](https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/youtube-dl-red.exe)] [[UNIX-like](https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/youtube-dl)]**
 
 In UNIX-like OSes (MacOS, Linux, BSD), you can also install the same in one of the following ways:
 
