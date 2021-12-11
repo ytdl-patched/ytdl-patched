@@ -985,7 +985,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
     _FEATURE_DEPENDENCY = ('websocket', )
 
     # sort qualities in this order to trick youtube-dl to download highest quality as default
-    _KNOWN_QUALITIES = ('abr', 'super_low', 'low', 'normal', 'high', 'super_high', '6Mbps1080p30fps')
+    _KNOWN_QUALITIES = ('abr', 'super_low', 'low', 'normal', 'high', 'super_high')
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -994,13 +994,12 @@ class NiconicoLiveIE(NiconicoBaseIE):
         embedded_data = self._search_regex(r'<script\s+id="embedded-data"\s*data-props="(.+?)"', webpage, 'embedded data')
         embedded_data = unescapeHTML(embedded_data)
         embedded_data = self._parse_json(embedded_data, video_id)
-        print(embedded_data)
 
         ws_url = embedded_data['site']['relive']['webSocketUrl']
         if not ws_url:
             raise ExtractorError('the live hasn\'t started yet or already ended', expected=True)
         ws_url = update_url_query(ws_url, {
-            'frontend_id': 9,
+            'frontend_id': '9',
         })
 
         title = try_get(
@@ -1009,7 +1008,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
              lambda x: self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)),
             compat_str)
 
-        cookies = try_get(None, lambda x: self._get_cookie_header(urlh.geturl()))
+        cookies = try_get(urlh.geturl(), self._get_cookie_header)
 
         return {
             'id': video_id,

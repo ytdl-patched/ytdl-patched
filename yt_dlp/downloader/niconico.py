@@ -105,8 +105,8 @@ class NiconicoLiveFD(FileDownloader):
                     "data": {
                         "stream": {
                             "quality": live_quality,
-                            "protocol": "hls",
-                            "latency": "high",
+                            "protocol": "hls+fmp4",
+                            "latency": "low",
                             "chasePlay": False
                         },
                         "room": {
