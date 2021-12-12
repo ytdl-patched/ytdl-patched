@@ -281,8 +281,7 @@ class OdnoklassnikiIE(InfoExtractor):
             if payment_info:
                 self.raise_no_formats('This video is paid, subscribe to download it', expected=True)
 
-        if False:
-            self._sort_formats(formats)
+        self._sort_formats(formats)
 
         info['formats'] = formats
         return info
@@ -314,6 +313,5 @@ class OdnoklassnikiIE(InfoExtractor):
                 'format_id': 'mobile',
                 'url': json_data.get('videoSrc'),
                 'ext': 'mp4',
-                'source_preference': -1,
             }]
         }
