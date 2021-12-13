@@ -501,6 +501,7 @@ from .frontendmasters import (
     FrontendMastersLessonIE,
     FrontendMastersCourseIE
 )
+from .fujitv import FujiTVFODPlus7IE
 from .funimation import (
     FunimationIE,
     FunimationPageIE,
@@ -1307,6 +1308,7 @@ from .rutube import (
     RutubeMovieIE,
     RutubePersonIE,
     RutubePlaylistIE,
+    RutubeTagsIE,
 )
 from .rutv import RUTVIE
 from .ruutu import RuutuIE
@@ -1563,6 +1565,9 @@ from .tokyomotion import (
     TokyoMotionUserIE,
     TokyoMotionSearchesIE,
     TokyoMotionScannerIE,
+)
+from .toggo import (
+    ToggoIE,
 )
 from .tokentube import (
     TokentubeIE,
