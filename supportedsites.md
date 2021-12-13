@@ -375,6 +375,7 @@
  - **FrontendMasters**
  - **FrontendMastersCourse**
  - **FrontendMastersLesson**
+ - **FujiTVFODPlus7**
  - **Funimation**
  - **funimation:page**
  - **funimation:show**
@@ -980,11 +981,12 @@
  - **RumbleChannel**
  - **RumbleEmbed**
  - **rutube**: Rutube videos
- - **rutube:channel**: Rutube channels
+ - **rutube:channel**: Rutube channel
  - **rutube:embed**: Rutube embedded videos
  - **rutube:movie**: Rutube movies
  - **rutube:person**: Rutube person videos
  - **rutube:playlist**: Rutube playlists
+ - **rutube:tags**: Rutube tags
  - **RUTV**: RUTV.RU
  - **Ruutu**
  - **Ruv**
@@ -1159,6 +1161,7 @@
  - **TNAFlix**
  - **TNAFlixNetworkEmbed**
  - **toggle**
+ - **toggo**
  - **Tokentube**
  - **Tokentube:channel**
  - **tokyomotion**
