@@ -985,7 +985,16 @@ class NiconicoLiveIE(NiconicoBaseIE):
     _FEATURE_DEPENDENCY = ('websocket', )
 
     # sort qualities in this order to trick youtube-dl to download highest quality as default
-    _KNOWN_QUALITIES = ('abr', 'super_low', 'low', 'normal', 'high', 'super_high')
+    _KNOWN_QUALITIES = (
+        # quality code, group (bitmask), tags...
+        ('abr', 3, 'all'),
+        ('super_low', 1, 'all'),
+        ('low', 1, 'all'),
+        ('normal', 1, 'all'),
+        ('high', 1, 'all'),
+        ('super_high', 1, 'all'),
+    )
+    _KNOWN_LATENCY = ('high', 'low')
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -1002,6 +1011,10 @@ class NiconicoLiveIE(NiconicoBaseIE):
             'frontend_id': '9',
         })
 
+        latency = try_get(self._configuration_arg('latency'), lambda x: x[0])
+        if latency not in self._KNOWN_LATENCY:
+            latency = 'high'
+
         title = try_get(
             None,
             (lambda x: embedded_data['program']['title'],
@@ -1016,12 +1029,13 @@ class NiconicoLiveIE(NiconicoBaseIE):
             'formats': [{
                 'url': ws_url,
                 'protocol': 'niconico_live',
-                'format_id': '%s' % quality,
+                'format_id': '%s' % quality[0],
                 'video_id': video_id,
                 'cookies': cookies,
                 'ext': 'mp4',
                 'is_live': True,
                 'live_quality': quality,
+                'live_latency': latency,
             } for quality in self._KNOWN_QUALITIES],
             'is_live': True,
         }

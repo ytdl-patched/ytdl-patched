@@ -1695,6 +1695,10 @@ The following extractors use this feature:
 * `segment_duration` *1: Changes segment duration (in **milliseconds**) for DMC formats. Only have effects for HLS formats.
 * `player_size`: Modifies the simulated size of player, needed to convert comments to subtitles. `16:9`, `4:3` and size specification (`WIDTHxHEIGHT`) are accepted.
 
+#### niconicolive (niconico:live)
+* `latency`: Latency option either `high` or `low`. Default is `low`.
+* `format_set`: Reserved.
+
 #### y2mate
 * `mode`: Changes mode for extraction. One of `normal` and `rush`. Defaults to `normal`.
 
