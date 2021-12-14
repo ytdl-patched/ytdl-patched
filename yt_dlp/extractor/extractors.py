@@ -882,6 +882,10 @@ from .n1 import (
     N1InfoAssetIE,
     N1InfoIIE,
 )
+from .nate import (
+    NateIE,
+    NateProgramIE,
+)
 from .nationalgeographic import (
     NationalGeographicVideoIE,
     NationalGeographicTVIE,
