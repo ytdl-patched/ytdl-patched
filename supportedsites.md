@@ -671,6 +671,8 @@
  - **n-tv.de**
  - **N1Info:article**
  - **N1InfoAsset**
+ - **Nate**
+ - **NateProgram**
  - **natgeo:video**
  - **NationalGeographicTV**
  - **Naver**
