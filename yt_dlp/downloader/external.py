@@ -13,6 +13,7 @@ from ..compat import (
     compat_str,
 )
 from ..postprocessor.ffmpeg import FFmpegPostProcessor, EXT_TO_OUT_FORMATS
+from ..postprocessor._ffmpeg_progress import RunsFFmpeg
 from ..utils import (
     cli_option,
     cli_valueless_option,
@@ -317,7 +318,7 @@ class HttpieFD(ExternalFD):
         return cmd
 
 
-class FFmpegFD(ExternalFD):
+class FFmpegFD(ExternalFD, RunsFFmpeg):
     SUPPORTED_PROTOCOLS = ('http', 'https', 'ftp', 'ftps', 'm3u8', 'm3u8_native', 'rtsp', 'rtmp', 'rtmp_ffmpeg', 'mms', 'http_dash_segments')
     can_download_to_stdout = True
 
@@ -476,16 +477,29 @@ class FFmpegFD(ExternalFD):
 
         args += self._configuration_args(('_o1', '_o', ''))
 
+        use_native_progress = False
+
         args = [encodeArgument(opt) for opt in args]
         args.append(encodeFilename(ffpp._ffmpeg_filename_argument(tmpfilename), True))
+        if use_native_progress:
+            args.extend(['-progress', 'pipe:1'])
         self._debug_cmd(args)
 
-        proc = Popen(args, stdin=subprocess.PIPE, env=env)
+        if use_native_progress:
+            proc = Popen(
+                args, env=env, universal_newlines=True,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        else:
+            proc = Popen(args, stdin=subprocess.PIPE, env=env)
+
         if url in ('-', 'pipe:'):
             self.on_process_started(proc, proc.stdin)
         try:
             retval = -1
-            retval = proc.wait()
+            if use_native_progress:
+                retval = self.read_ffmpeg_status(info_dict, proc, False)
+            else:
+                retval = proc.wait()
         except BaseException as e:
             # subprocces.run would send the SIGKILL signal to ffmpeg and the
             # mp4 file couldn't be played, but if we ask ffmpeg to quit it

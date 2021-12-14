@@ -10,6 +10,7 @@ import json
 
 from ..longname import split_longname_str
 from .common import AudioConversionError, PostProcessor
+from ._ffmpeg_progress import RunsFFmpeg
 
 from ..compat import compat_str
 from ..utils import (
@@ -62,7 +63,7 @@ class FFmpegPostProcessorError(PostProcessingError):
     pass
 
 
-class FFmpegPostProcessor(PostProcessor):
+class FFmpegPostProcessor(PostProcessor, RunsFFmpeg):
     def __init__(self, downloader=None):
         PostProcessor.__init__(self, downloader)
         self._determine_executables()
@@ -282,7 +283,7 @@ class FFmpegPostProcessor(PostProcessor):
             [(path, []) for path in input_paths],
             [(out_path, opts)], **kwargs)
 
-    def real_run_ffmpeg(self, input_path_opts, output_path_opts, *, expected_retcodes=(0,)):
+    def real_run_ffmpeg(self, input_path_opts, output_path_opts, *, expected_retcodes=(0,), info_dict=None):
         self.check_version()
 
         oldest_mtime = min(
@@ -311,11 +312,25 @@ class FFmpegPostProcessor(PostProcessor):
 
         self.write_debug('ffmpeg command line: %s' % shell_quote(cmd))
         p = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+
+        # TODO: uncomment this after https://github.com/yt-dlp/yt-dlp/pull/1947 gets merged
+        # try:
+        #     stdout, stderr = p.communicate_or_kill(timeout=1)
+        # except subprocess.TimeoutExpired as e:
+        #     stdout, stderr = list(map(lambda x: x or '', (e.stdout, e.stderr)))
+
+        # retval = self.read_ffmpeg_status(info_dict, p, True)
+        # if retval not in variadic(expected_retcodes):
+        #     stderr = stderr.decode('utf-8', 'replace').strip()
+        #     self.write_debug(stderr)
+        #     raise FFmpegPostProcessorError(stderr.split('\n')[-1])
+
         stdout, stderr = p.communicate_or_kill()
         if p.returncode not in variadic(expected_retcodes):
             stderr = stderr.decode('utf-8', 'replace').strip()
             self.write_debug(stderr)
             raise FFmpegPostProcessorError(stderr.split('\n')[-1])
+
         for out_path, _ in output_path_opts:
             if out_path:
                 self.try_utime(out_path, oldest_mtime, oldest_mtime)
@@ -437,14 +452,14 @@ class FFmpegExtractAudioPP(FFmpegPostProcessor):
             return ['-vbr', f'{int(q)}']
         return ['-q:a', f'{q}']
 
-    def run_ffmpeg(self, path, out_path, codec, more_opts):
+    def run_ffmpeg(self, path, out_path, codec, more_opts, information=None):
         if codec is None:
             acodec_opts = []
         else:
             acodec_opts = ['-acodec', codec]
         opts = ['-vn'] + acodec_opts + more_opts
         try:
-            FFmpegPostProcessor.run_ffmpeg(self, path, out_path, opts)
+            FFmpegPostProcessor.run_ffmpeg(self, path, out_path, opts, info_dict=information)
         except FFmpegPostProcessorError as err:
             raise AudioConversionError(err.msg)
 
@@ -518,7 +533,7 @@ class FFmpegExtractAudioPP(FFmpegPostProcessor):
 
         try:
             self.to_screen(f'Destination: {new_path}')
-            self.run_ffmpeg(path, temp_path, acodec, more_opts)
+            self.run_ffmpeg(path, temp_path, acodec, more_opts, information)
         except AudioConversionError as e:
             raise PostProcessingError(
                 'audio conversion failed: ' + e.msg)
