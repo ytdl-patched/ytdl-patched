@@ -7,8 +7,8 @@ import subprocess
 import time
 import re
 import json
-from yt_dlp.longname import split_longname_str
 
+from ..longname import split_longname_str
 from .common import AudioConversionError, PostProcessor
 
 from ..compat import compat_str
