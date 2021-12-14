@@ -342,6 +342,18 @@ def parseOpts(overrideArguments=None):
         default=True,
         help='Do not lock downloading exclusively. '
              'Download will start even if other process is working on it.')
+    general.add_option(
+        '--ffmpeg-native-progress', '--use-ffmpeg-native-progress', '--enable-ffmpeg-native-progress',
+        action='store_true', dest='enable_ffmpeg_native_progress',
+        default=False,
+        help=('Show FFmpeg download (and postprocessing in the future) progress with built-in progress. '
+              'This is an experimental feature, and disabled on live streams. (see yt-dlp/yt-dlp#1947)'))
+    general.add_option(
+        '--no-ffmpeg-native-progress', '--disable-ffmpeg-native-progress',
+        action='store_false', dest='enable_ffmpeg_native_progress',
+        default=False,
+        help=('Show FFmpeg download (and postprocessing in the future) progress with built-in progress. '
+              'This is an experimental feature, and disabled on live streams. (see yt-dlp/yt-dlp#1947)'))
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(

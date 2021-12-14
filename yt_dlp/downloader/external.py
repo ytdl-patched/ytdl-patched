@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import time
+import signal
 
 from .fragment import FragmentFD
 from ..compat import (
@@ -362,8 +363,11 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             if self.params.get(log_level, False):
                 args += ['-loglevel', log_level]
                 break
-        if not self.params.get('verbose'):
+        verbose = self.params.get('verbose')
+        if not verbose:
             args += ['-hide_banner']
+
+        live = info_dict.get('live') or info_dict.get('is_live')
 
         args += info_dict.get('_ffmpeg_args', [])
 
@@ -477,7 +481,10 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
 
         args += self._configuration_args(('_o1', '_o', ''))
 
-        use_native_progress = False
+        use_native_progress = (
+            self.params.get('enable_ffmpeg_native_progress')
+            and not verbose
+            and not live)
 
         args = [encodeArgument(opt) for opt in args]
         args.append(encodeFilename(ffpp._ffmpeg_filename_argument(tmpfilename), True))
@@ -497,7 +504,13 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
         try:
             retval = -1
             if use_native_progress:
-                retval = self.read_ffmpeg_status(info_dict, proc, False)
+                try:
+                    retval = self.read_ffmpeg_status(info_dict, proc, False)
+                except KeyboardInterrupt:
+                    # forward SIGINT and get return value
+                    proc.send_signal(signal.SIGINT.value)
+                    retval = proc.wait()
+                    raise
             else:
                 retval = proc.wait()
         except BaseException as e:

@@ -809,6 +809,7 @@ def _real_main(argv=None):
         'lock_exclusive': opts.lock_exclusive,
         'use_modern_tls_cipher': opts.use_modern_tls_cipher,
         'continue_on_any_sock_error': opts.continue_on_any_sock_error,
+        'enable_ffmpeg_native_progress': opts.enable_ffmpeg_native_progress,
     }
 
     with YoutubeDL(ydl_opts) as ydl:

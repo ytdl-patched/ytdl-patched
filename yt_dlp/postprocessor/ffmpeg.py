@@ -64,6 +64,11 @@ class FFmpegPostProcessorError(PostProcessingError):
 
 
 class FFmpegPostProcessor(PostProcessor, RunsFFmpeg):
+    # Do NOT enable unless the PP runs ffmpeg ONLY ONCE
+    # ref. https://discord.com/channels/807245652072857610/808027148308840478/920337647732404244
+    #      (yt-dlp contributors only)
+    _NATIVE_PROGRESS_ENABLED = False
+
     def __init__(self, downloader=None):
         PostProcessor.__init__(self, downloader)
         self._determine_executables()
@@ -313,20 +318,25 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg):
         self.write_debug('ffmpeg command line: %s' % shell_quote(cmd))
         p = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
-        # TODO: uncomment this after https://github.com/yt-dlp/yt-dlp/pull/1947 gets merged
-        # try:
-        #     stdout, stderr = p.communicate_or_kill(timeout=1)
-        # except subprocess.TimeoutExpired as e:
-        #     stdout, stderr = list(map(lambda x: x or '', (e.stdout, e.stderr)))
+        # don't take --verbose in account since PPs don't redirect ffmpeg output to respective stdfds
+        # also, PPs currently have no way to show its process by itself now
+        use_native_progress = (
+            False
+            and self._downloader.params.get('enable_ffmpeg_native_progress')
+            and self._NATIVE_PROGRESS_ENABLED)
 
-        # retval = self.read_ffmpeg_status(info_dict, p, True)
-        # if retval not in variadic(expected_retcodes):
-        #     stderr = stderr.decode('utf-8', 'replace').strip()
-        #     self.write_debug(stderr)
-        #     raise FFmpegPostProcessorError(stderr.split('\n')[-1])
+        if use_native_progress:
+            try:
+                stdout, stderr = p.communicate_or_kill(timeout=1)
+            except subprocess.TimeoutExpired as e:
+                stdout, stderr = list(map(lambda x: x or '', (e.stdout, e.stderr)))
 
-        stdout, stderr = p.communicate_or_kill()
-        if p.returncode not in variadic(expected_retcodes):
+            retval = self.read_ffmpeg_status(info_dict, p, True)
+        else:
+            stdout, stderr = p.communicate_or_kill()
+            retval = p.returncode
+
+        if retval not in variadic(expected_retcodes):
             stderr = stderr.decode('utf-8', 'replace').strip()
             self.write_debug(stderr)
             raise FFmpegPostProcessorError(stderr.split('\n')[-1])
@@ -832,6 +842,8 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
 
 
 class FFmpegMergerPP(FFmpegPostProcessor):
+    _NATIVE_PROGRESS_ENABLED = True
+
     @PostProcessor._restrict_to(images=False)
     def run(self, info):
         filename = info['filepath']
