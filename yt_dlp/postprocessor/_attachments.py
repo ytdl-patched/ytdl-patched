@@ -1,5 +1,6 @@
 import re
 import time
+import os
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -9,6 +10,7 @@ if TYPE_CHECKING:
 from ..utils import (
     timetuple_from_msec,
     format_bytes,
+    to_str,
 )
 from ..minicurses import (
     MultilinePrinterBase,
@@ -68,22 +70,17 @@ class RunsFFmpeg(object):
                 total_filesize += fmt['filesize_approx']
                 is_approx = True
             elif fmt.get('filepath'):
-                # PPs are give this
-                total_filesize += fmt['filepath']
+                # PPs are given this
+                total_filesize += os.path.getsize(fmt['filepath'])
+                is_approx = True
 
-        if total_filesize:
-            if is_approx:
-                status = {'total_bytes': total_filesize}
-            else:
-                status = {'total_bytes_estimate': total_filesize}
-        else:
-            status = {}
-
-        status.update({
+        status = {
+            '__from_ffmpeg_native_status': True,
             'filename': info_dict.get('_filename'),
             'status': 'processing' if is_pp else 'downloading',
             'elapsed': 0,
-        })
+            ('total_bytes_estimate' if is_approx else 'total_bytes'): total_filesize,
+        }
 
         progress_pattern = re.compile(
             r'(frame=\s*(?P<frame>\S+)\nfps=\s*(?P<fps>\S+)\nstream_0_0_q=\s*(?P<stream_0_0_q>\S+)\n)?bitrate=\s*(?P<bitrate>\S+)\ntotal_size=\s*(?P<total_size>\S+)\nout_time_us=\s*(?P<out_time_us>\S+)\nout_time_ms=\s*(?P<out_time_ms>\S+)\nout_time=\s*(?P<out_time>\S+)\ndup_frames=\s*(?P<dup_frames>\S+)\ndrop_frames=\s*(?P<drop_frames>\S+)\nspeed=\s*(?P<speed>\S+)\nprogress=\s*(?P<progress>\S+)')
@@ -92,7 +89,7 @@ class RunsFFmpeg(object):
         ffmpeg_stdout_buffer = ''
 
         while retval is None:
-            ffmpeg_stdout = proc.stdout.readline() if proc.stdout is not None else ''
+            ffmpeg_stdout = to_str(proc.stdout.readline() if proc.stdout is not None else '')
             if ffmpeg_stdout:
                 ffmpeg_stdout_buffer += ffmpeg_stdout
                 ffmpeg_prog_infos = re.match(progress_pattern, ffmpeg_stdout_buffer)
@@ -134,9 +131,8 @@ class RunsFFmpeg(object):
             retval = proc.poll()
         status.update({
             'status': 'finished',
-            'processed_bytes': total_filesize,
-            'downloaded_bytes': total_filesize,
-            '__from_ffmpeg_native_status': True,
+            'processed_bytes': dl_bytes_int,
+            'downloaded_bytes': dl_bytes_int,
         })
         self._hook_progress(status, info_dict)
 

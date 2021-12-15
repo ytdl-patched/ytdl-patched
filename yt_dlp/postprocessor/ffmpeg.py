@@ -77,9 +77,14 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
         self._PROGRESS_LABEL = self.pp_key()
         self._determine_executables()
 
+    @property
+    def use_native_progress(self):
+        # don't take --verbose in account since PPs don't redirect ffmpeg output to respective stdfds
+        return self._NATIVE_PROGRESS_ENABLED and self._downloader and self._downloader.params.get('enable_ffmpeg_native_progress')
+
     def set_downloader(self, downloader):
         PostProcessor.set_downloader(self, downloader)
-        if self._NATIVE_PROGRESS_ENABLED and self._downloader and self._downloader.params.get('enable_ffmpeg_native_progress'):
+        if self.use_native_progress:
             self._enable_progress(False)
 
     def check_version(self):
@@ -304,6 +309,10 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
             self._downloader.stat(path).st_mtime for path, _ in input_path_opts if path)
 
         cmd = [encodeFilename(self.executable, True), encodeArgument('-y')]
+
+        use_native_progress = self.use_native_progress
+        if use_native_progress:
+            cmd.extend(['-progress', 'pipe:1'])
         # avconv does not have repeat option
         if self.basename == 'ffmpeg':
             cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info')]
@@ -326,12 +335,6 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
 
         self.write_debug('ffmpeg command line: %s' % shell_quote(cmd))
         p = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-
-        # don't take --verbose in account since PPs don't redirect ffmpeg output to respective stdfds
-        # also, PPs currently have no way to show its process by itself now
-        use_native_progress = (
-            self._downloader.params.get('enable_ffmpeg_native_progress')
-            and self._NATIVE_PROGRESS_ENABLED)
 
         if use_native_progress:
             # try:
@@ -443,14 +446,11 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
                     yield f'{directive} {opts[directive]}\n'
 
     def report_progress(self, s):
-        use_native_progress = (
-            self._downloader.params.get('enable_ffmpeg_native_progress')
-            and self._NATIVE_PROGRESS_ENABLED)
-        if use_native_progress:
-            if s.get('status') == 'finshed' and not s.get('__from_ffmpeg_native_status'):
+        if self.use_native_progress:
+            if s.get('status') == 'finished' and not s.get('__from_ffmpeg_native_status'):
                 return
             ShowsProgress.report_progress(self, s)
-        return PostProcessor.report_progress(self, s)
+        PostProcessor.report_progress(self, s)
 
 
 class FFmpegExtractAudioPP(FFmpegPostProcessor):
@@ -883,7 +883,7 @@ class FFmpegMergerPP(FFmpegPostProcessor):
             if fmt.get('vcodec') != 'none':
                 args.extend(['-map', '%u:v:0' % (i)])
         self.to_screen('Merging formats into "%s"' % filename)
-        self.run_ffmpeg_multiple_files(info['__files_to_merge'], temp_filename, args)
+        self.run_ffmpeg_multiple_files(info['__files_to_merge'], temp_filename, args, info_dict=info)
         self._downloader.rename(temp_filename, filename)
         return info['__files_to_merge'], info
 
