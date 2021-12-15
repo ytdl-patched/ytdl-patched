@@ -62,30 +62,42 @@ class RunsFFmpeg(object):
             info_dict = {}
         started, total_filesize, total_time_to_dl, dl_bytes_int = time.time(), 0, None, None
 
-        total_filesize, is_approx = 0, False
+        total_filesize = 0
         for fmt in info_dict.get('requested_formats') or [info_dict]:
-            if total_filesize:
-                # there's at least 2 or more files
-                is_approx = True
-            if fmt.get('filesize'):
+            if fmt.get('filepath'):
+                # PPs are given this
+                total_filesize += os.path.getsize(fmt['filepath'])
+            elif fmt.get('filesize'):
                 total_filesize += fmt['filesize']
             elif fmt.get('filesize_approx'):
                 total_filesize += fmt['filesize_approx']
-                is_approx = True
-            elif fmt.get('filepath'):
-                # PPs are given this
-                total_filesize += os.path.getsize(fmt['filepath'])
+
+        duration = info_dict.get('duration')
+        guessed_size = total_filesize
 
         status = {
             '__from_ffmpeg_native_status': True,
             'filename': info_dict.get('_filename'),
             'status': 'processing' if is_pp else 'downloading',
             'elapsed': 0,
-            ('total_bytes_estimate' if is_approx else 'total_bytes'): total_filesize,
+            'total_bytes_estimate': total_filesize,
         }
 
         progress_pattern = re.compile(
-            r'(frame=\s*(?P<frame>\S+)\nfps=\s*(?P<fps>\S+)\nstream_0_0_q=\s*(?P<stream_0_0_q>\S+)\n)?bitrate=\s*(?P<bitrate>\S+)\ntotal_size=\s*(?P<total_size>\S+)\nout_time_us=\s*(?P<out_time_us>\S+)\nout_time_ms=\s*(?P<out_time_ms>\S+)\nout_time=\s*(?P<out_time>\S+)\ndup_frames=\s*(?P<dup_frames>\S+)\ndrop_frames=\s*(?P<drop_frames>\S+)\nspeed=\s*(?P<speed>\S+)\nprogress=\s*(?P<progress>\S+)')
+            r'''(?x)
+                (frame=\s*(?P<frame>\S+)\n
+                fps=\s*(?P<fps>\S+)\n
+                stream_0_0_q=\s*(?P<stream_0_0_q>\S+)\n)?
+                bitrate=\s*(?P<bitrate>\S+)\n
+                total_size=\s*(?P<total_size>\S+)\n
+                out_time_us=\s*(?P<out_time_us>\S+)\n
+                out_time_ms=\s*(?P<out_time_ms>\S+)\n
+                out_time=\s*(?P<out_time>\S+)\n
+                dup_frames=\s*(?P<dup_frames>\S+)\n
+                drop_frames=\s*(?P<drop_frames>\S+)\n
+                speed=\s*(?P<speed>\S+)\n
+                progress=\s*(?P<progress>\S+)
+            ''')
 
         retval = proc.poll()
         ffmpeg_stdout_buffer = ''
@@ -101,10 +113,10 @@ class RunsFFmpeg(object):
                     ffmpeg_stdout = ''
                     speed = None if ffmpeg_prog_infos['speed'] == 'N/A' else float(ffmpeg_prog_infos['speed'][:-1])
 
+                    out_time = self.parse_ffmpeg_time_string(ffmpeg_prog_infos['out_time'])
                     eta_seconds = None
                     if speed and total_time_to_dl:
-                        eta_seconds = (total_time_to_dl - self.parse_ffmpeg_time_string(
-                            ffmpeg_prog_infos['out_time'])) / speed
+                        eta_seconds = (total_time_to_dl - out_time) / speed
                         if eta_seconds < 0:
                             eta_seconds = None
                     if eta_seconds is None and total_filesize and dl_bytes_int:
@@ -112,6 +124,9 @@ class RunsFFmpeg(object):
                         eta_seconds = (total_filesize - dl_bytes_int) * status['elapsed'] / dl_bytes_int
                         if eta_seconds < 0:
                             eta_seconds = None
+
+                    if duration and total_filesize and dl_bytes_int and out_time:
+                        guessed_size = dl_bytes_int * duration / out_time
 
                     bitrate_int = None
                     bitrate_str = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', ffmpeg_prog_infos['bitrate'])
@@ -125,7 +140,8 @@ class RunsFFmpeg(object):
                         'processed_bytes': dl_bytes_int,
                         'downloaded_bytes': dl_bytes_int,
                         'speed': bitrate_int / 8,
-                        'eta': eta_seconds
+                        'eta': eta_seconds,
+                        'total_bytes_estimate': guessed_size,
                     })
                     self._hook_progress(status, info_dict)
                     ffmpeg_stdout_buffer = ''
