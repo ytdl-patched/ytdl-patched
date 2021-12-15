@@ -64,6 +64,9 @@ class RunsFFmpeg(object):
 
         total_filesize, is_approx = 0, False
         for fmt in info_dict.get('requested_formats') or [info_dict]:
+            if total_filesize:
+                # there's at least 2 or more files
+                is_approx = True
             if fmt.get('filesize'):
                 total_filesize += fmt['filesize']
             elif fmt.get('filesize_approx'):
@@ -72,7 +75,6 @@ class RunsFFmpeg(object):
             elif fmt.get('filepath'):
                 # PPs are given this
                 total_filesize += os.path.getsize(fmt['filepath'])
-                is_approx = True
 
         status = {
             '__from_ffmpeg_native_status': True,
