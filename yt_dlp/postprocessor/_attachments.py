@@ -135,6 +135,7 @@ class RunsFFmpeg(object):
             'status': 'finished',
             'processed_bytes': dl_bytes_int,
             'downloaded_bytes': dl_bytes_int,
+            'total_bytes': dl_bytes_int,
         })
         self._hook_progress(status, info_dict)
 
