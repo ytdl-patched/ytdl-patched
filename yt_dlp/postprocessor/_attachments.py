@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 
 from ..utils import (
+    int_or_none,
     timetuple_from_msec,
     format_bytes,
     to_str,
@@ -101,6 +102,7 @@ class RunsFFmpeg(object):
 
         retval = proc.poll()
         ffmpeg_stdout_buffer = ''
+        time_and_size, avg_len = [], 10
 
         while retval is None:
             ffmpeg_stdout = to_str(proc.stdout.readline() if proc.stdout is not None else '')
@@ -125,21 +127,31 @@ class RunsFFmpeg(object):
                         if eta_seconds < 0:
                             eta_seconds = None
 
-                    if duration and total_filesize and dl_bytes_int and out_time:
+                    if duration and dl_bytes_int and out_time:
                         guessed_size = dl_bytes_int * duration / out_time
+                    # reduce terminal flick caused by drastic estimation change
+                    if total_filesize and guessed_size and (abs(guessed_size - total_filesize) / total_filesize) > 0.1:
+                        guessed_size = total_filesize
 
                     bitrate_int = None
                     bitrate_str = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', ffmpeg_prog_infos['bitrate'])
 
                     if bitrate_str:
                         bitrate_int = self.compute_prefix(bitrate_str)
-                    dl_bytes_str = re.match(r'\d+', ffmpeg_prog_infos['total_size'])
-                    dl_bytes_int = int(ffmpeg_prog_infos['total_size']) if dl_bytes_str else 0
+                    dl_bytes_int = int_or_none(ffmpeg_prog_infos['total_size'], default=0)
+                    time_and_size.append((dl_bytes_int, time.time()))
+                    time_and_size = time_and_size[-avg_len:]
+                    if len(time_and_size) > 1:
+                        last, early = time_and_size[0], time_and_size[-1]
+                        average_speed = (early[0] - last[0]) / (early[1] - last[1])
+                    else:
+                        average_speed = None
 
                     status.update({
                         'processed_bytes': dl_bytes_int,
                         'downloaded_bytes': dl_bytes_int,
-                        'speed': bitrate_int / 8,
+                        'speed': average_speed,
+                        'bitrate': bitrate_int / 8,
                         'eta': eta_seconds,
                         'total_bytes_estimate': guessed_size,
                     })
