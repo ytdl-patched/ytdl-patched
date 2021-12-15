@@ -151,6 +151,7 @@ class RunsFFmpeg(object):
                         'processed_bytes': dl_bytes_int,
                         'downloaded_bytes': dl_bytes_int,
                         'speed': average_speed,
+                        'speed_rate': speed,
                         'bitrate': bitrate_int / 8,
                         'eta': eta_seconds,
                         'total_bytes_estimate': guessed_size,
@@ -236,6 +237,12 @@ class ShowsProgress(object):
         if speed is None:
             return '%10s' % '---b/s'
         return '%10s' % ('%s/s' % format_bytes(speed))
+
+    @staticmethod
+    def format_speed_rate(rate):
+        if rate is None:
+            return '---x'
+        return '%.2dx' % rate
 
     @staticmethod
     def format_retries(retries):
@@ -354,7 +361,9 @@ class ShowsProgress(object):
             else:
                 s['_percent_str'] = 'Unknown %'
 
-        if s.get('speed') is not None:
+        if s.get('speed_rate') is not None:
+            s['_speed_str'] = self.format_speed_rate(s['speed_rate'])
+        elif s.get('speed') is not None:
             s['_speed_str'] = self.format_speed(s['speed'])
         else:
             s['_speed_str'] = 'Unknown speed'
