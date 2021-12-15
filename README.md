@@ -1247,6 +1247,8 @@ The available fields are:
  - `playlist_uploader` (string): Full name of the playlist uploader
  - `playlist_uploader_id` (string): Nickname or id of the playlist uploader
  - `webpage_url` (string): A URL to the video webpage which if given to yt-dlp should allow to get the same result again
+ - `webpage_url_basename` (string): The basename of the webpage URL
+ - `webpage_url_domain` (string): The domain of the webpage URL
  - `original_url` (string): The URL given by the user (or same as `webpage_url` for playlist entries)
  - `orig_title` (string): Original video title, when extractor altered the title in any reason
  - `orig_description` (string): The original description of the video, when extractor altered the description in any reason
@@ -1673,9 +1675,11 @@ The following extractors use this feature:
 * `player_skip`: Skip some network requests that are generally needed for robust extraction. One or more of `configs` (skip client configs), `webpage` (skip initial webpage), `js` (skip js player). While these options can help reduce the number of requests needed or avoid some rate-limiting, they could cause some issues. See [#860](https://github.com/yt-dlp/yt-dlp/pull/860) for more details
 * `include_live_dash`: Include live dash formats (These formats don't download properly)
 * `comment_sort`: `top` or `new` (default) - choose comment sorting mode (on YouTube's side)
-* `max_comments`: Maximum amount of comments to download (default all)
-* `max_comment_depth`: Maximum depth for nested comments. YouTube supports depths 1 or 2 (default)
-* `preferred_langs`: List of languages (in 2-charactor code) to prefer for title and description, separated by comma. Original title and description based on your region or settings are still available at `orig_*` key. (See [output template](#output-template) section for these keys)
+* `max_comments`: Limit the amount of comments to gather. Comma-seperated list of integers representing `max-comments,max-parents,max-replies,max-replies-per-thread`. Default is `all,all,all,all`.
+    * E.g. `all,all,1000,10` will get a maximum of 1000 replies total, with up to 10 replies per thread. `1000,all,100` will get a maximum of 1000 comments, with a maximum of 100 replies total.
+* `max_comment_depth` Maximum depth for nested comments. YouTube supports depths 1 or 2 (default)
+    * **Deprecated**: Set `max-replies` to `0` or `all` in `max_comments` instead (e.g. `max_comments=all,all,0` to get no replies) 
+* `preferred_langs`: List of languages (in 2-charactor code) to prefer for title and description, separated by comma. Original title and description based on your region or settings are still available at `orig_*` key. (See [output template](#output-template) section for about these keys)
 
 #### youtubetab (YouTube playlists, channels, feeds, etc.)
 * `skip`: One or more of `webpage` (skip initial webpage download), `authcheck` (allow the download of playlists requiring authentication when no initial webpage is downloaded. This may cause unwanted behavior, see [#1122](https://github.com/yt-dlp/yt-dlp/pull/1122) for more details)

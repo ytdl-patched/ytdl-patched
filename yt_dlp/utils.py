@@ -2346,6 +2346,8 @@ def remove_quotes(s):
 
 
 def get_domain(url):
+    if not url:
+        return url
     domain = re.match(r'(?:https?:\/\/)?(?:www\.)?(?P<domain>[^\n\/]+\.[^\n\/]+)(?:\/(.*))?', url)
     return domain.group('domain') if domain else None
 

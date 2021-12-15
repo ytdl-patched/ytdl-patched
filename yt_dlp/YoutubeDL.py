@@ -74,6 +74,7 @@ from .utils import (
     format_field,
     formatSeconds,
     GeoRestrictedError,
+    get_domain,
     HEADRequest,
     int_or_none,
     iri_to_uri,
@@ -687,13 +688,6 @@ class YoutubeDL(object):
                 self.print_debug_header()
             self.add_default_info_extractors()
 
-        for pp_def_raw in self.params.get('postprocessors', []):
-            pp_def = dict(pp_def_raw)
-            when = pp_def.pop('when', 'post_process')
-            pp_class = get_postprocessor(pp_def.pop('key'))
-            pp = pp_class(self, **compat_kwargs(pp_def))
-            self.add_post_processor(pp, when=when)
-
         hooks = {
             'post_hooks': self.add_post_hook,
             'progress_hooks': self.add_progress_hook,
@@ -702,6 +696,13 @@ class YoutubeDL(object):
         for opt, fn in hooks.items():
             for ph in self.params.get(opt, []):
                 fn(ph)
+
+        for pp_def_raw in self.params.get('postprocessors', []):
+            pp_def = dict(pp_def_raw)
+            when = pp_def.pop('when', 'post_process')
+            self.add_post_processor(
+                get_postprocessor(pp_def.pop('key'))(self, **compat_kwargs(pp_def)),
+                when=when)
 
         register_socks_protocols()
 
@@ -789,6 +790,9 @@ class YoutubeDL(object):
     def add_postprocessor_hook(self, ph):
         """Add the postprocessing progress hook"""
         self._postprocessor_hooks.append(ph)
+        for pps in self._pps.values():
+            for pp in pps:
+                pp.add_progress_hook(ph)
 
     def _bidi_workaround(self, message):
         if not hasattr(self, '_output_channel'):
@@ -1484,6 +1488,7 @@ class YoutubeDL(object):
                 'webpage_url': url,
                 'original_url': url,
                 'webpage_url_basename': url_basename(url),
+                'webpage_url_domain': get_domain(url),
             })
         if ie is not None:
             self.add_extra_info(ie_result, {
@@ -1608,6 +1613,7 @@ class YoutubeDL(object):
                     'extractor': ie_result.get('extractor'),
                     'webpage_url': ie_result['webpage_url'],
                     'webpage_url_basename': url_basename(ie_result['webpage_url']),
+                    'webpage_url_domain': get_domain(ie_result['webpage_url']),
                     'extractor_key': ie_result['extractor_key'],
                 })
                 return r
@@ -1771,6 +1777,7 @@ class YoutubeDL(object):
                 'extractor': ie_result.get('extractor'),
                 'webpage_url': ie_result.get('webpage_url'),
                 'webpage_url_basename': url_basename(ie_result.get('webpage_url')),
+                'webpage_url_domain': get_domain(ie_result.get('webpage_url')),
                 'extractor_key': ie_result.get('extractor_key'),
             }
 
