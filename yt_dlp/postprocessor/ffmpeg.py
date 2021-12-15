@@ -10,7 +10,7 @@ import json
 
 from ..longname import split_longname_str
 from .common import AudioConversionError, PostProcessor
-from ._ffmpeg_progress import RunsFFmpeg
+from ._attachments import RunsFFmpeg, ShowsProgress
 
 from ..compat import compat_str
 from ..utils import (
@@ -60,18 +60,27 @@ ACODECS = {
 
 
 class FFmpegPostProcessorError(PostProcessingError):
-    pass
+    def __init__(self, msg=None, retval=None):
+        super().__init__(msg=msg)
+        self.retval = retval
 
 
-class FFmpegPostProcessor(PostProcessor, RunsFFmpeg):
+class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
     # Do NOT enable unless the PP runs ffmpeg ONLY ONCE
     # ref. https://discord.com/channels/807245652072857610/808027148308840478/920337647732404244
     #      (yt-dlp contributors only)
     _NATIVE_PROGRESS_ENABLED = False
 
     def __init__(self, downloader=None):
+        ShowsProgress.__init__(self, downloader)
         PostProcessor.__init__(self, downloader)
+        self._PROGRESS_LABEL = self.pp_key()
         self._determine_executables()
+
+    def set_downloader(self, downloader):
+        PostProcessor.set_downloader(self, downloader)
+        if self._NATIVE_PROGRESS_ENABLED and self._downloader and self._downloader.params.get('enable_ffmpeg_native_progress'):
+            self._enable_progress(False)
 
     def check_version(self):
         if not self.available:
@@ -321,30 +330,34 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg):
         # don't take --verbose in account since PPs don't redirect ffmpeg output to respective stdfds
         # also, PPs currently have no way to show its process by itself now
         use_native_progress = (
-            False
-            and self._downloader.params.get('enable_ffmpeg_native_progress')
+            self._downloader.params.get('enable_ffmpeg_native_progress')
             and self._NATIVE_PROGRESS_ENABLED)
 
         if use_native_progress:
+            # try:
+            #     stdout, stderr = p.communicate_or_kill(timeout=1)
+            # except subprocess.TimeoutExpired as e:
+            #     stdout, stderr = list(map(lambda x: x or '', (e.stdout, e.stderr)))
+            stdout, stderr = '', ''
             try:
-                stdout, stderr = p.communicate_or_kill(timeout=1)
-            except subprocess.TimeoutExpired as e:
-                stdout, stderr = list(map(lambda x: x or '', (e.stdout, e.stderr)))
-
-            retval = self.read_ffmpeg_status(info_dict, p, True)
+                retval = self.read_ffmpeg_status(info_dict, p, True)
+            finally:
+                self._finish_multiline_status()
         else:
             stdout, stderr = p.communicate_or_kill()
             retval = p.returncode
 
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode('utf-8', 'replace')
         if retval not in variadic(expected_retcodes):
-            stderr = stderr.decode('utf-8', 'replace').strip()
+            stderr = stderr.strip()
             self.write_debug(stderr)
-            raise FFmpegPostProcessorError(stderr.split('\n')[-1])
+            raise FFmpegPostProcessorError(stderr.split('\n')[-1], retval)
 
         for out_path, _ in output_path_opts:
             if out_path:
                 self.try_utime(out_path, oldest_mtime, oldest_mtime)
-        return stderr.decode('utf-8', 'replace')
+        return stderr
 
     def run_ffmpeg(self, path, out_path, opts, **kwargs):
         return self.run_ffmpeg_multiple_files([path], out_path, opts, **kwargs)
@@ -428,6 +441,16 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg):
             for directive in 'inpoint', 'outpoint', 'duration':
                 if directive in opts:
                     yield f'{directive} {opts[directive]}\n'
+
+    def report_progress(self, s):
+        use_native_progress = (
+            self._downloader.params.get('enable_ffmpeg_native_progress')
+            and self._NATIVE_PROGRESS_ENABLED)
+        if use_native_progress:
+            if s.get('status') == 'finshed' and not s.get('__from_ffmpeg_native_status'):
+                return
+            ShowsProgress.report_progress(self, s)
+        return PostProcessor.report_progress(self, s)
 
 
 class FFmpegExtractAudioPP(FFmpegPostProcessor):

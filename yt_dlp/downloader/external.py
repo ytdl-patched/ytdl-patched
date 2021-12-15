@@ -14,7 +14,7 @@ from ..compat import (
     compat_str,
 )
 from ..postprocessor.ffmpeg import FFmpegPostProcessor, EXT_TO_OUT_FORMATS
-from ..postprocessor._ffmpeg_progress import RunsFFmpeg
+from ..postprocessor._attachments import RunsFFmpeg
 from ..utils import (
     cli_option,
     cli_valueless_option,
@@ -484,7 +484,8 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
         use_native_progress = (
             self.params.get('enable_ffmpeg_native_progress')
             and not verbose
-            and not live)
+            and not live
+            and url not in ('-', 'pipe:'))
 
         args = [encodeArgument(opt) for opt in args]
         args.append(encodeFilename(ffpp._ffmpeg_filename_argument(tmpfilename), True))

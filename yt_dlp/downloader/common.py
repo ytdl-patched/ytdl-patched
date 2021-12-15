@@ -1,6 +1,5 @@
 from __future__ import division, unicode_literals
 
-import re
 import time
 import random
 import threading
@@ -13,21 +12,14 @@ from ..utils import (
     decodeArgument,
     encodeFilename,
     error_to_compat_str,
-    format_bytes,
     shell_quote,
     timeconvert,
     sanitized_Request,
-    timetuple_from_msec,
 )
-from ..minicurses import (
-    MultilineLogger,
-    MultilinePrinter,
-    QuietMultilinePrinter,
-    BreaklineStatusPrinter
-)
+from ..postprocessor._attachments import ShowsProgress
 
 
-class FileDownloader(object):
+class FileDownloader(ShowsProgress):
     """File Downloader class.
 
     File downloader objects are the ones responsible of downloading the
@@ -73,101 +65,17 @@ class FileDownloader(object):
 
     def __init__(self, ydl, params):
         """Create a FileDownloader object with the given options."""
+        ShowsProgress.__init__(self, ydl, params)
         self.ydl: 'YoutubeDL' = ydl
-        self._progress_hooks = []
         self.params = params
-        self._prepare_multiline_status()
-        self.add_progress_hook(self.report_progress)
-
-    @staticmethod
-    def format_seconds(seconds):
-        time = timetuple_from_msec(seconds * 1000)
-        if time.hours > 99:
-            return '--:--:--'
-        if not time.hours:
-            return '%02d:%02d' % time[1:-1]
-        return '%02d:%02d:%02d' % time[:-1]
-
-    @staticmethod
-    def calc_percent(byte_counter, data_len):
-        if data_len is None:
-            return None
-        return float(byte_counter) / float(data_len) * 100.0
-
-    @staticmethod
-    def format_percent(percent):
-        if percent is None:
-            return '---.-%'
-        elif percent == 100:
-            return '100%'
-        return '%6s' % ('%3.1f%%' % percent)
-
-    @staticmethod
-    def calc_eta(start, now, total, current):
-        if total is None:
-            return None
-        if now is None:
-            now = time.time()
-        dif = now - start
-        if current == 0 or dif < 0.001:  # One millisecond
-            return None
-        rate = float(current) / dif
-        return int((float(total) - float(current)) / rate)
-
-    @staticmethod
-    def format_eta(eta):
-        if eta is None:
-            return '--:--'
-        return FileDownloader.format_seconds(eta)
-
-    @staticmethod
-    def calc_speed(start, now, bytes):
-        dif = now - start
-        if bytes == 0 or dif < 0.001:  # One millisecond
-            return None
-        return float(bytes) / dif
-
-    @staticmethod
-    def format_speed(speed):
-        if speed is None:
-            return '%10s' % '---b/s'
-        return '%10s' % ('%s/s' % format_bytes(speed))
-
-    @staticmethod
-    def format_retries(retries):
-        return 'inf' if retries == float('inf') else '%.0f' % retries
-
-    @staticmethod
-    def best_block_size(elapsed_time, bytes):
-        new_min = max(bytes / 2.0, 1.0)
-        new_max = min(max(bytes * 2.0, 1.0), 4194304)  # Do not surpass 4 MB
-        if elapsed_time < 0.001:
-            return int(new_max)
-        rate = bytes / elapsed_time
-        if rate > new_max:
-            return int(new_max)
-        if rate < new_min:
-            return int(new_min)
-        return int(rate)
-
-    @staticmethod
-    def parse_bytes(bytestr):
-        """Parse a string indicating a byte quantity into an integer."""
-        matchobj = re.match(r'(?i)^(\d+(?:\.\d+)?)([kMGTPEZY]?)$', bytestr)
-        if matchobj is None:
-            return None
-        number = float(matchobj.group(1))
-        multiplier = 1024.0 ** 'bkmgtpezy'.index(matchobj.group(2).lower())
-        return int(round(number * multiplier))
+        self._progress_hooks = []
+        self._enable_progress()
 
     def to_screen(self, *args, **kargs):
         self.ydl.to_stdout(*args, quiet=self.params.get('quiet'), **kargs)
 
     def to_stderr(self, message):
         self.ydl.to_stderr(message)
-
-    def to_console_title(self, message):
-        self.ydl.to_console_title(message)
 
     def trouble(self, *args, **kargs):
         self.ydl.trouble(*args, **kargs)
@@ -244,120 +152,6 @@ class FileDownloader(object):
     def report_destination(self, filename):
         """Report destination filename."""
         self.to_screen('[download] Destination: ' + filename)
-
-    def _prepare_multiline_status(self, lines=1):
-        if self.params.get('noprogress'):
-            self._multiline = QuietMultilinePrinter()
-        elif self.ydl.params.get('logger'):
-            self._multiline = MultilineLogger(self.ydl.params['logger'], lines)
-        elif self.params.get('progress_with_newline'):
-            self._multiline = BreaklineStatusPrinter(self.ydl._screen_file, lines)
-        else:
-            self._multiline = MultilinePrinter(self.ydl._screen_file, lines, not self.params.get('quiet'))
-        self._multiline.allow_colors = self._multiline._HAVE_FULLCAP and not self.params.get('no_color')
-
-    def _finish_multiline_status(self):
-        self._multiline.end()
-
-    _progress_styles = {
-        'downloaded_bytes': 'light blue',
-        'percent': 'light blue',
-        'eta': 'yellow',
-        'speed': 'green',
-        'elapsed': 'bold white',
-        'total_bytes': '',
-        'total_bytes_estimate': '',
-    }
-
-    def _report_progress_status(self, s, default_template):
-        for name, style in self._progress_styles.items():
-            name = f'_{name}_str'
-            if name not in s:
-                continue
-            s[name] = self._format_progress(s[name], style)
-        s['_default_template'] = default_template % s
-
-        progress_dict = s.copy()
-        progress_dict.pop('info_dict')
-        progress_dict = {'info': s['info_dict'], 'progress': progress_dict}
-
-        progress_template = self.params.get('progress_template', {})
-        self._multiline.print_at_line(self.ydl.evaluate_outtmpl(
-            progress_template.get('download') or '[download] %(progress._default_template)s',
-            progress_dict), s.get('progress_idx') or 0)
-        self.to_console_title(self.ydl.evaluate_outtmpl(
-            progress_template.get('download-title') or 'yt-dlp %(progress._default_template)s',
-            progress_dict))
-
-    def _format_progress(self, *args, **kwargs):
-        return self.ydl._format_text(
-            self._multiline.stream, self._multiline.allow_colors, *args, **kwargs)
-
-    def report_progress(self, s):
-        if s['status'] == 'finished':
-            if self.params.get('noprogress'):
-                self.to_screen('[download] Download completed')
-            msg_template = '100%%'
-            if s.get('total_bytes') is not None:
-                s['_total_bytes_str'] = format_bytes(s['total_bytes'])
-                msg_template += ' of %(_total_bytes_str)s'
-            if s.get('elapsed') is not None:
-                s['_elapsed_str'] = self.format_seconds(s['elapsed'])
-                msg_template += ' in %(_elapsed_str)s'
-            if s.get('fragment_count') is not None:
-                msg_template += ' (%(fragment_count)d fragments total)'
-            s['_percent_str'] = self.format_percent(100)
-            self._report_progress_status(s, msg_template)
-            return
-
-        if s['status'] != 'downloading':
-            return
-
-        if s.get('eta') is not None:
-            s['_eta_str'] = self.format_eta(s['eta'])
-        else:
-            s['_eta_str'] = 'Unknown'
-
-        if s.get('total_bytes') and s.get('downloaded_bytes') is not None:
-            s['_percent_str'] = self.format_percent(100 * s['downloaded_bytes'] / s['total_bytes'])
-        elif s.get('total_bytes_estimate') and s.get('downloaded_bytes') is not None:
-            s['_percent_str'] = self.format_percent(100 * s['downloaded_bytes'] / s['total_bytes_estimate'])
-        else:
-            if s.get('downloaded_bytes') == 0:
-                s['_percent_str'] = self.format_percent(0)
-            else:
-                s['_percent_str'] = 'Unknown %'
-
-        if s.get('speed') is not None:
-            s['_speed_str'] = self.format_speed(s['speed'])
-        else:
-            s['_speed_str'] = 'Unknown speed'
-
-        if s.get('total_bytes') is not None:
-            s['_total_bytes_str'] = format_bytes(s['total_bytes'])
-            msg_template = '%(_percent_str)s of %(_total_bytes_str)s at %(_speed_str)s ETA %(_eta_str)s'
-        elif s.get('total_bytes_estimate') is not None:
-            s['_total_bytes_estimate_str'] = format_bytes(s['total_bytes_estimate'])
-            msg_template = '%(_percent_str)s of ~%(_total_bytes_estimate_str)s at %(_speed_str)s ETA %(_eta_str)s'
-        else:
-            if s.get('downloaded_bytes') is not None:
-                s['_downloaded_bytes_str'] = format_bytes(s['downloaded_bytes'])
-                if s.get('elapsed'):
-                    s['_elapsed_str'] = self.format_seconds(s['elapsed'])
-                    msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s (%(_elapsed_str)s)'
-                else:
-                    msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s'
-                if s.get('fragment_count') is not None:
-                    msg_template += ' (%(fragment_count)s fragments)'
-            else:
-                msg_template = '%(_percent_str)s % at %(_speed_str)s ETA %(_eta_str)s'
-
-        if s.get('fragment_count') is not None and s.get('fragment_index') is not None:
-            msg_template += ' (%(fragment_index)d fragments of %(fragment_count)d)'
-        elif s.get('fragment_index') is not None:
-            msg_template += ' (%(fragment_index)d fragments downloaded)'
-
-        self._report_progress_status(s, msg_template)
 
     def report_resuming_byte(self, resume_len):
         """Report attempt to resume at given byte."""
