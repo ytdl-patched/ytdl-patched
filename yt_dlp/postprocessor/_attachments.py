@@ -84,82 +84,73 @@ class RunsFFmpeg(object):
             'total_bytes_estimate': total_filesize,
         }
 
-        progress_pattern = re.compile(
-            r'''(?x)
-                (frame=\s*(?P<frame>\S+)\n
-                fps=\s*(?P<fps>\S+)\n
-                stream_0_0_q=\s*(?P<stream_0_0_q>\S+)\n)?
-                bitrate=\s*(?P<bitrate>\S+)\n
-                total_size=\s*(?P<total_size>\S+)\n
-                out_time_us=\s*(?P<out_time_us>\S+)\n
-                out_time_ms=\s*(?P<out_time_ms>\S+)\n
-                out_time=\s*(?P<out_time>\S+)\n
-                dup_frames=\s*(?P<dup_frames>\S+)\n
-                drop_frames=\s*(?P<drop_frames>\S+)\n
-                speed=\s*(?P<speed>\S+)\n
-                progress=\s*(?P<progress>\S+)
-            ''')
+        retval = None
 
-        retval = proc.poll()
-        ffmpeg_stdout_buffer = ''
+        def _ffmpeg_progress_reader():
+            nonlocal retval
+            retval = proc.poll()
+            result = {}
+            while retval is None:
+                ffmpeg_stdout = to_str(proc.stdout.readline() if proc.stdout is not None else '')
+                try:
+                    for mobj in re.finditer(r'(?P<key>\S+)=\s*(?P<value>\S+)', ffmpeg_stdout):
+                        result[mobj.group('key')] = mobj.group('value')
+                        if mobj.group('key') == 'progress':
+                            yield result
+                            result = {}
+                            break
+                finally:
+                    retval = proc.poll()
+                    status.update({'elapsed': time.time() - started})
+
         time_and_size, avg_len = [], 10
 
-        while retval is None:
-            ffmpeg_stdout = to_str(proc.stdout.readline() if proc.stdout is not None else '')
-            if ffmpeg_stdout:
-                ffmpeg_stdout_buffer += ffmpeg_stdout
-                ffmpeg_prog_infos = re.match(progress_pattern, ffmpeg_stdout_buffer)
+        for ffmpeg_prog_infos in _ffmpeg_progress_reader():
+            speed = None if ffmpeg_prog_infos['speed'] == 'N/A' else float(ffmpeg_prog_infos['speed'][:-1])
 
-                if ffmpeg_prog_infos:
-                    # sys.stdout.write(ffpmeg_stdout_buffer)
-                    ffmpeg_stdout = ''
-                    speed = None if ffmpeg_prog_infos['speed'] == 'N/A' else float(ffmpeg_prog_infos['speed'][:-1])
-
-                    out_time = self.parse_ffmpeg_time_string(ffmpeg_prog_infos['out_time'])
+            out_time = self.parse_ffmpeg_time_string(ffmpeg_prog_infos['out_time'])
+            eta_seconds = None
+            if speed and total_time_to_dl:
+                eta_seconds = (total_time_to_dl - out_time) / speed
+                if eta_seconds < 0:
                     eta_seconds = None
-                    if speed and total_time_to_dl:
-                        eta_seconds = (total_time_to_dl - out_time) / speed
-                        if eta_seconds < 0:
-                            eta_seconds = None
-                    if eta_seconds is None and total_filesize and dl_bytes_int:
-                        # dl_bytes_int : (total_filesize - dl_bytes_int) = status['elapsed'] : ETA
-                        eta_seconds = (total_filesize - dl_bytes_int) * status['elapsed'] / dl_bytes_int
-                        if eta_seconds < 0:
-                            eta_seconds = None
+            if eta_seconds is None and total_filesize and dl_bytes_int:
+                # dl_bytes_int : (total_filesize - dl_bytes_int) = status['elapsed'] : ETA
+                eta_seconds = (total_filesize - dl_bytes_int) * status['elapsed'] / dl_bytes_int
+                if eta_seconds < 0:
+                    eta_seconds = None
 
-                    if duration and dl_bytes_int and out_time:
-                        guessed_size = dl_bytes_int * duration / out_time
-                    # reduce terminal flick caused by drastic estimation change
-                    if total_filesize and guessed_size and (abs(guessed_size - total_filesize) / total_filesize) > 0.1:
-                        guessed_size = total_filesize
+            if duration and dl_bytes_int and out_time:
+                guessed_size = dl_bytes_int * duration / out_time
+            # reduce terminal flick caused by drastic estimation change
+            if total_filesize and guessed_size and (abs(guessed_size - total_filesize) / total_filesize) > 0.1:
+                guessed_size = total_filesize
 
-                    bitrate_int = None
-                    bitrate_str = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', ffmpeg_prog_infos['bitrate'])
+            bitrate_int = None
+            bitrate_str = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', ffmpeg_prog_infos['bitrate'])
 
-                    if bitrate_str:
-                        bitrate_int = self.compute_prefix(bitrate_str)
-                    dl_bytes_int = int_or_none(ffmpeg_prog_infos['total_size'], default=0)
-                    time_and_size.append((dl_bytes_int, time.time()))
-                    time_and_size = time_and_size[-avg_len:]
-                    if len(time_and_size) > 1:
-                        last, early = time_and_size[0], time_and_size[-1]
-                        average_speed = (early[0] - last[0]) / (early[1] - last[1])
-                    else:
-                        average_speed = None
+            if bitrate_str:
+                bitrate_int = self.compute_prefix(bitrate_str)
+            dl_bytes_int = int_or_none(ffmpeg_prog_infos['total_size'], default=0)
+            time_and_size.append((dl_bytes_int, time.time()))
+            time_and_size = time_and_size[-avg_len:]
+            if len(time_and_size) > 1:
+                last, early = time_and_size[0], time_and_size[-1]
+                average_speed = (early[0] - last[0]) / (early[1] - last[1])
+            else:
+                average_speed = None
 
-                    status.update({
-                        'processed_bytes': dl_bytes_int,
-                        'downloaded_bytes': dl_bytes_int,
-                        'speed': average_speed,
-                        'speed_rate': speed,
-                        'bitrate': bitrate_int / 8,
-                        'eta': eta_seconds,
-                        'total_bytes_estimate': guessed_size,
-                    })
-                    self._hook_progress(status, info_dict)
-                    ffmpeg_stdout_buffer = ''
-            status.update({'elapsed': time.time() - started})
-            retval = proc.poll()
+            status.update({
+                'processed_bytes': dl_bytes_int,
+                'downloaded_bytes': dl_bytes_int,
+                'speed': average_speed,
+                'speed_rate': speed,
+                'bitrate': bitrate_int / 8,
+                'eta': eta_seconds,
+                'total_bytes_estimate': guessed_size,
+            })
+            self._hook_progress(status, info_dict)
+
         status.update({
             'status': 'finished',
             'processed_bytes': dl_bytes_int,
