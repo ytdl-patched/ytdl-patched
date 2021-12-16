@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import base64
 import collections
-import datetime
 import hashlib
 import itertools
 import json
@@ -3512,12 +3511,8 @@ class InfoExtractor(object):
         return formats
 
     def _live_title(self, name):
-        """ Generate the title for a live video """
-        if name is None:
-            return None
-        now = datetime.datetime.now()
-        now_str = now.strftime('%Y-%m-%d %H:%M')
-        return name + ' ' + now_str
+        self._downloader.deprecation_warning('yt_dlp.InfoExtractor._live_title is deprecated and does not work as expected')
+        return name
 
     def _int(self, v, name, fatal=False, **kwargs):
         res = int_or_none(v, **kwargs)
