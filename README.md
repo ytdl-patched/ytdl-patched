@@ -1,9 +1,11 @@
+<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 <div align="center">
 
 # YTDL-PATCHED
 A command-line program to download videos from YouTube and many other [video platforms](supportedsites.md)
 
 </div>
+<!-- MANPAGE: END EXCLUDED SECTION -->
 
 ## MIRRORS
 - ~~https://github.com/nao20010128nao/ytdl-patched (passed away)~~
@@ -34,6 +36,9 @@ A command-line program to download videos from YouTube and many other [video pla
 
 ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork based on [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
+<!-- MANPAGE: MOVE "USAGE AND OPTIONS" SECTION HERE -->
+
+<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 * [NEW FEATURES](#new-features)
     * [NEW FEATURES IN YTDL-PATCHED](#new-features-in-ytdl-patched)
     * [NEW FEATURES IN YT-DLP](#new-features-in-yt-dlp)
@@ -78,6 +83,7 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
     * [Opening an Issue](CONTRIBUTING.md#opening-an-issue)
     * [Developer Instructions](CONTRIBUTING.md#developer-instructions)
 * [MORE](#more)
+<!-- MANPAGE: END EXCLUDED SECTION -->
 
 # NEW FEATURES
 ## NEW FEATURES IN YTDL-PATCHED
@@ -291,6 +297,7 @@ If you [installed with pip](#with-pip), simply re-run the same command that was 
 
 If you [installed using Homebrew](#with-homebrew), run `brew upgrade nao20010128nao/my/ytdl-patched`
 
+<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 ## RELEASE FILES
 
 #### Recommended
@@ -310,6 +317,7 @@ File|Description
 [yt_dlp-py2.py3-none-any.whl](https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/yt-dlp.tar.gz)|pip wheel for installation using pip
 [yt_dlp-wheel.tar.gz](https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/yt-dlp.tar.gz)|pip .tar.gz for installation using pip
 
+<!-- MANPAGE: END EXCLUDED SECTION -->
 
 ## DEPENDENCIES
 Python versions 3.6+ (CPython and PyPy) are supported. Other versions and implementations may or may not work correctly.
@@ -320,6 +328,7 @@ On windows, [Microsoft Visual C++ 2010 SP1 Redistributable Package (x86)](https:
 -->
 
 While all the other dependancies are optional, `ffmpeg` and `ffprobe` are highly recommended
+
 * [**ffmpeg** and **ffprobe**](https://www.ffmpeg.org) - Required for [merging seperate video and audio files](#format-selection) as well as for various [post-processing](#post-processing-options) tasks. Licence [depends on the build](https://www.ffmpeg.org/legal.html)
 * [**mutagen**](https://github.com/quodlibet/mutagen) - For embedding thumbnail in certain formats. Licenced under [GPLv2+](https://github.com/quodlibet/mutagen/blob/master/COPYING)
 * [**pycryptodomex**](https://github.com/Legrandin/pycryptodome) - For decrypting AES-128 HLS streams and various other data. Licenced under [BSD2](https://github.com/Legrandin/pycryptodome/blob/master/LICENSE.rst)
@@ -362,11 +371,13 @@ You can also fork the project on github and run your fork's [build workflow](.gi
 
 # USAGE AND OPTIONS
 
+<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
     yt-dlp [OPTIONS] [--] URL [URL...]
 
 `Ctrl+F` is your friend :D
-<!-- Auto generated -->
+<!-- MANPAGE: END EXCLUDED SECTION -->
 
+<!-- Auto generated -->
 ## General Options:
     -h, --help                       Print this help text and exit
     --version                        Print program version and exit
@@ -1110,7 +1121,7 @@ You can configure yt-dlp by placing any supported command line option to a confi
     * `~/yt-dlp.conf`
     * `~/yt-dlp.conf.txt`
 
-    `%XDG_CONFIG_HOME%` defaults to `~/.config` if undefined. On windows, `%APPDATA%` generally points to (`C:\Users\<user name>\AppData\Roaming`) and `~` points to `%HOME%` if present, `%USERPROFILE%` (generally `C:\Users\<user name>`), or `%HOMEDRIVE%%HOMEPATH%`
+    `%XDG_CONFIG_HOME%` defaults to `~/.config` if undefined. On windows, `%APPDATA%` generally points to `C:\Users\<user name>\AppData\Roaming` and `~` points to `%HOME%` if present, `%USERPROFILE%` (generally `C:\Users\<user name>`), or `%HOMEDRIVE%%HOMEPATH%`
 1. **System Configuration**: `/etc/yt-dlp.conf`
 
 For example, with the following configuration file yt-dlp will always extract the audio, not copy the mtime, use a proxy and save all videos under `YouTube` directory in your home directory:
@@ -1158,7 +1169,9 @@ The default location of the .netrc file is `$HOME` (`~`) in UNIX. On Windows, it
 
 The `-o` option is used to indicate a template for the output file names while `-P` option is used to specify the path each type of file should be saved to.
 
+<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 **tl;dr:** [navigate me to examples](#output-template-examples).
+<!-- MANPAGE: END EXCLUDED SECTION -->
 
 The simplest usage of `-o` is not to set any template arguments when downloading a single file, like in `yt-dlp -o funny_video.flv "https://some/video"` (hard-coding file extension like this is _not_ recommended and could break some post-processing).
 
@@ -1166,11 +1179,17 @@ It may however also contain special sequences that will be replaced when downloa
 
 The field names themselves (the part inside the parenthesis) can also have some special formatting:
 1. **Object traversal**: The dictionaries and lists available in metadata can be traversed by using a `.` (dot) separator. You can also do python slicing using `:`. Eg: `%(tags.0)s`, `%(subtitles.en.-1.ext)s`, `%(id.3:7:-1)s`, `%(formats.:.format_id)s`. `%()s` refers to the entire infodict. Note that all the fields that become available using this method are not listed below. Use `-j` to see such fields
+
 1. **Addition**: Addition and subtraction of numeric fields can be done using `+` and `-` respectively. Eg: `%(playlist_index+10)03d`, `%(n_entries+1-playlist_index)d`
+
 1. **Date/time Formatting**: Date/time fields can be formatted according to [strftime formatting](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes) by specifying it separated from the field name using a `>`. Eg: `%(duration>%H-%M-%S)s`, `%(upload_date>%Y-%m-%d)s`, `%(epoch-3600>%H-%M-%S)s`
+
 1. **Alternatives**: Alternate fields can be specified seperated with a `,`. Eg: `%(release_date>%Y,upload_date>%Y|Unknown)s`
+
 1. **Default**: A literal default value can be specified for when the field is empty using a `|` seperator. This overrides `--output-na-template`. Eg: `%(uploader|Unknown)s`
+
 1. **More Conversions**: In addition to the normal format types `diouxXeEfFgGcrs`, `B`, `j`, `l`, `q` can be used for converting to **B**ytes, **j**son (flag `#` for pretty-printing), a comma seperated **l**ist (flag `#` for `\n` newline-seperated) and a string **q**uoted for the terminal (flag `#` to split a list into different arguments), respectively
+
 1. **Unicode normalization**: The format type `U` can be used for NFC [unicode normalization](https://docs.python.org/3/library/unicodedata.html#unicodedata.normalize). The alternate form flag (`#`) changes the normalization to NFD and the conversion flag `+` can be used for NFKC/NFKD compatibility equivalence normalization. Eg: `%(title)+.100U` is NFKC
 
 To summarize, the general syntax for a field is:
@@ -1317,9 +1336,11 @@ The current default template is `%(title)s [%(id)s].%(ext)s`.
 
 In some cases, you don't want special characters such as 中, spaces, or &, such as when transferring the downloaded filename to a Windows system or the filename through an 8bit-unsafe channel. In these cases, add the `--restrict-filenames` flag to get a shorter title.
 
+<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 #### Output template and Windows batch files
 
 If you are using an output template inside a Windows batch file then you must escape plain percent characters (`%`) by doubling, so that `-o "%(title)s-%(id)s.%(ext)s"` should become `-o "%%(title)s-%%(id)s.%%(ext)s"`. However you should not touch `%`'s that are not plain characters, e.g. environment variables for expansion should stay intact: `-o "C:\%HOMEPATH%\Desktop\%%(title)s.%%(ext)s"`.
+<!-- MANPAGE: END EXCLUDED SECTION -->
 
 #### Output template examples
 
@@ -1363,7 +1384,9 @@ This is generally equivalent to using `-f bestvideo*+bestaudio/best`. However, i
 
 The general syntax for format selection is `-f FORMAT` (or `--format FORMAT`) where `FORMAT` is a *selector expression*, i.e. an expression that describes format or formats you would like to download.
 
+<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 **tl;dr:** [navigate me to examples](#format-selection-examples).
+<!-- MANPAGE: END EXCLUDED SECTION -->
 
 The simplest case is requesting a specific format, for example with `-f 22` you can download the format with format code equal to 22. You can get the list of available format codes for particular video using `--list-formats` or `-F`. Note that these format codes are extractor specific.
 
@@ -1714,6 +1737,7 @@ NOTE: These options may be changed/removed in the future without concern for bac
 
 *1: **READ CAREFULLY**: Using it will make non-standard DMC request(s). You may be being banned of your account or IP address by using it. Use it at your own risk. <!-- It's better to use this option with `-N` if you really don't mind. -->
 
+<!-- MANPAGE: MOVE "INSTALLATION" SECTION HERE -->
 
 # PLUGINS
 
@@ -1844,6 +1868,8 @@ with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
 **Tip**: If you are porting your code from youtube-dl to yt-dlp, one important point to look out for is that we do not guarantee the return value of `YoutubeDL.extract_info` to be json serializable, or even be a dictionary. It will be dictionary-like, but if you want to ensure it is a serializable dictionary, pass it through `YoutubeDL.sanitize_info` as shown in the example above
 
+
+<!-- MANPAGE: MOVE "NEW FEATURES" SECTION HERE -->
 
 # DEPRECATED OPTIONS
 
