@@ -2884,7 +2884,7 @@ class YoutubeDL(object):
         _infojson_written = self._write_info_json('video', info_dict, infofn)
         if _infojson_written:
             info_dict['infojson_filename'] = infofn
-            # For backward compatability, even though it was a private field
+            # For backward compatibility, even though it was a private field
             info_dict['__infojson_filename'] = infofn
         elif _infojson_written is None:
             return
@@ -4003,7 +4003,7 @@ class YoutubeDL(object):
             self.write_debug(f'Skipping writing {label} thumbnail')
             return ret
 
-        for t in thumbnails[::-1]:
+        for idx, t in list(enumerate(thumbnails))[::-1]:
             thumb_ext = (f'{t["id"]}.' if multiple else '') + determine_ext(t['url'], 'jpg')
             thumb_display_id = f'{label} thumbnail {t["id"]}'
             thumb_filename = replace_extension(filename, thumb_ext, info_dict.get('ext'))
@@ -4024,6 +4024,7 @@ class YoutubeDL(object):
                     ret.append((thumb_filename, thumb_filename_final))
                     t['filepath'] = thumb_filename
                 except network_exceptions as err:
+                    thumbnails.pop(idx)
                     self.report_warning(f'Unable to download {thumb_display_id}: {err}')
             if ret and not write_all:
                 break
