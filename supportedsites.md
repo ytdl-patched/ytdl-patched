@@ -21,6 +21,7 @@
  - **9now.com.au**
  - **abc.net.au**
  - **abc.net.au:iview**
+ - **abc.net.au:iview:showseries**
  - **abcnews**
  - **abcnews:video**
  - **abcotvs**: ABC Owned Television Stations
@@ -445,6 +446,8 @@
  - **hrfernsehen**
  - **HRTi**
  - **HRTiPlaylist**
+ - **HSEProduct**
+ - **HSEShow**
  - **Huajiao**: 花椒直播
  - **HuffPost**: Huffington Post
  - **Hungama**
@@ -1049,6 +1052,7 @@
  - **SonyLIVSeries**
  - **soundcloud**
  - **soundcloud:playlist**
+ - **soundcloud:related**
  - **soundcloud:search**: Soundcloud search; "scsearch:" prefix
  - **soundcloud:set**
  - **soundcloud:trackstation**
