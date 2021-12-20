@@ -175,9 +175,8 @@ class InfoExtractor(object):
                     * filesize_approx  An estimate for the number of bytes
                     * player_url SWF Player URL (used for rtmpdump).
                     * protocol   The protocol that will be used for the actual
-                                 download, lower-case.
-                                 "http", "https", "rtsp", "rtmp", "rtmp_ffmpeg", "rtmpe",
-                                 "m3u8", "m3u8_native" or "http_dash_segments".
+                                 download, lower-case. One of "http", "https" or
+                                 one of the protocols defined in downloader.PROTOCOL_MAP
                     * expected_protocol The protocol that will finally be used.
                                         Only used by "niconico_dmc" downloader
                                         to determine actual downloader.
@@ -196,6 +195,8 @@ class InfoExtractor(object):
                                             fragment_base_url
                                  * "duration" (optional, int or float)
                                  * "filesize" (optional, int)
+                    * is_from_start  Is a live format that can be downloaded
+                                from the start. Boolean
                     * preference Order number of this format. If this field is
                                  present and not None, the formats get sorted
                                  by this field, regardless of all other values.
