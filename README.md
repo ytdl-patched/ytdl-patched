@@ -127,15 +127,15 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
-    * `mixch` (merged in upstream)
-    * `skeb` (merged in upstream)
-    * `mirrativ`, `mirrativ:user` (merged in upstream)
-    * `openrec`, `openrec:capture` (merged in upstream)
-    * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!) (merged in upstream)
-    * `voicy`, `voicy:channel` (merged in upstream)
-    * `whowatch` (merged in upstream)
-    * `damtomo:video`, `damtomo:record` (merged in upstream)
-    * `17live`, `17live:clip` (merged in upstream)
+    * `mixch` (merged in yt-dlp)
+    * `skeb` (merged in yt-dlp)
+    * `mirrativ`, `mirrativ:user` (merged in yt-dlp)
+    * `openrec`, `openrec:capture` (merged in yt-dlp)
+    * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!) (merged in yt-dlp)
+    * `voicy`, `voicy:channel` (merged in yt-dlp)
+    * `whowatch` (merged in yt-dlp)
+    * `damtomo:video`, `damtomo:record` (merged in yt-dlp)
+    * `17live`, `17live:clip` (merged in yt-dlp)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
