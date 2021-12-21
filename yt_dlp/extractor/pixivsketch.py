@@ -3,109 +3,118 @@ from __future__ import unicode_literals
 
 from .common import InfoExtractor
 from ..utils import (
-    try_get,
+    traverse_obj,
     ExtractorError,
-)
-from ..compat import (
-    compat_str,
+    unified_timestamp,
 )
 
 
 class PixivSketchBaseIE(InfoExtractor):
-    pass
+    def _call_api(self, video_id, path, referer):
+        response = self._download_json(f'https://sketch.pixiv.net/api/{path}', video_id, headers={
+            'Referer': referer,
+            # this is correct
+            'X-Requested-With': referer,
+        })
+        errors = traverse_obj(response, ('errors', ..., 'message'))
+        if errors:
+            ex = ExtractorError(' '.join(f'{e}.' for e in errors))
+            setattr(ex, 'errors', errors)
+            raise ex
+        return response.get('data') or {}
 
 
 class PixivSketchIE(PixivSketchBaseIE):
     IE_NAME = 'pixiv:sketch'
-    # https://sketch.pixiv.net/@kotaru_taruto/lives/3404565243464976376
     _VALID_URL = r'https?://sketch\.pixiv\.net/@(?P<uploader_id>[a-zA-Z0-9_-]+)/lives/(?P<id>\d+)/?'
-    _TEST = {}
-    API_JSON_URL = 'https://sketch.pixiv.net/api/lives/%s.json'
+    _TESTS = [{
+        'url': 'https://sketch.pixiv.net/@nuhutya/lives/3654620468641830507',
+        'info_dict': {
+            'id': '3654620468641830507',
+            'title': 'やっぱクリスマス絵は描きたい',
+            'uploader': 'ぬふちゃ',
+            'uploader_id': 'nuhutya',
+            'age_limit': 0,
+        },
+        'skip': True,
+    }, {
+        # these two (age_limit > 0) requires you to login on website, but it's actually not required for download
+        'url': 'https://sketch.pixiv.net/@namahyou/lives/4393103321546851377',
+        'info_dict': {
+            'id': '4393103321546851377',
+            'title': '描きます',
+            'uploader': 'なまひゆ',
+            'uploader_id': 'namahyou',
+            'uploader_id_numeric': '13075529',
+            'uploader_pixiv_id': '13075529',
+            'age_limit': 15,
+        },
+        'skip': True,
+    }, {
+        'url': 'https://sketch.pixiv.net/@8aki/lives/3553803162487249670',
+        'info_dict': {
+            'id': '3553803162487249670',
+            'title': '原稿',
+            'uploader': '8aki',
+            'uploader_id': '8aki',
+            'age_limit': 18,
+            'timestamp': 1640074398,
+        },
+        'skip': True,
+    }]
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        uploader_id_url = compat_str(self._VALID_URL_RE.match(url).group('uploader_id'))
-        data = self._download_json(self.API_JSON_URL % video_id, video_id, headers={
-            'Referer': url,
-            'X-Requested-With': url,
-        })['data']
+        video_id, uploader_id = self._match_valid_url(url).group('id', 'uploader_id')
+        data = self._call_api(video_id, f'lives/{video_id}.json', url)
 
-        if not data or not data['is_broadcasting']:
-            raise ExtractorError('This live is offline. Use https://sketch.pixiv.net/%s for ongoing live.' % uploader_id_url, expected=True)
+        if not traverse_obj(data, 'is_broadcasting'):
+            raise ExtractorError(f'This live is offline. Use https://sketch.pixiv.net/@{uploader_id} for ongoing live.', expected=True)
 
+        m3u8_url = traverse_obj(data, ('owner', 'hls_movie', 'url'))
+        if not m3u8_url:
+            raise ExtractorError('Failed to extract m3u8 URL')
         formats = self._extract_m3u8_formats(
-            data['owner']['hls_movie']['url'], video_id, ext='mp4',
+            m3u8_url, video_id, ext='mp4',
             entry_protocol='m3u8_native', m3u8_id='hls')
         self._sort_formats(formats)
 
-        title = data['name']
-        uploader = try_get(data, (
-            lambda x: x['user']['name'],
-            lambda x: x['owner']['user']['name'],
-        ), None)
-        uploader_id = try_get(data, (
-            lambda x: x['user']['unique_name'],
-            lambda x: x['owner']['user']['unique_name'],
-        ), None) or uploader_id_url
-        uploader_id_numeric = try_get(data, (
-            lambda x: compat_str(x['user']['id']),
-            lambda x: compat_str(x['owner']['user']['id']),
-        ), None)
-        uploader_pixiv_id = try_get(data, (
-            lambda x: compat_str(x['user']['pixiv_user_id']),
-            lambda x: compat_str(x['owner']['user']['pixiv_user_id']),
-        ), None)
-        if data['is_r18']:
-            age_limit = 18
-        elif data['is_r15']:
-            age_limit = 15
-        else:
-            age_limit = 0
-
         return {
-            'formats': formats,
             'id': video_id,
-            'title': title,
-            'uploader': uploader,
-            'uploader_id': uploader_id,
-            'uploader_id_numeric': uploader_id_numeric,
-            'uploader_pixiv_id': uploader_pixiv_id,
-            'age_limit': age_limit,
+            'title': data.get('name'),
+            'formats': formats,
+            'uploader': traverse_obj(data, ('user', 'name'), ('owner', 'user', 'name')),
+            'uploader_id': traverse_obj(data, ('user', 'unique_name'), ('owner', 'user', 'unique_name')),
+            'uploader_pixiv_id': traverse_obj(data, ('user', 'pixiv_user_id'), ('owner', 'user', 'pixiv_user_id')),
+            'age_limit': 18 if data['is_r18'] else 15 if data['is_r15'] else 0,
+            'timestamp': unified_timestamp(data.get('created_at')),
             'is_live': True
-            # 'raw': data,
         }
 
 
 class PixivSketchUserIE(PixivSketchBaseIE):
     IE_NAME = 'pixiv:sketch:user'
-    # https://sketch.pixiv.net/@kotaru_taruto
     _VALID_URL = r'https?://sketch\.pixiv\.net/@(?P<id>[a-zA-Z0-9_-]+)/?'
-    API_JSON_URL = 'https://sketch.pixiv.net/api/lives/users/@%s.json'
+    _TESTS = [{
+        'url': 'https://sketch.pixiv.net/@nuhutya',
+        'only_matching': True,
+    }, {
+        'url': 'https://sketch.pixiv.net/@namahyou',
+        'only_matching': True,
+    }, {
+        'url': 'https://sketch.pixiv.net/@8aki',
+        'only_matching': True,
+    }]
+
+    @classmethod
+    def suitable(cls, url):
+        return super(PixivSketchUserIE, cls).suitable(url) and not PixivSketchIE.suitable(url)
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        data = self._download_json(self.API_JSON_URL % video_id, video_id, headers={
-            'Referer': url,
-            'X-Requested-With': url,
-        })['data']
+        user_id = self._match_id(url)
+        data = self._call_api(user_id, f'lives/users/@{user_id}.json', url)
 
-        if not data:
-            try:
-                self._download_json('https://sketch.pixiv.net/api/users/current.json', video_id, headers={
-                    'Referer': url,
-                    'X-Requested-With': url,
-                }, note='Investigating reason of download failure')['data']
-            except ExtractorError as cause:
-                if cause.cause.code == 401:
-                    # without login, it throws 401
-                    raise ExtractorError('Please log in, or use live URL like https://sketch.pixiv.net/@%s/1234567890' % video_id,
-                                         expected=True, cause=cause.cause)
-                else:
-                    raise
-            else:
-                raise ExtractorError('This user is offline', expected=True)
-        if not data['is_broadcasting']:
-            raise ExtractorError('This user is offline', expected=True)
+        if not traverse_obj(data, 'is_broadcasting'):
+            # cannot differentiate the two just by only one request
+            raise ExtractorError('Either you are not logged in, or this user is really offline', expected=True)
 
-        live_id = data['id']
-        return self.url_result('https://sketch.pixiv.net/@%s/lives/%s' % (video_id, live_id))
+        return self.url_result(f'https://sketch.pixiv.net/@{user_id}/lives/{data["id"]}')
