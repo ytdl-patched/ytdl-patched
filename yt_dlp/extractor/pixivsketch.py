@@ -85,7 +85,7 @@ class PixivSketchIE(PixivSketchBaseIE):
             'uploader': traverse_obj(data, ('user', 'name'), ('owner', 'user', 'name')),
             'uploader_id': traverse_obj(data, ('user', 'unique_name'), ('owner', 'user', 'unique_name')),
             'uploader_pixiv_id': traverse_obj(data, ('user', 'pixiv_user_id'), ('owner', 'user', 'pixiv_user_id')),
-            'age_limit': 18 if data['is_r18'] else 15 if data['is_r15'] else 0,
+            'age_limit': 18 if data.get('is_r18') else 15 if data.get('is_r15') else 0,
             'timestamp': unified_timestamp(data.get('created_at')),
             'is_live': True
         }
