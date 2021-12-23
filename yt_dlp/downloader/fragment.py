@@ -95,7 +95,7 @@ class FragmentFD(FileDownloader):
 
     def _read_ytdl_file(self, ctx):
         assert 'ytdl_corrupt' not in ctx
-        stream, _ = self.ydl.sanitize_open(self.ytdl_filename(ctx['filename']), 'r')
+        stream, _ = self.sanitize_open(self.ytdl_filename(ctx['filename']), 'r')
         try:
             ytdl_data = json.loads(stream.read())
             ctx['fragment_index'] = ytdl_data['downloader']['current_fragment']['index']
@@ -107,7 +107,7 @@ class FragmentFD(FileDownloader):
             stream.close()
 
     def _write_ytdl_file(self, ctx):
-        frag_index_stream, _ = self.ydl.sanitize_open(self.ytdl_filename(ctx['filename']), 'w')
+        frag_index_stream, _ = self.sanitize_open(self.ytdl_filename(ctx['filename']), 'w')
         try:
             downloader = {
                 'current_fragment': {
@@ -140,7 +140,7 @@ class FragmentFD(FileDownloader):
         return True, self._read_fragment(ctx)
 
     def _read_fragment(self, ctx):
-        down, frag_sanitized = self.ydl.sanitize_open(ctx['fragment_filename_sanitized'], 'rb')
+        down, frag_sanitized = self.sanitize_open(ctx['fragment_filename_sanitized'], 'rb')
         try:
             ctx['fragment_filename_sanitized'] = frag_sanitized
             frag_content = down.read()
@@ -218,7 +218,7 @@ class FragmentFD(FileDownloader):
                 self._write_ytdl_file(ctx)
                 assert ctx['fragment_index'] == 0
 
-        dest_stream, tmpfilename = self.ydl.sanitize_open(tmpfilename, open_mode)
+        dest_stream, tmpfilename = self.sanitize_open(tmpfilename, open_mode)
 
         ctx.update({
             'dl': dl,

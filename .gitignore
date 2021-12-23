@@ -1,27 +1,32 @@
 # Config
 *.conf
-*.spec
 cookies
 *cookies.txt
 .netrc
 
 # Downloaded
-*.3gp
 *.annotations.xml
-*.ape
 *.aria2
-*.avi
 *.description
-*.desktop
 *.dump
-*.flac
-*.flv
 *.frag
+*.frag.aria2
 *.frag.urls
 *.info.json
+*.live_chat.json
+*.part*
+*.unknown_video
+*.ytdl
+.cache/
+
+*.3gp
+*.ape
+*.avi
+*.desktop
+*.flac
+*.flv
 *.jpeg
 *.jpg
-*.live_chat.json
 *.m4a
 *.m4v
 *.mhtml
@@ -31,15 +36,12 @@ cookies
 *.mp4
 *.ogg
 *.opus
-*.part
-*.part-*
 *.png
 *.sbv
 *.srt
 *.swf
 *.swp
 *.ttml
-*.unknown_video
 *.url
 *.vtt
 *.wav
@@ -47,8 +49,6 @@ cookies
 *.webm
 *.webp
 *.images
-*.ytdl
-.cache/
 
 # Allow config/media files in testdata
 !test/**
@@ -87,7 +87,6 @@ README.txt
 *.1
 *.bash-completion
 *.fish
-*.exe
 *.tar.gz
 *.zsh
 *.spec
