@@ -33,9 +33,7 @@ if NPM_IS_SANE:
     def test_package_existence(pkg):
         try:
             assert isinstance(pkg, compat_str)
-            p = start_node_process(['-e', 'require("%s")' % pkg])
-            p.wait()
-            return p.returncode == 0
+            return start_node_process(['-e', f'require({json.dumps(pkg)})']).wait() == 0
         except OSError:
             return False
 
