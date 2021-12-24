@@ -18,9 +18,7 @@ class PixivSketchBaseIE(InfoExtractor):
         })
         errors = traverse_obj(response, ('errors', ..., 'message'))
         if errors:
-            ex = ExtractorError(' '.join(f'{e}.' for e in errors))
-            setattr(ex, 'errors', errors)
-            raise ex
+            raise ExtractorError(' '.join(f'{e}.' for e in errors))
         return response.get('data') or {}
 
 
