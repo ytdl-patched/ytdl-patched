@@ -1172,6 +1172,7 @@ from .podomatic import PodomaticIE
 from .pokemon import (
     PokemonIE,
     PokemonWatchIE,
+    PokemonSoundLibraryIE,
 )
 from .polsatgo import PolsatGoIE
 from .polskieradio import (
