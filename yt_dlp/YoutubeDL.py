@@ -2571,7 +2571,7 @@ class YoutubeDL(object):
                     info_dict['id'], automatic_captions, 'automatic captions')
             self.list_subtitles(info_dict['id'], subtitles, 'subtitles')
         if self.params.get('listformats') or interactive_format_selection:
-            self.list_formats(info_dict)
+            self.list_formats(info_dict, format_selector)
         if list_only:
             # Without this printing, -F --print-json will not work
             self.__forced_printings(info_dict, self.prepare_filename(info_dict), incomplete=True)
