@@ -61,6 +61,10 @@ class RunsFFmpeg(object):
     def read_ffmpeg_status(self, info_dict, proc, is_pp=False):
         if not info_dict:
             info_dict = {}
+        stdout = proc.stdout
+        if not stdout:
+            self.write_debug('Gave up reading progress; stdout == None')
+            return proc.wait()
         started, total_filesize, total_time_to_dl, dl_bytes_int = time.time(), 0, None, None
 
         total_filesize = 0
@@ -91,14 +95,13 @@ class RunsFFmpeg(object):
             retval = proc.poll()
             result = {}
             while retval is None:
-                ffmpeg_stdout = to_str(proc.stdout.readline() if proc.stdout is not None else '')
+                progress_line = to_str(stdout.readline())
                 try:
-                    for mobj in re.finditer(r'(?P<key>\S+)=\s*(?P<value>\S+)', ffmpeg_stdout):
+                    for mobj in re.finditer(r'(?P<key>\S+)=\s*(?P<value>\S+)', progress_line):
                         result[mobj.group('key')] = mobj.group('value')
                         if mobj.group('key') == 'progress':
                             yield result
                             result = {}
-                            break
                 finally:
                     retval = proc.poll()
                     status.update({'elapsed': time.time() - started})
