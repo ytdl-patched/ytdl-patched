@@ -393,6 +393,10 @@ from .dispeak import DigitallySpeakingIE
 from .dnatube import DnaTubeIE
 from .doodstream import DoodStreamIE
 from .dropbox import DropboxIE
+from .dropout import (
+    DropoutSeasonIE,
+    DropoutIE
+)
 from .dw import (
     DWIE,
     DWArticleIE,
