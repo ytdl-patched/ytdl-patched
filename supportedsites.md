@@ -279,6 +279,7 @@
  - **DiscoveryPlus**
  - **DiscoveryPlusIndia**
  - **DiscoveryPlusIndiaShow**
+ - **DiscoveryPlusItaly**
  - **DiscoveryPlusItalyShow**
  - **DiscoveryVR**
  - **Disney**
@@ -388,6 +389,12 @@
  - **GabTV**
  - **Gaia**
  - **GameInformer**
+ - **GameJolt**
+ - **GameJoltCommunity**
+ - **GameJoltGame**
+ - **GameJoltGameSoundtrack**
+ - **GameJoltSearch**
+ - **GameJoltUser**
  - **GameSpot**
  - **GameStar**
  - **Gaskrank**
@@ -799,6 +806,8 @@
  - **OnionStudios**
  - **Ooyala**
  - **OoyalaExternal**
+ - **Opencast**
+ - **OpencastPlaylist**
  - **openrec**
  - **openrec:capture**
  - **OraTV**

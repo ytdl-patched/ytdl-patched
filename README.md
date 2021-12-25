@@ -423,8 +423,8 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     --no-flat-playlist               Extract the videos of a playlist
     --live-from-start                Download livestreams from the start.
                                      Currently only supported for YouTube
-    --no-live-from-start             Download livestreams from the current
-                                     time (default)
+    --no-live-from-start             Download livestreams from the current time
+                                     (default)
     --wait-for-video MIN[-MAX]       Wait for scheduled streams to become
                                      available. Pass the minimum number of
                                      seconds (or range) to wait between retries
@@ -553,8 +553,8 @@ You can also fork the project on github and run your fork's [build workflow](.gi
 
 ## Download Options:
     -N, --concurrent-fragments N     Number of fragments of a dash/hlsnative
-                                     video that should be download concurrently
-                                     (default is 1)
+                                     video that should be downloaded
+                                     concurrently (default is 1)
     -r, --limit-rate RATE            Maximum download rate in bytes per second
                                      (e.g. 50K or 4.2M)
     --throttled-rate RATE            Minimum download rate in bytes per second
@@ -562,8 +562,8 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      video data is re-extracted (e.g. 100K)
     -R, --retries RETRIES            Number of retries (default is 10), or
                                      "infinite"
-    --file-access-retries RETRIES    Number of times to retry on file access error
-                                     (default is 10), or "infinite"
+    --file-access-retries RETRIES    Number of times to retry on file access
+                                     error (default is 10), or "infinite"
     --fragment-retries RETRIES       Number of retries for a fragment (default
                                      is 10), or "infinite" (DASH, hlsnative and
                                      ISM)
@@ -996,7 +996,7 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      emit a warning), detect_or_warn (the
                                      default; fix file if we can, warn
                                      otherwise), force (try fixing even if file
-                                     already exists
+                                     already exists)
     --ffmpeg-location PATH           Location of the ffmpeg binary; either the
                                      path to the binary or its containing
                                      directory
@@ -1479,12 +1479,12 @@ The available fields are:
  - `lang`: Language preference as given by the extractor
  - `quality`: The quality of the format as given by the extractor
  - `source`: Preference of the source as given by the extractor
- - `proto`: Protocol used for download (`m3u8_native` > `m3u8` > `https`/`ftps` > `http`/`ftp` > `http_dash_segments` > `websocket_frag` > other > `mms`/`rtsp` > unknown > `f4f`/`f4m`)
- - `vcodec`: Video Codec (`av01` > `vp9.2` > `vp9` > `h265` > `h264` > `vp8` > `h263` > `theora` > other > unknown)
- - `acodec`: Audio Codec (`opus` > `vorbis` > `aac` > `mp4a` > `mp3` > `eac3` > `ac3` > `dts` > other > unknown)
+ - `proto`: Protocol used for download (`m3u8_native`/`m3u8` > `https`/`ftps` > `http`/`ftp` > `http_dash_segments`> `websocket_frag` > `mms`/`rtsp` > `f4f`/`f4m`)
+ - `vcodec`: Video Codec (`av01` > `vp9.2` > `vp9` > `h265` > `h264` > `vp8` > `h263` > `theora` > other)
+ - `acodec`: Audio Codec (`flac`/`alac` > `wav`/`aiff` > `opus` > `vorbis` > `aac` > `mp4a` > `mp3` > `eac3` > `ac3` > `dts` > other)
  - `codec`: Equivalent to `vcodec,acodec`
- - `vext`: Video Extension (`mp4` > `webm` > `flv` > other > unknown). If `--prefer-free-formats` is used, `webm` is preferred.
- - `aext`: Audio Extension (`m4a` > `aac` > `mp3` > `ogg` > `opus` > `webm` > other > unknown). If `--prefer-free-formats` is used, the order changes to `opus` > `ogg` > `webm` > `m4a` > `mp3` > `aac`.
+ - `vext`: Video Extension (`mp4` > `webm` > `flv` > other). If `--prefer-free-formats` is used, `webm` is preferred.
+ - `aext`: Audio Extension (`m4a` > `aac` > `mp3` > `ogg` > `opus` > `webm` > other). If `--prefer-free-formats` is used, the order changes to `opus` > `ogg` > `webm` > `m4a` > `mp3` > `aac`.
  - `ext`: Equivalent to `vext,aext`
  - `filesize`: Exact filesize, if known in advance
  - `fs_approx`: Approximate filesize calculated from the manifests
@@ -1739,6 +1739,8 @@ The following extractors use this feature:
 #### youtubewebarchive
 * `check_all`: Try to check more at the cost of more requests. One or more of `thumbnails`, `captures`
 
+#### gamejolt
+* `comment_sort`: `hot` (default), `you` (cookies needed), `top`, `new` - choose comment sorting mode (on GameJolt's side)
 
 NOTE: These options may be changed/removed in the future without concern for backward compatibility
 
