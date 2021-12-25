@@ -7,6 +7,7 @@ import subprocess
 import time
 import re
 import json
+import tempfile
 
 from ..longname import split_longname_str
 from .common import AudioConversionError, PostProcessor
@@ -336,20 +337,21 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
                 for i, (path, opts) in enumerate(path_opts) if path)
 
         self.write_debug('ffmpeg command line: %s' % shell_quote(cmd))
-        p = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-
         if use_native_progress:
-            # try:
-            #     stdout, stderr = p.communicate_or_kill(timeout=1)
-            # except subprocess.TimeoutExpired as e:
-            #     stdout, stderr = list(map(lambda x: x or '', (e.stdout, e.stderr)))
-            stdout, stderr = '', ''
-            try:
-                retval = self.read_ffmpeg_status(info_dict, p, True)
-            finally:
-                self._finish_multiline_status()
+            # this is required because read_ffmpeg_status doesn't care about stderr,
+            # and sabotaging reading stderr cause ffmpeg to stuck
+            with tempfile.TemporaryFile() as ste:
+                p = Popen(cmd, stdout=subprocess.PIPE, stderr=ste, stdin=subprocess.PIPE)
+                try:
+                    retval = -1
+                    retval = self.read_ffmpeg_status(info_dict, p, True)
+                finally:
+                    self._finish_multiline_status()
+                ste.seek(0)
+                stderr = ste.read()
         else:
-            stdout, stderr = p.communicate_or_kill()
+            p = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+            stderr = p.communicate_or_kill()[1]
             retval = p.returncode
 
         if isinstance(stderr, bytes):
