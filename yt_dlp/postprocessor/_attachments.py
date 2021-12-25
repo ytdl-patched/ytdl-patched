@@ -46,6 +46,8 @@ class RunsFFmpeg(object):
 
     @staticmethod
     def compute_prefix(match):
+        if not match:
+            return None
         res = int(match.group('E'))
         if match.group('f') is not None:
             res += int(match.group('f'))
@@ -129,11 +131,9 @@ class RunsFFmpeg(object):
             if total_filesize and guessed_size and (abs(guessed_size - total_filesize) / total_filesize) > 0.1:
                 guessed_size = total_filesize
 
-            bitrate_int = None
             bitrate_str = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', ffmpeg_prog_infos['bitrate'])
+            bitrate_int = self.compute_prefix(bitrate_str)
 
-            if bitrate_str:
-                bitrate_int = self.compute_prefix(bitrate_str)
             dl_bytes_int = int_or_none(ffmpeg_prog_infos['total_size'], default=0)
             time_and_size.append((dl_bytes_int, time.time()))
             time_and_size = time_and_size[-avg_len:]
@@ -148,7 +148,7 @@ class RunsFFmpeg(object):
                 'downloaded_bytes': dl_bytes_int,
                 'speed': average_speed,
                 'speed_rate': speed,
-                'bitrate': bitrate_int / 8,
+                'bitrate': None if bitrate_int is None else bitrate_int / 8,
                 'eta': eta_seconds,
                 'total_bytes_estimate': guessed_size,
             })
