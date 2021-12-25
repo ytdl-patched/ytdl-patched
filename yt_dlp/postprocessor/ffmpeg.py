@@ -635,6 +635,7 @@ class FFmpegVideoConvertorPP(FFmpegPostProcessor):
 
 class FFmpegVideoRemuxerPP(FFmpegVideoConvertorPP):
     _ACTION = 'remuxing'
+    _NATIVE_PROGRESS_ENABLED = True
 
     @staticmethod
     def _options(target_ext):
@@ -642,6 +643,8 @@ class FFmpegVideoRemuxerPP(FFmpegVideoConvertorPP):
 
 
 class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
+    _NATIVE_PROGRESS_ENABLED = True
+
     def __init__(self, downloader=None, already_have_subtitle=False):
         super(FFmpegEmbedSubtitlePP, self).__init__(downloader)
         self._already_have_subtitle = already_have_subtitle
@@ -726,6 +729,7 @@ class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
 
 
 class FFmpegMetadataPP(FFmpegPostProcessor):
+    _NATIVE_PROGRESS_ENABLED = True
 
     def __init__(self, downloader, add_metadata=True, add_chapters=True, add_infojson='if_exists'):
         FFmpegPostProcessor.__init__(self, downloader)
@@ -906,6 +910,8 @@ class FFmpegMergerPP(FFmpegPostProcessor):
 
 
 class FFmpegFixupPostProcessor(FFmpegPostProcessor):
+    _NATIVE_PROGRESS_ENABLED = True
+
     def _fixup(self, msg, filename, options):
         temp_filename = prepend_extension(filename, 'temp')
 
