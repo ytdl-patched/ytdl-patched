@@ -155,7 +155,7 @@ class PokemonSoundLibraryIE(InfoExtractor):
         song_entries = [{
             'id': f'pokemon-soundlibrary-{song_id}',
             'url': f'https://soundlibrary.pokemon.co.jp/assets/sounds/wav/{song_id}.wav',
-            'ext': 'wav',
+            'ext': 'mp3',
             'vcodec': 'none',
             'title': song_title,
             'track': song_title,
