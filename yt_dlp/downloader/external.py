@@ -495,7 +495,7 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
         if use_native_progress:
             proc = Popen(
                 args, env=env, universal_newlines=True,
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         else:
             proc = Popen(args, stdin=subprocess.PIPE, env=env)
 
