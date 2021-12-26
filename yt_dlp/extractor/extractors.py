@@ -1580,6 +1580,9 @@ from .threeqsdn import ThreeQSDNIE
 from .tiktok import (
     TikTokIE,
     TikTokUserIE,
+    TikTokSoundIE,
+    TikTokEffectIE,
+    TikTokTagIE,
     DouyinIE,
 )
 from .tinypic import TinyPicIE

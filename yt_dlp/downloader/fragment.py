@@ -438,6 +438,7 @@ class FragmentFD(FileDownloader):
 
         def download_fragment(fragment, ctx):
             frag_index = ctx['fragment_index'] = fragment['frag_index']
+            ctx['last_error'] = None
             if not interrupt_trigger[0]:
                 return False, frag_index
             headers = info_dict.get('http_headers', {}).copy()
@@ -462,6 +463,7 @@ class FragmentFD(FileDownloader):
                     # See https://github.com/ytdl-org/youtube-dl/issues/10165,
                     # https://github.com/ytdl-org/youtube-dl/issues/10448).
                     count += 1
+                    ctx['last_error'] = err
                     if count <= fragment_retries:
                         self.report_retry_fragment(err, frag_index, count, fragment_retries)
                 except DownloadError:
