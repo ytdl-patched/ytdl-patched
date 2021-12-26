@@ -1174,6 +1174,9 @@
  - **ThreeSpeak**
  - **ThreeSpeakUser**
  - **TikTok**
+ - **tiktok:effect**
+ - **tiktok:sound**
+ - **tiktok:tag**
  - **tiktok:user**
  - **tinypic**: tinypic.com videos
  - **TMZ**
