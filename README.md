@@ -168,7 +168,7 @@ You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens
     * Youtube music Albums, channels etc can be downloaded ([except self-uploaded music](https://github.com/yt-dlp/yt-dlp/issues/723))
     * Download livestreams from the start using `--live-from-start`
 
-* **Cookies from browser**: Cookies can be automatically extracted from all major web browsers using `--cookies-from-browser BROWSER[:PROFILE]`
+* **Cookies from browser**: Cookies can be automatically extracted from all major web browsers using `--cookies-from-browser BROWSER[+KEYRING][:PROFILE]`
 
 * **Split video by chapters**: Videos can be split into multiple files based on chapters using `--split-chapters`
 
@@ -334,7 +334,7 @@ While all the other dependencies are optional, `ffmpeg` and `ffprobe` are highly
 * [**mutagen**](https://github.com/quodlibet/mutagen) - For embedding thumbnail in certain formats. Licensed under [GPLv2+](https://github.com/quodlibet/mutagen/blob/master/COPYING)
 * [**pycryptodomex**](https://github.com/Legrandin/pycryptodome) - For decrypting AES-128 HLS streams and various other data. Licensed under [BSD2](https://github.com/Legrandin/pycryptodome/blob/master/LICENSE.rst)
 * [**websockets**](https://github.com/aaugustin/websockets) - For downloading over websocket. Licensed under [BSD3](https://github.com/aaugustin/websockets/blob/main/LICENSE)
-* [**keyring**](https://github.com/jaraco/keyring) - For decrypting cookies of chromium-based browsers on Linux. Licensed under [MIT](https://github.com/jaraco/keyring/blob/main/LICENSE)
+* [**secretstorage**](https://github.com/mitya57/secretstorage) - For accessing the Gnome keyring while decrypting cookies of Chromium-based browsers on Linux. Licensed under [BSD](https://github.com/mitya57/secretstorage/blob/master/LICENSE)
 * [**AtomicParsley**](https://github.com/wez/atomicparsley) - For embedding thumbnail in mp4/m4a if mutagen is not present. Licensed under [GPLv2+](https://github.com/wez/atomicparsley/blob/master/COPYING)
 * [**rtmpdump**](http://rtmpdump.mplayerhq.hu) - For downloading `rtmp` streams. ffmpeg will be used as a fallback. Licensed under [GPLv2+](http://rtmpdump.mplayerhq.hu)
 * [**mplayer**](http://mplayerhq.hu/design7/info.html) or [**mpv**](https://mpv.io) - For downloading `rstp` streams. ffmpeg will be used as a fallback. Licensed under [GPLv2+](https://github.com/mpv-player/mpv/blob/master/Copyright)
@@ -635,7 +635,7 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     -P, --paths [TYPES:]PATH         The paths where the files should be
                                      downloaded. Specify the type of file and
                                      the path separated by a colon ":". All the
-                                     same types as --output are supported.
+                                     same TYPES as --output are supported.
                                      Additionally, you can also provide "home"
                                      (default) and "temp" paths. All
                                      intermediary files are first downloaded to
@@ -707,16 +707,19 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      from and dump cookie jar in
     --no-cookies                     Do not read/dump cookies from/to file
                                      (default)
-    --cookies-from-browser BROWSER[:PROFILE]
-                                     Load cookies from a user profile of the
-                                     given web browser. Currently supported
-                                     browsers are: brave, chrome, chromium,
-                                     edge, firefox, opera, safari, vivaldi. You
-                                     can specify the user profile name or
-                                     directory using "BROWSER:PROFILE_NAME" or
-                                     "BROWSER:PROFILE_PATH". If no profile is
-                                     given, the most recently accessed one is
-                                     used
+    --cookies-from-browser BROWSER[+KEYRING][:PROFILE]
+                                     The name of the browser and (optionally)
+                                     the name/path of the profile to load
+                                     cookies from, separated by a ":". Currently
+                                     supported browsers are: brave, chrome,
+                                     chromium, edge, firefox, opera, safari,
+                                     vivaldi. By default, the most recently
+                                     accessed profile is used. The keyring used
+                                     for decrypting Chromium cookies on Linux
+                                     can be (optionally) specified after the
+                                     browser name separated by a "+". Currently
+                                     supported keyrings are: basictext,
+                                     gnomekeyring, kwallet
     --no-cookies-from-browser        Do not load cookies from browser (default)
     --cache-dir DIR                  Location in the filesystem where youtube-dl
                                      can store some downloaded information (such
@@ -1369,7 +1372,7 @@ $ yt-dlp -o "%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" "https://www.y
 $ yt-dlp -o "%(upload_date>%Y)s/%(title)s.%(ext)s" "https://www.youtube.com/playlist?list=PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re"
 
 # Prefix playlist index with " - " separator, but only if it is available
-$ yt-dlp -o '%(playlist_index|)s%(playlist_index& - |)s%(title)s.%(ext)s' BaW_jenozKc https://www.youtube.com/user/TheLinuxFoundation/playlists
+$ yt-dlp -o '%(playlist_index|)s%(playlist_index& - |)s%(title)s.%(ext)s' BaW_jenozKc "https://www.youtube.com/user/TheLinuxFoundation/playlists"
 
 # Download all playlists of YouTube channel/user keeping each playlist in separate directory:
 $ yt-dlp -o "%(uploader)s/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" "https://www.youtube.com/user/TheLinuxFoundation/playlists"
@@ -1379,6 +1382,13 @@ $ yt-dlp -u user -p password -P "~/MyVideos" -o "%(playlist)s/%(chapter_number)s
 
 # Download entire series season keeping each series and each season in separate directory under C:/MyVideos
 $ yt-dlp -P "C:/MyVideos" -o "%(series)s/%(season_number)s - %(season)s/%(episode_number)s - %(episode)s.%(ext)s" "https://videomore.ru/kino_v_detalayah/5_sezon/367617"
+
+# Download video as "C:\MyVideos\uploader\title.ext", subtitles as "C:\MyVideos\subs\uploader\title.ext"
+# and put all temporary files in "C:\MyVideos\tmp"
+$ yt-dlp -P "C:/MyVideos" -P "temp:tmp" -P "subtitle:subs" -o "%(uploader)s/%(title)s.%(ext)s" BaW_jenoz --write-subs
+
+# Download video as "C:\MyVideos\uploader\title.ext" and subtitles as "C:\MyVideos\uploader\subs\title.ext"
+$ yt-dlp -P "C:/MyVideos" -o "%(uploader)s/%(title)s.%(ext)s" -o "subtitle:%(uploader)s/subs/%(title)s.%(ext)s" BaW_jenozKc --write-subs
 
 # Stream the video being downloaded to stdout
 $ yt-dlp -o - BaW_jenozKc
