@@ -295,6 +295,7 @@
  - **DouyuTV**: 斗鱼
  - **DPlay**
  - **DRBonanza**
+ - **Drooble**
  - **Dropbox**
  - **Dropout**
  - **DropoutSeason**
@@ -478,6 +479,7 @@
  - **IndavideoEmbed**
  - **InfoQ**
  - **Instagram**
+ - **instagram:story**
  - **instagram:tag**: Instagram hashtag search URLs
  - **instagram:user**: Instagram user profile
  - **InstagramIOS**: IOS instagram:// URL
