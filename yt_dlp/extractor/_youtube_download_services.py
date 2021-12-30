@@ -1,6 +1,4 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
+# automating YouTube downloading services to download deleted videos
 import re
 
 from ..compat import compat_urllib_parse_urlencode, compat_str
@@ -8,6 +6,7 @@ from ..utils import (
     ExtractorError,
     int_or_none,
     parse_filesize,
+    parse_qs,
     urlencode_postdata,
     try_get,
 )
@@ -15,9 +14,9 @@ from .common import InfoExtractor
 from .youtube import YoutubeIE
 
 
-class Y2mateBaseIE(InfoExtractor):
+class CustomPrefixedBaseIE(InfoExtractor):
     BASE_IE = InfoExtractor
-    PREFIXES = ('y2:', 'y2mate:')
+    PREFIXES = ()
 
     @classmethod
     def remove_prefix(cls, url):
@@ -36,9 +35,11 @@ class Y2mateBaseIE(InfoExtractor):
         return False
 
 
-class Y2mateIE(Y2mateBaseIE):
+# Y2Mate
+class Y2mateIE(CustomPrefixedBaseIE):
     BASE_IE = YoutubeIE
     IE_NAME = 'y2mate'
+    PREFIXES = ('y2:', 'y2mate:')
     RUSH_PREFIXES = ('y2r:', 'y2mater:', 'y2materush:')
 
     def _real_extract(self, url):
@@ -195,3 +196,69 @@ class Y2mateIE(Y2mateBaseIE):
 
         self._sort_formats(info_data['formats'])
         return info_data
+
+
+# ClipConverter
+class ClipConverterIE(CustomPrefixedBaseIE):
+    BASE_IE = YoutubeIE
+    PREFIXES = ('cc:', 'clipconverter:')
+
+    def _real_extract(self, url):
+        video_id = self.BASE_IE._match_id(self.remove_prefix(url))
+        post_data = {
+            'mediaurl': f"https://www.youtube.com/watch?v={video_id}",
+            'service': 'YouTube',
+            'ref': '',
+            'lang': 'en',
+            'client_urlmap': 'none',
+            'addon_urlmap': '',
+            'cookie': '',
+            'addon_cookie': '',
+            'addon_title': '',
+            'ablock': '1',
+            'clientside': '1',
+            'addon_page': 'none',
+            'addon_browser': '',
+            'addon_version': '',
+            'filetype': 'MP4',
+            'format': '',
+            'audiovol': '0',
+            'audiochannel': '2',
+            'audiobr': '128'
+        }
+        response = self._download_json(
+            'https://www.clipconverter.cc/check.php', video_id, note='Requesting for extraction',
+            data=urlencode_postdata(post_data),
+            headers={
+                'Origin': 'https://www.clipconverter.cc',
+                'Referer': 'https://www.clipconverter.cc/2/',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            })
+
+        formats = []
+        for fmt in response.get('url') or []:
+            text = fmt.get('text')
+            heightp = self._search_regex(r'(\d+p)', text, 'resolution', default='unknown_size')
+            fps = self._search_regex(r'(\d+)fps', text, 'framerate', default=None)
+            formats.append({
+                'format_id': f'{heightp}-{fmt.get("filetype")}',
+                'url': fmt.get('url'),
+                'filesize': int_or_none(fmt.get('size')),
+                'height': int_or_none(heightp[:-1]),
+                'ext': try_get(fmt, lambda x: x['filetype'].lower()),
+                'fps': int_or_none(fps),
+            })
+
+        # convert mode isn't implemented yet; this is just Download mode
+        if not formats:
+            raise ExtractorError(parse_qs(response['redirect'])['errorstr'][0], expected=True)
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': response.get('filename') or response.get('id3title'),
+            'uploader': response.get('channel') or response.get('id3artist'),
+            'category': response.get('category'),
+            'formats': formats,
+        }
