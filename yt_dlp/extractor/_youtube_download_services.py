@@ -40,18 +40,9 @@ class Y2mateIE(CustomPrefixedBaseIE):
     BASE_IE = YoutubeIE
     IE_NAME = 'y2mate'
     PREFIXES = ('y2:', 'y2mate:')
-    RUSH_PREFIXES = ('y2r:', 'y2mater:', 'y2materush:')
 
     def _real_extract(self, url):
-        mode = try_get(self._configuration_arg('mode'), lambda x: x[0], compat_str)
-        if not mode:
-            # backward compatibility
-            for p in self.RUSH_PREFIXES:
-                if url.startswith(p):
-                    mode = 'rush'
-                    break
-        if not mode:
-            mode = 'normal'
+        mode = try_get(self._configuration_arg('mode'), lambda x: x[0], compat_str) or 'normal'
 
         if mode == 'rush':
             self.report_warning('Please run again without rush mode')
@@ -117,17 +108,15 @@ class Y2mateIE(CustomPrefixedBaseIE):
             if not video_url or 'app.y2mate.com' in video_url:
                 continue
 
-            preference = int_or_none(self._search_regex(r'(\d+)p?', format_name, 'video size', group=1, default=None))
             formats.append({
                 'format_id': '%s-%s' % (format_name, format_ext),
                 'resolution': format_name,
+                'height': int_or_none(format_name[:-1]),
                 'filesize_approx': parse_filesize(estimate_size),
                 'ext': format_ext,
                 'url': video_url,
                 'vcodec': 'unknown',
                 'acodec': 'unknown',
-                'preference': preference,
-                'quality': preference,
             })
 
         for rows in re.finditer(r'''(?x)<tr>\s*
@@ -239,13 +228,14 @@ class ClipConverterIE(CustomPrefixedBaseIE):
         formats = []
         for fmt in response.get('url') or []:
             text = fmt.get('text')
-            heightp = self._search_regex(r'(\d+p)', text, 'resolution', default='unknown_size')
+            resol = self._search_regex(r'(\d+p)', text, 'resolution', default='unknown_size')
             fps = self._search_regex(r'(\d+)fps', text, 'framerate', default=None)
             formats.append({
-                'format_id': f'{heightp}-{fmt.get("filetype")}',
+                'format_id': f'{resol}-{fmt.get("filetype")}',
                 'url': fmt.get('url'),
                 'filesize': int_or_none(fmt.get('size')),
-                'height': int_or_none(heightp[:-1]),
+                'resolution': resol,
+                'height': int_or_none(resol[:-1]),
                 'ext': try_get(fmt, lambda x: x['filetype'].lower()),
                 'fps': int_or_none(fps),
             })
@@ -262,3 +252,29 @@ class ClipConverterIE(CustomPrefixedBaseIE):
             'category': response.get('category'),
             'formats': formats,
         }
+
+
+# Combined
+class YtAlternateIE(CustomPrefixedBaseIE):
+    BASE_IE = YoutubeIE
+    PREFIXES = ('yta:', 'dig:', 'ytalternate:')
+    # _CALL_IES = ('Y2mate', 'ClipConverter', 'Youtube')
+    _CALL_IES = ('Y2mate', 'ClipConverter')
+
+    def _real_extract(self, url):
+        video_id = self.BASE_IE._match_id(self.remove_prefix(url))
+        infodicts = []
+        for exn in self._CALL_IES:
+            try:
+                dct = self._downloader.get_info_extractor(exn).extract(video_id)
+                for fmt in dct['formats']:
+                    fmt['format_note'] = exn
+                infodicts.append(dct)
+            except KeyboardInterrupt:
+                raise
+            except BaseException as ex:
+                self.report_warning(f'{ex}')
+
+        if not infodicts:
+            raise ExtractorError('Extraction failed.', expected=True)
+        return self._merge_video_infodicts(infodicts)

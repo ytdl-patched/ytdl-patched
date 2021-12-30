@@ -3737,7 +3737,7 @@ class InfoExtractor(object):
             return [] if default is NO_DEFAULT else default
         return list(val) if casesense else [x.lower() for x in val]
 
-    def _merge_video_infodicts(self, *dicts, sort_formats=True):
+    def _merge_video_infodicts(self, dicts, sort_formats=True):
         valid_dicts = list(filter(None, dicts))
         all_info = merge_dicts(*filter(None, dicts))
 

@@ -2045,4 +2045,5 @@ from ._trashed import (
 from ._youtube_download_services import (
     Y2mateIE,
     ClipConverterIE,
+    YtAlternateIE,
 )
