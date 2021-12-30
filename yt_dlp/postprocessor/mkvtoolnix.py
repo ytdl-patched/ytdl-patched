@@ -14,6 +14,7 @@ from ..utils import (
     encodeFilename,
     Popen,
     PostProcessingError,
+    prepend_extension,
     shell_quote,
     variadic,
 )
@@ -134,3 +135,21 @@ class MkvToolNixPostProcessor(PostProcessor):
             if out_path:
                 self.try_utime(out_path, oldest_mtime, oldest_mtime)
         return stderr
+
+
+class MkvMergePostProcessor(MkvToolNixPostProcessor):
+
+    @PostProcessor._restrict_to(images=False)
+    def run(self, info):
+        filename = info['filepath']
+        temp_filename = prepend_extension(filename, 'temp')
+        args = []
+        for (i, fmt) in enumerate(info['requested_formats']):
+            if fmt.get('acodec') != 'none':
+                args.extend(['--audio-tracks', '0'])
+            if fmt.get('vcodec') != 'none':
+                args.extend(['--video-tracks', '0'])
+        self.to_screen('Merging formats into "%s"' % filename)
+        self.run_binary(info['__files_to_merge'], temp_filename, args, info_dict=info)
+        self._downloader.rename(temp_filename, filename)
+        return info['__files_to_merge'], info
