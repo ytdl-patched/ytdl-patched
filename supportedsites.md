@@ -211,6 +211,7 @@
  - **CiscoLiveSession**
  - **ciscowebex**: Cisco Webex
  - **CJSW**
+ - **ClipConverter**
  - **cliphunter**
  - **Clippit**
  - **ClipRs**
@@ -1466,6 +1467,7 @@
  - **youtube:watchlater**: Youtube watch later list; ":ytwatchlater" keyword (requires cookies)
  - **YoutubeYtBe**: youtu.be
  - **YoutubeYtUser**: YouTube user videos; "ytuser:" prefix
+ - **YtAlternate**
  - **Zapiks**
  - **Zattoo**
  - **ZattooLive**
