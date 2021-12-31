@@ -209,8 +209,7 @@ class AbemaTVIE(AbemaTVBaseIE):
                 'osTimezone': 'Asia/Tokyo',
                 'appId': 'tv.abema',
                 'appVersion': '3.27.1'
-            },
-            headers={
+            }, headers={
                 'Authorization': 'Bearer ' + self._get_device_token()
             })['token']
 
@@ -235,7 +234,7 @@ class AbemaTVIE(AbemaTVBaseIE):
             data=json.dumps({
                 method: username,
                 "password": password
-            }), headers={
+            }).encode('utf-8'), headers={
                 'Authorization': 'Bearer ' + self._get_device_token()
             })
 
