@@ -245,8 +245,13 @@ def run_update(ydl):
             return report_network_error('verify the new package')
 
         try:
-            with open(filename, 'wb') as outf:
+            with open(filename + '.new', 'wb') as outf:
                 outf.write(newcontent)
+        except (IOError, OSError):
+            return report_unable('download current version')
+
+        try:
+            os.replace(filename + '.new', filename)
         except (IOError, OSError):
             return report_unable('overwrite current version')
 
