@@ -40,7 +40,7 @@ class AbemaLicenseHandler(YoutubeDLExtractorHandler):
 
     def _get_videokey_from_ticket(self, ticket):
         to_show = self.ie._downloader.params.get('verbose', False)
-        media_token = self.ie._get_media_token()
+        media_token = self.ie._get_media_token(to_show=to_show)
 
         license_response = self.ie._download_json(
             'https://license.abema.io/abematv-hls', None, note='Requesting playback license' if to_show else False,
@@ -196,12 +196,12 @@ class AbemaTVIE(AbemaTVBaseIE):
 
         return self._USERTOKEN
 
-    def _get_media_token(self, invalidate=False):
+    def _get_media_token(self, invalidate=False, to_show=True):
         if not invalidate and self._MEDIATOKEN:
             return self._MEDIATOKEN
 
         self._MEDIATOKEN = self._download_json(
-            'https://api.abema.io/v1/media/token', None, note='Fetching media token',
+            'https://api.abema.io/v1/media/token', None, note='Fetching media token' if to_show else False,
             query={
                 'osName': 'android',
                 'osVersion': '6.0.1',
