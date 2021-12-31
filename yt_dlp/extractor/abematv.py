@@ -305,7 +305,7 @@ class AbemaTVIE(AbemaTVBaseIE):
             ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'), default=[])
             if 3 not in ondemand_types:
                 # cannot acquire decryption key for these streams
-                raise ExtractorError("Premium stream is not supported", expected=True)
+                self.report_warning('Premium stream is not supported')
 
             m3u8_url = f'https://vod-abematv.akamaized.net/program/{video_id}/playlist.m3u8'
         elif video_type == 'slots':
@@ -314,14 +314,14 @@ class AbemaTVIE(AbemaTVBaseIE):
                 note='Checking playability',
                 headers=headers)
             if not traverse_obj(api_response, ('slot', 'flags', 'timeshiftFree'), default=False):
-                raise ExtractorError("Premium stream is not supported", expected=True)
+                self.report_warning('Premium stream is not supported')
 
             m3u8_url = f'https://vod-abematv.akamaized.net/slot/{video_id}/playlist.m3u8'
         else:
             raise ExtractorError('Unreachable')
 
         if is_live:
-            self.report_warning("This is a livestream; yt-dlp doesn't support downloading natively, but FFmpeg cannot handle m3u8 manifests from AbemaTV")
+            self.report_warning('This is a livestream; yt-dlp doesn\'t support downloading natively, but FFmpeg cannot handle m3u8 manifests from AbemaTV')
             self.report_warning('Please consider using Streamlink to download these streams (https://github.com/streamlink/streamlink)')
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id, ext='mp4', live=is_live)
