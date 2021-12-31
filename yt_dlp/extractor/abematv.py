@@ -325,6 +325,7 @@ class AbemaTVIE(AbemaTVBaseIE):
             self.report_warning('Please consider using Streamlink to download these streams (https://github.com/streamlink/streamlink)')
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id, ext='mp4', live=is_live)
+        self._sort_formats(formats)
 
         info.update({
             'id': video_id,
