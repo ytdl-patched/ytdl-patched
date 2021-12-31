@@ -236,7 +236,7 @@ class ShowsProgress(object):
     def format_speed_rate(rate):
         if rate is None:
             return '---x'
-        return '%.2dx' % rate
+        return '%.1dx' % rate
 
     @staticmethod
     def format_retries(retries):
