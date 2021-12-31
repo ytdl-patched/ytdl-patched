@@ -246,6 +246,7 @@ def run_update(ydl):
 
         try:
             with open(filename + '.new', 'wb') as outf:
+                os.chmod(outf.fileno(), os.stat(filename).st_mode)
                 outf.write(newcontent)
         except (IOError, OSError):
             return report_unable('download current version')
