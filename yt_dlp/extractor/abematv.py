@@ -209,9 +209,8 @@ class AbemaTVIE(AbemaTVBaseIE):
                 'osTimezone': 'Asia/Tokyo',
                 'appId': 'tv.abema',
                 'appVersion': '3.27.1'
-            },
-            headers={
-                'Authorization': 'Bearer ' + self._get_device_token()
+            }, headers={
+                'Authorization': 'bearer ' + self._get_device_token()
             })['token']
 
         return self._MEDIATOKEN
@@ -235,8 +234,11 @@ class AbemaTVIE(AbemaTVBaseIE):
             data=json.dumps({
                 method: username,
                 "password": password
-            }), headers={
-                'Authorization': 'Bearer ' + self._get_device_token()
+            }).encode('utf-8'), headers={
+                'Authorization': 'bearer ' + self._get_device_token(),
+                'Origin': 'https://abema.tv',
+                'Referer': 'https://abema.tv/',
+                'Content-Type': 'application/json',
             })
 
         self._USERTOKEN = login_response['token']
@@ -248,7 +250,7 @@ class AbemaTVIE(AbemaTVBaseIE):
         # (unless there's a way to hook before downloading by extractor)
         video_id, video_type = self._match_valid_url(url).group('id', 'type')
         headers = {
-            'Authorization': 'Bearer ' + self._get_device_token(),
+            'Authorization': 'bearer ' + self._get_device_token(),
         }
         video_type = video_type.split('/')[-1]
 
