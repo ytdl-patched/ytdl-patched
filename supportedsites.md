@@ -514,6 +514,7 @@
  - **KarriereVideos**
  - **Katsomo**
  - **KeezMovies**
+ - **KelbyOne**
  - **Ketnet**
  - **khanacademy**
  - **khanacademy:unit**
