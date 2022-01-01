@@ -63,12 +63,8 @@ def is_non_updateable():
 
 
 def get_version_info(ydl):
-    try:
-        JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases/latest'
-        version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
-    except BaseException:
-        JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
-        version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
+    JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
+    version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
     return json.loads(version_info)
 
 # def get_version_info(ydl):
@@ -260,7 +256,17 @@ def run_update(ydl):
         return
 
     elif variant == 'homebrew':
-        os.execvp('brew', ['brew', 'upgrade', 'nao20010128nao/my/ytdl-patched'])
+        stdout, stderr = Popen(['brew', 'tap'], stdout=subprocess.PIPE, encoding='utf-8').communicate()
+        taps = stdout.trim().split()
+        if 'nao20010128nao/my' in taps:
+            ydl.to_screen('Fixing taps to point to new one')
+            ret = Popen(['brew', 'untap', '-f', 'nao20010128nao/my']).wait()
+            if ret != 0:
+                return report_unable('untap old tap')
+            ret = Popen(['brew', 'tap', 'lesmiscore/my']).wait()
+            if ret != 0:
+                return report_unable('tap new tap')
+        os.execvp('brew', ['brew', 'upgrade', 'lesmiscore/my/ytdl-patched'])
 
     assert False, f'Unhandled variant: {variant}'
 

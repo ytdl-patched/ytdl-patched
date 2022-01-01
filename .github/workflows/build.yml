@@ -276,9 +276,9 @@ jobs:
     steps:
       - name: Upload to my homebrew repository
         run: |
-          git config --global user.name nao20010128nao
+          git config --global user.name lesmiscore
           git config --global user.email nao20010128@gmail.com
-          git clone https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/nao20010128nao/homebrew-my.git
+          git clone https://lesmiscore:${{ secrets.GH_PAT }}@github.com/lesmiscore/homebrew-my.git
           cd homebrew-my
           echo $FILEHASH_TAR $VERSION
           wget https://github.com/ytdl-patched/ytdl-patched/raw/ytdlp/devscripts/update-formulae.py -O update-formulae.py

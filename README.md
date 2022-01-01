@@ -8,7 +8,7 @@ A command-line program to download videos from YouTube and many other [video pla
 <!-- MANPAGE: END EXCLUDED SECTION -->
 
 ## MIRRORS
-- ~~https://github.com/nao20010128nao/ytdl-patched (passed away)~~
+- ~~https://github.com/Lesmiscore/ytdl-patched (passed away)~~
 - https://github.com/ytdl-patched/ytdl-patched (primary)
 - https://bitbucket.org/nao20010128nao/ytdl-patched (secondary)
 - https://forge.tedomum.net/nao20010128nao/ytdl-patched (secondary)
@@ -288,7 +288,7 @@ Note that on some systems, you may need to use `py` or `python` instead of `pyth
 macOS or Linux users that are using Homebrew can also install it by:
 
 ```
-brew install nao20010128nao/my/ytdl-patched
+brew install lesmiscore/my/ytdl-patched
 ```
 
 ## UPDATE
@@ -296,7 +296,7 @@ You can use `yt-dlp -U` to update if you are [using the provided release](#using
 
 If you [installed with pip](#with-pip), simply re-run the same command that was used to install the program
 
-If you [installed using Homebrew](#with-homebrew), run `brew upgrade nao20010128nao/my/ytdl-patched`
+If you [installed using Homebrew](#with-homebrew), run `brew upgrade lesmiscore/my/ytdl-patched`
 
 <!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 ## RELEASE FILES
