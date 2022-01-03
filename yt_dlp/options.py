@@ -16,6 +16,7 @@ from .utils import (
     expand_path,
     get_executable_path,
     OUTTMPL_TYPES,
+    POSTPROCESS_WHEN,
     preferredencoding,
     remove_end,
     write_string,
@@ -152,9 +153,9 @@ def parseOpts(overrideArguments=None):
     def _dict_from_options_callback(
             option, opt_str, value, parser,
             allowed_keys=r'[\w-]+', delimiter=':', default_key=None, process=None, multiple_keys=True,
-            process_key=str.lower):
+            process_key=str.lower, append=False):
 
-        out_dict = getattr(parser.values, option.dest)
+        out_dict = dict(getattr(parser.values, option.dest))
         if multiple_keys:
             allowed_keys = r'(%s)(,(%s))*' % (allowed_keys, allowed_keys)
         mobj = re.match(r'(?i)(?P<keys>%s)%s(?P<val>.*)$' % (allowed_keys, delimiter), value)
@@ -171,7 +172,8 @@ def parseOpts(overrideArguments=None):
         except Exception as err:
             raise optparse.OptionValueError(f'wrong {opt_str} formatting; {err}')
         for key in keys:
-            out_dict[key] = val
+            out_dict[key] = out_dict.get(key, []) + [val] if append else val
+        setattr(parser.values, option.dest, out_dict)
 
     # No need to wrap help messages if we're on a wide console
     columns = compat_get_terminal_size().columns
@@ -984,10 +986,17 @@ def parseOpts(overrideArguments=None):
         help='Do not download the video but write all related files (Alias: --no-download)')
     verbosity.add_option(
         '-O', '--print',
-        metavar='TEMPLATE', action='append', dest='forceprint',
-        help=(
-            'Quiet, but print the given fields for each video. Simulate unless --no-simulate is used. '
-            'Either a field name or same syntax as the output template can be used'))
+        metavar='[WHEN:]TEMPLATE', dest='forceprint', default={}, type='str',
+        action='callback', callback=_dict_from_options_callback,
+        callback_kwargs={
+            'allowed_keys': 'video|playlist',
+            'default_key': 'video',
+            'multiple_keys': False,
+            'append': True,
+        }, help=(
+            'Field name or output template to print to screen per video. '
+            'Prefix the template with "playlist:" to print it once per playlist instead. '
+            'Implies --quiet and --simulate (unless --no-simulate is used). This option can be used multiple times'))
     verbosity.add_option(
         '-g', '--get-url',
         action='store_true', dest='geturl', default=False,
@@ -1491,29 +1500,33 @@ def parseOpts(overrideArguments=None):
         dest='ffmpeg_location',
         help='Location of the ffmpeg binary; either the path to the binary or its containing directory')
     postproc.add_option(
-        '--exec', metavar='CMD',
-        action='append', dest='exec_cmd',
-        help=(
-            'Execute a command on the file after downloading and post-processing. '
+        '--exec',
+        metavar='[WHEN:]CMD', dest='exec_cmd', default={}, type='str',
+        action='callback', callback=_dict_from_options_callback,
+        callback_kwargs={
+            'allowed_keys': '|'.join(map(re.escape, POSTPROCESS_WHEN)),
+            'default_key': 'after_move',
+            'multiple_keys': False,
+            'append': True,
+        }, help=(
+            'Execute a command, optionally prefixed with when to execute it (after_move if unspecified), separated by a ":". '
+            'Supported values of "WHEN" are the same as that of --use-postprocessor. '
             'Same syntax as the output template can be used to pass any field as arguments to the command. '
-            'An additional field "filepath" that contains the final path of the downloaded file is also available. '
-            'If no fields are passed, %(filepath)q is appended to the end of the command. '
+            'After download, an additional field "filepath" that contains the final path of the downloaded file '
+            'is also available, and if no fields are passed, %(filepath)q is appended to the end of the command. '
             'This option can be used multiple times'))
     postproc.add_option(
         '--no-exec',
-        action='store_const', dest='exec_cmd', const=[],
+        action='store_const', dest='exec_cmd', const={},
         help='Remove any previously defined --exec')
     postproc.add_option(
         '--exec-before-download', metavar='CMD',
         action='append', dest='exec_before_dl_cmd',
-        help=(
-            'Execute a command before the actual download. '
-            'The syntax is the same as --exec but "filepath" is not available. '
-            'This option can be used multiple times'))
+        help=optparse.SUPPRESS_HELP)
     postproc.add_option(
         '--no-exec-before-download',
         action='store_const', dest='exec_before_dl_cmd', const=[],
-        help='Remove any previously defined --exec-before-download')
+        help=optparse.SUPPRESS_HELP)
     postproc.add_option(
         '--convert-subs', '--convert-sub', '--convert-subtitles',
         metavar='FORMAT', dest='convertsubtitles', default=None,
@@ -1575,8 +1588,10 @@ def parseOpts(overrideArguments=None):
             'ARGS are a semicolon ";" delimited list of NAME=VALUE. '
             'The "when" argument determines when the postprocessor is invoked. '
             'It can be one of "pre_process" (after extraction), '
-            '"before_dl" (before video download), "post_process" (after video download; default) '
-            'or "after_move" (after moving file to their final locations). '
+            '"before_dl" (before video download), "post_process" (after video download; default), '
+            '"after_move" (after moving file to their final locations), '
+            '"after_video" (after downloading and processing all formats of a video), '
+            'or "playlist" (end of playlist). '
             'This option can be used multiple times to add different postprocessors'))
 
     sponsorblock = optparse.OptionGroup(parser, 'SponsorBlock Options', description=(

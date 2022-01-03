@@ -3062,6 +3062,9 @@ def qualities(quality_ids):
     return q
 
 
+POSTPROCESS_WHEN = {'pre_process', 'before_dl', 'after_move', 'post_process', 'after_video', 'playlist'}
+
+
 DEFAULT_OUTTMPL = {
     # reverted to match older version of ytdl-patched behavior.
     # changing this will trigger disastrous bugs in my local scripts

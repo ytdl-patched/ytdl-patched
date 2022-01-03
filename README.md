@@ -764,10 +764,12 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      formats are found (default)
     --skip-download                  Do not download the video but write all
                                      related files (Alias: --no-download)
-    -O, --print TEMPLATE             Quiet, but print the given fields for each
-                                     video. Simulate unless --no-simulate is
-                                     used. Either a field name or same syntax as
-                                     the output template can be used
+    -O, --print [WHEN:]TEMPLATE      Field name or output template to print to
+                                     screen per video. Prefix the template with
+                                     "playlist:" to print it once per playlist
+                                     instead. Implies --quiet and --simulate
+                                     (unless --no-simulate is used). This option
+                                     can be used multiple times
     -j, --dump-json                  Quiet, but print JSON information for each
                                      video. Simulate unless --no-simulate is
                                      used. See "OUTPUT TEMPLATE" for a
@@ -1003,23 +1005,20 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     --ffmpeg-location PATH           Location of the ffmpeg binary; either the
                                      path to the binary or its containing
                                      directory
-    --exec CMD                       Execute a command on the file after
-                                     downloading and post-processing. Same
-                                     syntax as the output template can be used
-                                     to pass any field as arguments to the
-                                     command. An additional field "filepath"
+    --exec [WHEN:]CMD                Execute a command, optionally prefixed with
+                                     when to execute it (after_move if
+                                     unspecified), separated by a ":". Supported
+                                     values of "WHEN" are the same as that of
+                                     --use-postprocessor. Same syntax as the
+                                     output template can be used to pass any
+                                     field as arguments to the command. After
+                                     download, an additional field "filepath"
                                      that contains the final path of the
-                                     downloaded file is also available. If no
-                                     fields are passed, %(filepath)q is appended
-                                     to the end of the command. This option can
-                                     be used multiple times
-    --no-exec                        Remove any previously defined --exec
-    --exec-before-download CMD       Execute a command before the actual
-                                     download. The syntax is the same as --exec
-                                     but "filepath" is not available. This
+                                     downloaded file is also available, and if
+                                     no fields are passed, %(filepath)q is
+                                     appended to the end of the command. This
                                      option can be used multiple times
-    --no-exec-before-download        Remove any previously defined
-                                     --exec-before-download
+    --no-exec                        Remove any previously defined --exec
     --convert-subs FORMAT            Convert the subtitles to another format
                                      (currently supported: srt|vtt|ass|lrc)
                                      (Alias: --convert-subtitles)
@@ -1058,10 +1057,12 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      "pre_process" (after extraction),
                                      "before_dl" (before video download),
                                      "post_process" (after video download;
-                                     default) or "after_move" (after moving file
-                                     to their final locations). This option can
-                                     be used multiple times to add different
-                                     postprocessors
+                                     default), "after_move" (after moving file
+                                     to their final locations), "after_video"
+                                     (after downloading and processing all
+                                     formats of a video), or "playlist" (end of
+                                     playlist). This option can be used multiple
+                                     times to add different postprocessors
 
 ## SponsorBlock Options:
 Make chapter entries for, or remove various segments (sponsor,
@@ -1268,6 +1269,7 @@ The available fields are:
  - `extractor_key` (string): Key name of the extractor
  - `epoch` (numeric): Unix epoch when creating the file
  - `autonumber` (numeric): Number that will be increased with each download, starting at `--autonumber-start`
+ - `video_autonumber` (numeric): Number that will be increased with each video
  - `n_entries` (numeric): Total number of extracted items in the playlist
  - `playlist` (string): Name or id of the playlist that contains the video
  - `playlist_index` (numeric): Index of the video in the playlist padded with leading zeros according the final index
@@ -1920,6 +1922,8 @@ While these options are redundant, they are still expected to be used due to the
 #### Not recommended
 While these options still work, their use is not recommended since there are other alternatives to achieve the same
 
+    --exec-before-download CMD       --exec "before_dl:CMD"
+    --no-exec-before-download        --no-exec
     --all-formats                    -f all
     --all-subs                       --sub-langs all --write-subs
     --print-json                     -j --no-simulate
