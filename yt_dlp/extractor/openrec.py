@@ -128,7 +128,7 @@ class OpenRecMovieIE(InfoExtractor):
     IE_NAME = 'openrec:movie'
     _VALID_URL = r'https?://(?:www\.)?openrec\.tv/movie/(?P<id>[^/]+)'
     _TESTS = [{
-        'url': 'https://www.openrec.tv/capture/mldjr82p7qk',
+        'url': 'https://www.openrec.tv/movie/nqz5xl5km8v',
         'info_dict': {
             'id': 'nqz5xl5km8v',
             'title': '限定コミュニティ(Discord)参加方法ご説明動画',
