@@ -5,7 +5,6 @@ from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
     traverse_obj,
-    try_get,
     unified_strdate,
     unified_timestamp
 )
@@ -41,9 +40,8 @@ class OpenRecIE(InfoExtractor):
         description = movie_store.get('introduction')
         thumbnail = movie_store.get('thumbnailUrl')
 
-        channel_user = traverse_obj(movie_store, ('channel', 'user'), expected_type=dict)
-        uploader = try_get(channel_user, lambda x: x['name'], compat_str)
-        uploader_id = try_get(channel_user, lambda x: x['id'], compat_str)
+        uploader = traverse_obj(movie_store, ('channel', 'name'), expected_type=compat_str)
+        uploader_id = traverse_obj(movie_store, ('channel', 'id'), expected_type=compat_str)
 
         timestamp = traverse_obj(movie_store, ('startedAt', 'time'), expected_type=int)
 
@@ -94,7 +92,7 @@ class OpenRecCaptureIE(InfoExtractor):
 
         window_stores = self._parse_json(
             self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.pageStore'), video_id)
-        movie_store = window_stores.get('movie') or {}
+        movie_store = window_stores.get('movie')
 
         capture_data = window_stores.get('capture')
         if not capture_data:
@@ -103,19 +101,14 @@ class OpenRecCaptureIE(InfoExtractor):
         thumbnail = capture_data.get('thumbnailUrl')
         upload_date = unified_strdate(capture_data.get('createdAt'))
 
-        channel_info = traverse_obj(movie_store, ('channel',), expected_type=dict)
-        uploader = try_get(channel_info, lambda x: x['name'], compat_str)
-        uploader_id = try_get(channel_info, lambda x: x['id'], compat_str)
+        uploader = traverse_obj(movie_store, ('channel', 'name'), expected_type=compat_str)
+        uploader_id = traverse_obj(movie_store, ('channel', 'id'), expected_type=compat_str)
 
-        timestamp = unified_timestamp(movie_store.get('createdAt'))
+        timestamp = traverse_obj(movie_store, 'createdAt', expected_type=compat_str)
+        timestamp = unified_timestamp(timestamp)
 
-        m3u8_url = capture_data.get('source')
-        if not m3u8_url:
-            raise ExtractorError('Cannot extract m3u8 url')
         formats = self._extract_m3u8_formats(
-            m3u8_url, video_id, ext='mp4', entry_protocol='m3u8_native',
-            m3u8_id='hls')
-
+            capture_data.get('source'), video_id, ext='mp4')
         self._sort_formats(formats)
 
         return {
