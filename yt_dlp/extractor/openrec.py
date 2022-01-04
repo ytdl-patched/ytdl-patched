@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
+    int_or_none,
     traverse_obj,
     unified_strdate,
     unified_timestamp
@@ -43,7 +44,7 @@ class OpenRecIE(InfoExtractor):
         uploader = traverse_obj(movie_store, ('channel', 'name'), expected_type=compat_str)
         uploader_id = traverse_obj(movie_store, ('channel', 'id'), expected_type=compat_str)
 
-        timestamp = traverse_obj(movie_store, ('startedAt', 'time'), expected_type=int)
+        timestamp = int_or_none(traverse_obj(movie_store, ('startedAt', 'time')), scale=1000)
 
         m3u8_playlists = movie_store.get('media') or {}
         formats = []
@@ -120,4 +121,66 @@ class OpenRecCaptureIE(InfoExtractor):
             'uploader': uploader,
             'uploader_id': uploader_id,
             'upload_date': upload_date,
+        }
+
+
+class OpenRecMovieIE(InfoExtractor):
+    IE_NAME = 'openrec:movie'
+    _VALID_URL = r'https?://(?:www\.)?openrec\.tv/movie/(?P<id>[^/]+)'
+    _TESTS = [{
+        'url': 'https://www.openrec.tv/capture/mldjr82p7qk',
+        'info_dict': {
+            'id': 'nqz5xl5km8v',
+            'title': '限定コミュニティ(Discord)参加方法ご説明動画',
+            'description': 'md5:ebd563e5f5b060cda2f02bf26b14d87f',
+            'thumbnail': r're:https://.+',
+            'uploader': 'タイキとカズヒロ',
+            'uploader_id': 'taiki_to_kazuhiro',
+            'timestamp': 1638856800,
+        },
+    }]
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage('https://www.openrec.tv/movie/%s' % video_id, video_id)
+
+        window_stores = self._parse_json(
+            self._search_regex(r'(?m)window\.pageStore\s*=\s*(\{.+?\});$', webpage, 'window.pageStore'), video_id)
+        movie_store = traverse_obj(
+            window_stores,
+            ('v8', 'state', 'movie'),
+            ('v8', 'movie'),
+            expected_type=dict)
+        if not movie_store:
+            raise ExtractorError('Failed to extract live info')
+
+        title = movie_store.get('title')
+        description = movie_store.get('introduction')
+        thumbnail = movie_store.get('thumbnailUrl')
+
+        uploader = traverse_obj(movie_store, ('channel', 'user', 'name'), expected_type=compat_str)
+        uploader_id = traverse_obj(movie_store, ('channel', 'user', 'id'), expected_type=compat_str)
+
+        timestamp = int_or_none(traverse_obj(movie_store, ('publishedAt', 'time')), scale=1000)
+
+        m3u8_playlists = movie_store.get('media') or {}
+        formats = []
+        for name, m3u8_url in m3u8_playlists.items():
+            if not m3u8_url:
+                continue
+            formats.extend(self._extract_m3u8_formats(
+                m3u8_url, video_id, ext='mp4', entry_protocol='m3u8',
+                m3u8_id='hls-%s' % name, live=True))
+
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'description': description,
+            'thumbnail': thumbnail,
+            'formats': formats,
+            'uploader': uploader,
+            'uploader_id': uploader_id,
+            'timestamp': timestamp,
         }
