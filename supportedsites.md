@@ -814,6 +814,7 @@
  - **OpencastPlaylist**
  - **openrec**
  - **openrec:capture**
+ - **openrec:movie**
  - **OraTV**
  - **orf:burgenland**: Radio Burgenland
  - **orf:fm4**: radio FM4
