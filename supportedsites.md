@@ -581,6 +581,7 @@
  - **mailru**: Видео@Mail.Ru
  - **mailru:music**: Музыка@Mail.Ru
  - **mailru:music:search**: Музыка@Mail.Ru
+ - **MainStreaming**: MainStreaming Player
  - **MallTV**
  - **mangomolo:live**
  - **mangomolo:video**
@@ -1339,6 +1340,7 @@
  - **vimeo:review**: Review pages on vimeo
  - **vimeo:user**
  - **vimeo:watchlater**: Vimeo watch later list, "vimeowatchlater" keyword (requires authentication)
+ - **Vimm**
  - **Vimple**: Vimple - one-click video hosting
  - **Vine**
  - **vine:user**
