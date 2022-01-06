@@ -162,8 +162,8 @@ class IwaraUserIE(InfoExtractor):
         },
         'playlist_mincount': 420,
     }, {
-        # cond: Japanese chars in URL
-        'note': 'Japanese chars in URL',
+        # cond: foreign chars in URL
+        'note': 'foreign chars in URL',
         'url': 'https://ecchi.iwara.tv/users/ぶた丼',
         'info_dict': {
             'title': 'Uploaded videos from ぶた丼',
@@ -176,8 +176,7 @@ class IwaraUserIE(InfoExtractor):
 
     @classmethod
     def suitable(cls, url):
-        return super(IwaraUserIE, cls).suitable(url) and not re.search(
-            r'iwara\.tv/users/[^/]+/videos', url)
+        return super(IwaraUserIE, cls).suitable(url) and not IwaraUser2IE.suitable(url)
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -240,7 +239,7 @@ class IwaraUser2IE(InfoExtractor):
         'info_dict': {},
         'add_ie': [IwaraUserIE.ie_key()],
     }, {
-        'note': 'Japanese chars in URL',
+        'note': 'foreign chars in URL',
         'url': 'https://ecchi.iwara.tv/users/ぶた丼/videos',
         'info_dict': {},
         'add_ie': [IwaraUserIE.ie_key()],
@@ -269,25 +268,18 @@ class IwaraPlaylistIE(InfoExtractor):
 
     def _real_extract(self, url):
         playlist_id = self._match_id(url)
-
         webpage = self._download_webpage(url, playlist_id)
-
-        title = self._html_search_regex(
-            (r'<h1 class="title"[^>]*?>(.*?)</h1>',
-             r'<title>(.*?)\s+\|\s*Iwara'), webpage, 'title')
-        uploader_id = self._html_search_regex(
-            r'<div class="[^"]*views-field-name">\s*<span class="field-content">\s*<h2>(.*?)</h2>',
-            webpage,
-            'uploader_id')
-        urls = re.findall(
-            r'<h3 class="title">\s*<a href="([^"]+)">',
-            webpage)
-        entries = (self.url_result(urljoin(url, u)) for u in urls)
 
         return {
             '_type': 'playlist',
             'id': playlist_id,
-            'uploader_id': uploader_id,
-            'title': title,
-            'entries': entries,
+            'uploader_id': self._html_search_regex(
+                r'<div class="[^"]*views-field-name">\s*<span class="field-content">\s*<h2>(.*?)</h2>',
+                webpage, 'uploader_id'),
+            'title': self._html_search_regex(
+                (r'<h1 class="title"[^>]*?>(.*?)</h1>',
+                 r'<title>(.*?)\s+\|\s*Iwara'), webpage, 'title'),
+            'entries': (self.url_result(urljoin(url, u))
+                        for u in re.findall(
+                            r'<h3 class="title">\s*<a href="([^"]+)">', webpage)),
         }
