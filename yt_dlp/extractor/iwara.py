@@ -108,7 +108,6 @@ class IwaraIE(InfoExtractor):
                 'format_id': format_id,
                 'ext': mimetype2ext(a_format.get('mime')) or 'mp4',
                 'height': height,
-                'width': int_or_none(height / 9.0 * 16.0 if height else None),
                 'quality': 1 if format_id == 'Source' else 0,
             })
 
@@ -128,7 +127,7 @@ class IwaraIE(InfoExtractor):
 
 class IwaraUserIE(InfoExtractor):
     IE_NAME = 'iwara:user'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)'
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/?&#]+)'
     _TESTS = [{
         # cond: videos < 40
         'note': 'number of all videos page is just 1 page',
@@ -223,7 +222,7 @@ class IwaraUserIE(InfoExtractor):
 
 class IwaraUser2IE(InfoExtractor):
     IE_NAME = 'iwara:user2'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/]+)/videos'
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/?&#]+)/videos'
     IE_DESC = False  # do not list this
     _TESTS = [{
         'note': 'number of all videos page is just 1 page',
