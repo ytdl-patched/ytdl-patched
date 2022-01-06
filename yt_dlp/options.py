@@ -85,7 +85,7 @@ def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
         # Multiple package names can be given here
         # Eg: ('yt-dlp', 'youtube-dlc', 'youtube-dl') will look for
         # the configuration file of any of these three packages
-        for package in ('yt-dlp',):
+        for package in ('yt-dlp', 'ytdl-patched'):
             if user:
                 args, current_path = _readUserConf(package, default=None)
             else:
