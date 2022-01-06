@@ -450,7 +450,9 @@ jobs:
         run: |
           mkdir exe_files/
           cp ./artifacts/youtube-dl-red.exe ./artifacts/youtube-dl-white.exe exe_files/
-          mksquashfs exe_files/ win_exe.sqfs -comp xz -progress -no-xattrs -b 1M -Xdict-size 50%
+          mksquashfs exe_files/ win_exe.sqfs \
+            -comp xz -progress -b 1M -Xdict-size 50% \
+            -no-xattrs -force-uid 1000 -force-gid 1000
           ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/win_exe.sqfs" \
             -H x-archive-keep-old-version:0 \
