@@ -123,7 +123,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `misskey`, `misskey:user`
     * `niconico:live` (**COMMENTS ARE NOT SUPPORTED**)
     * `niconico:playlist`, `niconico:series`, `niconico:user`
-    * `pixiv:sketch`, `pixiv:sketch:user`
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
@@ -136,6 +135,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `whowatch` (merged in yt-dlp)
     * `damtomo:video`, `damtomo:record` (merged in yt-dlp)
     * `17live`, `17live:clip` (merged in yt-dlp)
+    * `pixiv:sketch`, `pixiv:sketch:user` (merged in yt-dlp)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
