@@ -94,6 +94,7 @@ from ..utils import (
     update_url_query,
     url_basename,
     url_or_none,
+    urlencode_postdata,
     urljoin,
     variadic,
     xpath_element,
@@ -707,12 +708,17 @@ class InfoExtractor(object):
         else:
             return err.code in variadic(expected_status)
 
-    def _request_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True, data=None, headers={}, query={}, expected_status=None):
+    def _request_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True, data=None, headers=None, query=None, expected_status=None):
         """
         Return the response handle.
 
         See _download_webpage docstring for arguments specification.
         """
+
+        if not headers:
+            headers = {}
+        if not query:
+            query = {}
         if not self._downloader._first_webpage_request:
             sleep_interval = self.get_param('sleep_interval_requests') or 0
             if sleep_interval > 0:
@@ -772,7 +778,11 @@ class InfoExtractor(object):
                 self.report_warning(errmsg)
                 return False
 
-    def _download_webpage_handle(self, url_or_request, video_id, note=None, errnote=None, fatal=True, encoding=None, data=None, headers={}, query={}, expected_status=None):
+    def _download_webpage_handle(
+            self, url_or_request, video_id, note=None, errnote=None, fatal=True,
+            encoding=None, data=None, headers={}, query={}, expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
+
         """
         Return a tuple (page content as string, URL handle).
 
@@ -781,6 +791,16 @@ class InfoExtractor(object):
         # Strip hashes from the URL (#1038)
         if isinstance(url_or_request, (compat_str, str)):
             url_or_request = url_or_request.partition('#')[0]
+
+        # False is valid for JSON value ("false") while form_params isn't
+        if json_body is not None or form_params:
+            # both "data" and, "json_body" or "form_params" are specified
+            if data:
+                raise ExtractorError('Both "data" parameter and either "json_body" or "form_params" are specified')
+            if json_body is not None:
+                data = json.dumps(json_body).encode(body_encoding or encoding or 'utf-8')
+            elif form_params:
+                data = urlencode_postdata(form_params)
 
         urlh = self._request_webpage(url_or_request, video_id, note, errnote, fatal, data=data, headers=headers, query=query, expected_status=expected_status)
         if urlh is False:
@@ -875,7 +895,8 @@ class InfoExtractor(object):
     def _download_webpage(
             self, url_or_request, video_id, note=None, errnote=None,
             fatal=True, tries=1, timeout=5, encoding=None, data=None,
-            headers={}, query={}, expected_status=None):
+            headers=None, query=None, expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
         """
         Return the data of the page as a string.
 
@@ -917,7 +938,8 @@ class InfoExtractor(object):
                 res = self._download_webpage_handle(
                     url_or_request, video_id, note, errnote, fatal,
                     encoding=encoding, data=data, headers=headers, query=query,
-                    expected_status=expected_status)
+                    expected_status=expected_status,
+                    json_body=json_body, form_params=form_params, body_encoding=body_encoding)
                 success = True
             except compat_http_client.IncompleteRead as e:
                 try_count += 1
@@ -933,8 +955,9 @@ class InfoExtractor(object):
     def _download_xml_handle(
             self, url_or_request, video_id, note='Downloading XML',
             errnote='Unable to download XML', transform_source=None,
-            fatal=True, encoding=None, data=None, headers={}, query={},
-            expected_status=None):
+            fatal=True, encoding=None, data=None, headers=None, query=None,
+            expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
         """
         Return a tuple (xml as an compat_etree_Element, URL handle).
 
@@ -943,7 +966,8 @@ class InfoExtractor(object):
         res = self._download_webpage_handle(
             url_or_request, video_id, note, errnote, fatal=fatal,
             encoding=encoding, data=data, headers=headers, query=query,
-            expected_status=expected_status)
+            expected_status=expected_status, json_body=json_body,
+            form_params=form_params, body_encoding=body_encoding)
         if res is False:
             return res
         xml_string, urlh = res
@@ -955,7 +979,8 @@ class InfoExtractor(object):
             self, url_or_request, video_id,
             note='Downloading XML', errnote='Unable to download XML',
             transform_source=None, fatal=True, encoding=None,
-            data=None, headers={}, query={}, expected_status=None):
+            data=None, headers=None, query=None, expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
         """
         Return the xml as an compat_etree_Element.
 
@@ -965,7 +990,8 @@ class InfoExtractor(object):
             url_or_request, video_id, note=note, errnote=errnote,
             transform_source=transform_source, fatal=fatal, encoding=encoding,
             data=data, headers=headers, query=query,
-            expected_status=expected_status)
+            expected_status=expected_status,
+            json_body=json_body, form_params=form_params, body_encoding=body_encoding)
         return res if res is False else res[0]
 
     def _parse_xml(self, xml_string, video_id, transform_source=None, fatal=True):
@@ -984,8 +1010,9 @@ class InfoExtractor(object):
     def _download_json_handle(
             self, url_or_request, video_id, note='Downloading JSON metadata',
             errnote='Unable to download JSON metadata', transform_source=None,
-            fatal=True, encoding=None, data=None, headers={}, query={},
-            expected_status=None):
+            fatal=True, encoding=None, data=None, headers=None, query=None,
+            expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
         """
         Return a tuple (JSON object, URL handle).
 
@@ -994,7 +1021,8 @@ class InfoExtractor(object):
         res = self._download_webpage_handle(
             url_or_request, video_id, note, errnote, fatal=fatal,
             encoding=encoding, data=data, headers=headers, query=query,
-            expected_status=expected_status)
+            expected_status=expected_status,
+            json_body=json_body, form_params=form_params, body_encoding=body_encoding)
         if res is False:
             return res
         json_string, urlh = res
@@ -1005,8 +1033,9 @@ class InfoExtractor(object):
     def _download_json(
             self, url_or_request, video_id, note='Downloading JSON metadata',
             errnote='Unable to download JSON metadata', transform_source=None,
-            fatal=True, encoding=None, data=None, headers={}, query={},
-            expected_status=None):
+            fatal=True, encoding=None, data=None, headers=None, query=None,
+            expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
         """
         Return the JSON object as a dict.
 
@@ -1016,7 +1045,8 @@ class InfoExtractor(object):
             url_or_request, video_id, note=note, errnote=errnote,
             transform_source=transform_source, fatal=fatal, encoding=encoding,
             data=data, headers=headers, query=query,
-            expected_status=expected_status)
+            expected_status=expected_status,
+            json_body=json_body, form_params=form_params, body_encoding=body_encoding)
         return res if res is False else res[0]
 
     def _parse_json(self, json_string, video_id, transform_source=None, fatal=True):
@@ -1039,8 +1069,9 @@ class InfoExtractor(object):
     def _download_socket_json_handle(
             self, url_or_request, video_id, note='Polling socket',
             errnote='Unable to poll socket', transform_source=None,
-            fatal=True, encoding=None, data=None, headers={}, query={},
-            expected_status=None):
+            fatal=True, encoding=None, data=None, headers=None, query=None,
+            expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
         """
         Return a tuple (JSON object, URL handle).
 
@@ -1049,7 +1080,8 @@ class InfoExtractor(object):
         res = self._download_webpage_handle(
             url_or_request, video_id, note, errnote, fatal=fatal,
             encoding=encoding, data=data, headers=headers, query=query,
-            expected_status=expected_status)
+            expected_status=expected_status,
+            json_body=json_body, form_params=form_params, body_encoding=body_encoding)
         if res is False:
             return res
         webpage, urlh = res
@@ -1060,8 +1092,9 @@ class InfoExtractor(object):
     def _download_socket_json(
             self, url_or_request, video_id, note='Polling socket',
             errnote='Unable to poll socket', transform_source=None,
-            fatal=True, encoding=None, data=None, headers={}, query={},
-            expected_status=None):
+            fatal=True, encoding=None, data=None, headers=None, query=None,
+            expected_status=None,
+            json_body=None, form_params=None, body_encoding=None):
         """
         Return the JSON object as a dict.
 
@@ -1071,7 +1104,8 @@ class InfoExtractor(object):
             url_or_request, video_id, note=note, errnote=errnote,
             transform_source=transform_source, fatal=fatal, encoding=encoding,
             data=data, headers=headers, query=query,
-            expected_status=expected_status)
+            expected_status=expected_status,
+            json_body=json_body, form_params=form_params, body_encoding=body_encoding)
         return res if res is False else res[0]
 
     def report_warning(self, msg, video_id=None, *args, only_once=False, **kwargs):
@@ -2124,14 +2158,16 @@ class InfoExtractor(object):
     def _extract_m3u8_formats_and_subtitles(
             self, m3u8_url, video_id, ext=None, entry_protocol='m3u8_native',
             preference=None, quality=None, m3u8_id=None, note=None,
-            errnote=None, fatal=True, live=False, data=None, headers={},
-            query={}):
+            errnote=None, fatal=True, live=False, data=None, headers=None,
+            query=None,
+            json_body=None, form_params=None, body_encoding=None):
 
         res = self._download_webpage_handle(
             m3u8_url, video_id,
             note='Downloading m3u8 information' if note is None else note,
             errnote='Failed to download m3u8 information' if errnote is None else errnote,
-            fatal=fatal, data=data, headers=headers, query=query)
+            fatal=fatal, data=data, headers=headers, query=query,
+            json_body=json_body, form_params=form_params, body_encoding=body_encoding)
 
         if res is False:
             return [], {}

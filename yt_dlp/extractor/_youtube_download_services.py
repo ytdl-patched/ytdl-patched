@@ -1,7 +1,7 @@
 # automating YouTube downloading services to download deleted videos
 import re
 
-from ..compat import compat_urllib_parse_urlencode, compat_str
+from ..compat import compat_str
 from ..utils import (
     ExtractorError,
     int_or_none,
@@ -54,14 +54,14 @@ class Y2mateIE(CustomPrefixedBaseIE):
         video_id = self.BASE_IE._match_id(self.remove_prefix(url))
         self._download_webpage('https://www.y2mate.com/youtube/%s' % video_id, video_id)
         common_headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-        request_data = urlencode_postdata({
+        request_data = {
             'url': 'https://www.youtube.com/watch?v=%s' % video_id,
             'q_auto': '1',
             'ajax': '1'
-        })
+        }
         size_specs = self._download_json(
             'https://www.y2mate.com/mates/analyze/ajax', video_id,
-            note='Fetching size specs', errnote='This video is unavailable', data=request_data,
+            note='Fetching size specs', errnote='This video is unavailable', form_params=request_data,
             headers=common_headers)
         if size_specs.get('status') != 'success':
             raise ExtractorError('Server responded with status %s' % size_specs.get('status'))
@@ -139,7 +139,7 @@ class Y2mateIE(CustomPrefixedBaseIE):
             for i in range(retries):
                 url_data = self._download_json(
                     'https://www.y2mate.com/mates/convert', video_id,
-                    note='Fetching infomation for %s (%d of %d)' % (format_name, i + 1, retries), data=compat_urllib_parse_urlencode(request_data).encode('utf-8'),
+                    note='Fetching infomation for %s (%d of %d)' % (format_name, i + 1, retries), form_params=request_data,
                     headers=common_headers)
                 if url_data.get('status') != 'success':
                     self.report_warning('Server responded with status %s' % url_data.get('status'))
@@ -217,7 +217,7 @@ class ClipConverterIE(CustomPrefixedBaseIE):
         }
         response = self._download_json(
             'https://www.clipconverter.cc/check.php', video_id, note='Requesting for extraction',
-            data=urlencode_postdata(post_data),
+            form_params=post_data,
             headers={
                 'Origin': 'https://www.clipconverter.cc',
                 'Referer': 'https://www.clipconverter.cc/2/',
