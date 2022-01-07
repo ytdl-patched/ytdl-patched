@@ -256,9 +256,8 @@ def run_update(ydl):
         return
 
     elif variant == 'homebrew':
-        stdout, stderr = Popen(['brew', 'tap'], stdout=subprocess.PIPE, encoding='utf-8').communicate()
-        taps = stdout.trim().split()
-        if 'nao20010128nao/my' in taps:
+        stdout = next(filter(None, Popen(['brew', 'tap'], stdout=subprocess.PIPE, encoding='utf-8').communicate()), '')
+        if 'nao20010128nao/my' in stdout:
             ydl.to_screen('Fixing taps to point to new one')
             ret = Popen(['brew', 'untap', '-f', 'nao20010128nao/my']).wait()
             if ret != 0:
