@@ -43,6 +43,7 @@
  - **aenetworks:collection**
  - **aenetworks:show**
  - **afreecatv**: afreecatv.com
+ - **afreecatv:live**: afreecatv.com
  - **AirMozilla**
  - **AliExpressLive**
  - **AlJazeera**
@@ -167,6 +168,7 @@
  - **BuzzFeed**
  - **BYUtv**
  - **CableAV**
+ - **Callin**
  - **CAM4**
  - **Camdemy**
  - **CamdemyFolder**
@@ -902,6 +904,7 @@
  - **PopcornTV**
  - **PornCom**
  - **PornerBros**
+ - **Pornez**
  - **PornFlip**
  - **PornHd**
  - **PornHub**: PornHub and Thumbzilla
