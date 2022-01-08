@@ -228,16 +228,21 @@ class ClipConverterIE(CustomPrefixedBaseIE):
         formats = []
         for fmt in response.get('url') or []:
             text = fmt.get('text')
-            resol = self._search_regex(r'(\d+p)', text, 'resolution', default='unknown_size')
+            resol = self._search_regex(r'(\d+p)', text, 'resolution', default=None)
             fps = self._search_regex(r'(\d+)fps', text, 'framerate', default=None)
+            filetype = try_get(fmt, lambda x: x['filetype'])
+            height = int_or_none(resol[:-1]) if resol else None
+            is_vonly = filetype == 'webm' or (height and height > 1080)
             formats.append({
-                'format_id': f'{resol}-{fmt.get("filetype")}',
+                'format_id': f'{resol}-{filetype}',
                 'url': fmt.get('url'),
                 'filesize': int_or_none(fmt.get('size')),
                 'resolution': resol,
-                'height': int_or_none(resol[:-1]),
-                'ext': try_get(fmt, lambda x: x['filetype'].lower()),
+                'height': height,
+                'ext': filetype.lower() if filetype else None,
                 'fps': int_or_none(fps),
+                'acodec': 'none' if is_vonly else None,
+                'quality': -10 if is_vonly else None
             })
 
         # convert mode isn't implemented yet; this is just Download mode
@@ -259,7 +264,7 @@ class YtAlternateIE(CustomPrefixedBaseIE):
     BASE_IE = YoutubeIE
     PREFIXES = ('yta:', 'dig:', 'ytalternate:')
     # _CALL_IES = ('Y2mate', 'ClipConverter', 'Youtube')
-    _CALL_IES = ('Y2mate', 'ClipConverter')
+    _CALL_IES = ('ClipConverter', 'Y2mate')
 
     def _real_extract(self, url):
         video_id = self.BASE_IE._match_id(self.remove_prefix(url))
