@@ -718,7 +718,7 @@ class InfoExtractor(object):
         else:
             return err.code in variadic(expected_status)
 
-    def _request_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True, data=None, headers=None, query=None, expected_status=None):
+    def _request_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True, data=None, headers={}, query={}, expected_status=None):
         """
         Return the response handle.
 
@@ -905,7 +905,7 @@ class InfoExtractor(object):
     def _download_webpage(
             self, url_or_request, video_id, note=None, errnote=None,
             fatal=True, tries=1, timeout=5, encoding=None, data=None,
-            headers=None, query=None, expected_status=None,
+            headers={}, query={}, expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
         """
         Return the data of the page as a string.
@@ -965,7 +965,7 @@ class InfoExtractor(object):
     def _download_xml_handle(
             self, url_or_request, video_id, note='Downloading XML',
             errnote='Unable to download XML', transform_source=None,
-            fatal=True, encoding=None, data=None, headers=None, query=None,
+            fatal=True, encoding=None, data=None, headers={}, query={},
             expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
         """
@@ -989,7 +989,7 @@ class InfoExtractor(object):
             self, url_or_request, video_id,
             note='Downloading XML', errnote='Unable to download XML',
             transform_source=None, fatal=True, encoding=None,
-            data=None, headers=None, query=None, expected_status=None,
+            data=None, headers={}, query={}, expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
         """
         Return the xml as an compat_etree_Element.
@@ -1020,7 +1020,7 @@ class InfoExtractor(object):
     def _download_json_handle(
             self, url_or_request, video_id, note='Downloading JSON metadata',
             errnote='Unable to download JSON metadata', transform_source=None,
-            fatal=True, encoding=None, data=None, headers=None, query=None,
+            fatal=True, encoding=None, data=None, headers={}, query={},
             expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
         """
@@ -1043,7 +1043,7 @@ class InfoExtractor(object):
     def _download_json(
             self, url_or_request, video_id, note='Downloading JSON metadata',
             errnote='Unable to download JSON metadata', transform_source=None,
-            fatal=True, encoding=None, data=None, headers=None, query=None,
+            fatal=True, encoding=None, data=None, headers={}, query={},
             expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
         """
@@ -1079,7 +1079,7 @@ class InfoExtractor(object):
     def _download_socket_json_handle(
             self, url_or_request, video_id, note='Polling socket',
             errnote='Unable to poll socket', transform_source=None,
-            fatal=True, encoding=None, data=None, headers=None, query=None,
+            fatal=True, encoding=None, data=None, headers={}, query={},
             expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
         """
@@ -1102,7 +1102,7 @@ class InfoExtractor(object):
     def _download_socket_json(
             self, url_or_request, video_id, note='Polling socket',
             errnote='Unable to poll socket', transform_source=None,
-            fatal=True, encoding=None, data=None, headers=None, query=None,
+            fatal=True, encoding=None, data=None, headers={}, query={},
             expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
         """
@@ -2168,8 +2168,8 @@ class InfoExtractor(object):
     def _extract_m3u8_formats_and_subtitles(
             self, m3u8_url, video_id, ext=None, entry_protocol='m3u8_native',
             preference=None, quality=None, m3u8_id=None, note=None,
-            errnote=None, fatal=True, live=False, data=None, headers=None,
-            query=None,
+            errnote=None, fatal=True, live=False, data=None, headers={},
+            query={},
             json_body=None, form_params=None, body_encoding=None):
 
         res = self._download_webpage_handle(
