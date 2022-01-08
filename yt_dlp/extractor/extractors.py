@@ -444,6 +444,7 @@ from .espn import (
 )
 from .esri import EsriVideoIE
 from .europa import EuropaIE
+from .europeantour import EuropeanTourIE
 from .euscreen import EUScreenIE
 from .evoload import EvoLoadIE
 from .expotv import ExpoTVIE
