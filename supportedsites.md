@@ -341,6 +341,7 @@
  - **ESPNCricInfo**
  - **EsriVideo**
  - **Europa**
+ - **EuropeanTour**
  - **EUScreen**
  - **EWETV**
  - **ExpoTV**
