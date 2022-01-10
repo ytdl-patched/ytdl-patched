@@ -18,10 +18,10 @@ from ..utils import (
     urlencode_postdata,
     try_get,
     urljoin,
-    # qualities,
+    qualities,
 )
 from ..compat import compat_str
-# from ..websocket import HAVE_WEBSOCKET  # WebSocket itself is optional
+from ..websocket import HAVE_WEBSOCKET  # WebSocket itself is optional
 
 
 class TwitCastingBaseIE(InfoExtractor):
@@ -103,9 +103,9 @@ class TwitCastingIE(TwitCastingBaseIE):
                 r"data-movie-playlist='([^']+?)'",
                 x, 'movie playlist', default=None), video_id)["2"], list)
 
-        # stream_server_data = self._download_json(
-        #     'https://twitcasting.tv/streamserver.php?target=%s&mode=client' % uploader_id, video_id,
-        #     'Downloading live info', fatal=False)
+        stream_server_data = self._download_json(
+            'https://twitcasting.tv/streamserver.php?target=%s&mode=client' % uploader_id, video_id,
+            'Downloading live info', fatal=False)
 
         is_live = 'data-status="online"' in webpage
 
@@ -137,17 +137,18 @@ class TwitCastingIE(TwitCastingBaseIE):
                     'Referer': 'https://twitcasting.tv/',
                 })
 
-            # if stream_server_data and HAVE_WEBSOCKET:
-            #     qq = qualities(['base', 'mobilesource', 'main'])
-            #     for mode, ws_url in stream_server_data['llfmp4']['streams'].items():
-            #         formats.append({
-            #             'url': ws_url,
-            #             'format_id': 'ws-%s' % mode,
-            #             'ext': 'mp4',
-            #             'quality': qq(mode),
-            #             # TwitCasting simply sends moof atom directly over WS
-            #             'protocol': 'websocket_frag',
-            #         })
+            if stream_server_data and HAVE_WEBSOCKET:
+                qq = qualities(['base', 'mobilesource', 'main'])
+                streams = traverse_obj(stream_server_data, ('llfmp4', 'streams')) or {}
+                for mode, ws_url in streams.items():
+                    formats.append({
+                        'url': ws_url,
+                        'format_id': 'ws-%s' % mode,
+                        'ext': 'mp4',
+                        'quality': qq(mode),
+                        # TwitCasting simply sends moof atom directly over WS
+                        'protocol': 'websocket_frag',
+                    })
 
             self._sort_formats(formats)
         else:
