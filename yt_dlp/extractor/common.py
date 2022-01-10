@@ -725,10 +725,6 @@ class InfoExtractor(object):
         See _download_webpage docstring for arguments specification.
         """
 
-        if not headers:
-            headers = {}
-        if not query:
-            query = {}
         if not self._downloader._first_webpage_request:
             sleep_interval = self.get_param('sleep_interval_requests') or 0
             if sleep_interval > 0:
