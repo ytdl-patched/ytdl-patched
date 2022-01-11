@@ -152,7 +152,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             except ExtractorError as ex:
                 self.report_warning(ex)
 
-            if stream_server_data and HAVE_WEBSOCKET:
+            if HAVE_WEBSOCKET:
                 qq = qualities(['base', 'mobilesource', 'main'])
                 streams = traverse_obj(stream_server_data, ('llfmp4', 'streams')) or {}
                 for mode, ws_url in streams.items():
@@ -225,7 +225,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             'duration': duration,
             'view_count': view_count,
             'formats': formats,
-            'is_live': True,
+            'is_live': is_live,
         }
 
 
