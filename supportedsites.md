@@ -273,6 +273,7 @@
  - **democracynow**
  - **DHM**: Filmarchiv - Deutsches Historisches Museum
  - **Digg**
+ - **DigitalConcertHall**: DigitalConcertHall extractor
  - **DigitallySpeaking**
  - **Digiteka**
  - **Discovery**
@@ -766,6 +767,7 @@
  - **NJPWWorld**: 新日本プロレスワールド
  - **NobelPrize**
  - **NonkTube**
+ - **NoodleMagazine**
  - **Noovo**
  - **Normalboots**
  - **NosVideo**
@@ -953,8 +955,9 @@
  - **RaiPlay**
  - **RaiPlayLive**
  - **RaiPlayPlaylist**
- - **RaiPlayRadio**
- - **RaiPlayRadioPlaylist**
+ - **RaiPlaySound**
+ - **RaiPlaySoundLive**
+ - **RaiPlaySoundPlaylist**
  - **RayWenderlich**
  - **RayWenderlichCourse**
  - **RBMARadio**
@@ -1006,6 +1009,7 @@
  - **RTVNH**
  - **RTVS**
  - **RUHD**
+ - **Rule34Video**
  - **RumbleChannel**
  - **RumbleEmbed**
  - **rutube**: Rutube videos
