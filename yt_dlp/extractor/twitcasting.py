@@ -107,7 +107,7 @@ class TwitCastingIE(TwitCastingBaseIE):
             'https://twitcasting.tv/streamserver.php?target=%s&mode=client' % uploader_id, video_id,
             'Downloading live info', fatal=False)
 
-        is_live = 'data-status="online"' in webpage
+        is_live = 'data-status="online"' in webpage or traverse_obj(stream_server_data, ('movie', 'live'))
         if not traverse_obj(stream_server_data, 'llfmp4') and is_live:
             raise ExtractorError('You must be logged in to watch.', expected=True)
 
