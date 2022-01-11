@@ -386,6 +386,7 @@ from .duboku import (
 )
 from .dumpert import DumpertIE
 from .defense import DefenseGouvFrIE
+from .digitalconcerthall import DigitalConcertHallIE
 from .discovery import DiscoveryIE
 from .discoverygo import (
     DiscoveryGoIE,
@@ -1020,6 +1021,7 @@ from .nitter import NitterIE
 from .njpwworld import NJPWWorldIE
 from .nobelprize import NobelPrizeIE
 from .nonktube import NonkTubeIE
+from .noodlemagazine import NoodleMagazineIE
 from .noovo import NoovoIE
 from .normalboots import NormalbootsIE
 from .nosvideo import NosVideoIE
@@ -1271,9 +1273,10 @@ from .rai import (
     RaiPlayIE,
     RaiPlayLiveIE,
     RaiPlayPlaylistIE,
+    RaiPlaySoundIE,
+    RaiPlaySoundLiveIE,
+    RaiPlaySoundPlaylistIE,
     RaiIE,
-    RaiPlayRadioIE,
-    RaiPlayRadioPlaylistIE,
 )
 from .raywenderlich import (
     RayWenderlichIE,
@@ -1341,6 +1344,7 @@ from .rtve import (
 from .rtvnh import RTVNHIE
 from .rtvs import RTVSIE
 from .ruhd import RUHDIE
+from .rule34video import Rule34VideoIE
 from .rumble import (
     RumbleEmbedIE,
     RumbleChannelIE,

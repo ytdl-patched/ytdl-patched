@@ -769,11 +769,13 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     --skip-download                  Do not download the video but write all
                                      related files (Alias: --no-download)
     -O, --print [WHEN:]TEMPLATE      Field name or output template to print to
-                                     screen per video. Prefix the template with
-                                     "playlist:" to print it once per playlist
-                                     instead. Implies --quiet and --simulate
-                                     (unless --no-simulate is used). This option
-                                     can be used multiple times
+                                     screen, optionally prefixed with when to
+                                     print it, separated by a ":". Supported
+                                     values of "WHEN" are the same as that of
+                                     --use-postprocessor, and "video" (default).
+                                     Implies --quiet and --simulate (unless
+                                     --no-simulate is used). This option can be
+                                     used multiple times
     -j, --dump-json                  Quiet, but print JSON information for each
                                      video. Simulate unless --no-simulate is
                                      used. See "OUTPUT TEMPLATE" for a
@@ -1332,6 +1334,11 @@ Available only when used in `--print`:
 
  - `urls` (string): The URLs of all requested formats, one in each line
  - `filename` (string): Name of the video file. Note that the actual filename may be different due to post-processing. Use `--exec echo` to get the name after all postprocessing is complete
+ - `formats_table` (table): The video format table as printed by `--list-formats`
+ - `thumbnails_table` (table): The thumbnail format table as printed by `--list-thumbnails`
+ - `subtitles_table` (table): The subtitle format table as printed by `--list-subs`
+ - `automatic_captions_table` (table): The automatic subtitle format table as printed by `--list-subs`
+ 
  
 Available only in `--sponsorblock-chapter-title`:
 
@@ -1908,6 +1915,14 @@ with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
 These are all the deprecated options and the current alternative to achieve the same effect
 
+#### Almost redundant options
+While these options are almost the same as their new counterparts, there are some differences that prevents them being redundant
+
+    -j, --dump-json                  --print "%()j"
+    -F, --list-formats               --print formats_table
+    --list-thumbnails                --print thumbnails_table
+    --list-subs                      --print automatic_captions_table --print subtitles_table
+
 #### Redundant options
 While these options are redundant, they are still expected to be used due to their ease of use
 
@@ -1919,7 +1934,6 @@ While these options are redundant, they are still expected to be used due to the
     --get-thumbnail                  --print thumbnail
     -e, --get-title                  --print title
     -g, --get-url                    --print urls
-    -j, --dump-json                  --print "%()j"
     --match-title REGEX              --match-filter "title ~= (?i)REGEX"
     --reject-title REGEX             --match-filter "title !~= (?i)REGEX"
     --min-views COUNT                --match-filter "view_count >=? COUNT"
