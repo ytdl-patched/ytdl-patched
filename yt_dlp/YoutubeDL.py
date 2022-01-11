@@ -3763,8 +3763,8 @@ class YoutubeDL(object):
         self.to_screen(f'[info] Available {name} for {video_id}:')
         self.to_stdout(table)
 
-    def list_formats(self, info_dict):
-        self.__list_table(info_dict['id'], 'formats', self.render_formats_table, info_dict)
+    def list_formats(self, info_dict, format_selector=None):
+        self.__list_table(info_dict['id'], 'formats', self.render_formats_table, info_dict, format_selector)
 
     def list_thumbnails(self, info_dict):
         self.__list_table(info_dict['id'], 'thumbnails', self.render_thumbnails_table, info_dict)
