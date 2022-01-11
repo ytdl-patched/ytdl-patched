@@ -109,7 +109,7 @@ class TwitCastingIE(TwitCastingBaseIE):
 
         is_live = 'data-status="online"' in webpage or traverse_obj(stream_server_data, ('movie', 'live'))
         if not traverse_obj(stream_server_data, 'llfmp4') and is_live:
-            raise ExtractorError('You must be logged in to watch.', expected=True)
+            self.raise_login_required()
 
         def find_dmu(x):
             data_movie_url = self._search_regex(
