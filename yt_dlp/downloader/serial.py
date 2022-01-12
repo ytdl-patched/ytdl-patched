@@ -40,17 +40,16 @@ class SerialFD(FileDownloader):
 
         txt_file = '%s.txt' % filename
         ffmpeg_request = {
-            'protocol': 'ffmpeg',
+            'protocol': 'live_ffmpeg',
             'url': txt_file,
             'ext': info_dict['ext'],
             'input_params': ['-f', 'concat', '-safe', '0'],
             'output_params': ['-movflags', '+faststart'],
         }
         try:
-            with self.ydl.open(txt_file, 'w') as w:
-                for nmj in names_to_join:
-                    w.write('file \'%s\'\n' % nmj)
-            ret = FFmpegFD(self.ydl, self.params).download(filename, ffmpeg_request)
+            with self.ydl.open(txt_file, 'wt') as w:
+                w.write(''.join(f"file '{nmj}'\n" for nmj in names_to_join))
+            ret = FFmpegFD(self.ydl, self.params).download(filename, ffmpeg_request)[0]
 
             if ret:
                 for nmj in names_to_join:
