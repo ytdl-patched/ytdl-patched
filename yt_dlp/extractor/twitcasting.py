@@ -80,7 +80,7 @@ class TwitCastingIE(TwitCastingBaseIE):
     def _real_extract(self, url):
         uploader_id, video_id = self._match_valid_url(url).groups()
 
-        video_password = self._downloader.params.get('videopassword')
+        video_password = self.get_param('videopassword')
         request_data = None
         if video_password:
             request_data = urlencode_postdata({
