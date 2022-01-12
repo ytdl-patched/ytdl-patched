@@ -1721,7 +1721,7 @@ class YoutubeDL(object):
 
         ie_entries = ie_result['entries']
         if isinstance(ie_entries, list):
-            playlist_count = len(ie_result)
+            playlist_count = len(ie_entries)
             msg = f'Collected {playlist_count} videos; downloading %d of them'
             ie_result['playlist_count'] = ie_result.get('playlist_count') or playlist_count
 
@@ -2501,7 +2501,7 @@ class YoutubeDL(object):
         if not self.params.get('allow_unplayable_formats'):
             formats = [f for f in formats if not f.get('has_drm')]
 
-        # backward compatibility, or for backing up original title modified below
+        # backward compatibility
         info_dict['fulltitle'] = info_dict['title']
 
         if info_dict.get('is_live'):
