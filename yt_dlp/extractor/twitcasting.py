@@ -192,6 +192,13 @@ class TwitCastingIE(TwitCastingBaseIE):
                     'items': list(formats),
                     'ext': 'mp4',
                 })
+                formats.append({
+                    'format_id': 'concat_ffmpeg',
+                    'url': 'serial:',
+                    'protocol': 'concat_ffmpeg',
+                    'items': list(formats),
+                    'ext': 'mp4',
+                })
                 formats.reverse()
 
         thumbnail = try_get(

@@ -64,3 +64,43 @@ class SerialFD(FileDownloader):
                 self.ydl.remove(txt_file)
             except (IOError, OSError):
                 pass
+
+
+class FfmpegConcatFD(FileDownloader):
+    """
+    Use ffmpeg's concat demuxer to download in serial.
+
+    Keys for formats:
+    - "url" -- Must be "serial:". or download will fail.
+    - "items" -- List of URL to download and join. Must have more than one item
+    """
+
+    def real_download(self, filename, info_dict):
+        if info_dict['url'] != 'serial:':
+            self.report_error('"url" key must be "serial:". Please check extractor code.')
+            return False
+
+        items = info_dict['items']
+        if not items:
+            self.report_error('There is no item to download!')
+            return False
+
+        urls = [(x if isinstance(x, str) else x['url']) for x in items]
+
+        txt_file = '%s.txt' % filename
+        ffmpeg_request = {
+            'protocol': 'live_ffmpeg',
+            'url': txt_file,
+            'ext': info_dict['ext'],
+            'input_params': ['-f', 'concat', '-safe', '0'],
+            'output_params': ['-movflags', '+faststart'],
+        }
+        try:
+            with self.ydl.open(txt_file, 'wt') as w:
+                w.write(''.join(f"file '{nmj}'\n" for nmj in urls))
+            return FFmpegFD(self.ydl, self.params).download(filename, ffmpeg_request)[0]
+        finally:
+            try:
+                self.ydl.remove(txt_file)
+            except (IOError, OSError):
+                pass
