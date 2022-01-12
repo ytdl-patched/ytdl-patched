@@ -457,6 +457,7 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
                 if not o:
                     continue
                 result.extend(variadic(o))
+            return result
 
         for i, url in enumerate(urls):
             args += get_infodict_list((f'input_params_{i + 1}', 'input_params')) + self._configuration_args((f'_i{i + 1}', '_i')) + ['-i', url]
