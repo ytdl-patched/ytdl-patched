@@ -25,6 +25,7 @@ from ..utils import (
     handle_youtubedl_headers,
     check_executable,
     Popen,
+    variadic,
 )
 from ..longname import split_longname
 
@@ -449,8 +450,16 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             elif isinstance(conn, compat_str):
                 args += ['-rtmp_conn', conn]
 
+        def get_infodict_list(keys):
+            result = []
+            for k in variadic(keys):
+                o = info_dict.get(k)
+                if not o:
+                    continue
+                result.extend(variadic(o))
+
         for i, url in enumerate(urls):
-            args += self._configuration_args((f'_i{i + 1}', '_i')) + ['-i', url]
+            args += get_infodict_list((f'input_params_{i + 1}', 'input_params')) + self._configuration_args((f'_i{i + 1}', '_i')) + ['-i', url]
 
         args += ['-c', 'copy']
         if info_dict.get('requested_formats') or protocol == 'http_dash_segments':
@@ -479,7 +488,7 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
         else:
             args += ['-f', EXT_TO_OUT_FORMATS.get(ext, ext)]
 
-        args += self._configuration_args(('_o1', '_o', ''))
+        args += get_infodict_list((f'output_params_{i + 1}', 'output_params')) + self._configuration_args(('_o1', '_o', ''))
 
         use_native_progress = (
             self.params.get('enable_ffmpeg_native_progress')
