@@ -185,7 +185,7 @@ class TwitCastingIE(InfoExtractor):
 
             archive_mode = next(self._configuration_arg('archive_mode', default=[]), 'formats')
             if archive_mode == 'formats':
-                self.report_warning('Archives are provided as "formats" mode. It\'s now recommend to use "multi_video" mode via "--extractor-args twitcasting:archive_mode=multi_video --concat-playlist multi_video" for more stability. Default mode may be changed without notice.')
+                self.report_warning('Archives are provided as "formats" mode. It\'s now recommend to use "multi_video" mode via "--extractor-args twitcasting:archive_mode=multi_video --concat-playlist multi_video" for more stability. See https://github.com/ytdl-patched/ytdl-patched/issues/15')
                 url_count = len(m3u8_urls)
                 if url_count > 1:
                     self.report_warning('This archive is split in %d parts; to download each split, please use "-f hls-0".."-f hls-%d" option.' % (url_count, url_count - 1))
