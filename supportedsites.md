@@ -419,6 +419,8 @@
  - **Glide**: Glide mobile video messages (glide.me)
  - **Globo**
  - **GloboArticle**
+ - **glomex**: Glomex videos
+ - **glomex:embed**: Glomex embedded videos
  - **Go**
  - **GodTube**
  - **Gofile**
