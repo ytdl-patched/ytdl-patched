@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+import urllib.parse
 
 from .common import InfoExtractor
 from ..compat import (
@@ -9,10 +11,9 @@ from ..compat import (
 from ..utils import (
     ExtractorError,
     float_or_none,
-    parse_duration,
+    js_to_json,
     parse_qs,
-    str_to_int,
-    urlencode_postdata,
+    try_get,
 )
 
 
@@ -78,56 +79,46 @@ class PandoraTVIE(InfoExtractor):
             qs = parse_qs(url)
             video_id = qs.get('prgid', [None])[0]
             user_id = qs.get('ch_userid', [None])[0]
-            if any(not f for f in (video_id, user_id,)):
+            if not all(f for f in (video_id, user_id)):
                 raise ExtractorError('Invalid URL', expected=True)
 
+        webpage = self._download_webpage(f'http://www.pandora.tv/view/{user_id}/{video_id}', video_id)
+        variables = {x.group(1): js_to_json(x.group(2)) for x in re.finditer(r'(?m)var\s+(\S+)\s*=\s*(.+?);$', webpage)}
+        variables = {k: self._parse_json(v, video_id, fatal=False) for k, v in variables.items()}
+        print(variables)
+
         data = self._download_json(
-            'http://m.pandora.tv/?c=view&m=viewJsonApi&ch_userid=%s&prgid=%s'
-            % (user_id, video_id), video_id)
-
-        info = data['data']['rows']['vod_play_info']['result']
-
-        formats = []
-        for format_id, format_url in info.items():
-            if not format_url:
-                continue
-            height = self._search_regex(
-                r'^v(\d+)[Uu]rl$', format_id, 'height', default=None)
-            if not height:
-                continue
-
-            play_url = self._download_json(
-                'http://m.pandora.tv/?c=api&m=play_url', video_id,
-                data=urlencode_postdata({
-                    'prgid': video_id,
-                    'runtime': info.get('runtime'),
-                    'vod_url': format_url,
-                }),
-                headers={
-                    'Origin': url,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                })
-            format_url = play_url.get('url')
-            if not format_url:
-                continue
-
-            formats.append({
-                'format_id': '%sp' % height,
-                'url': format_url,
-                'height': int(height),
+            'http://www.pandora.tv/external/getExternalApi/getVodUrl/', video_id,
+            form_params={
+                'userid': user_id,
+                'prgid': video_id,
+                'fid': variables['strFid'],
+                'resolType': variables['strResolType'],
+                'resolArr': variables['strResolArr'][0],
+                'vodStr': variables['nVodSvr'],
+                'resol': variables['nCurResol'],
+                'runtime': variables['runtime'],
+                'tvbox': 'false',
+                'defResol': 'true',
+                'embed': 'false',
             })
-        self._sort_formats(formats)
+        if not data.get('result'):
+            raise ExtractorError('Failed to request video URL')
 
         return {
             'id': video_id,
-            'title': info['subject'],
-            'description': info.get('body'),
-            'thumbnail': info.get('thumbnail') or info.get('poster'),
-            'duration': float_or_none(info.get('runtime'), 1000) or parse_duration(info.get('time')),
-            'upload_date': info['fid'].split('/')[-1][:8] if isinstance(info.get('fid'), compat_str) else None,
-            'uploader': info.get('nickname'),
-            'uploader_id': info.get('upload_userid'),
-            'view_count': str_to_int(info.get('hit')),
-            'like_count': str_to_int(info.get('likecnt')),
-            'formats': formats,
+            'title': urllib.parse.unquote(variables['strTitle']),
+            'description': self._html_search_meta((
+                'og:description', 'twitter:description', 'description', 'twitter:card'), webpage, 'description'),
+            'thumbnail': variables.get('thumbnail'),
+            'duration': float_or_none(variables.get('runtime'), 1000),
+            'upload_date': variables['fid'].split('/')[-1][:8] if isinstance(variables.get('fid'), compat_str) else None,
+            'uploader': variables.get('strChUserNick'),
+            'uploader_id': variables.get('strChUserId'),
+            'channel': variables.get('strChUserId'),
+            'channel_id': variables.get('strChName'),
+            'view_count': try_get(webpage, lambda x: int(re.search(r'id="prgViewCount">\s*([0-9,]+)\s*</', x).group(1).replace(',', ''))),
+
+            'url': data.get('src'),
+            'height': variables['nCurResol'],
         }
