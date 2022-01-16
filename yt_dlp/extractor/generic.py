@@ -1877,6 +1877,7 @@ class GenericIE(InfoExtractor):
             'add_ie': [RutubeIE.ie_key()],
         },
         {
+            # glomex:embed
             'url': 'https://www.skai.gr/news/world/iatrikos-syllogos-tourkias-to-turkovac-aplo-dialyma-erntogan-eiste-apateones-kai-pseytes',
             'info_dict': {
                 'id': 'v-ch2nkhcirwc9-sf',
