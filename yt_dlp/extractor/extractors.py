@@ -1366,6 +1366,10 @@ from .glomex import (
     GlomexIE,
     GlomexEmbedIE,
 )
+from .megatvcom import (
+    MegaTVComIE,
+    MegaTVComEmbedIE,
+)
 from .rutv import RUTVIE
 from .ruutu import RuutuIE
 from .ruv import RuvIE
