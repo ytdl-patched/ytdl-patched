@@ -618,6 +618,8 @@
  - **MediasiteNamedCatalog**
  - **Medici**
  - **megaphone.fm**: megaphone.fm embedded players
+ - **megatvcom**: megatv.com videos
+ - **megatvcom:embed**: megatv.com embedded videos
  - **Meipai**: 美拍
  - **MelonVOD**
  - **META**
