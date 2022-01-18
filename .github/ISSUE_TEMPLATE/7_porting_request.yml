@@ -27,7 +27,7 @@ body:
       label: Example URLs or extractor name
       description: |
         Example URLs or extractor name to identify which one is your requets.
-      value: |
+      placeholder: |
         https://www.youtube.com/watch?v=BaW_jenozKc
         youtube
     validations:
