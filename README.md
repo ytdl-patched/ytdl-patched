@@ -126,7 +126,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
-    * `mixch` (merged in yt-dlp)
+    * `mixch`, `mixch:archive` (merged in yt-dlp)
     * `skeb` (merged in yt-dlp)
     * `mirrativ`, `mirrativ:user` (merged in yt-dlp)
     * `openrec`, `openrec:capture` (merged in yt-dlp)
