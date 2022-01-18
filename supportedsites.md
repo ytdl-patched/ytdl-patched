@@ -645,6 +645,7 @@
  - **misskey:user**
  - **MiTele**: mitele.es
  - **mixch**
+ - **mixch:archive**
  - **mixcloud**
  - **mixcloud:playlist**
  - **mixcloud:user**
