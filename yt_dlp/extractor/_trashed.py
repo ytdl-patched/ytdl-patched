@@ -8,6 +8,7 @@ from ..compat import compat_str
 from ..utils import (
     ExtractorError,
     clean_html,
+    float_or_none,
     int_or_none,
     parse_qs,
     smuggle_url,
@@ -119,6 +120,8 @@ class HANMIE(InfoExtractor):
                 'height': int_or_none(stream['height']),
                 'ext': 'mp4',
                 'protocol': 'm3u8',
+                'filesize_approx': float_or_none(stream.get('filesize_mbs'), invscale=1000 ** 2),
+                'duration': float_or_none(stream.get('duration_in_ms'), 1000),
             })
 
         hentai_video = traverse_obj(json_data, 'hentai_video')
