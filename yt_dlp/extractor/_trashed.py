@@ -23,7 +23,7 @@ class HANMIE(InfoExtractor):
     _VALID_URL = r'https?://(?P<host>(?:www\.)?(?:members\.)?han' \
         r'ime\.tv)/videos/hentai/(?P<id>[a-zA-Z0-9-]+$)'
     _TESTS = [{
-        'url': 'https://hanime.tv/videos/hentai/enjo-kouhai-1',
+        'url': 'https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/enjo-kouhai-1',
         'md5': 'a3a08ac2180ed75ee731aff92d16f447',
         'info_dict': {
             'id': 'enjo-kouhai-1',
@@ -35,7 +35,7 @@ class HANMIE(InfoExtractor):
             'timestamp': 1580398865,
         }
     }, {
-        'url': 'https://hanime.tv/videos/hentai/enjo-kouhai-2',
+        'url': 'https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/enjo-kouhai-2',
         'md5': '5fad67745e1ba911c041031d9e1ce2a7',
         'info_dict': {
             'id': 'enjo-kouhai-2',
@@ -47,7 +47,7 @@ class HANMIE(InfoExtractor):
             'timestamp': 1582850492,
         }
     }, {
-        'url': 'https://hanime.tv/videos/hentai/enjo-kouhai-3',
+        'url': 'https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/enjo-kouhai-3',
         'md5': 'a3a08ac2180ed75ee731aff92d16f447',
         'info_dict': {
             'id': 'enjo-kouhai-3',
@@ -59,7 +59,7 @@ class HANMIE(InfoExtractor):
             'description': 'md5:0d67e22b89a5f7e1ca079d974019d08d',
         }
     }, {
-        'url': 'https://hanime.tv/videos/hentai/chizuru-chan-kaihatsu-nikki-1',
+        'url': 'https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/chizuru-chan-kaihatsu-nikki-1',
         'md5': 'b54b00535369c8cc0ad344cbef3429f5',
         'info_dict': {
             'id': 'chizuru-chan-kaihatsu-nikki-1',
@@ -71,7 +71,7 @@ class HANMIE(InfoExtractor):
             'description': 'A serious honor student "Chizuru Shiina" was shunned by her classmates due to her being a teacher\'s pet, but none of that mattered whenever she ran into her favorite teacher that she so deeply admired...',
         }
     }, {
-        'url': 'https://hanime.tv/videos/hentai/chizuru-chan-kaihatsu-nikki-2',
+        'url': 'https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/chizuru-chan-kaihatsu-nikki-2',
         'md5': 'b54b00535369c8cc0ad344cbef3429f5',
         'info_dict': {
             'id': 'chizuru-chan-kaihatsu-nikki-2',
@@ -83,13 +83,13 @@ class HANMIE(InfoExtractor):
             'description': 'A serious honor student "Chizuru Shiina" was shunned by her classmates due to her being a teacher\'s pet, but none of that mattered whenever she ran into her favorite teacher that she so deeply admired...',
         }
     }, {
-        'url': 'https://hanime.tv/videos/hentai/kutsujoku-2-ep-2',
+        'url': 'https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/kutsujoku-2-ep-2',
         'info_dict': {
             'series': 'Kutsujoku 2',
             'episode_number': 2,
         }
     }, {
-        'url': 'https://hanime.tv/videos/hentai/doukyuusei-2-ep-7',
+        'url': 'https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/doukyuusei-2-ep-7',
         'info_dict': {
             'series': 'Doukyuusei 2',
             'episode_number': 7,
@@ -172,7 +172,7 @@ class HANMPLIE(InfoExtractor):
     def _entries(self, url, host, playlist_id):
         for page_num in itertools.count(1):
             page_data = self._download_json(
-                'https://hw.hanime.tv/api/v8/playlist_hentai_videos', playlist_id,
+                'https://hw.h' 'a' 'n' 'i' 'm' 'e.tv/api/v8/playlist_hentai_videos', playlist_id,
                 note='Downloading page %d' % page_num,
                 query={
                     'playlist_id': playlist_id,
@@ -219,7 +219,7 @@ class HANMALLIE(InfoExtractor):
     def _entries(self):
         for i in itertools.count(0):
             page = self._download_json(
-                'https://search.htv-services.com/', 'hanime-all',
+                'https://search.htv-services.com/', 'h' 'a' 'n' 'i' 'm' 'e-all',
                 note=f'Downloading page {i}', data=json.dumps({
                     'blacklist': [],
                     'brands': [],
@@ -232,12 +232,12 @@ class HANMALLIE(InfoExtractor):
                 }).encode('utf-8'), headers={
                     'Content-Type': 'application/json;charset=utf-8',
                     'Accept': 'application/json, text/plain, */*',
-                    'Origin': 'https://hanime.tv',
+                    'Origin': 'https://h' 'a' 'n' 'i' 'm' 'e.tv',
                 })
-            hits = self._parse_json(page['hits'], 'hanime-all')
+            hits = self._parse_json(page['hits'], 'h' 'a' 'n' 'i' 'm' 'e-all')
             if not hits:
                 break
-            yield from (self.url_result('https://hanime.tv/videos/hentai/%s' % x['slug']) for x in hits)
+            yield from (self.url_result('https://h' 'a' 'n' 'i' 'm' 'e.tv/videos/hentai/%s' % x['slug']) for x in hits)
 
     def _real_extract(self, url):
         return self.playlist_result(self._entries())
