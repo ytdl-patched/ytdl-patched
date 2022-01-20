@@ -254,6 +254,7 @@
  - **curiositystream:collections**
  - **curiositystream:series**
  - **CWTV**
+ - **Daftsex**
  - **DagelijkseKost**: dagelijksekost.een.be
  - **DailyMail**
  - **dailymotion**
@@ -494,6 +495,8 @@
  - **InternetVideoArchive**
  - **IPrima**
  - **IPrimaCNN**
+ - **iq.com**: International version of iQiyi
+ - **iq.com:album**
  - **iqiyi**: 爱奇艺
  - **Ir90Tv**
  - **ITTF**
@@ -999,12 +1002,15 @@
  - **Roxwel**
  - **Rozhlas**
  - **RTBF**
+ - **RTDocumentry**
+ - **RTDocumentryPlaylist**
  - **rte**: Raidió Teilifís Éireann TV
  - **rte:radio**: Raidió Teilifís Éireann radio
  - **rtl.nl**: rtl.nl and rtlxl.nl
  - **rtl2**
  - **rtl2:you**
  - **rtl2:you:series**
+ - **RTNews**
  - **RTP**
  - **RTRFM**
  - **RTS**: RTS.ch
@@ -1019,6 +1025,7 @@
  - **Rule34Video**
  - **RumbleChannel**
  - **RumbleEmbed**
+ - **Ruptly**
  - **rutube**: Rutube videos
  - **rutube:channel**: Rutube channel
  - **rutube:embed**: Rutube embedded videos
@@ -1161,7 +1168,10 @@
  - **TeamTreeHouse**
  - **TechTalks**
  - **techtv.mit.edu**
- - **ted**
+ - **TedEmbed**
+ - **TedPlaylist**
+ - **TedSeries**
+ - **TedTalk**
  - **Tele13**
  - **Tele5**
  - **TeleBruxelles**
@@ -1263,6 +1273,8 @@
  - **TVNowNew**
  - **TVNowSeason**
  - **TVNowShow**
+ - **tvopengr:embed**: tvopen.gr embedded videos
+ - **tvopengr:watch**: tvopen.gr (and ethnos.gr) videos
  - **tvp**: Telewizja Polska
  - **tvp:embed**: Telewizja Polska
  - **tvp:series**
@@ -1483,9 +1495,10 @@
  - **youtube:search_url**: YouTube search URLs with sorting and filter support
  - **youtube:subscriptions**: YouTube subscriptions feed; ":ytsubs" keyword (requires cookies)
  - **youtube:tab**: YouTube Tabs
+ - **youtube:user**: YouTube user videos; "ytuser:" prefix
  - **youtube:watchlater**: Youtube watch later list; ":ytwatchlater" keyword (requires cookies)
+ - **YoutubeLivestreamEmbed**: YouTube livestream embeds
  - **YoutubeYtBe**: youtu.be
- - **YoutubeYtUser**: YouTube user videos; "ytuser:" prefix
  - **YtAlternate**
  - **Zapiks**
  - **Zattoo**
