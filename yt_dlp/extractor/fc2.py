@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import hashlib
+import threading
 
 from .common import InfoExtractor
 from ..compat import (
@@ -166,7 +167,6 @@ class FC2EmbedIE(InfoExtractor):
 class FC2LiveIE(InfoExtractor):
     _VALID_URL = r'^https?://live\.fc2\.com/(?P<id>\d+)'
     IE_NAME = 'fc2:live'
-    _WORKING = False
     _FEATURE_DEPENDENCY = ('websocket', )
 
     def _real_extract(self, url):
@@ -202,60 +202,62 @@ class FC2LiveIE(InfoExtractor):
         playlist_data = None
 
         self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
-        with WebSocket(ws_url, {
+        ws = WebSocket(ws_url, {
             'Cookie': str(self._get_cookies('https://live.fc2.com/'))[12:],
             'Origin': 'https://live.fc2.com',
             'Accept': '*/*',
             'User-Agent': std_headers['User-Agent'],
-        }) as ws:
-            if self._downloader.params.get('verbose', False):
-                self.to_screen('[debug] Sending HLS server request')
+        })
 
-            while True:
-                recv = ws.recv()
-                if not recv:
-                    continue
-                data = self._parse_json(recv, video_id, fatal=False)
-                if not data or not isinstance(data, dict):
-                    continue
-                print(data)
+        self.write_debug('[debug] Sending HLS server request')
 
-                if data.get('name') == 'connect_complete':
-                    break
-            ws.send(r'{"name":"get_hls_information","arguments":{},"id":1}')
+        while True:
+            recv = ws.recv()
+            if not recv:
+                continue
+            data = self._parse_json(recv, video_id, fatal=False)
+            if not data or not isinstance(data, dict):
+                continue
+            # print(data)
 
-            while True:
-                recv = ws.recv()
-                if not recv:
-                    continue
-                data = self._parse_json(recv, video_id, fatal=False)
-                if not data or not isinstance(data, dict):
-                    continue
-                print(data)
-                if data.get('name') == '_response_' and data.get('id') == 1:
-                    if self._downloader.params.get('verbose', False):
-                        self.to_screen('[debug] Goodbye.')
-                    playlist_data = data
-                    print(data)
-                    break
-                elif self._downloader.params.get('verbose', False):
-                    if len(recv) > 100:
-                        recv = recv[:100] + '...'
-                    self.to_screen('[debug] Server said: %s' % recv)
+            if data.get('name') == 'connect_complete':
+                break
+        ws.send(r'{"name":"get_hls_information","arguments":{},"id":1}')
+
+        while True:
+            recv = ws.recv()
+            if not recv:
+                continue
+            data = self._parse_json(recv, video_id, fatal=False)
+            if not data or not isinstance(data, dict):
+                continue
+            # print(data)
+            if data.get('name') == '_response_' and data.get('id') == 1:
+                self.write_debug('[debug] Goodbye.')
+                playlist_data = data
+                # print(data)
+                break
+            elif self._downloader.params.get('verbose', False):
+                if len(recv) > 100:
+                    recv = recv[:100] + '...'
+                self.to_screen('[debug] Server said: %s' % recv)
 
         if not playlist_data:
             raise ExtractorError('Unable to fetch HLS playlist info via WebSocket')
-        arguments = playlist_data['arguments']
-        playlists = arguments['playlists']
-        hls_url = None
 
-        for pl in playlists:
-            if pl.get('status') == 0 and 'master_playlist' in pl.get('url'):
-                hls_url = pl.get('url')
-                break
-
-        if not hls_url:
-            raise ExtractorError('Unable to find HLS playlist')
+        formats = []
+        for name, playlists in playlist_data['arguments'].items():
+            if not isinstance(playlists, list):
+                continue
+            for pl in playlists:
+                if pl.get('status') == 0 and 'master_playlist' in pl.get('url'):
+                    formats.extend(self._extract_m3u8_formats(
+                        pl['url'], video_id, ext='mp4', m3u8_id=name, live=True,
+                        headers={
+                            'Origin': 'https://live.fc2.com',
+                            'Referer': url,
+                        }))
+        self._sort_formats(formats)
 
         title = try_get(
             webpage,
@@ -265,16 +267,28 @@ class FC2LiveIE(InfoExtractor):
         description = self._html_search_meta(
             ('description', 'og:description', 'twitter:description'),
             webpage, 'live description', fatal=False)
-        formats = self._extract_m3u8_formats(
-            hls_url, video_id, ext='mp4', m3u8_id='hls', live=True,
-            headers={
-                'Origin': 'https://live.fc2.com',
-                'Referer': url,
-            })
+
+        heartbeat_lock = threading.Lock()
+        heartbeat_state = [None, 1]
+
+        def heartbeat():
+            try:
+                heartbeat_state[1] += 1
+                ws.send('{"name":"heartbeat","arguments":{},"id":%d}' % heartbeat_state[1])
+            except Exception:
+                self.to_screen("[download] Heartbeat failed")
+
+            with heartbeat_lock:
+                heartbeat_state[0] = threading.Timer(30, heartbeat)
+                heartbeat_state[0]._daemonic = True
+                heartbeat_state[0].start()
+
+        heartbeat()
 
         return {
             'id': video_id,
             'title': title,
             'description': description,
             'formats': formats,
+            'is_live': True,
         }
