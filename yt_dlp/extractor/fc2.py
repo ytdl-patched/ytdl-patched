@@ -2,20 +2,20 @@
 from __future__ import unicode_literals
 
 import hashlib
-import threading
+import re
 
 from .common import InfoExtractor
 from ..compat import (
     compat_parse_qs,
-    compat_str,
     compat_urllib_request,
     compat_urlparse,
 )
 from ..utils import (
     ExtractorError,
+    js_to_json,
     sanitized_Request,
     std_headers,
-    try_get,
+    traverse_obj,
     urlencode_postdata,
 )
 from ..websocket import WebSocket
@@ -257,38 +257,35 @@ class FC2LiveIE(InfoExtractor):
                             'Origin': 'https://live.fc2.com',
                             'Referer': url,
                         }))
+
         self._sort_formats(formats)
+        for fmt in formats:
+            fmt.update({
+                'protocol': 'fc2_live',
+                'ws': ws,
+            })
 
-        title = try_get(
-            webpage,
-            (lambda x: self._html_search_meta(('og:title', 'twitter:title'), x, 'live title', fatal=False).strip('\u3000 ')[1:-1],
-             lambda x: self._search_regex((r'<title>[\u3000:space:]*\[(.+?)\]\s*-\s*[^-]+?</title>', r'<p class="c-ctbName">(.+?)</p>'), x, 'live title'),
-             ), compat_str)
-        description = self._html_search_meta(
-            ('description', 'og:description', 'twitter:description'),
-            webpage, 'live description', fatal=False)
+        title = self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)
+        if not title:
+            title = self._html_extract_title(webpage, 'html title', fatal=False)
+            if title:
+                # remove service name in <title>
+                title = re.sub(r'\s+-\s+.+$', '', title)
 
-        heartbeat_lock = threading.Lock()
-        heartbeat_state = [None, 1]
-
-        def heartbeat():
-            try:
-                heartbeat_state[1] += 1
-                ws.send('{"name":"heartbeat","arguments":{},"id":%d}' % heartbeat_state[1])
-            except Exception:
-                self.to_screen("[download] Heartbeat failed")
-
-            with heartbeat_lock:
-                heartbeat_state[0] = threading.Timer(30, heartbeat)
-                heartbeat_state[0]._daemonic = True
-                heartbeat_state[0].start()
-
-        heartbeat()
+        live_info_view = self._search_regex(r'(?s)liveInfoView\s*:\s*({.+?}),\s*premiumStateView', webpage, 'user info', fatal=False) or None
+        if live_info_view:
+            # remove jQuery code from object literal
+            live_info_view = re.sub(r'\$\(.+?\)[^,]+,', '"",', live_info_view)
+            live_info_view = self._parse_json(js_to_json(live_info_view), video_id)
 
         return {
             'id': video_id,
-            'title': title,
-            'description': description,
+            'title': title or traverse_obj(live_info_view, 'title'),
+            'description': self._html_search_meta(
+                ('description', 'og:description', 'twitter:description'),
+                webpage, 'live description', fatal=False) or traverse_obj(live_info_view, 'info'),
             'formats': formats,
+            'uploader_id': video_id,
+            'thumbnail': traverse_obj(live_info_view, 'thumb'),
             'is_live': True,
         }

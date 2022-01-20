@@ -37,6 +37,7 @@ from .rtsp import RtspFD
 from .ism import IsmFD
 from .mhtml import MhtmlFD
 from .niconico import NiconicoDmcFD, NiconicoLiveFD
+from .fc2 import FC2LiveFD
 from .websocket import WebSocketFragmentFD
 from .youtube_live_chat import YoutubeLiveChatFD
 from .serial import SerialFD
@@ -63,6 +64,7 @@ PROTOCOL_MAP = {
     'mhtml': MhtmlFD,
     'niconico_dmc': NiconicoDmcFD,
     'niconico_live': NiconicoLiveFD,
+    'fc2_live': FC2LiveFD,
     'websocket_frag': WebSocketFragmentFD,
     'serial': SerialFD,
     'image_series': ImageSeriesFD,
@@ -74,7 +76,7 @@ PROTOCOL_MAP = {
 # adding here will bypass protocol change
 LDM_EXCEPTIONS = (
     'http_dash_segments', 'serial',
-    'niconico_live',
+    'niconico_live', 'fc2_live',
     'youtube_live_chat', 'youtube_live_chat_replay',
     'websocket_frag', 'image_series',
 )
