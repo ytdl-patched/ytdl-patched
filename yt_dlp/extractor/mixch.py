@@ -11,7 +11,7 @@ class MixchIE(InfoExtractor):
     IE_NAME = 'mixch'
     _VALID_URL = r'https?://(?:www\.)?mixch\.tv/u/(?P<id>\d+)'
 
-    TESTS = [{
+    _TESTS = [{
         'url': 'https://mixch.tv/u/16236849/live',
         'skip': 'don\'t know if this live persists',
         'info_dict': {
@@ -59,7 +59,7 @@ class MixchArchiveIE(InfoExtractor):
     IE_NAME = 'mixch:archive'
     _VALID_URL = r'https?://(?:www\.)?mixch\.tv/archive/(?P<id>\d+)'
 
-    TESTS = [{
+    _TESTS = [{
         'url': 'https://mixch.tv/archive/421',
         'skip': 'paid video, no DRM. expires at Jan 23',
         'info_dict': {
