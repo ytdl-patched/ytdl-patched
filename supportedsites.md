@@ -357,6 +357,7 @@
  - **faz.net**
  - **fc2**
  - **fc2:embed**
+ - **fc2:live**
  - **Fczenit**
  - **Filmmodu**
  - **filmon**
