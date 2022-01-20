@@ -264,6 +264,7 @@ class FileDownloader(ShowsProgress):
                 with heartbeat_lock:
                     if not download_complete:
                         timer[0] = threading.Timer(heartbeat_interval, heartbeat)
+                        timer[0]._daemonic = True
                         timer[0].start()
 
             heartbeat()
