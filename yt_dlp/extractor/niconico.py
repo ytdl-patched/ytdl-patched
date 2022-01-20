@@ -27,13 +27,16 @@ from ..utils import (
     parse_duration,
     parse_iso8601,
     remove_start,
-    try_get,
-    traverse_obj,
-    unescapeHTML,
-    urlencode_postdata,
-    update_url_query,
+    std_headers,
+    str_or_none,
     time_millis,
+    traverse_obj,
+    try_get,
+    unescapeHTML,
+    update_url_query,
+    urlencode_postdata,
 )
+from ..websocket import WebSocket
 
 
 class NiconicoBaseIE(InfoExtractor):
@@ -984,16 +987,6 @@ class NiconicoLiveIE(NiconicoBaseIE):
     _VALID_URL = r'(?:https?://(?:sp\.)?live2?\.nicovideo\.jp/(?:watch|gate)/|nico(?:nico|video)?:)(?P<id>lv\d+)'
     _FEATURE_DEPENDENCY = ('websocket', )
 
-    # sort qualities in this order to trick youtube-dl to download highest quality as default
-    _KNOWN_QUALITIES = (
-        # quality code, group (bitmask), tags...
-        ('abr', 3, 'all'),
-        ('super_low', 1, 'all'),
-        ('low', 1, 'all'),
-        ('normal', 1, 'all'),
-        ('high', 1, 'all'),
-        ('super_high', 1, 'all'),
-    )
     _KNOWN_LATENCY = ('high', 'low')
 
     def _real_extract(self, url):
@@ -1011,9 +1004,58 @@ class NiconicoLiveIE(NiconicoBaseIE):
             'frontend_id': '9',
         })
 
+        cookies = try_get(urlh.geturl(), self._get_cookie_header)
         latency = try_get(self._configuration_arg('latency'), lambda x: x[0])
         if latency not in self._KNOWN_LATENCY:
             latency = 'high'
+
+        ws = WebSocket(ws_url, {
+            'Cookie': str_or_none(cookies) or '',
+            'Origin': 'https://live2.nicovideo.jp',
+            'Accept': '*/*',
+            'User-Agent': std_headers['User-Agent'],
+        })
+
+        self.write_debug('[debug] Sending HLS server request')
+        ws.send(json.dumps({
+            "type": "startWatching",
+            "data": {
+                "stream": {
+                    "quality": 'abr',
+                    "protocol": "hls+fmp4",
+                    "latency": latency,
+                    "chasePlay": False
+                },
+                "room": {
+                    "protocol": "webSocket",
+                    "commentable": True
+                },
+                "reconnect": False,
+            }
+        }))
+
+        while True:
+            recv = ws.recv()
+            if not recv:
+                continue
+            data = json.loads(recv)
+            if not data or not isinstance(data, dict):
+                continue
+            if data.get('type') == 'stream':
+                m3u8_url = data['data']['uri']
+                qualities = data['data']['availableQualities']
+                break
+            elif data.get('type') == 'disconnect':
+                self.write_debug(recv)
+                raise ExtractorError('Disconnected at middle of extraction')
+            elif data.get('type') == 'error':
+                self.write_debug(recv)
+                message = try_get(data, lambda x: x["body"]["code"], compat_str) or recv
+                raise ExtractorError(message)
+            elif self.get_param('verbose', False):
+                if len(recv) > 100:
+                    recv = recv[:100] + '...'
+                self.to_screen('[debug] Server said: %s' % recv)
 
         title = try_get(
             None,
@@ -1021,21 +1063,21 @@ class NiconicoLiveIE(NiconicoBaseIE):
              lambda x: self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)),
             compat_str)
 
-        cookies = try_get(urlh.geturl(), self._get_cookie_header)
+        formats = self._extract_m3u8_formats(m3u8_url, video_id, ext='mp4', live=True)
+        self._sort_formats(formats)
+        for fmt, q in zip(formats, reversed(qualities[1:])):
+            fmt.update({
+                'format_id': q,
+                'protocol': 'niconico_live',
+                'ws': ws,
+                'video_id': video_id,
+                'cookies': cookies,
+                'live_latency': latency,
+            })
 
         return {
             'id': video_id,
             'title': title,
-            'formats': [{
-                'url': ws_url,
-                'protocol': 'niconico_live',
-                'format_id': '%s' % quality[0],
-                'video_id': video_id,
-                'cookies': cookies,
-                'ext': 'mp4',
-                'is_live': True,
-                'live_quality': quality,
-                'live_latency': latency,
-            } for quality in self._KNOWN_QUALITIES],
+            'formats': formats,
             'is_live': True,
         }
