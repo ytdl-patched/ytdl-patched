@@ -530,6 +530,8 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             # produces a file that is playable (this is mostly useful for live
             # streams). Note that Windows is not affected and produces playable
             # files (see https://github.com/ytdl-org/youtube-dl/issues/8300).
+            if isinstance(e, KeyboardInterrupt) and live:
+                retval = 0
             if isinstance(e, KeyboardInterrupt) and sys.platform != 'win32' and url not in ('-', 'pipe:'):
                 proc.communicate_or_kill(b'q')
             else:
