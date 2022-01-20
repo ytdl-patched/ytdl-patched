@@ -6,14 +6,18 @@ import hashlib
 from .common import InfoExtractor
 from ..compat import (
     compat_parse_qs,
+    compat_str,
     compat_urllib_request,
     compat_urlparse,
 )
 from ..utils import (
     ExtractorError,
     sanitized_Request,
+    std_headers,
+    try_get,
     urlencode_postdata,
 )
+from ..websocket import WebSocket
 
 
 class FC2IE(InfoExtractor):
@@ -156,4 +160,121 @@ class FC2EmbedIE(InfoExtractor):
             'url': 'fc2:%s' % video_id,
             'title': title,
             'thumbnail': thumbnail,
+        }
+
+
+class FC2LiveIE(InfoExtractor):
+    _VALID_URL = r'^https?://live\.fc2\.com/(?P<id>\d+)'
+    IE_NAME = 'fc2:live'
+    _WORKING = False
+    _FEATURE_DEPENDENCY = ('websocket', )
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
+
+        self._set_cookie('live.fc2.com', 'js-player_size', '1')
+
+        # https://live.fc2.com/js/playerVersion/version.txt?0.0674203108942784
+        member_api = self._download_json(
+            "https://live.fc2.com/api/memberApi.php", video_id, form_params={
+                "channel": "1",
+                "profile": "1",
+                "user": "1",
+                "streamid": video_id
+            }, note='Requesting member info')
+
+        control_server = self._download_json(
+            'https://live.fc2.com/api/getControlServer.php', video_id, note='Downloading ControlServer data',
+            form_params={
+                'channel_id': video_id,
+                'mode': 'play',
+                'orz': '',
+                'channel_version': member_api['data']['channel_data']['version'],
+                'client_version': '2.1.0\n [1]',
+                'client_type': 'pc',
+                'client_app': 'browser_hls',
+                'ipv6': '',
+            }, headers={'X-Requested-With': 'XMLHttpRequest'})
+        self._set_cookie('live.fc2.com', 'l_ortkn', control_server['orz_raw'])
+
+        ws_url = control_server['url'] + '?control_token=' + control_server['control_token']
+        playlist_data = None
+
+        self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
+        with WebSocket(ws_url, {
+            'Cookie': str(self._get_cookies('https://live.fc2.com/'))[12:],
+            'Origin': 'https://live.fc2.com',
+            'Accept': '*/*',
+            'User-Agent': std_headers['User-Agent'],
+        }) as ws:
+            if self._downloader.params.get('verbose', False):
+                self.to_screen('[debug] Sending HLS server request')
+
+            while True:
+                recv = ws.recv()
+                if not recv:
+                    continue
+                data = self._parse_json(recv, video_id, fatal=False)
+                if not data or not isinstance(data, dict):
+                    continue
+                print(data)
+
+                if data.get('name') == 'connect_complete':
+                    break
+            ws.send(r'{"name":"get_hls_information","arguments":{},"id":1}')
+
+            while True:
+                recv = ws.recv()
+                if not recv:
+                    continue
+                data = self._parse_json(recv, video_id, fatal=False)
+                if not data or not isinstance(data, dict):
+                    continue
+                print(data)
+                if data.get('name') == '_response_' and data.get('id') == 1:
+                    if self._downloader.params.get('verbose', False):
+                        self.to_screen('[debug] Goodbye.')
+                    playlist_data = data
+                    print(data)
+                    break
+                elif self._downloader.params.get('verbose', False):
+                    if len(recv) > 100:
+                        recv = recv[:100] + '...'
+                    self.to_screen('[debug] Server said: %s' % recv)
+
+        if not playlist_data:
+            raise ExtractorError('Unable to fetch HLS playlist info via WebSocket')
+        arguments = playlist_data['arguments']
+        playlists = arguments['playlists']
+        hls_url = None
+
+        for pl in playlists:
+            if pl.get('status') == 0 and 'master_playlist' in pl.get('url'):
+                hls_url = pl.get('url')
+                break
+
+        if not hls_url:
+            raise ExtractorError('Unable to find HLS playlist')
+
+        title = try_get(
+            webpage,
+            (lambda x: self._html_search_meta(('og:title', 'twitter:title'), x, 'live title', fatal=False).strip('\u3000 ')[1:-1],
+             lambda x: self._search_regex((r'<title>[\u3000:space:]*\[(.+?)\]\s*-\s*[^-]+?</title>', r'<p class="c-ctbName">(.+?)</p>'), x, 'live title'),
+             ), compat_str)
+        description = self._html_search_meta(
+            ('description', 'og:description', 'twitter:description'),
+            webpage, 'live description', fatal=False)
+        formats = self._extract_m3u8_formats(
+            hls_url, video_id, ext='mp4', m3u8_id='hls', live=True,
+            headers={
+                'Origin': 'https://live.fc2.com',
+                'Referer': url,
+            })
+
+        return {
+            'id': video_id,
+            'title': title,
+            'description': description,
+            'formats': formats,
         }
