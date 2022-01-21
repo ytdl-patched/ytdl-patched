@@ -18,12 +18,9 @@ class DisneyChrisIE(InfoExtractor):
         video_id = long_id.rsplit('/', 1)[-1]
         webpage = self._download_webpage(url, video_id)
 
-        for section in re.finditer(r'href="/(.+?)\.html">(.+?)</a>', webpage):
-            if section.group(1) == long_id:
-                title = section.group(2)
-                break
-        else:
-            title = self._html_extract_title(webpage, 'playlist title')
+        title = next(
+            (x.group(2) for x in re.finditer(r'href="/(.+?)\.html">(.+?)</a>', webpage) if x.group(1) == long_id),
+            None) or self._html_extract_title(webpage, 'playlist title', default=None)
 
         return self.playlist_result(self.extract_article_sections(webpage, video_id), video_id, title)
 
