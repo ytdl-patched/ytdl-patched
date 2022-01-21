@@ -1793,7 +1793,10 @@ class YoutubeDL(object):
         ie_result['requested_entries'] = playlistitems
 
         _infojson_written = False
-        if not self.params.get('simulate') and self.params.get('allow_playlist_files', True):
+        write_playlist_files = self.params.get('allow_playlist_files', True)
+        if write_playlist_files and self.params.get('list_thumbnails'):
+            self.list_thumbnails(ie_result)
+        if write_playlist_files and not self.params.get('simulate'):
             ie_copy = self._playlist_infodict(ie_result, n_entries=n_entries)
             _infojson_written = self._write_info_json(
                 'playlist', ie_result, self.prepare_filename(ie_copy, 'pl_infojson'))
@@ -2795,7 +2798,7 @@ class YoutubeDL(object):
     def _forceprint(self, tmpl, info_dict):
         mobj = re.match(r'\w+(=?)$', tmpl)
         if mobj and mobj.group(1):
-            tmpl = f'{tmpl[:-1]} = %({tmpl[:-1]})s'
+            tmpl = f'{tmpl[:-1]} = %({tmpl[:-1]})r'
         elif mobj:
             tmpl = '%({})s'.format(tmpl)
 
@@ -3744,7 +3747,7 @@ class YoutubeDL(object):
             return None
         return render_table(
             self._list_format_headers('ID', 'Width', 'Height', 'URL'),
-            [[t['id'], t.get('width', 'unknown'), t.get('height', 'unknown'), t['url']] for t in thumbnails])
+            [[t.get('id'), t.get('width', 'unknown'), t.get('height', 'unknown'), t['url']] for t in thumbnails])
 
     def render_subtitles_table(self, video_id, subtitles):
         def _row(lang, formats):

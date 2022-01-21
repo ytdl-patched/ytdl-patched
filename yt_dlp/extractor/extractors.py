@@ -759,7 +759,6 @@ from .limelight import (
     LimelightChannelListIE,
 )
 from .line import (
-    LineTVIE,
     LineLiveIE,
     LineLiveChannelIE,
 )

@@ -257,7 +257,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     _RESERVED_NAMES = (
         r'channel|c|user|playlist|watch|w|v|embed|e|watch_popup|clip|'
-        r'shorts|movies|results|shared|hashtag|trending|feed|feeds|'
+        r'shorts|movies|results|shared|hashtag|trending|explore|feed|feeds|'
         r'browse|oembed|get_video_info|iframe_api|s/player|'
         r'storefront|oops|index|account|reporthistory|t/terms|about|upload|signin|logout')
 
@@ -3408,7 +3408,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'uploader_id': self._search_regex(r'/(?:channel|user)/([^/?&#]+)', owner_profile_url, 'uploader id') if owner_profile_url else None,
             'uploader_url': owner_profile_url,
             'channel_id': channel_id,
-            'channel_url': f'https://www.youtube.com/channel/{channel_id}' if channel_id else None,
+            'channel_url': format_field(channel_id, template='https://www.youtube.com/channel/%s'),
             'duration': duration,
             'view_count': int_or_none(
                 get_first((video_details, microformats), (..., 'viewCount'))

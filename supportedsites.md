@@ -240,6 +240,8 @@
  - **Cracked**
  - **Crackle**
  - **CrooksAndLiars**
+ - **CrowdBunker**
+ - **CrowdBunkerChannel**
  - **crunchyroll**
  - **crunchyroll:beta**
  - **crunchyroll:playlist**
@@ -570,7 +572,6 @@
  - **limelight:channel_list**
  - **LineLive**
  - **LineLiveChannel**
- - **LineTV**
  - **LinkedIn**
  - **linkedin:learning**
  - **linkedin:learning:course**
@@ -579,6 +580,7 @@
  - **LiveJournal**
  - **livestream**
  - **livestream:original**
+ - **Lnk**
  - **LnkGo**
  - **loc**: Library of Congress
  - **LocalNews8**
@@ -740,6 +742,7 @@
  - **Newgrounds:playlist**
  - **Newgrounds:user**
  - **Newstube**
+ - **Newsy**
  - **NextMedia**: 蘋果日報
  - **NextMediaActionNews**: 蘋果日報 - 動新聞
  - **NextTV**: 壹電視
@@ -933,6 +936,11 @@
  - **PressTV**
  - **ProjectVeritas**
  - **prosiebensat1**: ProSiebenSat.1 Digital
+ - **PRXAccount**
+ - **PRXSeries**
+ - **prxseries:search**: PRX Series Search; "prxseries:" prefix
+ - **prxstories:search**: PRX Stories Search; "prxstories:" prefix
+ - **PRXStory**
  - **puhutv**
  - **puhutv:serie**
  - **Puls4**
@@ -1500,7 +1508,10 @@
  - **youtube:watchlater**: Youtube watch later list; ":ytwatchlater" keyword (requires cookies)
  - **YoutubeLivestreamEmbed**: YouTube livestream embeds
  - **YoutubeYtBe**: youtu.be
+<<<<<<< HEAD
  - **YtAlternate**
+=======
+>>>>>>> 50ce204cc2aa29a1a267d70a0c44a63f976809db
  - **Zapiks**
  - **Zattoo**
  - **ZattooLive**
