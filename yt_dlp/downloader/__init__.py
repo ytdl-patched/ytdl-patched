@@ -30,6 +30,7 @@ def get_suitable_downloader(info_dict, params={}, default=NO_DEFAULT, protocol=N
 from .common import FileDownloader
 from .dash import DashSegmentsFD
 from .f4m import F4mFD
+from .fc2 import FC2LiveFD
 from .hls import HlsFD
 from .http import HttpFD
 from .rtmp import RtmpFD
@@ -37,7 +38,6 @@ from .rtsp import RtspFD
 from .ism import IsmFD
 from .mhtml import MhtmlFD
 from .niconico import NiconicoDmcFD, NiconicoLiveFD
-from .fc2 import FC2LiveFD
 from .websocket import WebSocketFragmentFD
 from .youtube_live_chat import YoutubeLiveChatFD
 from .serial import SerialFD
