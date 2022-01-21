@@ -21,7 +21,7 @@ class FC2LiveFD(FileDownloader):
                 heartbeat_state[1] += 1
                 ws.send('{"name":"heartbeat","arguments":{},"id":%d}' % heartbeat_state[1])
             except Exception:
-                self.to_screen("[fc2:live] Heartbeat failed")
+                self.to_screen('[fc2:live] Heartbeat failed')
 
             with heartbeat_lock:
                 heartbeat_state[0] = threading.Timer(30, heartbeat)

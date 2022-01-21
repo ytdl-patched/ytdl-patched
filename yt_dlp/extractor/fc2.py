@@ -169,6 +169,18 @@ class FC2LiveIE(InfoExtractor):
     IE_NAME = 'fc2:live'
     _FEATURE_DEPENDENCY = ('websocket', )
 
+    _TESTS = [{
+        'url': 'https://live.fc2.com/57892267/',
+        'info_dict': {
+            'id': '57892267',
+            'title': 'どこまで・・・ 2022-01-21 16:48',
+            'uploader': 'あつあげ',
+            'uploader_id': '57892267',
+            'thumbnail': r're:https?://.+fc2.+',
+        },
+        'skip': 'livestream',
+    }]
+
     def _real_extract(self, url):
         video_id = self._match_id(url)
         webpage = self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
@@ -177,11 +189,11 @@ class FC2LiveIE(InfoExtractor):
 
         # https://live.fc2.com/js/playerVersion/version.txt?0.0674203108942784
         member_api = self._download_json(
-            "https://live.fc2.com/api/memberApi.php", video_id, form_params={
-                "channel": "1",
-                "profile": "1",
-                "user": "1",
-                "streamid": video_id
+            'https://live.fc2.com/api/memberApi.php', video_id, form_params={
+                'channel': '1',
+                'profile': '1',
+                'user': '1',
+                'streamid': video_id
             }, note='Requesting member info')
 
         control_server = self._download_json(
@@ -271,6 +283,11 @@ class FC2LiveIE(InfoExtractor):
             if title:
                 # remove service name in <title>
                 title = re.sub(r'\s+-\s+.+$', '', title)
+        uploader = None
+        if title:
+            match = self._search_regex(r'^(.+?)\s*\[(.+?)\]$', title, 'title and uploader', default=None, group=(1, 2))
+            if match and all(match):
+                title, uploader = match
 
         live_info_view = self._search_regex(r'(?s)liveInfoView\s*:\s*({.+?}),\s*premiumStateView', webpage, 'user info', fatal=False) or None
         if live_info_view:
@@ -282,9 +299,10 @@ class FC2LiveIE(InfoExtractor):
             'id': video_id,
             'title': title or traverse_obj(live_info_view, 'title'),
             'description': self._html_search_meta(
-                ('description', 'og:description', 'twitter:description'),
+                ('og:description', 'twitter:description'),
                 webpage, 'live description', fatal=False) or traverse_obj(live_info_view, 'info'),
             'formats': formats,
+            'uploader': uploader or traverse_obj(live_info_view, 'name'),
             'uploader_id': video_id,
             'thumbnail': traverse_obj(live_info_view, 'thumb'),
             'is_live': True,
