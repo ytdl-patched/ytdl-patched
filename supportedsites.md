@@ -685,6 +685,10 @@
  - **MTVUutisetArticle**
  - **MuenchenTV**: münchen.tv
  - **MuseScore**
+ - **MusicdexAlbum**
+ - **MusicdexArtist**
+ - **MusicdexPlaylist**
+ - **MusicdexSong**
  - **mva**: Microsoft Virtual Academy videos
  - **mva:course**: Microsoft Virtual Academy courses
  - **Mwave**
@@ -1376,7 +1380,8 @@
  - **vimeo:review**: Review pages on vimeo
  - **vimeo:user**
  - **vimeo:watchlater**: Vimeo watch later list, "vimeowatchlater" keyword (requires authentication)
- - **Vimm**
+ - **Vimm:recording**
+ - **Vimm:stream**
  - **Vimple**: Vimple - one-click video hosting
  - **Vine**
  - **vine:user**
