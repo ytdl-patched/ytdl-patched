@@ -907,6 +907,12 @@ from .mtv import (
 )
 from .muenchentv import MuenchenTVIE
 from .musescore import MuseScoreIE
+from .musicdex import (
+    MusicdexSongIE,
+    MusicdexAlbumIE,
+    MusicdexArtistIE,
+    MusicdexPlaylistIE,
+)
 from .mwave import MwaveIE, MwaveMeetGreetIE
 from .mxplayer import (
     MxplayerIE,
@@ -1880,7 +1886,10 @@ from .vimeo import (
     VimeoWatchLaterIE,
     VHXEmbedIE,
 )
-from .vimm import VimmIE
+from .vimm import (
+    VimmIE,
+    VimmRecordingIE,
+)
 from .vimple import VimpleIE
 from .vine import (
     VineIE,
