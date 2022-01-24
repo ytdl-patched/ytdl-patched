@@ -76,6 +76,7 @@ from .utils import (
     GeoRestrictedError,
     get_domain,
     HEADRequest,
+    InAdvancePagedList,
     int_or_none,
     iri_to_uri,
     ISO3166Utils,
@@ -227,9 +228,12 @@ class YoutubeDL(object):
     verbose:           Print additional info to stdout.
     quiet:             Do not print messages to stdout.
     no_warnings:       Do not print out anything for warnings.
-    forceprint:        A dict with keys video/playlist mapped to
-                       a list of templates to force print to stdout
+    forceprint:        A dict with keys WHEN mapped to a list of templates to
+                       print to stdout. The allowed keys are video or any of the
+                       items in utils.POSTPROCESS_WHEN.
                        For compatibility, a single list is also accepted
+    print_to_file:     A dict with keys WHEN (same as forceprint) mapped to
+                       a list of tuples with (template, filename)
     forceurl:          Force printing final URL. (Deprecated)
     forcetitle:        Force printing title. (Deprecated)
     forceid:           Force printing ID. (Deprecated)
@@ -375,8 +379,8 @@ class YoutubeDL(object):
     postprocessors:    A list of dictionaries, each with an entry
                        * key:  The name of the postprocessor. See
                                yt_dlp/postprocessor/__init__.py for a list.
-                       * when: When to run the postprocessor. Can be one of
-                               pre_process|before_dl|post_process|after_move.
+                       * when: When to run the postprocessor. Allowed values are
+                               the entries of utils.POSTPROCESS_WHEN
                                Assumed to be 'post_process' if not given
     post_hooks:        Deprecated - Register a custom postprocessor instead
                        A list of functions that get called as the final step
@@ -532,6 +536,7 @@ class YoutubeDL(object):
     extractor_args:    A dictionary of arguments to be passed to the extractors.
                        See "EXTRACTOR ARGUMENTS" for details.
                        Eg: {'youtube': {'skip': ['dash', 'hls']}}
+    mark_watched:      Mark videos watched (even with --simulate). Only for YouTube
     youtube_include_dash_manifest: Deprecated - Use extractor_args instead.
                        If True (default), DASH manifests and related
                        data will be downloaded and processed by extractor.
@@ -644,8 +649,10 @@ class YoutubeDL(object):
         else:
             self.params['nooverwrites'] = not self.params['overwrites']
 
-        # Compatibility with older syntax
         params.setdefault('forceprint', {})
+        params.setdefault('print_to_file', {})
+
+        # Compatibility with older syntax
         if not isinstance(params['forceprint'], dict):
             params['forceprint'] = {'video': params['forceprint']}
 
@@ -1746,6 +1753,9 @@ class YoutubeDL(object):
             msg = 'Downloading %d videos'
             if not isinstance(ie_entries, (PagedList, LazyList)):
                 ie_entries = LazyList(ie_entries)
+            elif isinstance(ie_entries, InAdvancePagedList):
+                if ie_entries._pagesize == 1:
+                    playlist_count = ie_entries._pagecount
 
             def get_entry(i):
                 return YoutubeDL.__handle_extraction_exceptions(
@@ -2795,19 +2805,32 @@ class YoutubeDL(object):
             subs[lang] = f
         return subs
 
-    def _forceprint(self, tmpl, info_dict):
-        mobj = re.match(r'\w+(=?)$', tmpl)
-        if mobj and mobj.group(1):
-            tmpl = f'{tmpl[:-1]} = %({tmpl[:-1]})r'
-        elif mobj:
-            tmpl = '%({})s'.format(tmpl)
+    def _forceprint(self, key, info_dict):
+        if info_dict is None:
+            return
+        info_copy = info_dict.copy()
+        info_copy['formats_table'] = self.render_formats_table(info_dict)
+        info_copy['thumbnails_table'] = self.render_thumbnails_table(info_dict)
+        info_copy['subtitles_table'] = self.render_subtitles_table(info_dict.get('id'), info_dict.get('subtitles'))
+        info_copy['automatic_captions_table'] = self.render_subtitles_table(info_dict.get('id'), info_dict.get('automatic_captions'))
 
-        info_dict = info_dict.copy()
-        info_dict['formats_table'] = self.render_formats_table(info_dict)
-        info_dict['thumbnails_table'] = self.render_thumbnails_table(info_dict)
-        info_dict['subtitles_table'] = self.render_subtitles_table(info_dict.get('id'), info_dict.get('subtitles'))
-        info_dict['automatic_captions_table'] = self.render_subtitles_table(info_dict.get('id'), info_dict.get('automatic_captions'))
-        self.to_stdout(self.evaluate_outtmpl(tmpl, info_dict))
+        def format_tmpl(tmpl):
+            mobj = re.match(r'\w+(=?)$', tmpl)
+            if mobj and mobj.group(1):
+                return f'{tmpl[:-1]} = %({tmpl[:-1]})r'
+            elif mobj:
+                return f'%({tmpl})s'
+            return tmpl
+
+        for tmpl in self.params['forceprint'].get(key, []):
+            self.to_stdout(self.evaluate_outtmpl(format_tmpl(tmpl), info_copy))
+
+        for tmpl, file_tmpl in self.params['print_to_file'].get(key, []):
+            filename = self.evaluate_outtmpl(file_tmpl, info_dict)
+            tmpl = format_tmpl(tmpl)
+            self.to_screen(f'[info] Writing {tmpl!r} to: {filename}')
+            with io.open(filename, 'a', encoding='utf-8') as f:
+                f.write(self.evaluate_outtmpl(tmpl, info_copy) + '\n')
 
     def __forced_printings(self, info_dict, filename, incomplete):
         def print_mandatory(field, actual_field=None):
@@ -2831,10 +2854,11 @@ class YoutubeDL(object):
         elif 'url' in info_dict:
             info_dict['urls'] = info_dict['url'] + info_dict.get('play_path', '')
 
-        if self.params['forceprint'].get('video') or self.params.get('forcejson'):
+        if (self.params.get('forcejson')
+                or self.params['forceprint'].get('video')
+                or self.params['print_to_file'].get('video')):
             self.post_extract(info_dict)
-        for tmpl in self.params['forceprint'].get('video', []):
-            self._forceprint(tmpl, info_dict)
+        self._forceprint('video', info_dict)
 
         print_mandatory('title')
         print_mandatory('id')
@@ -3363,6 +3387,7 @@ class YoutubeDL(object):
         if info_dict is None:
             return info_dict
         info_dict.setdefault('epoch', int(time.time()))
+        info_dict.setdefault('_type', 'video')
         remove_keys = {'__original_infodict'}  # Always remove this since this may contain a copy of the entire dict
         keep_keys = ['_type']  # Always keep this to facilitate load-info-json
         if remove_private_keys:
@@ -3441,8 +3466,7 @@ class YoutubeDL(object):
         return infodict
 
     def run_all_pps(self, key, info, *, additional_pps=None):
-        for tmpl in self.params['forceprint'].get(key, []):
-            self._forceprint(tmpl, info)
+        self._forceprint(key, info)
         for pp in (additional_pps or []) + self._pps[key]:
             info = self.run_pp(pp, info)
         return info
@@ -3742,7 +3766,7 @@ class YoutubeDL(object):
             delim=self._format_screen('\u2500', self.Styles.DELIM, '-', test_encoding=True))
 
     def render_thumbnails_table(self, info_dict):
-        thumbnails = list(info_dict.get('thumbnails'))
+        thumbnails = list(info_dict.get('thumbnails') or [])
         if not thumbnails:
             return None
         return render_table(

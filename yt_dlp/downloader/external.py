@@ -20,11 +20,13 @@ from ..utils import (
     cli_valueless_option,
     cli_bool_option,
     _configuration_args,
+    determine_ext,
     encodeFilename,
     encodeArgument,
     handle_youtubedl_headers,
     check_executable,
     Popen,
+    remove_end,
     variadic,
 )
 from ..longname import split_longname
@@ -486,6 +488,15 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             args += ['-f', 'flv']
         elif ext == 'mp4' and tmpfilename == '-':
             args += ['-f', 'mpegts']
+        elif ext == 'unknown_video':
+            ext = determine_ext(remove_end(tmpfilename, '.part'))
+            if ext == 'unknown_video':
+                self.report_warning(
+                    'The video format is unknown and cannot be downloaded by ffmpeg. '
+                    'Explicitly set the extension in the filename to attempt download in that format')
+            else:
+                self.report_warning(f'The video format is unknown. Trying to download as {ext} according to the filename')
+                args += ['-f', EXT_TO_OUT_FORMATS.get(ext, ext)]
         else:
             args += ['-f', EXT_TO_OUT_FORMATS.get(ext, ext)]
 
