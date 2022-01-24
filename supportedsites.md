@@ -1429,7 +1429,7 @@
  - **wdr:mobile**
  - **WDRElefant**
  - **WDRPage**
- - **web.archive:youtube**: web.archive.org saved youtube videos
+ - **web.archive:youtube**: web.archive.org saved youtube videos, "ytarchive:" prefix
  - **Webcaster**
  - **WebcasterFeed**
  - **WebOfStories**
