@@ -117,7 +117,7 @@ def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
     return parser, opts, args
 
 
-def create_parser():
+def instantiate_parser():
     def _format_option_string(option):
         ''' ('-o', '--option') -> -o, --format METAVAR'''
 
@@ -135,6 +135,28 @@ def create_parser():
 
         return ''.join(opts)
 
+    # No need to wrap help messages if we're on a wide console
+    columns = compat_get_terminal_size().columns
+    max_width = columns if columns else 80
+    # 47% is chosen because that is how README.md is currently formatted
+    # and moving help text even further to the right is undesirable.
+    # This can be reduced in the future to get a prettier output
+    max_help_position = int(0.47 * max_width)
+
+    fmt = optparse.IndentedHelpFormatter(width=max_width, max_help_position=max_help_position)
+    fmt.format_option_strings = _format_option_string
+
+    kw = {
+        'version': __version__,
+        'formatter': fmt,
+        'usage': '%prog [OPTIONS] URL [URL...]',
+        'conflict_handler': 'resolve',
+    }
+
+    return optparse.OptionParser(**compat_kwargs(kw))
+
+
+def create_parser():
     def _list_from_options_callback(option, opt_str, value, parser, append=True, delim=',', process=str.strip):
         # append can be True, False or -1 (prepend)
         current = list(getattr(parser.values, option.dest)) if append else []
@@ -197,25 +219,7 @@ def create_parser():
             out_dict[key] = out_dict.get(key, []) + [val] if append else val
         setattr(parser.values, option.dest, out_dict)
 
-    # No need to wrap help messages if we're on a wide console
-    columns = compat_get_terminal_size().columns
-    max_width = columns if columns else 80
-    # 47% is chosen because that is how README.md is currently formatted
-    # and moving help text even further to the right is undesirable.
-    # This can be reduced in the future to get a prettier output
-    max_help_position = int(0.47 * max_width)
-
-    fmt = optparse.IndentedHelpFormatter(width=max_width, max_help_position=max_help_position)
-    fmt.format_option_strings = _format_option_string
-
-    kw = {
-        'version': __version__,
-        'formatter': fmt,
-        'usage': '%prog [OPTIONS] URL [URL...]',
-        'conflict_handler': 'resolve',
-    }
-
-    parser = optparse.OptionParser(**compat_kwargs(kw))
+    parser = instantiate_parser()
 
     general = optparse.OptionGroup(parser, 'General Options')
     general.add_option(
