@@ -10,6 +10,8 @@ from ..utils import (
 )
 
 iaup_options = instantiate_parser()
+iaup_options.set_usage('[OPTIONS] IDENTIFIER FILE [FILE...]')
+
 iaup_options.add_option(
     '-q', '--quiet',
     action='store_true', dest='quiet',
@@ -42,17 +44,22 @@ iaup_options.add_option(
 iaup_options.add_option(
     '-R', '--retries',
     metavar='RETRIES', dest='debug', default=10000,
-    type=int, help='Disables "derive" task on IA.')
+    type=int, help='Number of retries on SlowDown or connection being disconnected.')
+iaup_options.add_option(
+    '-t', '--throttled-rate',
+    metavar='RATE', dest='debug', type=int,
+    help=('Same as the option with same name on yt-dlp, but for upload in this time. '
+          'Downloaded failure caused by this option will count for -R retries.'))
 iaup_options.add_option(
     '-D', '--delete',
     action='store_true', dest='debug', default=False,
-    help='Deletes files after all files are uploaded.')
+    help='Deletes files after all files are successfully uploaded.')
 iaup_options.add_option(
     '-C', '--conflict-resolve',
     metavar='KIND:BEHAVIOR', dest='debug',
     help=('Specifies how to avoid/torelate errors while uploading. '
           'Allowed values for KIND are: size_overflow, no_perm. '
-          'Allowed values for BEHAVIOR are: rename_bucket, error, skip.'))
+          'Allowed values for BEHAVIOR are: rename_ident, error, skip.'))
 
 
 class InternetArchiveUploadPP(ExecPP):
