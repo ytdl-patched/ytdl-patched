@@ -63,6 +63,8 @@ iaup_options.add_option(
 
 
 class InternetArchiveUploadPP(ExecPP):
+    # memo
+    #  This item total number of bytes(666) is over the per item size limit of 1099511627776. Please contact info@archive.org for help fitting your data into the archive.
     def run(self, info):
         for tmpl in self.exec_cmd:
             cmd = self.parse_cmd(tmpl, info)
