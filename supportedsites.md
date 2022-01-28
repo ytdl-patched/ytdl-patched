@@ -1486,6 +1486,7 @@
  - **yandexmusic:playlist**: Яндекс.Музыка - Плейлист
  - **yandexmusic:track**: Яндекс.Музыка - Трек
  - **YandexVideo**
+ - **YandexVideoPreview**
  - **YapFiles**
  - **YesJapan**
  - **yinyuetai:video**: 音悦Tai
