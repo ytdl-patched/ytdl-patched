@@ -2,10 +2,7 @@
 from __future__ import unicode_literals
 
 from .common import InfoExtractor
-from ..utils import (
-    urlencode_postdata,
-    ExtractorError,
-)
+from ..utils import ExtractorError
 
 
 class BigoIE(InfoExtractor):
@@ -24,33 +21,33 @@ class BigoIE(InfoExtractor):
     def _real_extract(self, url):
         user_id = self._match_id(url)
 
-        INFO_URL = 'https://bigo.tv/studio/getInternalStudioInfo'
         info_raw = self._download_json(
-            INFO_URL, user_id, data=urlencode_postdata({'siteId': user_id}))
+            'https://bigo.tv/studio/getInternalStudioInfo',
+            user_id, form_params={'siteId': user_id})
 
-        if info_raw['code'] != 0:
-            if self._downloader.params.get('verbose', False):
-                self.to_screen(
-                    '[debug] getInternalStudioInfo returns code %i, msg "%s"'
-                    % (info_raw['code'], info_raw['msg']))
-
+        if info_raw.get('code'):
             raise ExtractorError(
-                "Failed to get user's data. Most likely the user doesn't exist",
-                expected=True)
-        info = info_raw['data']
+                f'{info_raw["msg"]} (code {info_raw["code"]})', expected=True)
+        info = info_raw.get('data') or {}
 
-        alive = info.get('alive')
-        if alive is not None and alive == 0:
-            raise ExtractorError(
-                'User "%s" is not live at the moment' % user_id,
-                expected=True)
+        if not info.get('alive'):
+            raise ExtractorError('This user is offline.', expected=True)
+
+        # formats = self._extract_m3u8_formats(
+        #     info.get('hls_src'), user_id, ext='mp4')
+        formats = [{
+            'url': info.get('hls_src'),
+            'ext': 'mp4',
+            'protocol': 'm3u8',
+            'is_live': True,
+        }]
 
         return {
             'id': info.get('roomId') or user_id,
             'title': info.get('roomTopic'),
-            'url': info.get('hls_src'),
-            'ext': 'mp4',
+            'formats': formats,
             'thumbnail': info.get('snapshot'),
             'uploader': info.get('nick_name'),
+            'uploader_id': user_id,
             'is_live': True,
         }
