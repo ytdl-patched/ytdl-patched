@@ -11,6 +11,17 @@ class BigoIE(InfoExtractor):
     # site, and a test would require that the broadcaster is live at the moment.
     # So, I don't have a good way to provide a real test here.
     _TESTS = [{
+        'url': 'https://www.bigo.tv/ja/221338632',
+        'info_dict': {
+            'id': '6576287577575737440',
+            'title': '土よ〜💁‍♂️ 休憩室/REST room',
+            'thumbnail': r're:https?://.+',
+            'uploader': '✨Shin💫',
+            'uploader_id': '221338632',
+            'is_live': True,
+        },
+        'skip': 'livestream',
+    }, {
         'url': 'https://www.bigo.tv/th/Tarlerm1304',
         'only_matching': True,
     }, {
