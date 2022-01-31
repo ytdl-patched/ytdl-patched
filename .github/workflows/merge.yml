@@ -31,7 +31,7 @@ jobs:
       continue-on-error: true
       run: |
         python ./devscripts/make_supportedsites.py ./supportedsites.md 
-        git commit -m"[automatic] regenerate supportedsites.md @ $(date +'%Y%m%d')" ./supportedsites.md
+        git commit -m"automatic: regenerate supportedsites.md @ $(date +'%Y%m%d')" ./supportedsites.md
     - name: Push to here
       run: git push self HEAD:ytdlp
     - name: Create tag
