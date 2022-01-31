@@ -183,14 +183,14 @@ class TwitCastingIE(InfoExtractor):
                 'http_headers': self._M3U8_HEADERS,
             } for (num, m3u8_url) in enumerate(m3u8_urls)]
 
-            archive_mode = next(iter(self._configuration_arg('archive_mode', default=[])), 'formats')
+            archive_mode = next(iter(self._configuration_arg('archive_mode', default=[])), 'multi_video')
             if archive_mode == 'formats':
-                self.report_warning('Archives are provided as "formats" mode. It\'s now recommended to use "multi_video" mode via "--extractor-args twitcasting:archive_mode=multi_video --concat-playlist multi_video" for more stability. See https://github.com/ytdl-patched/ytdl-patched/issues/15')
+                self.report_warning('You are currently using "formats" mode. This mode is deprecated. See https://github.com/ytdl-patched/ytdl-patched/issues/15')
                 url_count = len(m3u8_urls)
                 if url_count > 1:
                     self.report_warning('This archive is split in %d parts; to download each split, please use "-f hls-0".."-f hls-%d" option.' % (url_count, url_count - 1))
                     formats.append({
-                        # renamed from 'all' because 'all' is reserved word in yt-dlp
+                        # renamed from 'all' because 'all' is a reserved word in yt-dlp
                         'format_id': 'joinall',
                         'url': 'serial:',
                         'protocol': 'serial',
