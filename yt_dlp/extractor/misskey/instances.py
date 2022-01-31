@@ -263,7 +263,6 @@ instances = {
     "niscii.xyz",
     "noize.guru",
     "nojob.jp",
-    "nombi.link",
     "not.acu.lt",
     "novoa.nagoya",
     "ns.auction",
