@@ -1352,7 +1352,7 @@
  - **Viddler**
  - **Videa**
  - **video.arnes.si**: Arnes Video
- - **video.google:search**: Google Video search; "gvsearch:" prefix (Currently broken)
+ - **video.google:search**: Google Video search; "gvsearch:" prefix
  - **video.sky.it**
  - **video.sky.it:live**
  - **VideoDetective**
