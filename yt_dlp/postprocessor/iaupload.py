@@ -8,9 +8,14 @@ import os
 import re
 import shlex
 import time
+import urllib
+import hashlib
 from collections import defaultdict
-from typing import Dict, Set
+from typing import IO, BinaryIO, Dict, Set
 
+from yt_dlp.YoutubeDL import YoutubeDL
+
+from ._attachments import ShowsProgress
 from .exec import ExecPP
 from ..compat import compat_HTTPError
 from ..options import instantiate_parser
@@ -19,7 +24,9 @@ from ..utils import (
     int_or_none,
     network_exceptions,
     sanitized_Request,
+    time_millis,
     traverse_obj,
+    variadic,
 )
 
 
@@ -187,8 +194,93 @@ class InternetArchiveUploadPP(ExecPP):
             self.report_warning(skip)
             return
 
-        # upload files according to its plan
-        next(plans)
+        # upload files according to the plan
+        for idx, (remotename, filename) in enumerate(plans):
+            headers = dict(opts.headers)
+            self.generate_headers(headers, opts.metadata, queue_derive=opts.derive)
+            self.write_debug(f'=== {filename} -> {remotename}')
+            with open(filename, 'rb') as r:
+                self.real_upload(remotename, r, headers, idx + 1, len(plans))
+
+    def real_upload(self, remotename, r, headers, index, total_plans):
+        self.to_screen(f'[{index}/{total_plans}] Uploading {remotename}')
+        fsize = os.stat(r.fileno()).st_size
+        headers['Content-MD5'] = self.md5(r)
+        headers['Content-Length'] = str(fsize)
+        true_body = ProgressByteIO(self._downloader, r, fsize)
+        true_body._PROGRESS_LABEL = f'{index}/{total_plans}'
+        try:
+            true_body.start()
+            resp, body = self.do_put_request('', true_body)
+            (resp, body)
+        finally:
+            # no need to call close() as it's caller's responsible to close streams
+            true_body.end()
+
+    @staticmethod
+    def md5(file_object):
+        file_object.seek(0, os.SEEK_SET)
+        m = hashlib.md5()
+        while True:
+            data = file_object.read(8192)
+            if not data:
+                break
+            m.update(data)
+        file_object.seek(0, os.SEEK_SET)
+        return m.hexdigest()
+
+    def generate_headers(self, headers, metadata, file_metadata=None, queue_derive=True):
+        metadata = dict() if metadata is None else metadata
+        file_metadata = dict() if file_metadata is None else file_metadata
+
+        if not metadata.get('scanner'):
+            from ..version import __version__
+            scanner = 'ytdl-patched InternetArchiveUploadPP {0}'.format(__version__)
+            metadata['scanner'] = scanner
+        prepared_metadata = metadata or {}
+        prepared_file_metadata = file_metadata or {}
+
+        headers['x-archive-auto-make-bucket'] = '1'
+        if 'x-archive-queue-derive' not in headers:
+            if queue_derive is False:
+                headers['x-archive-queue-derive'] = '0'
+            else:
+                headers['x-archive-queue-derive'] = '1'
+
+        def needs_quote(s):
+            try:
+                s.encode('ascii')
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                return True
+            return re.search(r'\s', s) is not None
+
+        def _prepare_metadata_headers(prepared_metadata, meta_type='meta'):
+            for meta_key, meta_value in prepared_metadata.items():
+                # Encode arrays into JSON strings because Archive.org does not
+                # yet support complex metadata structures in
+                # <identifier>_meta.xml.
+                if isinstance(meta_value, dict):
+                    meta_value = json.dumps(meta_value)
+                # Convert the metadata value into a list if it is not already
+                # iterable.
+                meta_value = variadic(meta_value)
+                # Convert metadata items into HTTP headers and add to
+                # ``headers`` dict.
+                for i, value in enumerate(meta_value):
+                    if not value:
+                        continue
+                    header_key = 'x-archive-{0}{1:02d}-{2}'.format(meta_type, i, meta_key)
+                    if (isinstance(value, str) and needs_quote(value)):
+                        value = 'uri({0})'.format(urllib.parse.quote(value))
+                    # because rfc822 http headers disallow _ in names, IA-S3 will
+                    # translate two hyphens in a row (--) into an underscore (_).
+                    header_key = header_key.replace('_', '--')
+                    headers[header_key] = value
+
+        # Parse the prepared metadata into HTTP headers,
+        # and add them to the ``headers`` dict.
+        _prepare_metadata_headers(prepared_metadata)
+        _prepare_metadata_headers(prepared_file_metadata, meta_type='filemeta')
 
     def conflict_trial(self, opts, ident, pre=False):
         history = self.conflict_cache.get(ident)
@@ -332,4 +424,80 @@ class InternetArchiveUploadPP(ExecPP):
                         self.to_screen(f'Sleeping {sleep_interval} seconds ...')
                         time.sleep(sleep_interval)
                     continue
-                raise PostProcessingError(f'Unable to communicate with SponsorBlock API: {e}')
+                raise PostProcessingError(f'Unable to communicate with Internet Archive: {e}')
+
+    def do_put_request(self, url, data):
+        rsp = self._downloader.urlopen(sanitized_Request(url, data=data))
+        return rsp, rsp.read().decode(rsp.info().get_param('charset') or 'utf-8')
+
+
+class ProgressByteIO(BinaryIO, IO[bytes], ShowsProgress):
+    def __init__(self, ydl: YoutubeDL, stream: IO[bytes], filesize: int) -> None:
+        super().__init__()
+        ShowsProgress.__init__(self, ydl)
+        self.stream = stream
+        self.filesize = filesize
+        self.counter, self.start_time = None, None
+        self.time_and_size, self.avg_len = [], 10
+        # call with all=False as this class doesn't have hooks,
+        # therefore calling report_progress directly
+        self._enable_progress(False)
+
+    def start(self):
+        self.counter = 0
+        self.stream.seek(0, os.SEEK_SET)
+        self.start_time = time_millis()
+        self.report_progress({
+            'status': 'processing',
+            'elapsed': 0,
+            'processed_bytes': 0,
+            'total_bytes': self.filesize,
+        })
+
+    def report(self):
+        self.time_and_size.append((self.counter, time.time()))
+        self.time_and_size = tsz = self.time_and_size[-self.avg_len:]
+        elapsed = time_millis() - self.start_time
+        if len(tsz) > 1:
+            last, early = tsz[0], tsz[-1]
+            average_speed = (early[0] - last[0]) / (early[1] - last[1])
+            eta = ((self.filesize - self.counter) / average_speed) if average_speed > 0 else None
+        else:
+            average_speed = None
+            eta = (self.filesize - self.counter) * elapsed / self.counter
+            if eta < 0:
+                eta = None
+        self.report_progress({
+            'status': 'processing',
+            'elapsed': elapsed,
+            'speed': average_speed,
+            'processed_bytes': self.counter,
+            'eta': eta,
+            'total_bytes': self.filesize,
+        })
+
+    def end(self):
+        # prevent "finished" event to be emitted twice without indication
+        if self.counter is None:
+            return
+        self.report_progress({
+            'status': 'finished',
+            # do not use self.filesize here since the task could fail at middle of file
+            'processed_bytes': self.counter,
+            'total_bytes': self.filesize,
+        })
+        self.counter = None
+
+    def close(self) -> None:
+        self.end()
+        self.stream.close()
+
+    def read(self, __n: int = ...) -> bytes:
+        ret = self.stream.read(__n)
+        if ret:
+            self.counter += len(ret)
+            self.report()
+        return ret
+
+    def __len__(self):
+        return self.filesize
