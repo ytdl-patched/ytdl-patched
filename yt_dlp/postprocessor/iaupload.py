@@ -1,14 +1,25 @@
 from __future__ import unicode_literals
 
-import subprocess
-import re
+import configparser
+import itertools
+import json
 import optparse
+import os
+import re
+import shlex
+import time
+from collections import defaultdict
+from typing import Dict, Set
 
 from .exec import ExecPP
+from ..compat import compat_HTTPError
 from ..options import instantiate_parser
 from ..utils import (
-    encodeArgument,
     PostProcessingError,
+    int_or_none,
+    network_exceptions,
+    sanitized_Request,
+    traverse_obj,
 )
 
 
@@ -107,20 +118,218 @@ iaup_options.add_option(
     help='Deletes files after all files are successfully uploaded.')
 iaup_options.add_option(
     '-C', '--conflict-resolve',
-    metavar='KIND:BEHAVIOR', dest='conflict_resolve',
+    metavar='KIND:BEHAVIOR', dest='conflict_resolve', default={},
+    action='callback', callback=_dict_from_options_callback,
     help=('Specifies how to avoid/torelate errors while uploading. '
           'Allowed values for KIND are: size_overflow, no_perm. '
           'Allowed values for BEHAVIOR are: rename_ident, error, skip.'))
 
 
+class Skip(PostProcessingError):
+    pass
+
+
 class InternetArchiveUploadPP(ExecPP):
     # memo
     #  This item total number of bytes(666) is over the per item size limit of 1099511627776. Please contact info@archive.org for help fitting your data into the archive.
+    def __init__(self, downloader, exec_cmd):
+        super().__init__(downloader, exec_cmd)
+        self.login_cache: Dict[str, Dict] = {}
+        self.conflict_cache: Dict[str, Set[str]] = {}
+
     def run(self, info):
         for tmpl in self.exec_cmd:
             cmd = self.parse_cmd(tmpl, info)
-            self.to_screen('Executing command: %s' % cmd)
-            retCode = subprocess.call(encodeArgument(cmd), shell=True)
-            if retCode != 0:
-                raise PostProcessingError('Command returned error code %d' % retCode)
+            self.to_screen('Processing: %s' % cmd)
+            parsed = iaup_options.parse_args(shlex.split(cmd))
+            self.process(parsed)
         return [], info
+
+    def process(self, parsed):
+        opts, args = parsed
+        if not args:
+            raise PostProcessingError('You have to specify identifier and files to upload.')
+        ident = args[0]
+        files = args[1:]
+        if not files:
+            raise PostProcessingError('You have specified nothing to upload!')
+
+        # login
+        cred = self.login_cache.get(ident)
+        if not cred:
+            if opts.username and opts.password:
+                self.to_screen(f'Logging in with username and password for identifier {ident}')
+                cred = self.login(opts.username, opts.password)
+            else:
+                self.write_debug(f'Loading config file for identifier {ident}')
+                cred = self.parse_config_file(opts.config)
+            self.login_cache[ident] = cred
+
+        # create plans for upload
+        rp = opts.remote_name
+        if rp:
+            if rp.endswith('/'):
+                # upload files to a remote directory
+                plans = [(rp + os.path.basename(x), x) for x in files]
+            elif not rp.endswith('/') and len(files) == 1:
+                # upload a file with a exact filename
+                plans = [(rp, files[0])]
+            else:
+                raise PostProcessingError('Conflict: You have requested uploading multiple files to one remote file.')
+        else:
+            # no --remote-name, upload to root
+            plans = [(os.path.basename(x), x) for x in files]
+
+        # have we encountered any conflicts previously?
+        try:
+            ident = self.conflict_trial(opts, ident, pre=True)
+        except Skip as skip:
+            self.report_warning(skip)
+            return
+
+        # upload files according to its plan
+        next(plans)
+
+    def conflict_trial(self, opts, ident, pre=False):
+        history = self.conflict_cache.get(ident)
+        # TODO: test against size overflow beforehand here
+        if not history:
+            return ident
+        cr = opts.conflict_resolve or {}
+        resolve_methods = set(filter(None, (cr.get(cc) for cc in history)))
+        if not resolve_methods:
+            # no method for resolving/avoiding conflict is specified
+            return ident
+        if 'rename_ident' in resolve_methods:
+            # split the last number and others, and increment the number specified
+            m = re.fullmatch(r'(.+)(?:_(\d+))?', ident)
+            assert m
+            name, num = m.groups()
+            num = int_or_none(num, default=1) + 1
+            ident = f'{name}_{num}'
+            # as we've changed the identifier, put into trial again
+            return self.conflict_trial(opts, ident, pre)
+        elif 'skip' in resolve_methods:
+            # literally.
+            raise Skip(f'Skipping because of any of errors here: {" ".join(history)}')
+        elif 'error' in resolve_methods:
+            # literally, again
+            if pre:
+                raise PostProcessingError(f'Refusing upload to identifier {ident}; {" ".join(history)}')
+            else:
+                raise PostProcessingError(f'Aborted uploading to identifier {ident}; {" ".join(history)}')
+        return ident
+
+    def login(self, email, password, host=None):
+        host = host or 'archive.org'
+        j = self._get_json(
+            f'https://{host}/services/xauthn/?op=login',
+            {'email': email, 'password': password})
+        if not j.get('success'):
+            msg = traverse_obj(j, ('values', 'reason'), 'error')
+            msg = {
+                'account_not_found': 'Account not found, check your email and try again.',
+                'account_bad_password': 'Incorrect password, try again.',
+            }.get(msg) or f'Authentication failed: {msg}'
+            raise PostProcessingError(msg)
+        return j['values']
+
+    def parse_config_file(self, config_file=None):
+        config = configparser.RawConfigParser()
+
+        is_xdg = False
+        if not config_file:
+            candidates = []
+            if os.environ.get('IA_CONFIG_FILE'):
+                candidates.append(os.environ['IA_CONFIG_FILE'])
+            xdg_config_home = os.environ.get('XDG_CONFIG_HOME')
+            if not xdg_config_home or not os.path.isabs(xdg_config_home):
+                # Per the XDG Base Dir specification, this should be $HOME/.config. Unfortunately, $HOME
+                # does not exist on all systems. Therefore, we use ~/.config here. On a POSIX-compliant
+                # system, where $HOME must always be set, the XDG spec will be followed precisely.
+                xdg_config_home = os.path.join(os.path.expanduser('~'), '.config')
+            xdg_config_file = os.path.join(xdg_config_home, 'internetarchive', 'ia.ini')
+            candidates.append(xdg_config_file)
+            candidates.append(os.path.join(os.path.expanduser('~'), '.config', 'ia.ini'))
+            candidates.append(os.path.join(os.path.expanduser('~'), '.ia'))
+            for candidate in candidates:
+                if os.path.isfile(candidate):
+                    config_file = candidate
+                    break
+            else:
+                # None of the candidates exist, default to IA_CONFIG_FILE if set else XDG
+                config_file = os.environ.get('IA_CONFIG_FILE', xdg_config_file)
+            if config_file == xdg_config_file:
+                is_xdg = True
+        config.read(config_file)
+
+        if not config.has_section('s3'):
+            config.add_section('s3')
+            config.set('s3', 'access', None)
+            config.set('s3', 'secret', None)
+        if not config.has_section('cookies'):
+            config.add_section('cookies')
+            config.set('cookies', 'logged-in-user', None)
+            config.set('cookies', 'logged-in-sig', None)
+
+        if config.has_section('general'):
+            for k, v in config.items('general'):
+                if k in ['secure']:
+                    config.set('general', k, config.getboolean('general', k))
+            if not config.get('general', 'screenname'):
+                config.set('general', 'screenname', None)
+        else:
+            config.add_section('general')
+            config.set('general', 'screenname', None)
+
+        return (config_file, is_xdg, config)
+
+    def get_config(self, config=None, config_file=None):
+        _config = {} if not config else config
+        config_file, is_xdg, config = self.parse_config_file(config_file)
+
+        if not os.path.isfile(config_file):
+            return _config
+
+        config_dict = defaultdict(dict)
+        for sec in config.sections():
+            try:
+                for k, v in config.items(sec):
+                    if k is None or v is None:
+                        continue
+                    config_dict[sec][k] = v
+            except TypeError:
+                pass
+
+        def deep_update(d, u):
+            for k, v in u.items():
+                if isinstance(v, dict):
+                    r = deep_update(d.get(k, {}), v)
+                    d[k] = r
+                else:
+                    d[k] = u[k]
+            return d
+
+        # Recursive/deep update.
+        deep_update(config_dict, _config)
+
+        return dict((k, v) for k, v in config_dict.items() if v is not None)
+
+    def _get_json(self, url, data=None):
+        # Taken from sponsorblock.py with POST support
+        max_retries = self.get_param('extractor_retries', 3)
+        sleep_interval = self.get_param('sleep_interval_requests') or 0
+        for retries in itertools.count():
+            try:
+                rsp = self._downloader.urlopen(sanitized_Request(url, data=data))
+                return json.loads(rsp.read().decode(rsp.info().get_param('charset') or 'utf-8'))
+            except network_exceptions as e:
+                if isinstance(e, compat_HTTPError) and e.code == 404:
+                    return []
+                if retries < max_retries:
+                    self.report_warning(f'{e}. Retrying...')
+                    if sleep_interval > 0:
+                        self.to_screen(f'Sleeping {sleep_interval} seconds ...')
+                        time.sleep(sleep_interval)
+                    continue
+                raise PostProcessingError(f'Unable to communicate with SponsorBlock API: {e}')
