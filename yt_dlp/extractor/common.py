@@ -478,7 +478,7 @@ class InfoExtractor(object):
     """
     Feature dependency declaration. Case sensitive.
     Following features are known and recognized:
-    - websocket - Requires WebSocket-related package/command
+    - websocket - Requires WebSocket-related package
     - yaml - pyyaml package
     """
 
@@ -632,7 +632,7 @@ class InfoExtractor(object):
         """Extracts URL information and returns it in list of dicts."""
 
         if 'websocket' in self._FEATURE_DEPENDENCY and not HAVE_WEBSOCKET:
-            raise ExtractorError('Please install websockets or websocket_client package via pip, or websockat command', expected=True)
+            raise ExtractorError('Please install websockets or websocket_client package via pip', expected=True)
         try:
             if 'yaml' in self._FEATURE_DEPENDENCY:
                 __import__('yaml')
