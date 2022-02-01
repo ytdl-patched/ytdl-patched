@@ -12,15 +12,9 @@ from yt_dlp.websocket import (
     HAVE_WEBSOCKET,
     HAVE_WS_WEBSOCKET_CLIENT,
     HAVE_WS_WEBSOCKETS,
-    HAVE_WS_WEBSOCAT,
-    HAVE_WS_NODEJS_WEBSOCKET_WRAPPER,
-    HAVE_WS_NODEJS_WS_WRAPPER,
 
     WebSocketClientWrapper,
     WebSocketsWrapper,
-    WebsocatWrapper,
-    NodeJsWebsocketWrapper,
-    NodeJsWsWrapper,
 )
 
 import logging
@@ -54,9 +48,6 @@ for testsuite in ('kraken', 'echo'):
     for available, impl, name in (
         (HAVE_WS_WEBSOCKET_CLIENT, WebSocketClientWrapper, 'websocket_client'),
         (HAVE_WS_WEBSOCKETS, WebSocketsWrapper, 'websockets'),
-        (HAVE_WS_WEBSOCAT, WebsocatWrapper, 'websocat'),
-        (HAVE_WS_NODEJS_WEBSOCKET_WRAPPER, NodeJsWebsocketWrapper, 'nodejs_websocket'),
-        (HAVE_WS_NODEJS_WS_WRAPPER, NodeJsWsWrapper, 'nodejs_ws'),
     ):
 
         def create_function(testsuite, impl, available, name):
