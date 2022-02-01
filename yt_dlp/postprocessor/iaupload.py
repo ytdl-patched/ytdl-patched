@@ -66,7 +66,7 @@ iaup_options.set_usage('[OPTIONS] IDENTIFIER FILE [FILE...]')
 iaup_options.add_option(
     '-q', '--quiet',
     action='store_true', dest='quiet',
-    help='Runs without output. Isolated from --quiet option from the outside')
+    help='Runs without progress. Isolated from --quiet option from the outside')
 iaup_options.add_option(
     '-d', '--debug',
     action='store_true', dest='debug',
@@ -209,13 +209,13 @@ class InternetArchiveUploadPP(ExecPP):
             headers['Authorization'] = auth_header
             self.write_debug(f'=== {filename} -> {remotename}')
             with open(filename, 'rb') as r:
-                self.real_upload(ident, remotename, r, headers, idx + 1, len(plans))
+                self.real_upload(ident, remotename, r, headers, idx + 1, len(plans), opts.quiet)
 
-    def real_upload(self, ident, remotename, r, headers, index, total_plans):
+    def real_upload(self, ident, remotename, r, headers, index, total_plans, quiet):
         fsize = os.stat(r.fileno()).st_size
         headers['Content-MD5'] = self.md5(r)
         headers['Content-Length'] = str(fsize)
-        true_body = ProgressByteIO(self._downloader, r, fsize)
+        true_body = (QuietByteIO if quiet else ProgressByteIO)(self._downloader, r, fsize)
         true_body._PROGRESS_LABEL = f'{index}/{total_plans}'
         try:
             self.to_screen(f'[{index}/{total_plans}] Uploading {remotename}')
@@ -447,7 +447,39 @@ class InternetArchiveUploadPP(ExecPP):
         return rsp, rsp.read().decode(rsp.info().get_param('charset') or 'utf-8')
 
 
-class ProgressByteIO(BinaryIO, IO[bytes], ShowsProgress):
+class QuietByteIO(BinaryIO, IO[bytes]):
+    def __init__(self, ydl: YoutubeDL, stream: IO[bytes], filesize: int) -> None:
+        super().__init__()
+        self.stream = stream
+        self.filesize = filesize
+
+    def start(self):
+        self.stream.seek(0, os.SEEK_SET)
+
+    def report(self):
+        pass
+
+    def end(self):
+        pass
+
+    def close(self) -> None:
+        self.end()
+        self.stream.close()
+
+    def read(self, n: int = -1) -> bytes:
+        if n <= 0:
+            n = 1048576
+        ret = self.stream.read(n)
+        if ret:
+            self.counter += len(ret)
+            self.report()
+        return ret
+
+    def __len__(self):
+        return self.filesize
+
+
+class ProgressByteIO(QuietByteIO, ShowsProgress):
     def __init__(self, ydl: YoutubeDL, stream: IO[bytes], filesize: int) -> None:
         super().__init__()
         ShowsProgress.__init__(self, ydl)
@@ -503,19 +535,3 @@ class ProgressByteIO(BinaryIO, IO[bytes], ShowsProgress):
             'total_bytes': self.filesize,
         })
         self.counter = None
-
-    def close(self) -> None:
-        self.end()
-        self.stream.close()
-
-    def read(self, n: int = -1) -> bytes:
-        if n <= 0:
-            n = 1048576
-        ret = self.stream.read(n)
-        if ret:
-            self.counter += len(ret)
-            self.report()
-        return ret
-
-    def __len__(self):
-        return self.filesize
