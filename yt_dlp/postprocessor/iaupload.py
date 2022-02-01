@@ -13,10 +13,9 @@ import hashlib
 from collections import defaultdict
 from typing import IO, BinaryIO, Dict, Set
 
-from yt_dlp.YoutubeDL import YoutubeDL
-
 from ._attachments import ShowsProgress
 from .exec import ExecPP
+from ..YoutubeDL import YoutubeDL
 from ..compat import compat_HTTPError
 from ..options import instantiate_parser
 from ..utils import (
@@ -194,25 +193,39 @@ class InternetArchiveUploadPP(ExecPP):
             self.report_warning(skip)
             return
 
+        # generate header value for auth
+        s3_ak = traverse_obj(cred, ('s3', 'access'))
+        s3_sk = traverse_obj(cred, ('s3', 'secret'))
+        if not s3_ak:
+            raise PostProcessingError('Access Key for IAS3 is missing. You should run "ia configure"')
+        if not s3_sk:
+            raise PostProcessingError('Secret Key for IAS3 is missing. You should run "ia configure"')
+        auth_header = f'LOW {s3_ak}:{s3_sk}'
+
         # upload files according to the plan
         for idx, (remotename, filename) in enumerate(plans):
             headers = dict(opts.headers)
             self.generate_headers(headers, opts.metadata, queue_derive=opts.derive)
+            headers['Authorization'] = auth_header
             self.write_debug(f'=== {filename} -> {remotename}')
             with open(filename, 'rb') as r:
-                self.real_upload(remotename, r, headers, idx + 1, len(plans))
+                self.real_upload(ident, remotename, r, headers, idx + 1, len(plans))
 
-    def real_upload(self, remotename, r, headers, index, total_plans):
-        self.to_screen(f'[{index}/{total_plans}] Uploading {remotename}')
+    def real_upload(self, ident, remotename, r, headers, index, total_plans):
         fsize = os.stat(r.fileno()).st_size
         headers['Content-MD5'] = self.md5(r)
         headers['Content-Length'] = str(fsize)
         true_body = ProgressByteIO(self._downloader, r, fsize)
         true_body._PROGRESS_LABEL = f'{index}/{total_plans}'
         try:
+            self.to_screen(f'[{index}/{total_plans}] Uploading {remotename}')
             true_body.start()
-            resp, body = self.do_put_request('', true_body)
-            (resp, body)
+            # who wants to use plain HTTP nowadays?
+            resp, body = self.do_put_request(f'https://s3.us.archive.org/{ident}/{remotename}', headers, true_body)
+            resp_code = resp.code
+            self.write_debug(body)
+            if resp_code == 503:
+                "SlowDown"
         finally:
             # no need to call close() as it's caller's responsible to close streams
             true_body.end()
@@ -312,10 +325,9 @@ class InternetArchiveUploadPP(ExecPP):
                 raise PostProcessingError(f'Aborted uploading to identifier {ident}; {" ".join(history)}')
         return ident
 
-    def login(self, email, password, host=None):
-        host = host or 'archive.org'
+    def login(self, email, password):
         j = self._get_json(
-            f'https://{host}/services/xauthn/?op=login',
+            'https://archive.org/services/xauthn/?op=login',
             {'email': email, 'password': password})
         if not j.get('success'):
             msg = traverse_obj(j, ('values', 'reason'), 'error')
@@ -426,8 +438,12 @@ class InternetArchiveUploadPP(ExecPP):
                     continue
                 raise PostProcessingError(f'Unable to communicate with Internet Archive: {e}')
 
-    def do_put_request(self, url, data):
-        rsp = self._downloader.urlopen(sanitized_Request(url, data=data))
+    def do_put_request(self, url, headers, data):
+        try:
+            rsp = self._downloader.urlopen(sanitized_Request(url, headers=headers, data=data))
+        except network_exceptions as e:
+            e.fp._error = e
+            rsp = e.fp
         return rsp, rsp.read().decode(rsp.info().get_param('charset') or 'utf-8')
 
 
@@ -492,8 +508,10 @@ class ProgressByteIO(BinaryIO, IO[bytes], ShowsProgress):
         self.end()
         self.stream.close()
 
-    def read(self, __n: int = ...) -> bytes:
-        ret = self.stream.read(__n)
+    def read(self, n: int = -1) -> bytes:
+        if n <= 0:
+            n = 1048576
+        ret = self.stream.read(n)
         if ret:
             self.counter += len(ret)
             self.report()
