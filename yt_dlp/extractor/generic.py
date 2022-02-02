@@ -142,6 +142,7 @@ from .medialaan import MedialaanIE
 from .simplecast import SimplecastIE
 from .wimtv import WimTVIE
 from .tvopengr import TVOpenGrEmbedIE
+from .ertgr import ERTWebtvEmbedIE
 from .tvp import TVPEmbedIE
 from .swipevideo import SwipeVideoIE
 from .blogger import BloggerIE
@@ -1925,6 +1926,15 @@ class GenericIE(InfoExtractor):
                     'thumbnail': 'https://www.megatv.com/wp-content/uploads/2021/12/tsiodras-mitsotakis-1024x545.jpg',
                 },
             }]
+        },
+        {
+            'url': 'https://www.ertnews.gr/video/manolis-goyalles-o-anthropos-piso-apo-ti-diadiktyaki-vasilopita/',
+            'info_dict': {
+                'id': '2022/tv/news-themata-ianouarios/20220114-apotis6-gouales-pita.mp4',
+                'ext': 'mp4',
+                'title': 'md5:df64f5b61c06d0e9556c0cdd5cf14464',
+                'thumbnail': 'https://www.ert.gr/themata/photos/2021/20220114-apotis6-gouales-pita.jpg',
+            },
         },
         {
             # ThePlatform embedded with whitespaces in URLs
@@ -3794,6 +3804,13 @@ class GenericIE(InfoExtractor):
         if tvopengr_urls:
             return self.playlist_from_matches(tvopengr_urls, video_id, video_title, ie=TVOpenGrEmbedIE.ie_key())
 
+        # Look for ert.gr webtv embeds
+        ertwebtv_urls = list(ERTWebtvEmbedIE._extract_urls(webpage))
+        if len(ertwebtv_urls) == 1:
+            return self.url_result(self._proto_relative_url(ertwebtv_urls[0]), video_title=video_title, url_transparent=True)
+        elif ertwebtv_urls:
+            return self.playlist_from_matches(ertwebtv_urls, video_id, video_title, ie=ERTWebtvEmbedIE.ie_key())
+
         tvp_urls = TVPEmbedIE._extract_urls(webpage)
         if tvp_urls:
             waitlist.append(self.playlist_from_matches(tvp_urls, video_id, video_title, ie=TVPEmbedIE.ie_key()))
@@ -3908,13 +3925,16 @@ class GenericIE(InfoExtractor):
 
         # Looking for http://schema.org/VideoObject
         json_ld = self._search_json_ld(webpage, video_id, default={})
-        if json_ld.get('url'):
+        if json_ld.get('url') not in (url, None):
             self.report_detected('JSON LD')
-            if determine_ext(json_ld.get('url')) == 'm3u8':
+            if determine_ext(json_ld['url']) == 'm3u8':
                 json_ld['formats'], json_ld['subtitles'] = self._extract_m3u8_formats_and_subtitles(
                     json_ld['url'], video_id, 'mp4')
                 json_ld.pop('url')
                 self._sort_formats(json_ld['formats'])
+            else:
+                json_ld['_type'] = 'url_transparent'
+                json_ld['url'] = smuggle_url(json_ld['url'], {'force_videoid': video_id, 'to_generic': True})
             return merge_dicts(json_ld, info_dict)
 
         def check_video(vurl):

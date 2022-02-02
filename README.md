@@ -1811,7 +1811,11 @@ The following extractors use this feature:
 * `dr`: dynamic range to ignore - one or more of `sdr`, `hdr10`, `dv`
 
 ### twitcasting
-* `archive_mode`: mode to get split archives. `formats` to get these as formats (default, old), `multi_video` (new) to have them as `multi_video` playlist. to join split archive with `multi_video`, use `--concat-playlist multi_video`
+* `archive_mode`: mode to get split archives. `formats` to get these as formats (old), `multi_video` (default, new) to have them as `multi_video` playlist. to join split archive with `multi_video`, use `--concat-playlist multi_video`
+
+#### tiktok
+* `app_version`: App version to call mobile APIs with - should be set along with `manifest_app_version`. (e.g. `20.2.1`)
+* `manifest_app_version`: Numeric app version to call mobile APIs with. (e.g. `221`)
 
 NOTE: These options may be changed/removed in the future without concern for backward compatibility
 
