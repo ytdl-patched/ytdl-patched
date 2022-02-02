@@ -18,6 +18,7 @@ from .exec import ExecPP
 from ..YoutubeDL import YoutubeDL
 from ..compat import compat_HTTPError
 from ..options import instantiate_parser
+from ..longname import escaped_basename, escaped_remove
 from ..utils import (
     PostProcessingError,
     int_or_none,
@@ -112,7 +113,7 @@ iaup_options.add_option(
 iaup_options.add_option(
     '-R', '--retries',
     metavar='RETRIES', dest='retries', default=10000,
-    type=int, help='Number of retries on SlowDown or connection being disconnected.')
+    help='Number of retries on SlowDown or connection being disconnected.')
 iaup_options.add_option(
     '-t', '--throttled-rate',
     metavar='RATE', dest='throttle', type=int,
@@ -148,7 +149,9 @@ class InternetArchiveUploadPP(ExecPP):
             cmd = self.parse_cmd(tmpl, info)
             self.to_screen('Processing: %s' % cmd)
             parsed = iaup_options.parse_args(shlex.split(cmd))
-            self.process(parsed)
+            errors = self.process(parsed)
+            if errors:
+                raise PostProcessingError('There were error(s) while uploading:\n' + '\n'.join(map(str, errors)))
         return [], info
 
     def process(self, parsed):
@@ -176,7 +179,7 @@ class InternetArchiveUploadPP(ExecPP):
         if rp:
             if rp.endswith('/'):
                 # upload files to a remote directory
-                plans = [(rp + os.path.basename(x), x) for x in files]
+                plans = [(rp + escaped_basename(x), x) for x in files]
             elif not rp.endswith('/') and len(files) == 1:
                 # upload a file with a exact filename
                 plans = [(rp, files[0])]
@@ -184,14 +187,14 @@ class InternetArchiveUploadPP(ExecPP):
                 raise PostProcessingError('Conflict: You have requested uploading multiple files to one remote file.')
         else:
             # no --remote-name, upload to root
-            plans = [(os.path.basename(x), x) for x in files]
+            plans = [(escaped_basename(x), x) for x in files]
 
         # have we encountered any conflicts previously?
         try:
             ident = self.conflict_trial(opts, ident, pre=True)
         except Skip as skip:
             self.report_warning(skip)
-            return
+            return []
 
         # generate header value for auth
         s3_ak = traverse_obj(cred, ('s3', 'access'))
@@ -200,35 +203,63 @@ class InternetArchiveUploadPP(ExecPP):
             raise PostProcessingError('Access Key for IAS3 is missing. You should run "ia configure"')
         if not s3_sk:
             raise PostProcessingError('Secret Key for IAS3 is missing. You should run "ia configure"')
-        auth_header = f'LOW {s3_ak}:{s3_sk}'
 
         # upload files according to the plan
+        errors = []
         for idx, (remotename, filename) in enumerate(plans):
             headers = dict(opts.headers)
             self.generate_headers(headers, opts.metadata, queue_derive=opts.derive)
-            headers['Authorization'] = auth_header
+            headers['Authorization'] = f'LOW {s3_ak}:{s3_sk}'
             self.write_debug(f'=== {filename} -> {remotename}')
             with open(filename, 'rb') as r:
-                self.real_upload(ident, remotename, r, headers, idx + 1, len(plans), opts.quiet)
+                try:
+                    self.real_upload(ident, remotename, r, headers, idx + 1, len(plans), opts.quiet, opts.retries)
+                except PostProcessingError as ex:
+                    self.report_warning(ex)
+                    errors.append(ex)
 
-    def real_upload(self, ident, remotename, r, headers, index, total_plans, quiet):
+        if not errors and opts.delete:
+            for _, lf in plans:
+                self.write_debug(f'Removing {lf}')
+                try:
+                    escaped_remove(lf)
+                except (IOError, OSError) as ex:
+                    self.report_warning(ex)
+        return errors
+
+    def real_upload(self, ident, remotename, r, headers, index, total_plans, quiet, retries):
         fsize = os.stat(r.fileno()).st_size
         headers['Content-MD5'] = self.md5(r)
         headers['Content-Length'] = str(fsize)
         true_body = (QuietByteIO if quiet else ProgressByteIO)(self._downloader, r, fsize)
         true_body._PROGRESS_LABEL = f'{index}/{total_plans}'
-        try:
-            self.to_screen(f'[{index}/{total_plans}] Uploading {remotename}')
-            true_body.start()
-            # who wants to use plain HTTP nowadays?
-            resp, body = self.do_put_request(f'https://s3.us.archive.org/{ident}/{remotename}', headers, true_body)
-            resp_code = resp.code
-            self.write_debug(body)
-            if resp_code == 503:
-                "SlowDown"
-        finally:
-            # no need to call close() as it's caller's responsible to close streams
-            true_body.end()
+        for retry in self.repeat_iter(retries):
+            try:
+                self.to_screen(f'[{index}/{total_plans}] Uploading {remotename}', prefix=False)
+                true_body.start()
+                # who wants to use plain HTTP nowadays?
+                resp, body = self.do_put_request(f'https://s3.us.archive.org/{ident}/{remotename}', headers, true_body)
+                resp_code = resp.code
+                self.write_debug(body)
+                if resp_code == 200:
+                    # that's okay to return without messages
+                    return
+                else:
+                    warn_body = f'Unknown status code: {resp_code}'
+                    if resp_code == 503:
+                        warn_body = 'S3 is overloaded'
+                    retry_remain = self.repeat_remaining(retries, retry)
+                    if retry_remain == 0:
+                        raise PostProcessingError(f'[{index}/{total_plans}] {warn_body}. Retry exhausted.')
+                    else:
+                        waittime = 30 - 29 * (1.1**(-retry))
+                        self.report_warning(f'[{index}/{total_plans}] {warn_body}. Sleeping for {waittime} seconds. {retry_remain} retries left.')
+                        time.sleep(waittime)
+                        continue
+            finally:
+                # no need to call close() as it's caller's responsiblility to close streams
+                true_body.end()
+        raise PostProcessingError(f'[{index}/{total_plans}] Retry exhausted')
 
     @staticmethod
     def md5(file_object):
@@ -241,6 +272,20 @@ class InternetArchiveUploadPP(ExecPP):
             m.update(data)
         file_object.seek(0, os.SEEK_SET)
         return m.hexdigest()
+
+    @staticmethod
+    def repeat_iter(retries):
+        if retries < 1 or retries == float('inf'):
+            return itertools.count(0)
+        else:
+            return range(retries + 1)
+
+    @staticmethod
+    def repeat_remaining(retries, count):
+        if retries < 1 or retries == float('inf'):
+            return float('inf')
+        else:
+            return retries - count
 
     def generate_headers(self, headers, metadata, file_metadata=None, queue_derive=True):
         metadata = dict() if metadata is None else metadata
