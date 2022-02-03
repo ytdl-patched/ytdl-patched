@@ -17,7 +17,7 @@ body:
           required: true
         - label: I've read the [guidelines for opening an issue](https://github.com/yt-dlp/yt-dlp/blob/master/CONTRIBUTING.md#opening-an-issue)
           required: true
-        - label: I sware the extractor is not for NSFW or piracy website. Or I'm willing to pay for reqeusting porting NSFW website
+        - label: I sware the extractor is not for piracy website. Also I understand and accept that reqeusting porting NSFW website **ia a commissioned work**
           required: true
         - label: I sware the extractor is ABSOLUTELY not for piracy website
           required: true
