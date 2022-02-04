@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 # NeoNippori - Danmaku to ASS converter for "Unlicense"d applications
 
+import collections
 import io
 import json
 import math
@@ -10,6 +11,8 @@ import random
 import re
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
+from typing import Iterable, List, Optional
+
 from .version import __version__
 
 
@@ -42,12 +45,16 @@ NICONICO_COLOR_MAPPINGS = {
     'nobleviolet': 0x6633cc,
     'purple2': 0x6633cc}
 
+Comment = collections.namedtuple(
+    'Comment', [
+        'timeline', 'timestamp', 'no', 'comment', 'pos', 'color', 'size', 'height', 'width'])
 
-def process_mailstyle(mail, fontsize):
-    pos = 0
-    color = 0xffffff
-    size = fontsize
-    for mailstyle in str(mail).split():
+
+def process_mailstyle(mail: Optional[str], fontsize):
+    pos, color, size = 0, 0xffffff, fontsize
+    if not mail:
+        return pos, color, size
+    for mailstyle in mail.split():
         if mailstyle == 'ue':
             pos = 1
         elif mailstyle == 'shita':
@@ -71,7 +78,7 @@ def parse_comments_nnxml(f: str, fontsize: float, report_warning):
             if c.startswith('/'):
                 continue  # ignore advanced comments
             pos, color, size = process_mailstyle(comment.getAttribute('mail'), fontsize)
-            yield (max(int(comment.getAttribute('vpos')), 0) * 0.01, int(comment.getAttribute('date')), int(comment.getAttribute('no')), c, pos, color, size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
+            yield Comment(max(int(comment.getAttribute('vpos')), 0) * 0.01, int(comment.getAttribute('date')), int(comment.getAttribute('no')), c, pos, color, size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
         except (AssertionError, AttributeError, IndexError, TypeError, ValueError) as e:
             report_warning('Invalid comment: %s %s' % (e, comment.toxml()))
             continue
@@ -96,8 +103,8 @@ def parse_comments_nnjson(f: str, fontsize: float, report_warning):
             if c.startswith('/'):
                 continue  # ignore advanced comments
 
-            pos, color, size = process_mailstyle(comment.get('mail', ''), fontsize)
-            yield (max(comment['vpos'], 0) * 0.01, comment['date'], comment.get('no', 0), c, pos, color, size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
+            pos, color, size = process_mailstyle(comment.get('mail'), fontsize)
+            yield Comment(max(comment['vpos'], 0) * 0.01, comment['date'], comment.get('no', 0), c, pos, color, size, (c.count('\n') + 1) * size, maximum_line_length(c) * size)
         except (AssertionError, AttributeError, IndexError, TypeError, ValueError, KeyError) as e:
             report_warning('Invalid comment: %s %s' % (e, comment and json.dumps(comment)))
             continue
@@ -146,52 +153,49 @@ def convert_niconico_json_to_xml(data: str) -> str:
     return '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(packet, encoding='utf-8').decode('utf-8')
 
 
-def process_comments(comments, f, width, height, bottomReserved, fontface, fontsize, alpha, duration_marquee, duration_still, report_warning):
+def process_comments(comments: Iterable[Comment], f, width, height, bottomReserved, fontface, fontsize, alpha, duration_marquee, duration_still, report_warning):
     styleid = 'NeoNippori_%04x' % random.randint(0, 0xffff)
     write_ass_header(f, width, height, fontface, fontsize, alpha, styleid)
-    rows = [[None] * (height - bottomReserved + 1) for i in range(4)]
+    rows: List[List[Comment]] = [[None] * (height - bottomReserved + 1) for i in range(4)]
     for i in comments:
-        if isinstance(i[4], int):
-            row = 0
-            rowmax = height - bottomReserved - i[7]
-            while row <= rowmax:
-                freerows = test_free_rows(rows, i, row, width, height, bottomReserved, duration_marquee, duration_still)
-                if freerows >= i[7]:
-                    mark_comment_raw(rows, i, row)
-                    write_comment(f, i, row, width, height, bottomReserved, fontsize, duration_marquee, duration_still, styleid)
-                    break
-                else:
-                    row += freerows or 1
+        row = 0
+        rowmax = height - bottomReserved - i.height
+        while row <= rowmax:
+            avail = find_free_row(rows, i, row, width, height, bottomReserved, duration_marquee, duration_still)
+            if avail >= i.height:
+                break
             else:
-                row = find_alternative_row(rows, i, height, bottomReserved)
-                mark_comment_raw(rows, i, row)
-                write_comment(f, i, row, width, height, bottomReserved, fontsize, duration_marquee, duration_still, styleid)
+                row += avail or 1
         else:
-            report_warning('Invalid comment: %r' % i[3])
+            row = find_alternative_row(rows, i, height, bottomReserved)
+        mark_comment_raw(rows, i, row)
+        write_comment(f, i, row, width, height, bottomReserved, fontsize, duration_marquee, duration_still, styleid)
 
 
-def test_free_rows(rows, c, row, width, height, bottomReserved, duration_marquee, duration_still):
+def find_free_row(rows: List[List[Comment]], c: Comment, row, width, height, bottomReserved, duration_marquee, duration_still):
     res = 0
     rowmax = height - bottomReserved
-    targetRow = None
-    if c[4] in (1, 2):
-        while row < rowmax and res < c[7]:
-            if targetRow != rows[c[4]][row]:
-                targetRow = rows[c[4]][row]
-                if targetRow and targetRow[0] + duration_still > c[0]:
+    target = None
+    if c.pos in (1, 2):
+        while row < rowmax and res < c.height:
+            candidate = rows[c.pos][row]
+            if target != candidate:
+                target = candidate
+                if target and target.timeline + duration_still > c.timeline:
                     break
             row += 1
             res += 1
     else:
         try:
-            thresholdTime = c[0] - duration_marquee * (1 - width / (c[8] + width))
+            thresholdTime = c.timeline - duration_marquee * (1 - width / (c.width + width))
         except ZeroDivisionError:
-            thresholdTime = c[0] - duration_marquee
-        while row < rowmax and res < c[7]:
-            if targetRow != rows[c[4]][row]:
-                targetRow = rows[c[4]][row]
+            thresholdTime = c.timeline - duration_marquee
+        while row < rowmax and res < c.height:
+            candidate = rows[c.pos][row]
+            if target != candidate:
+                target = candidate
                 try:
-                    if targetRow and (targetRow[0] > thresholdTime or targetRow[0] + targetRow[8] * duration_marquee / (targetRow[8] + width) > c[0]):
+                    if target and (target.timeline > thresholdTime or target.timeline + target.width * duration_marquee / (target.width + width) > c.timeline):
                         break
                 except ZeroDivisionError:
                     pass
@@ -200,20 +204,20 @@ def test_free_rows(rows, c, row, width, height, bottomReserved, duration_marquee
     return res
 
 
-def find_alternative_row(rows, c, height, bottomReserved):
+def find_alternative_row(rows, c: Comment, height, bottomReserved):
     res = 0
-    for row in range(height - bottomReserved - math.ceil(c[7])):
-        if not rows[c[4]][row]:
+    for row in range(height - bottomReserved - math.ceil(c.height)):
+        if not rows[c.pos][row]:
             return row
-        elif rows[c[4]][row][0] < rows[c[4]][res][0]:
+        elif rows[c.pos][row].timeline < rows[c.pos][res].timeline:
             res = row
     return res
 
 
-def mark_comment_raw(rows, c, row):
+def mark_comment_raw(rows, c: Comment, row):
     try:
-        for i in range(row, row + math.ceil(c[7])):
-            rows[c[4]][i] = c
+        for i in range(row, row + math.ceil(c.height)):
+            rows[c.pos][i] = c
     except IndexError:
         pass
 
@@ -244,41 +248,32 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     )
 
 
-def write_comment(f, c, row, width, height, bottomReserved, fontsize, duration_marquee, duration_still, styleid):
-    text = escape_ass_text(c[3])
+def write_comment(f, c: Comment, row, width, height, bottomReserved, fontsize, duration_marquee, duration_still, styleid):
+    text = escape_ass_text(c.comment)
     styles = []
-    if c[4] == 1:
-        styles.append('\\an8\\pos(%(halfwidth)d, %(row)d)' % {'halfwidth': width / 2, 'row': row})
+    if c.pos == 1:  # ue
+        styles.append(r'\an8\pos(%(halfwidth)d, %(row)d)' % {'halfwidth': width / 2, 'row': row})
         duration = duration_still
-    elif c[4] == 2:
-        styles.append('\\an2\\pos(%(halfwidth)d, %(row)d)' % {'halfwidth': width / 2, 'row': convert_type2(row, height, bottomReserved)})
+    elif c.pos == 2:  # shita
+        styles.append(r'\an2\pos(%(halfwidth)d, %(row)d)' % {'halfwidth': width / 2, 'row': position_shita(row, height, bottomReserved)})
         duration = duration_still
-    elif c[4] == 3:
-        styles.append('\\move(%(neglen)d, %(row)d, %(width)d, %(row)d)' % {'width': width, 'row': row, 'neglen': -math.ceil(c[8])})
-        duration = duration_marquee
     else:
-        styles.append('\\move(%(width)d, %(row)d, %(neglen)d, %(row)d)' % {'width': width, 'row': row, 'neglen': -math.ceil(c[8])})
+        styles.append(r'\move(%(width)d, %(row)d, %(neglen)d, %(row)d)' % {'width': width, 'row': row, 'neglen': -math.ceil(c.width)})
         duration = duration_marquee
-    if not (-1 < c[6] - fontsize < 1):
-        styles.append('\\fs%.0f' % c[6])
-    if c[5] != 0xffffff:
-        styles.append('\\c&H%s&' % format_color(c[5]))
-        if c[5] == 0x000000:
-            styles.append('\\3c&HFFFFFF&')
-    f.write('Dialogue: 2,%(start)s,%(end)s,%(styleid)s,,0000,0000,0000,,{%(styles)s}%(text)s\n' % {'start': format_timestamp(c[0]), 'end': format_timestamp(c[0] + duration), 'styles': ''.join(styles), 'text': text, 'styleid': styleid})
+    if (fontsize - 1 >= c.size) or (c.size >= 1 + fontsize):
+        styles.append(r'\fs%.0f' % c.size)
+    if c.color != 0xffffff:
+        styles.append(r'\c&H%s&' % format_color(c.color))
+        if c.color == 0x000000:
+            styles.append(r'\3c&HFFFFFF&')
+    f.write('Dialogue: 2,%(start)s,%(end)s,%(styleid)s,,0000,0000,0000,,{%(styles)s}%(text)s\n' % {'start': format_timestamp(c.timeline), 'end': format_timestamp(c.timeline + duration), 'styles': ''.join(styles), 'text': text, 'styleid': styleid})
 
 
 def escape_ass_text(s):
-    def process_leading_blank(s):
-        sstrip = s.strip(' ')
-        slen = len(s)
-        if slen == len(sstrip):
-            return s
-        else:
-            llen = slen - len(s.lstrip(' '))
-            rlen = slen - len(s.rstrip(' '))
-            return ''.join(('\u2007' * llen, sstrip, '\u2007' * rlen))
-    return '\\N'.join((process_leading_blank(i) or ' ' for i in str(s).replace('\\', '\\\\').replace('{', '\\{').replace('}', '\\}').split('\n')))
+    def process_blanks(s):
+        a, b, c = re.search(r'(^\s*)(.+?)(\s*$)', s).groups()
+        return ''.join(('\u2007' * len(a), b, '\u2007' * len(c))) or ' '
+    return r'\N'.join(map(process_blanks, re.sub(r'([\\}{])', r'\\\1', s).splitlines()))
 
 
 def maximum_line_length(s: str):
@@ -286,11 +281,11 @@ def maximum_line_length(s: str):
 
 
 def format_timestamp(timestamp: float):
-    timestamp = round(timestamp * 100.0)
+    timestamp *= 100.0
     hour, minute = divmod(timestamp, 360000)
     minute, second = divmod(minute, 6000)
     second, centsecond = divmod(second, 100)
-    return '%d:%02d:%02d.%02d' % (int(hour), int(minute), int(second), int(centsecond))
+    return '%d:%02d:%02d.%02d' % (math.floor(hour), math.floor(minute), math.floor(second), math.floor(centsecond))
 
 
 def format_color(color):
@@ -305,12 +300,12 @@ def format_color(color):
     return '%02X%02X%02X' % (B, G, R)
 
 
-def convert_type2(row, height, bottomReserved):
+def position_shita(row, height, bottomReserved):
     return height - bottomReserved - row
 
 
 def filter_badchars(f):
-    return re.sub('[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f]', '\ufffd', f)
+    return re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '\ufffd', f)
 
 
 PROCESSORS = {
