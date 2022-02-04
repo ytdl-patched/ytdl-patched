@@ -93,7 +93,7 @@ README.txt
 *.tar.gz
 *.zsh
 *.spec
-test/testdata/player-*.js
+test/testdata/sigs/player-*.js
 yt_dlp/build_config.py
 
 # Binary

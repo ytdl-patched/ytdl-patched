@@ -149,7 +149,7 @@ You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens
 
 
 ## NEW FEATURES IN YT-DLP
-* Based on **youtube-dl 2021.12.17 [commit/5014bd6](https://github.com/ytdl-org/youtube-dl/commit/5014bd67c22b421207b2650d4dc874b95b36dda1)** and **youtube-dlc 2020.11.11-3 [commit/f9401f2](https://github.com/blackjack4494/yt-dlc/commit/f9401f2a91987068139c5f757b12fc711d4c0cee)**: You get all the features and patches of [youtube-dlc](https://github.com/blackjack4494/yt-dlc) in addition to the latest [youtube-dl](https://github.com/ytdl-org/youtube-dl)
+* Based on **youtube-dl 2021.12.17 [commit/78ce962](https://github.com/ytdl-org/youtube-dl/commit/78ce962f4fe020994c216dd2671546fbe58a5c67)** and **youtube-dlc 2020.11.11-3 [commit/f9401f2](https://github.com/blackjack4494/yt-dlc/commit/f9401f2a91987068139c5f757b12fc711d4c0cee)**: You get all the features and patches of [youtube-dlc](https://github.com/blackjack4494/yt-dlc) in addition to the latest [youtube-dl](https://github.com/ytdl-org/youtube-dl)
 
 * **[SponsorBlock Integration](#sponsorblock-options)**: You can mark/remove sponsor sections in youtube videos by utilizing the [SponsorBlock](https://sponsor.ajay.app) API
 
@@ -492,7 +492,7 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      option is not present) is used for the
                                      actual downloading
     --geo-bypass                     Bypass geographic restriction via faking
-                                     X-Forwarded-For HTTP header
+                                     X-Forwarded-For HTTP header (default)
     --no-geo-bypass                  Do not bypass geographic restriction via
                                      faking X-Forwarded-For HTTP header
     --geo-bypass-country CODE        Force bypass geographic restriction with
@@ -1252,6 +1252,7 @@ The available fields are:
 
  - `id` (string): Video identifier
  - `title` (string): Video title
+ - `fulltitle` (string): Video title ignoring live timestamp and generic title
  - `url` (string): Video URL
  - `ext` (string): Video filename extension
  - `alt_title` (string): A secondary title of the video
@@ -1307,16 +1308,16 @@ The available fields are:
  - `protocol` (string): The protocol that will be used for the actual download
  - `extractor` (string): Name of the extractor
  - `extractor_key` (string): Key name of the extractor
- - `epoch` (numeric): Unix epoch when creating the file
+ - `epoch` (numeric): Unix epoch of when the information extraction was completed
  - `autonumber` (numeric): Number that will be increased with each download, starting at `--autonumber-start`
  - `video_autonumber` (numeric): Number that will be increased with each video
  - `n_entries` (numeric): Total number of extracted items in the playlist
- - `playlist` (string): Name or id of the playlist that contains the video
+ - `playlist_id` (string): Identifier of the playlist that contains the video
+ - `playlist_title` (string): Name of the playlist that contains the video
+ - `playlist` (string): `playlist_id` or `playlist_title`
  - `playlist_count` (numeric): Total number of items in the playlist. May not be known if entire playlist is not extracted
  - `playlist_index` (numeric): Index of the video in the playlist padded with leading zeros according the final index
  - `playlist_autonumber` (numeric): Position of the video in the playlist download queue padded with leading zeros according to the total length of the playlist
- - `playlist_id` (string): Playlist identifier
- - `playlist_title` (string): Playlist title
  - `playlist_uploader` (string): Full name of the playlist uploader
  - `playlist_uploader_id` (string): Nickname or id of the playlist uploader
  - `webpage_url` (string): A URL to the video webpage which if given to yt-dlp should allow to get the same result again
@@ -1661,7 +1662,7 @@ $ yt-dlp -S "proto"
 
 
 # Download the best video with h264 codec, or the best video if there is no such video
-$ yt-dlp -f "(bv*+ba/b)[vcodec^=avc1] / (bv*+ba/b)"
+$ yt-dlp -f "(bv*[vcodec^=avc1]+ba) / (bv*+ba/b)"
 
 # Download the best video with best codec no better than h264,
 # or the best video with worst codec if there is no such video
