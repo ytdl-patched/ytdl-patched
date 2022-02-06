@@ -433,14 +433,14 @@ jobs:
 
       - name: Upload bin (IA)
         run: |
-          ia upload ytdl-patched-binaries -r 10000 \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
             ./artifacts/youtube-dl
       - name: Upload source tar (IA)
         run: |
-          ia upload ytdl-patched-binaries -r 10000 \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
@@ -453,7 +453,7 @@ jobs:
           mksquashfs exe_files/ win_exe.sqfs \
             -comp xz -progress -b 1M -Xdict-size 50% \
             -no-xattrs -force-uid 1000 -force-gid 1000
-          ia upload ytdl-patched-binaries -r 10000 \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/win_exe.sqfs" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
@@ -461,7 +461,7 @@ jobs:
 
       - name: Upload wheel (IA)
         run: |
-          ia upload ytdl-patched-binaries -r 10000 \
+          ia upload ytdl-patched-binaries \
             --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-py2.py3-none-any.whl" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
