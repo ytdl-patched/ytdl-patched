@@ -2190,7 +2190,8 @@ class locked_file(object):
 
     def __exit__(self, etype, value, traceback):
         try:
-            _unlock_file(self.f)
+            if not self.f.closed:
+                _unlock_file(self.f)
         finally:
             self.f.close()
 
@@ -2211,6 +2212,10 @@ class locked_file(object):
 
     def close(self, *args):
         self.__exit__(self, *args, value=False, traceback=False)
+
+    @property
+    def closed(self):
+        return self.f.closed
 
 
 def get_filesystem_encoding():
