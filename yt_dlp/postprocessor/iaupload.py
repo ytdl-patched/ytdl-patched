@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import configparser
+import hashlib
 import itertools
 import json
 import optparse
@@ -9,19 +10,20 @@ import re
 import shlex
 import time
 import urllib
-import hashlib
 from collections import defaultdict
-from typing import IO, BinaryIO, Dict, Set
+from typing import IO, BinaryIO, Dict, Optional, Set
 from xml.dom.minidom import parseString
 
 from ._attachments import ShowsProgress
 from .exec import ExecPP
 from ..YoutubeDL import YoutubeDL
 from ..compat import compat_HTTPError
+from ..downloader import FileDownloader
 from ..options import instantiate_parser
 from ..longname import escaped_basename, escaped_remove
 from ..utils import (
     PostProcessingError,
+    ThrottledDownload,
     int_or_none,
     network_exceptions,
     sanitized_Request,
@@ -117,9 +119,9 @@ iaup_options.add_option(
     help='Number of retries on SlowDown or connection being disconnected.')
 iaup_options.add_option(
     '-t', '--throttled-rate',
-    metavar='RATE', dest='throttle', type=int,
+    metavar='RATE', dest='throttle',
     help=('Same as the option with same name on yt-dlp, but for upload in this time. '
-          'Downloaded failure caused by this option will count for -R retries.'))
+          'Upload failure caused by this option will count for -R retries.'))
 iaup_options.add_option(
     '-D', '--delete',
     action='store_true', dest='delete', default=False,
@@ -150,10 +152,18 @@ class InternetArchiveUploadPP(ExecPP):
             cmd = self.parse_cmd(tmpl, info)
             self.to_screen('Processing: %s' % cmd)
             parsed = iaup_options.parse_args(shlex.split(cmd))
+            self.parse_inputs(parsed)
             errors = self.process(parsed)
             if errors:
                 raise PostProcessingError('There were error(s) while uploading:\n' + '\n'.join(map(str, errors)))
         return [], info
+
+    def parse_inputs(self, opts):
+        if opts.throttle is not None:
+            numeric_limit = FileDownloader.parse_bytes(opts.throttle)
+            if numeric_limit is None:
+                self.report_warning('invalid rate limit specified')
+            opts.throttle = numeric_limit
 
     def process(self, parsed):
         opts, args = parsed
@@ -214,7 +224,7 @@ class InternetArchiveUploadPP(ExecPP):
             self.write_debug(f'=== {filename} -> {remotename}')
             with open(filename, 'rb') as r:
                 try:
-                    self.real_upload(ident, remotename, r, headers, idx + 1, len(plans), opts.quiet, opts.retries)
+                    self.real_upload(ident, remotename, r, headers, idx + 1, len(plans), opts.quiet, opts.retries, opts.throttle)
                 except PostProcessingError as ex:
                     self.report_warning(ex)
                     errors.append(ex)
@@ -228,12 +238,13 @@ class InternetArchiveUploadPP(ExecPP):
                     self.report_warning(ex)
         return errors
 
-    def real_upload(self, ident, remotename, r, headers, index, total_plans, quiet, retries):
+    def real_upload(self, ident, remotename, r, headers, index, total_plans, quiet, retries, throttle=None):
         fsize = os.stat(r.fileno()).st_size
         headers['Content-MD5'] = self.md5(r)
         headers['Content-Length'] = str(fsize)
-        true_body = (QuietByteIO if quiet else ProgressByteIO)(self._downloader, r, fsize)
+        true_body = (QuietByteIO if quiet else ProgressByteIO)(self._downloader, r, fsize, throttle)
         true_body._PROGRESS_LABEL = f'{index}/{total_plans}'
+
         for retry in self.repeat_iter(retries):
             try:
                 self.to_screen(f'[{index}/{total_plans}] Uploading {remotename}', prefix=False)
@@ -257,6 +268,11 @@ class InternetArchiveUploadPP(ExecPP):
                         self.report_warning(f'[{index}/{total_plans}] {warn_body}. Sleeping for {waittime} seconds. {retry_remain} retries left.')
                         time.sleep(waittime)
                         continue
+            except PostProcessingError as ex:
+                waittime = 30 - 29 * (1.1**(-retry))
+                self.report_warning(f'[{index}/{total_plans}] {ex}. Sleeping for {waittime} seconds. {retry_remain} retries left.')
+                time.sleep(waittime)
+                continue
             finally:
                 # no need to call close() as it's caller's responsiblility to close streams
                 true_body.end()
@@ -289,6 +305,8 @@ class InternetArchiveUploadPP(ExecPP):
             return retries - count
 
     def get_s3_xml_text(xml_str):
+        if not xml_str:
+            return ''
 
         def _get_tag_text(tag_name, xml_obj):
             text = ''
@@ -412,7 +430,6 @@ class InternetArchiveUploadPP(ExecPP):
     def parse_config_file(self, config_file=None):
         config = configparser.RawConfigParser()
 
-        is_xdg = False
         if not config_file:
             candidates = []
             if os.environ.get('IA_CONFIG_FILE'):
@@ -434,8 +451,6 @@ class InternetArchiveUploadPP(ExecPP):
             else:
                 # None of the candidates exist, default to IA_CONFIG_FILE if set else XDG
                 config_file = os.environ.get('IA_CONFIG_FILE', xdg_config_file)
-            if config_file == xdg_config_file:
-                is_xdg = True
         config.read(config_file)
 
         if not config.has_section('s3'):
@@ -457,11 +472,11 @@ class InternetArchiveUploadPP(ExecPP):
             config.add_section('general')
             config.set('general', 'screenname', None)
 
-        return (config_file, is_xdg, config)
+        return config_file, config
 
     def get_config(self, config=None, config_file=None):
         _config = {} if not config else config
-        config_file, is_xdg, config = self.parse_config_file(config_file)
+        config_file, config = self.parse_config_file(config_file)
 
         if not os.path.isfile(config_file):
             return _config
@@ -519,16 +534,36 @@ class InternetArchiveUploadPP(ExecPP):
 
 
 class QuietByteIO(BinaryIO, IO[bytes]):
-    def __init__(self, ydl: YoutubeDL, stream: IO[bytes], filesize: int) -> None:
+    def __init__(self, ydl: YoutubeDL, stream: IO[bytes], filesize: int, throttle: Optional[int] = None) -> None:
         super().__init__()
         self.stream = stream
         self.filesize = filesize
+        self.throttle = throttle
+        self.counter, self.throttle_count, self.start_time = None, None, None
+        self.time_and_size, self.avg_len = [], 10
 
     def start(self):
+        self.counter, self.throttle_count = 0, 0
         self.stream.seek(0, os.SEEK_SET)
+        self.start_time = time_millis()
 
     def report(self):
         pass
+
+    def throttle_check(self):
+        self.time_and_size.append((self.counter, time.time()))
+        self.time_and_size = tsz = self.time_and_size[-self.avg_len:]
+        if not self.throttle:
+            return
+        if len(tsz) < 4:
+            return
+        last, early = tsz[0], tsz[-1]
+        average_speed = (early[0] - last[0]) / (early[1] - last[1])
+        if average_speed < self.throttle:
+            self.throttle_count += 1
+        if self.throttle_count > 4:
+            # throwing ThrottledDownload here could cause re-extraction, which is not desired here
+            raise PostProcessingError(ThrottledDownload().msg)
 
     def end(self):
         pass
@@ -543,6 +578,7 @@ class QuietByteIO(BinaryIO, IO[bytes]):
         ret = self.stream.read(n)
         if ret:
             self.counter += len(ret)
+            self.throttle_check()
             self.report()
         return ret
 
@@ -551,21 +587,17 @@ class QuietByteIO(BinaryIO, IO[bytes]):
 
 
 class ProgressByteIO(QuietByteIO, ShowsProgress):
-    def __init__(self, ydl: YoutubeDL, stream: IO[bytes], filesize: int) -> None:
-        super().__init__()
+    def __init__(self, ydl: YoutubeDL, stream: IO[bytes], filesize: int, throttle: Optional[int] = None) -> None:
+        super().__init__(ydl, stream, filesize, throttle)
         ShowsProgress.__init__(self, ydl)
         self.stream = stream
         self.filesize = filesize
-        self.counter, self.start_time = None, None
-        self.time_and_size, self.avg_len = [], 10
         # call with all=False as this class doesn't have hooks,
         # therefore calling report_progress directly
         self._enable_progress(False)
 
     def start(self):
-        self.counter = 0
-        self.stream.seek(0, os.SEEK_SET)
-        self.start_time = time_millis()
+        super().start()
         self.report_progress({
             'status': 'processing',
             'elapsed': 0,
@@ -574,8 +606,7 @@ class ProgressByteIO(QuietByteIO, ShowsProgress):
         })
 
     def report(self):
-        self.time_and_size.append((self.counter, time.time()))
-        self.time_and_size = tsz = self.time_and_size[-self.avg_len:]
+        tsz = self.time_and_size
         elapsed = time_millis() - self.start_time
         if len(tsz) > 1:
             last, early = tsz[0], tsz[-1]
