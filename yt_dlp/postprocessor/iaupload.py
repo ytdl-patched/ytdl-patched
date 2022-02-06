@@ -12,6 +12,7 @@ import urllib
 import hashlib
 from collections import defaultdict
 from typing import IO, BinaryIO, Dict, Set
+from xml.dom.minidom import parseString
 
 from ._attachments import ShowsProgress
 from .exec import ExecPP
@@ -245,7 +246,7 @@ class InternetArchiveUploadPP(ExecPP):
                     # that's okay to return without messages
                     return
                 else:
-                    warn_body = f'Unknown status code: {resp_code}'
+                    warn_body = self.get_s3_xml_text(body) or f'Unknown status code: {resp_code}'
                     if resp_code == 503:
                         warn_body = 'S3 is overloaded'
                     retry_remain = self.repeat_remaining(retries, retry)
@@ -286,6 +287,31 @@ class InternetArchiveUploadPP(ExecPP):
             return float('inf')
         else:
             return retries - count
+
+    def get_s3_xml_text(xml_str):
+
+        def _get_tag_text(tag_name, xml_obj):
+            text = ''
+            elements = xml_obj.getElementsByTagName(tag_name)
+            for e in elements:
+                for node in e.childNodes:
+                    if node.nodeType == node.TEXT_NODE:
+                        text += node.data
+            return text
+
+        try:
+            p = parseString(xml_str)
+            _msg = _get_tag_text('Message', p)
+            _resource = _get_tag_text('Resource', p)
+            # Avoid weird Resource text that contains PUT method.
+            if _resource and "'PUT" not in _resource:
+                return f'{_msg} - {_resource.strip()}'
+            else:
+                return _msg
+        except KeyboardInterrupt:
+            raise
+        except BaseException:
+            return str(xml_str)
 
     def generate_headers(self, headers, metadata, file_metadata=None, queue_derive=True):
         metadata = dict() if metadata is None else metadata
