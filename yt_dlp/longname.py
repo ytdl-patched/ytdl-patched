@@ -279,14 +279,14 @@ def escaped_remove(path, *args, **kwargs):
 
 def escaped_basename(path):
     "os.path.basename() that escapes long names"
-    return basename(split_longname(path, get_filesystem_encoding()))
+    return basename(combine_longname(path, get_filesystem_encoding()))
 
 
 def escaped_dirname(path):
     "os.path.dirname() that escapes long names"
-    return dirname(split_longname(path, get_filesystem_encoding()))
+    return dirname(combine_longname(path, get_filesystem_encoding()))
 
 
 def escaped_isabs(path):
     "os.path.isabs() that escapes long names"
-    return isabs(split_longname(path, get_filesystem_encoding()))
+    return isabs(combine_longname(path, get_filesystem_encoding()))
