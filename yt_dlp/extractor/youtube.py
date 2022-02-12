@@ -3067,13 +3067,17 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
             tbr = float_or_none(
                 fmt.get('averageBitrate') or fmt.get('bitrate'), 1000)
+            language_preference = (
+                10 if audio_track.get('audioIsDefault') and 10
+                else -10 if 'descriptive' in (audio_track.get('displayName') or '').lower() and -10
+                else -1)
             dct = {
                 'asr': int_or_none(fmt.get('audioSampleRate')),
                 'filesize': int_or_none(fmt.get('contentLength')),
                 'format_id': itag,
                 'format_note': join_nonempty(
                     '%s%s' % (audio_track.get('displayName') or '',
-                              ' (default)' if audio_track.get('audioIsDefault') else ''),
+                              ' (default)' if language_preference > 0 else ''),
                     fmt.get('qualityLabel') or quality.replace('audio_quality_', ''),
                     throttled and 'THROTTLED', client_name, delim=', '),
                 'source_preference': -10 if throttled else -1,
@@ -3083,8 +3087,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'tbr': tbr,
                 'url': fmt_url,
                 'width': int_or_none(fmt.get('width')),
-                'language': audio_track.get('id', '').split('.')[0],
-                'language_preference': 1 if audio_track.get('audioIsDefault') else -1,
+                'language': join_nonempty(audio_track.get('id', '').split('.')[0],
+                                          'desc' if language_preference < -1 else ''),
+                'language_preference': language_preference,
             }
             mime_mobj = re.match(
                 r'((?:[^/]+)/(?:[^;]+))(?:;\s*codecs="([^"]+)")?', fmt.get('mimeType') or '')
@@ -3485,6 +3490,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         trans_name += format_field(lang_name, template=' from %s')
                     process_language(
                         automatic_captions, base_url, trans_code, trans_name, {'tlang': trans_code})
+                    if lang_code == f'a-{trans_code}':
+                        process_language(
+                            automatic_captions, base_url, f'{trans_code}-orig', f'{trans_name} (Original)', {'tlang': trans_code})
             info['automatic_captions'] = automatic_captions
             info['subtitles'] = subtitles
 
