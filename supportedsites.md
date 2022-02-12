@@ -419,6 +419,7 @@
  - **gem.cbc.ca:playlist**
  - **generic**: Generic downloader that works on some sites
  - **Gettr**
+ - **GettrStreaming**
  - **Gfycat**
  - **GiantBomb**
  - **Giga**
