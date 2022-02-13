@@ -1401,6 +1401,7 @@
  - **vlive**
  - **vlive:channel**
  - **vlive:post**
+ - **vm.tiktok**
  - **Vodlocker**
  - **VODPl**
  - **VODPlatform**
