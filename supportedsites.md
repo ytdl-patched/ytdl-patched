@@ -1053,6 +1053,7 @@
  - **RUTV**: RUTV.RU
  - **Ruutu**
  - **Ruv**
+ - **ruv.is:spila**
  - **safari**: safaribooksonline.com online video
  - **safari:api**
  - **safari:course**: safaribooksonline.com online courses
