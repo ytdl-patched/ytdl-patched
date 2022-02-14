@@ -95,7 +95,7 @@ class FC2IE(InfoExtractor):
                 webpage,
                 'title', fatal=False)
             thumbnail = self._og_search_thumbnail(webpage)
-            description = self._og_search_description(webpage)
+            description = self._og_search_description(webpage, default=None)
 
         vidplaylist = self._download_json(
             'https://video.fc2.com/api/v3/videoplaylist/%s?sh=1&fs=0' % video_id, video_id,
@@ -110,6 +110,7 @@ class FC2IE(InfoExtractor):
             'title': title,
             'url': vid_url,
             'ext': 'mp4',
+            'protocol': 'm3u8_native',
             'description': description,
             'thumbnail': thumbnail,
         }
