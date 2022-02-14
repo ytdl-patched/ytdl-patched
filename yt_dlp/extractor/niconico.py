@@ -471,6 +471,9 @@ class NiconicoIE(NiconicoBaseIE):
 
         self._sort_formats(formats)
 
+        has_premium_formats = not all(
+            traverse_obj([quality_info['audios'], quality_info['videos']], (..., ..., 'isAvailable')))
+
         # Start extracting information
         title = (
             get_video_info(['originalTitle', 'title'])
@@ -570,6 +573,7 @@ class NiconicoIE(NiconicoBaseIE):
             'id': video_id,
             'title': title,
             'formats': formats,
+            'has_premium_formats': has_premium_formats,
             'thumbnail': thumbnail,
             'description': description,
             'uploader': uploader,
