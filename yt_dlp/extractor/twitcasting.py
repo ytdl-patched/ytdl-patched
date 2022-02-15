@@ -163,7 +163,7 @@ class TwitCastingIE(InfoExtractor):
                         'url': ws_url,
                         'format_id': 'ws-%s' % mode,
                         'ext': 'mp4',
-                        'quality': qq(mode),
+                        'quality': qq(mode) - 1000,
                         # TwitCasting simply sends moof atom directly over WS
                         'protocol': 'websocket_frag',
                     })
