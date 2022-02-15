@@ -93,7 +93,7 @@ class TwitCastingIE(InfoExtractor):
             webpage = self._download_webpage(
                 urlh.geturl(), video_id, data=request_data,
                 headers={'Origin': 'https://twitcasting.tv'},
-                note='Resending auth')
+                note='Retrying authentication')
 
         title = (clean_html(get_element_by_id('movietitle', webpage))
                  or self._html_search_meta(['og:title', 'twitter:title'], webpage, fatal=True))
