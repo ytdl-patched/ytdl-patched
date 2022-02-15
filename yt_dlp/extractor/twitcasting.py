@@ -174,42 +174,19 @@ class TwitCastingIE(InfoExtractor):
                 'formats': formats
             }
         else:
-            formats = [{
-                'url': m3u8_url,
-                'id': f'{video_id}-{num}',
-                'format_id': f'hls-{num}',
-                'ext': 'mp4',
-                'protocol': 'm3u8',
-                'http_headers': self._M3U8_HEADERS,
-            } for (num, m3u8_url) in enumerate(m3u8_urls)]
-
-            archive_mode = next(iter(self._configuration_arg('archive_mode', default=[])), 'multi_video')
-            if archive_mode == 'formats':
-                self.report_warning('You are currently using "formats" mode. This mode is deprecated. See https://github.com/ytdl-patched/ytdl-patched/issues/15')
-                url_count = len(m3u8_urls)
-                if url_count > 1:
-                    self.report_warning('This archive is split in %d parts; to download each split, please use "-f hls-0".."-f hls-%d" option.' % (url_count, url_count - 1))
-                    formats.append({
-                        # renamed from 'all' because 'all' is a reserved word in yt-dlp
-                        'format_id': 'joinall',
-                        'url': 'serial:',
-                        'protocol': 'serial',
-                        'items': list(formats),
-                        'ext': 'mp4',
-                    })
-                    formats.reverse()
-                infodict = {
-                    'formats': formats,
-                }
-            elif archive_mode == 'multi_video':
-                infodict = {
-                    '_type': 'multi_video',
+            infodict = {
+                '_type': 'multi_video',
+                'entries': [{
+                    'id': f'{video_id}-{num}',
+                    'url': m3u8_url,
+                    'ext': 'mp4',
                     # Requesting the manifests here will cause download to fail.
                     # So use ffmpeg instead. See: https://github.com/yt-dlp/yt-dlp/issues/382
-                    'entries': formats,
-                }
-            else:
-                raise ExtractorError(f'Invalid archive mode: {archive_mode}')
+                    'protocol': 'm3u8',
+                    'http_headers': self._M3U8_HEADERS,
+                    **base_dict,
+                } for (num, m3u8_url) in enumerate(m3u8_urls)],
+            }
 
         return {
             'id': video_id,
