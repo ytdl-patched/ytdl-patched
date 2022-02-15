@@ -3028,6 +3028,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 sp = try_get(sc, lambda x: x['sp'][0]) or 'signature'
                 fmt_url += '&' + sp + '=' + signature
 
+            """
             query = parse_qs(fmt_url)
             client_name = traverse_obj(query, ('c', 0), expected_type=compat_str, default='')
             throttled = False
@@ -3048,6 +3049,20 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 elif warn_message:
                     player_id = self._extract_player_info(player_url, fatal=False) or player_url or 'PLAYER UNKNOWN'
                     self.report_warning(f'nsig extraction failed: You may experience throttling for some formats. {warn_message}\nplayer id: {player_id} , nsig value: {old_n}\n{err}', only_once=True)
+            """
+
+            query = parse_qs(fmt_url)
+            client_name = traverse_obj(query, ('c', 0), expected_type=compat_str, default='')
+            throttled = False
+            if query.get('n'):
+                try:
+                    fmt_url = update_url_query(fmt_url, {
+                        'n': self._decrypt_nsig(query['n'][0], video_id, player_url)})
+                except ExtractorError as e:
+                    self.report_warning(
+                        f'nsig extraction failed: You may experience throttling for some formats\n'
+                        f'n = {query["n"][0]} ; player = {player_url}\n{e}', only_once=True)
+                    throttled = True
 
             if client_name:
                 client_name = client_name[0:3]
