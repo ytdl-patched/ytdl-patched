@@ -573,7 +573,6 @@ class NiconicoIE(NiconicoBaseIE):
             'id': video_id,
             'title': title,
             'formats': formats,
-            'has_premium_formats': not all_formats_available,
             'all_formats_available': all_formats_available,
             'thumbnail': thumbnail,
             'description': description,
