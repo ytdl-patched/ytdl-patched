@@ -689,6 +689,8 @@
  - **mtvservices:embedded**
  - **MTVUutisetArticle**
  - **MuenchenTV**: münchen.tv
+ - **Murrtube**
+ - **MurrtubeUser**: Murrtube user profile
  - **MuseScore**
  - **MusicdexAlbum**
  - **MusicdexArtist**
@@ -778,6 +780,7 @@
  - **niconico:playlist**
  - **niconico:series**
  - **niconico:smile** (Currently broken)
+ - **niconico:tag**: NicoNico video tag URLs
  - **niconico:user**
  - **nicovideo:search**: Nico video search; "nicosearch:" prefix
  - **nicovideo:search:date**: Nico video search, newest first; "nicosearchdate:" prefix
