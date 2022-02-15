@@ -1040,6 +1040,7 @@ from .niconico import (
     NicovideoSearchDateIE,
     NicovideoSearchIE,
     NicovideoSearchURLIE,
+    NicovideoTagURLIE,
     NiconicoLiveIE,
 )
 from .niconico_smile import NiconicoSmileIE

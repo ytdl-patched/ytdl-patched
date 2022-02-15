@@ -891,6 +891,8 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
 
 
 class NicovideoSearchBaseIE(InfoExtractor):
+    _SEARCH_TYPE = 'search'
+
     def _entries(self, url, item_id, query=None, note='Downloading page %(page)s'):
         query = query or {}
         pages = [query['page']] if 'page' in query else itertools.count(1)
@@ -905,7 +907,7 @@ class NicovideoSearchBaseIE(InfoExtractor):
 
     def _search_results(self, query):
         return self._entries(
-            self._proto_relative_url(f'//www.nicovideo.jp/search/{query}'), query)
+            self._proto_relative_url(f'//www.nicovideo.jp/{self._SEARCH_TYPE}/{query}'), query)
 
 
 class NicovideoSearchIE(NicovideoSearchBaseIE, SearchInfoExtractor):
@@ -983,6 +985,25 @@ class NicovideoSearchDateIE(NicovideoSearchBaseIE, SearchInfoExtractor):
             query['page'] = str(page_num)
 
         yield from super()._entries(url, item_id, query=query, note=note)
+
+
+class NicovideoTagURLIE(NicovideoSearchBaseIE):
+    IE_NAME = 'niconico:tag'
+    IE_DESC = 'NicoNico video tag URLs'
+    _SEARCH_TYPE = 'tag'
+    _VALID_URL = r'https?://(?:www\.)?nicovideo\.jp/tag/(?P<id>[^?#&]+)?'
+    _TESTS = [{
+        'url': 'https://www.nicovideo.jp/tag/%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%82%BF%E3%83%AA%E3%83%BC%E6%B7%AB%E5%A4%A2',
+        'info_dict': {
+            'id': 'ドキュメンタリー淫夢',
+            'title': 'ドキュメンタリー淫夢'
+        },
+        'playlist_mincount': 400,
+    }]
+
+    def _real_extract(self, url):
+        query = self._match_id(url)
+        return self.playlist_result(self._entries(url, query), query, query)
 
 
 class NiconicoLiveIE(NiconicoBaseIE):
