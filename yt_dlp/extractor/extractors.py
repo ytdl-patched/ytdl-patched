@@ -202,6 +202,7 @@ from .byutv import BYUtvIE
 from .c56 import C56IE
 from .cableav import CableAVIE
 from .callin import CallinIE
+from .caltrans import CaltransIE
 from .cam4 import CAM4IE
 from .camdemy import (
     CamdemyIE,
@@ -1172,6 +1173,7 @@ from .patreon import (
 )
 from .pbs import PBSIE
 from .pearvideo import PearVideoIE
+from .peekvids import PeekVidsIE, PlayVidsIE
 from .peertube import (
     PeerTubeIE,
     PeerTubePlaylistIE,
