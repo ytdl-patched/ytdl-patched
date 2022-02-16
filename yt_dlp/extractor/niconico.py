@@ -21,7 +21,6 @@ from ..neonippori import (
 from ..utils import (
     ExtractorError,
     clean_html,
-    dict_get,
     float_or_none,
     int_or_none,
     parse_duration,
@@ -310,7 +309,7 @@ class NiconicoIE(NiconicoBaseIE):
         elif dmc_protocol == 'hls':
             protocol = 'm3u8'
             parsed_token = self._parse_json(session_api_data['token'], video_id)
-            encryption = try_get(api_data, lambda x: x['media']['delivery']['encryption'], dict)
+            encryption = traverse_obj(api_data, ('media', 'delivery', 'encryption'))
             protocol_parameters = {
                 'hls_parameters': {
                     'segment_duration': segment_duration,
@@ -452,11 +451,11 @@ class NiconicoIE(NiconicoBaseIE):
         formats = []
 
         def get_video_info(items):
-            return dict_get(api_data['video'], items)
+            return traverse_obj(api_data, ('video', items))
 
         # --extractor-args niconico:segment_duration=TIME
         # TIME is in milliseconds. should not be changed unless you're an experienced NicoNico investigator
-        segment_duration = try_get(self._configuration_arg('segment_duration'), lambda x: int(x[0]), int) or 6000
+        segment_duration = try_get(self._configuration_arg('segment_duration'), lambda x: int(x[0])) or 6000
         quality_info = api_data['media']['delivery']['movie']
         session_api_data = quality_info['session']
         for (audio_quality, video_quality, protocol) in itertools.product(quality_info['audios'], quality_info['videos'], session_api_data['protocols']):
@@ -529,14 +528,14 @@ class NiconicoIE(NiconicoBaseIE):
 
         genre = traverse_obj(api_data, ('genre', 'label'), ('genre', 'key'))
 
-        tracking_id = try_get(api_data, lambda x: x['media']['delivery']['trackingId'], compat_str)
+        tracking_id = traverse_obj(api_data, ('media', 'delivery', 'trackingId'))
         if tracking_id:
             tracking_url = update_url_query('https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch', {'t': tracking_id})
             watch_request_response = self._download_json(
                 tracking_url, video_id,
                 note='Acquiring permission for downloading video', fatal=False,
                 headers=self._API_HEADERS)
-            if try_get(watch_request_response, lambda x: x['meta']['status'], int) != 200:
+            if traverse_obj(watch_request_response, ('meta', 'status')) != 200:
                 self.report_warning('Failed to acquire permission for playing video. Video download may fail.')
 
         subtitles = None
@@ -797,7 +796,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         user_info = self._search_regex(r'<div id="js-initial-userpage-data" .+? data-initial-data="(.+)?"', user_webpage, 'user info', default={})
         user_info = unescapeHTML(user_info)
         user_info = self._parse_json(user_info, list_id)
-        user_info = try_get(user_info, lambda x: x['userDetails']['userDetails']['user'], dict) or {}
+        user_info = traverse_obj(user_info, ('userDetails', 'userDetails', 'user')) or {}
 
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
