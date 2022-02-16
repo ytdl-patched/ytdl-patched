@@ -104,8 +104,8 @@
  - **bandaichannel**
  - **Bandcamp**
  - **Bandcamp:album**
+ - **Bandcamp:user**
  - **Bandcamp:weekly**
- - **BandcampMusic**
  - **bangumi.bilibili.com**: BiliBili番剧
  - **BannedVideo**
  - **bbc**: BBC
