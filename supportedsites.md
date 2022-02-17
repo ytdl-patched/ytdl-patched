@@ -249,6 +249,7 @@
  - **crunchyroll:playlist**
  - **crunchyroll:playlist:beta**
  - **CSpan**: C-SPAN
+ - **CSpanCongress**
  - **CtsNews**: 華視新聞
  - **CTV**
  - **CTVNews**
