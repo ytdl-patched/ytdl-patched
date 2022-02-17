@@ -1994,6 +1994,7 @@ from .weibo import (
 from .weiqitv import WeiqiTVIE
 from .willow import WillowIE
 from .wimtv import WimTVIE
+from .whatismyip import WhatIsMyIpIE
 from .whowatch import WhoWatchIE
 from .wistia import (
     WistiaIE,
