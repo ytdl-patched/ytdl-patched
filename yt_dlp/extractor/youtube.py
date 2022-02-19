@@ -225,28 +225,28 @@ INNERTUBE_CLIENTS = {
 
 
 def build_innertube_clients():
-    third_party = {
+    THIRD_PARTY = {
         'embedUrl': 'https://google.com',  # Can be any valid URL
     }
-    base_clients = ('android', 'web', 'ios', 'mweb')
-    priority = qualities(base_clients[::-1])
+    BASE_CLIENTS = ('android', 'web', 'ios', 'mweb')
+    priority = qualities(BASE_CLIENTS[::-1])
 
     for client, ytcfg in tuple(INNERTUBE_CLIENTS.items()):
         ytcfg.setdefault('INNERTUBE_API_KEY', 'AIzaSyDCU8hByM-4DrUqRUYnGn-3llEO78bcxq8')
         ytcfg.setdefault('INNERTUBE_HOST', 'www.youtube.com')
         ytcfg.setdefault('REQUIRE_JS_PLAYER', True)
         ytcfg['INNERTUBE_CONTEXT']['client'].setdefault('hl', 'en')
-        ytcfg['priority'] = 10 * priority(client.split('_', 1)[0])
 
-        if client in base_clients:
-            INNERTUBE_CLIENTS[f'{client}_agegate'] = agegate_ytcfg = copy.deepcopy(ytcfg)
+        base_client, *variant = client.split('_')
+        ytcfg['priority'] = 10 * priority(base_client)
+
+        if variant == ['embedded']:
+            ytcfg['INNERTUBE_CONTEXT']['thirdParty'] = THIRD_PARTY
+            INNERTUBE_CLIENTS[f'{base_client}_agegate'] = agegate_ytcfg = copy.deepcopy(ytcfg)
             agegate_ytcfg['INNERTUBE_CONTEXT']['client']['clientScreen'] = 'EMBED'
-            agegate_ytcfg['INNERTUBE_CONTEXT']['thirdParty'] = third_party
             agegate_ytcfg['priority'] -= 1
-        elif client.endswith('_embedded'):
-            ytcfg['INNERTUBE_CONTEXT']['thirdParty'] = third_party
             ytcfg['priority'] -= 2
-        else:
+        elif variant:
             ytcfg['priority'] -= 3
 
 
@@ -2985,6 +2985,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'small', 'medium', 'large', 'hd720', 'hd1080', 'hd1440', 'hd2160', 'hd2880', 'highres'
         ])
         streaming_formats = traverse_obj(streaming_data, (..., ('formats', 'adaptiveFormats'), ...), default=[])
+        approx_duration = max(traverse_obj(streaming_formats, (..., 'approxDurationMs'), expected_type=float_or_none) or [0]) or None
 
         for fmt in streaming_formats:
             if fmt.get('targetDurationSec') or fmt.get('drmFamilies'):
@@ -3071,12 +3072,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 itags[itag] = 'https'
                 stream_ids.append(stream_id)
 
-            tbr = float_or_none(
-                fmt.get('averageBitrate') or fmt.get('bitrate'), 1000)
+            tbr = float_or_none(fmt.get('averageBitrate') or fmt.get('bitrate'), 1000)
             language_preference = (
                 10 if audio_track.get('audioIsDefault') and 10
                 else -10 if 'descriptive' in (audio_track.get('displayName') or '').lower() and -10
                 else -1)
+            # Some formats may have much smaller duration than others (possibly damaged during encoding)
+            # Eg: 2-nOtRESiUc Ref: https://github.com/yt-dlp/yt-dlp/issues/2823
+            is_damaged = try_get(fmt, lambda x: float(x['approxDurationMs']) < approx_duration - 10000)
             dct = {
                 'asr': int_or_none(fmt.get('audioSampleRate')),
                 'filesize': int_or_none(fmt.get('contentLength')),
@@ -3085,7 +3088,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     '%s%s' % (audio_track.get('displayName') or '',
                               ' (default)' if language_preference > 0 else ''),
                     fmt.get('qualityLabel') or quality.replace('audio_quality_', ''),
-                    throttled and 'THROTTLED', client_name, delim=', '),
+                    throttled and 'THROTTLED', client_name, is_damaged and 'DAMAGED', delim=', '),
                 'source_preference': -10 if throttled else -1,
                 'fps': int_or_none(fmt.get('fps')) or None,
                 'height': height,
@@ -3096,6 +3099,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'language': join_nonempty(audio_track.get('id', '').split('.')[0],
                                           'desc' if language_preference < -1 else ''),
                 'language_preference': language_preference,
+                'preference': -10 if is_damaged else None,
             }
             mime_mobj = re.match(
                 r'((?:[^/]+)/(?:[^;]+))(?:;\s*codecs="([^"]+)")?', fmt.get('mimeType') or '')
