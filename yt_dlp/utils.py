@@ -3172,6 +3172,8 @@ def js_to_json(code, vars={}):
 
         return '"%s"' % v
 
+    code = re.sub(r'new Date\((".+")\)', r'\g<1>', code)
+
     return re.sub(r'''(?sx)
         "(?:[^"\\]*(?:\\\\|\\['"nurtbfx/\n]))*[^"\\]*"|
         '(?:[^'\\]*(?:\\\\|\\['"nurtbfx/\n]))*[^'\\]*'|
