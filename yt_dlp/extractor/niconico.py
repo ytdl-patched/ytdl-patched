@@ -1025,7 +1025,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
         if not ws_url:
             raise ExtractorError('the live hasn\'t started yet or already ended', expected=True)
         ws_url = update_url_query(ws_url, {
-            'frontend_id': '9',
+            'frontend_id': embedded_data['site']['frontendId'],
         })
 
         cookies = try_get(urlh.geturl(), self._get_cookie_header)
@@ -1087,6 +1087,13 @@ class NiconicoLiveIE(NiconicoBaseIE):
              lambda x: self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)),
             compat_str)
 
+        is_from_start = False
+        if self.get_param('live_from_start'):
+            if 'timeshift' in ws_url:
+                m3u8_url, is_from_start = update_url_query(m3u8_url, {'start', '0'}), True
+            else:
+                self.report_warning('--live-from-start only works for timeshifts')
+
         formats = self._extract_m3u8_formats(m3u8_url, video_id, ext='mp4', live=True)
         self._sort_formats(formats)
         for fmt, q in zip(formats, reversed(qualities[1:])):
@@ -1097,6 +1104,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
                 'video_id': video_id,
                 'cookies': cookies,
                 'live_latency': latency,
+                'is_from_start': is_from_start,
             })
 
         return {
