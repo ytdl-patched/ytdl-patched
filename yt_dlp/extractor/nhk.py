@@ -4,7 +4,13 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import clean_html, parse_duration, unescapeHTML, urljoin
+from ..utils import (
+    parse_duration,
+    traverse_obj,
+    unescapeHTML,
+    unified_timestamp,
+    urljoin
+)
 
 
 class NhkBaseIE(InfoExtractor):
@@ -185,7 +191,69 @@ class NhkForSchoolBangumiIE(InfoExtractor):
     _VALID_URL = r'https?://www2\.nhk\.or\.jp/school/movie/(?P<type>bangumi|clip)\.cgi\?das_id=(?P<id>[a-zA-Z0-9_-]+)'
     _TESTS = [{
         'url': 'https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id=D0005150191_00000',
-        'only_matching': True,
+        'info_dict': {
+            'id': 'D0005150191_00003',
+            'title': 'にている かな',
+            'duration': 599.999,
+            'timestamp': 1396414800,
+
+            'upload_date': '20140402',
+            'ext': 'mp4',
+
+            'chapters': [{
+                'start_time': 0,
+                'end_time': 21.521,
+                'title': 'オープニング'
+            }, {
+                'start_time': 21.521,
+                'end_time': 77.11,
+                'title': 'scene 01 『きのこ たべろな』'
+            }, {
+                'start_time': 77.11,
+                'end_time': 133.433,
+                'title': 'scene 02 『このはな さけん』'
+            }, {
+                'start_time': 133.433,
+                'end_time': 170.703,
+                'title': 'scene 03 『さ』ではなく『き』だった'
+            }, {
+                'start_time': 170.703,
+                'end_time': 225.592,
+                'title': 'scene 04 『くよが いる』とは…'
+            }, {
+                'start_time': 225.592,
+                'end_time': 256.055,
+                'title': 'scene 05 “ことばドリル”にちょうせん！'
+            }, {
+                'start_time': 256.055,
+                'end_time': 345.011,
+                'title': 'scene 06 ことばアンケート'
+            }, {
+                'start_time': 345.011,
+                'end_time': 408.474,
+                'title': 'scene 07 ハソバーグ？'
+            }, {
+                'start_time': 408.474,
+                'end_time': 464.263,
+                'title': 'scene 08 『ン』と『ソ』のかきかた'
+            }, {
+                'start_time': 464.263,
+                'end_time': 524.09,
+                'title': 'scene 09 『シ』と『ツ』がちがうと…'
+            }, {
+                'start_time': 524.09,
+                'end_time': 555.054,
+                'title': 'scene 10 “ことばドリル”にちょうせん！(2)'
+            }, {
+                'start_time': 555.054,
+                'end_time': 599.999,
+                'title': 'scene 11 うたっておぼえる漢字ドリル'
+            }]
+        },
+        'params': {
+            # m3u8 download
+            'skip_download': True,
+        },
     }]
 
     def _real_extract(self, url):
@@ -199,40 +267,36 @@ class NhkForSchoolBangumiIE(InfoExtractor):
         # and programObj values too
         program_values = {g.group(1): g.group(3) for g in re.finditer(r'(?:program|clip)Obj\.([a-zA-Z_]+)\s*=\s*(["\'])([^"]+?)\2;', webpage)}
         # extract all chapters
-        chapter_durations = [parse_duration(g.group(1)) for g in re.finditer(r'chapterTime\.push\(\'([0-9:]+)\'\);', webpage)]
-        chapter_titles = [('%s %s' % (g.group(1) or '', unescapeHTML(g.group(2)))).strip() for g in re.finditer(r'<div class="cpTitle"><span>(scene\s*\d+)?</span>([^<]+?)</div>', webpage)]
+        chapter_durations = [parse_duration(g.group(1)) for g in re.finditer(r'chapterTime\.push\(\'([0-9:]+?)\'\);', webpage)]
+        chapter_titles = [' '.join([g.group(1) or '', unescapeHTML(g.group(2))]).strip() for g in re.finditer(r'<div class="cpTitle"><span>(scene\s*\d+)?</span>([^<]+?)</div>', webpage)]
 
         # this is how player_core.js is actually doing (!)
         version = base_values.get('r_version') or program_values.get('version')
         if version:
             video_id = '%s_%s' % (video_id.split('_')[0], version)
 
-        m3u8_url = 'https://nhks-vh.akamaihd.net/i/das/%s/%s_V_000.f4v/master.m3u8' % (video_id[0:8], video_id)
         formats = self._extract_m3u8_formats(
-            m3u8_url, video_id, ext='mp4', m3u8_id='hls')
+            f'https://nhks-vh.akamaihd.net/i/das/{video_id[0:8]}/{video_id}_V_000.f4v/master.m3u8',
+            video_id, ext='mp4', m3u8_id='hls')
         self._sort_formats(formats)
 
-        title = program_values['name']
-        duration = parse_duration(base_values['r_duration'])
-        upload_date = base_values['r_upload'].split('T')[0].replace('-', '')
+        duration = parse_duration(base_values.get('r_duration'))
 
         chapters = None
         if chapter_durations and chapter_titles and len(chapter_durations) == len(chapter_titles):
             start_time = chapter_durations
             end_time = chapter_durations[1:] + [duration]
-            chapters = []
-            for (s, e, t) in zip(start_time, end_time, chapter_titles):
-                chapters.append({
-                    'start_time': s,
-                    'end_time': e,
-                    'title': t,
-                })
+            chapters = [{
+                'start_time': s,
+                'end_time': e,
+                'title': t,
+            } for s, e, t in zip(start_time, end_time, chapter_titles)]
 
         return {
             'id': video_id,
-            'title': title,
-            'duration': duration,
-            'upload_date': upload_date,
+            'title': program_values.get('name'),
+            'duration': parse_duration(base_values.get('r_duration')),
+            'timestamp': unified_timestamp(base_values['r_upload']),
             'formats': formats,
             'chapters': chapters,
         }
@@ -295,12 +359,13 @@ class NhkForSchoolSubjectIE(InfoExtractor):
         url = 'https://www.nhk.or.jp/school/%s/' % subject_id
 
         webpage = self._download_webpage(url, subject_id)
-        programs = [g.group(1) for g in re.finditer(r'href="((?:https?://www\.nhk\.or\.jp)?/school/%s/[^/]+/")' % re.escape(subject_id), webpage)]
-        title = self._search_regex(r'(?s)<span\s+class="subjectName">(.+?)</span>', webpage, 'title')
-        title = clean_html(title)
 
-        playlist = [self.url_result(urljoin(url, x)) for x in programs]
-        return self.playlist_result(playlist, subject_id, title)
+        return self.playlist_result(
+            [self.url_result(urljoin(url, g.group(1)))
+             for g in re.finditer(
+                r'href="((?:https?://www\.nhk\.or\.jp)?/school/%s/[^/]+/")' % re.escape(subject_id), webpage)],
+            subject_id,
+            self._html_search_regex(r'(?s)<span\s+class="subjectName">\s*<img\s*[^<]+>\s*([^<]+?)</span>', webpage, 'title', fatal=False))
 
 
 class NhkForSchoolProgramListIE(InfoExtractor):
@@ -321,11 +386,11 @@ class NhkForSchoolProgramListIE(InfoExtractor):
 
         webpage = self._download_webpage('https://www.nhk.or.jp/school/%s/' % program_id, program_id)
 
-        title = self._html_search_regex(r'<h3>([^<]+?)</h3>', webpage, 'title', fatal=False)
+        # both have format like "番組名 | NHK for School", so we have to strip last part
+        _title = self._og_search_title(webpage, fatal=False) or self._html_extract_title(webpage, fatal=False)
+        title = re.sub(r'\s*\|\s*NHK\s+for\s+School\s*$', '', _title)
         if not title:
-            # both have format like "番組名 | NHK for School", so we have to strip last part
-            _title = self._og_search_title(webpage) or self._html_extract_title(webpage)
-            title = re.sub(r'\s*\|\s*NHK\s+for\s+School\s*$', '', _title)
+            title = self._html_search_regex(r'<h3>([^<]+?)とは？\s*</h3>', webpage, 'title', fatal=False)
         description = self._html_search_regex(
             r'(?s)<div\s+class="programDetail\s*">\s*<p>[^<]+</p>',
             webpage, 'description', fatal=False, group=0)
@@ -333,6 +398,8 @@ class NhkForSchoolProgramListIE(InfoExtractor):
         bangumi_list = self._download_json(
             'https://www.nhk.or.jp/school/%s/meta/program.json' % program_id, program_id)
         # they're always bangumi
-        bangumis = [self.url_result('https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id=' + x['part-video-dasid']) for x in bangumi_list['part']]
+        bangumis = [
+            self.url_result(f'https://www2.nhk.or.jp/school/movie/bangumi.cgi?das_id={x}')
+            for x in traverse_obj(bangumi_list, ('part', ..., 'part-video-dasid')) or []]
 
         return self.playlist_result(bangumis, program_id, title, description)
