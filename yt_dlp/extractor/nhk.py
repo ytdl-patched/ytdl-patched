@@ -262,7 +262,7 @@ class NhkForSchoolBangumiIE(InfoExtractor):
         webpage = self._download_webpage(
             'https://www2.nhk.or.jp/school/movie/%s.cgi?das_id=%s' % (program_type, video_id), video_id)
 
-        # searches all assignments
+        # searches all variables
         base_values = {g.group(1): g.group(2) for g in re.finditer(r'var\s+([a-zA-Z_]+)\s*=\s*"([^"]+?)";', webpage)}
         # and programObj values too
         program_values = {g.group(1): g.group(3) for g in re.finditer(r'(?:program|clip)Obj\.([a-zA-Z_]+)\s*=\s*(["\'])([^"]+?)\2;', webpage)}
