@@ -376,7 +376,7 @@ class NhkForSchoolProgramListIE(InfoExtractor):
         'url': 'https://www.nhk.or.jp/school/sougou/q/',
         'info_dict': {
             'id': 'sougou/q',
-            'title': 'Ｑ～こどものための哲学とは？',
+            'title': 'Ｑ～こどものための哲学',
         },
         'playlist_mincount': 20,  # as of 2021/06/20
     }]
