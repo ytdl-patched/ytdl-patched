@@ -853,7 +853,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             'uploader': uploader,
             'channel_id': channel_id,
             'thumbnails': thumbnails,
-            #  'upload_date': strftime_or_none(timestamp, '%Y%m%d'),
+            'upload_date': strftime_or_none(timestamp, '%Y%m%d') if self._configuration_arg('approximate_date', ie_key='youtubetab') else None,
             'live_status': ('is_upcoming' if scheduled_timestamp is not None
                             else 'was_live' if 'streamed' in time_text.lower()
                             else 'is_live' if overlay_style is not None and overlay_style == 'LIVE' or 'live now' in badges
@@ -4336,6 +4336,16 @@ class YoutubeTabBaseInfoExtractor(YoutubeBaseInfoExtractor):
         if 'webpage' not in self._configuration_arg('skip'):
             webpage, data = self._extract_webpage(url, item_id, fatal=webpage_fatal)
             ytcfg = ytcfg or self.extract_ytcfg(item_id, webpage)
+            # Reject webpage data if redirected to home page without explicitly requesting
+            selected_tab = self._extract_selected_tab(traverse_obj(
+                data, ('contents', 'twoColumnBrowseResultsRenderer', 'tabs'), expected_type=list, default=[])) or {}
+            if (url != 'https://www.youtube.com/feed/recommended'
+                    and selected_tab.get('tabIdentifier') == 'FEwhat_to_watch'  # Home page
+                    and 'no-youtube-channel-redirect' not in self.get_param('compat_opts', [])):
+                msg = 'The channel/playlist does not exist and the URL redirected to youtube.com home page'
+                if fatal:
+                    raise ExtractorError(msg, expected=True)
+                self.report_warning(msg, only_once=True)
         if not data:
             if not ytcfg and self.is_authenticated:
                 msg = 'Playlists that require authentication may not extract correctly without a successful webpage download.'
