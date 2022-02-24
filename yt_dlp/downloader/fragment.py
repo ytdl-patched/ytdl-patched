@@ -435,9 +435,6 @@ class FragmentFD(FileDownloader):
                 tpe.shutdown(wait=True)
         # we expect the user wants to stop and DO WANT the preceding postprocessors to run;
         # so returning a intermediate result here instead of KeyboardInterrupt
-
-        # if not interrupt_trigger[0]:
-        #     raise KeyboardInterrupt()
         return result
 
     def download_and_append_fragments(
