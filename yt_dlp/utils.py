@@ -1413,11 +1413,13 @@ class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
             resp = compat_urllib_request.addinfourl(uncompressed, old_resp.headers, old_resp.url, old_resp.code)
             resp.msg = old_resp.msg
             del resp.headers['Content-encoding']
+            old_resp.close()
         # deflate
         if resp.headers.get('Content-encoding', '') == 'deflate':
-            gz = io.BytesIO(self.deflate(resp.read()))
-            resp = compat_urllib_request.addinfourl(gz, old_resp.headers, old_resp.url, old_resp.code)
-            resp.msg = old_resp.msg
+            with old_resp:
+                gz = io.BytesIO(self.deflate(resp.read()))
+                resp = compat_urllib_request.addinfourl(gz, old_resp.headers, old_resp.url, old_resp.code)
+                resp.msg = old_resp.msg
             del resp.headers['Content-encoding']
         # Percent-encode redirect URL of Location HTTP header to satisfy RFC 3986 (see
         # https://github.com/ytdl-org/youtube-dl/issues/6457).

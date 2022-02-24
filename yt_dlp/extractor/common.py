@@ -868,18 +868,20 @@ class InfoExtractor(object):
                 expected=True)
 
     def _webpage_read_content(self, urlh, url_or_request, video_id, note=None, errnote=None, fatal=True, prefix=None, encoding=None):
-        content_type = urlh.headers.get('Content-Type', '')
-        webpage_bytes = urlh.read()
+        with urlh:
+            content_type = urlh.headers.get('Content-Type', '')
+            webpage_bytes = urlh.read()
+            final_url = urlh.geturl()
         if prefix is not None:
             webpage_bytes = prefix + webpage_bytes
         if not encoding:
             encoding = self._guess_encoding_from_content(content_type, webpage_bytes)
         if self.get_param('dump_intermediate_pages', False):
-            self.to_screen('Dumping request to ' + urlh.geturl())
+            self.to_screen('Dumping request to ' + final_url)
             dump = base64.b64encode(webpage_bytes).decode('ascii')
             self._downloader.to_screen(dump)
         if self.get_param('write_pages', False):
-            basen = '%s_%s' % (video_id, urlh.geturl())
+            basen = '%s_%s' % (video_id, final_url)
             trim_length = self.get_param('trim_file_name') or 240
             if len(basen) > trim_length:
                 h = '___' + hashlib.md5(basen.encode('utf-8')).hexdigest()
