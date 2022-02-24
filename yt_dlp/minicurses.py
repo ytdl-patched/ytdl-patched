@@ -135,6 +135,9 @@ class MultilinePrinter(MultilinePrinterBase):
         return wrapper
 
     def _move_cursor(self, dest):
+        assert dest <= self.maximum
+        assert dest >= 0
+
         current = min(self._lastline, self.maximum)
         yield '\r'
         distance = dest - current

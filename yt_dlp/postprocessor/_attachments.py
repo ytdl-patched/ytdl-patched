@@ -269,9 +269,8 @@ class ShowsProgress(object):
         self._ydl.to_console_title(message)
 
     def _prepare_multiline_status(self, lines=1):
-        if self._multiline:
-            return
-        elif self._params.get('noprogress'):
+        self._finish_multiline_status()
+        if self._params.get('noprogress'):
             self._multiline = QuietMultilinePrinter()
         elif self._ydl.params.get('logger'):
             self._multiline = MultilineLogger(self._ydl.params['logger'], lines)
