@@ -8,9 +8,17 @@ import struct
 from base64 import urlsafe_b64encode
 from binascii import unhexlify
 
+import typing
+if typing.TYPE_CHECKING:
+    from ..YoutubeDL import YoutubeDL
+
 from .common import InfoExtractor
 from ..aes import aes_ecb_decrypt
-from ..compat import compat_urllib_response, compat_urllib_parse_urlparse
+from ..compat import (
+    compat_urllib_response,
+    compat_urllib_parse_urlparse,
+    compat_urllib_request,
+)
 from ..utils import (
     ExtractorError,
     decode_base,
@@ -20,14 +28,83 @@ from ..utils import (
     time_seconds,
     update_url_query,
     traverse_obj,
-    YoutubeDLExtractorHandler,
     intlist_to_bytes,
     bytes_to_intlist,
     urljoin,
 )
 
 
-class AbemaLicenseHandler(YoutubeDLExtractorHandler):
+# NOTE: network handler related code is temporary thing until network stack overhaul PRs are merged (#2861/#2862)
+
+def add_opener(self: 'YoutubeDL', handler):
+    ''' Add a handler for opening URLs, like _download_webpage '''
+    # https://github.com/python/cpython/blob/main/Lib/urllib/request.py#L426
+    # https://github.com/python/cpython/blob/main/Lib/urllib/request.py#L605
+    assert isinstance(self._opener, compat_urllib_request.OpenerDirector)
+    self._opener.add_handler(handler)
+
+
+def remove_opener(self: 'YoutubeDL', handler):
+    '''
+    Remove handler(s) for opening URLs
+    @param handler Either handler object itself or handler type.
+    Specifying handler type will remove all handler which isinstance returns True.
+    '''
+    # https://github.com/python/cpython/blob/main/Lib/urllib/request.py#L426
+    # https://github.com/python/cpython/blob/main/Lib/urllib/request.py#L605
+    opener = self._opener
+    assert isinstance(self._opener, compat_urllib_request.OpenerDirector)
+    if isinstance(handler, (type, tuple)):
+        find_cp = lambda x: isinstance(x, handler)
+    else:
+        find_cp = lambda x: x is handler
+
+    removed = []
+    for meth in dir(handler):
+        if meth in ["redirect_request", "do_open", "proxy_open"]:
+            # oops, coincidental match
+            continue
+
+        i = meth.find("_")
+        protocol = meth[:i]
+        condition = meth[i + 1:]
+
+        if condition.startswith("error"):
+            j = condition.find("_") + i + 1
+            kind = meth[j + 1:]
+            try:
+                kind = int(kind)
+            except ValueError:
+                pass
+            lookup = opener.handle_error.get(protocol, {})
+            opener.handle_error[protocol] = lookup
+        elif condition == "open":
+            kind = protocol
+            lookup = opener.handle_open
+        elif condition == "response":
+            kind = protocol
+            lookup = opener.process_response
+        elif condition == "request":
+            kind = protocol
+            lookup = opener.process_request
+        else:
+            continue
+
+        handlers = lookup.setdefault(kind, [])
+        if handlers:
+            handlers[:] = [x for x in handlers if not find_cp(x)]
+
+        removed.append(x for x in handlers if find_cp(x))
+
+    if removed:
+        for x in opener.handlers:
+            if find_cp(x):
+                x.add_parent(None)
+        opener.handlers[:] = [x for x in opener.handlers if not find_cp(x)]
+
+
+class AbemaLicenseHandler(compat_urllib_request.BaseHandler):
+    handler_order = 499
     STRTABLE = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
     HKEY = b'3AF0298C219469522A313570E8583005A642E73EDD58E3EA2FB7339D3DF1597E'
 
@@ -100,7 +177,8 @@ class AbemaTVIE(AbemaTVBaseIE):
             'series_number': 2,
             'episode': '第1話 「チーズケーキ」　「モーニング再び」',
             'episode_number': 1,
-        }
+        },
+        'skip': 'expired',
     }, {
         'url': 'https://abema.tv/channels/anime-live2/slots/E8tvAnMJ7a9a5d',
         'info_dict': {
@@ -111,7 +189,8 @@ class AbemaTVIE(AbemaTVBaseIE):
             'series_number': 2,
             'episode_number': 1,
             'description': 'md5:9c5a3172ae763278f9303922f0ea5b17',
-        }
+        },
+        'skip': 'expired',
     }, {
         'url': 'https://abema.tv/video/episode/87-877_s1282_p31047',
         'info_dict': {
@@ -121,16 +200,18 @@ class AbemaTVIE(AbemaTVBaseIE):
             'thumbnail': r're:https://hayabusa\.io/.+',
             'series': '相棒',
             'episode': '第5話『光射す』',
-        }
+        },
+        'skip': 'expired',
     }, {
         'url': 'https://abema.tv/now-on-air/abema-anime',
         'info_dict': {
             'id': 'abema-anime',
             # this varies
             # 'title': '女子高生の無駄づかい 全話一挙【無料ビデオ72時間】',
-            'description': '24時間アニメを放送中！ABEMA アニメチャンネルでは、今期のアニメ最新作から懐かしの名作、ABEMAオリジナルの声優番組まで充実なラインナップを無料で視聴できます。その他にもABEMAでは、ニュースやオリジナルドラマ、恋愛番組、アニメ、スポーツなど、多彩な番組をいつでもお楽しみいただけます。',
+            'description': 'md5:55f2e61f46a17e9230802d7bcc913d5f',
             'is_live': True,
-        }
+        },
+        'skip': 'Not supported until yt-dlp implements native live downloader OR AbemaTV can start a local HTTP server',
     }]
     _USERTOKEN = None
     _DEVICE_ID = None
@@ -188,11 +269,10 @@ class AbemaTVIE(AbemaTVBaseIE):
                 'Content-Type': 'application/json',
             })
         self._USERTOKEN = user_data['token']
-        self._get_media_token(True)
 
         # don't allow adding it 2 times or more, though it's guarded
-        self._downloader.remove_opener(AbemaLicenseHandler)
-        self._downloader.add_opener(AbemaLicenseHandler(self))
+        remove_opener(self._downloader, AbemaLicenseHandler)
+        add_opener(self._downloader, AbemaLicenseHandler(self))
 
         return self._USERTOKEN
 
@@ -233,7 +313,7 @@ class AbemaTVIE(AbemaTVBaseIE):
             f'https://api.abema.io/v1/auth/{ep}', None, note='Logging in',
             data=json.dumps({
                 method: username,
-                "password": password
+                'password': password
             }).encode('utf-8'), headers={
                 'Authorization': 'bearer ' + self._get_device_token(),
                 'Origin': 'https://abema.tv',
@@ -250,7 +330,7 @@ class AbemaTVIE(AbemaTVBaseIE):
         # (unless there's a way to hook before downloading by extractor)
         video_id, video_type = self._match_valid_url(url).group('id', 'type')
         headers = {
-            'Authorization': 'bearer ' + self._get_device_token(),
+            'Authorization': 'Bearer ' + self._get_device_token(),
         }
         video_type = video_type.split('/')[-1]
 
@@ -308,11 +388,8 @@ class AbemaTVIE(AbemaTVBaseIE):
                 description = re.sub(r'''(?sx)
                     ^(.+?)(?:
                         アニメの動画を無料で見るならABEMA！| # anime
-                        等、ABEMAでは韓流・華流番組| # korean drama
-                        等、女子高生の3人に1人が|  # romance
-                        等、今期の最新ドラマ # drama
-                        # TODO: add more
-                    )
+                        等、.+ # applies for most of categories
+                    )?
                 ''', r'\1', og_desc)
 
         # canonical URL may contain series and episode number
@@ -362,11 +439,10 @@ class AbemaTVIE(AbemaTVBaseIE):
             raise ExtractorError('Unreachable')
 
         if is_live:
-            self.report_warning('This is a livestream; yt-dlp doesn\'t support downloading natively, but FFmpeg cannot handle m3u8 manifests from AbemaTV')
+            self.report_warning("This is a livestream; yt-dlp doesn't support downloading natively, but FFmpeg cannot handle m3u8 manifests from AbemaTV")
             self.report_warning('Please consider using Streamlink to download these streams (https://github.com/streamlink/streamlink)')
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id, ext='mp4', live=is_live)
-        self._sort_formats(formats)
 
         info.update({
             'id': video_id,
@@ -405,8 +481,8 @@ class AbemaTVTitleIE(AbemaTVBaseIE):
         if breadcrumb:
             playlist_title = breadcrumb[-1]
 
-        playlist = []
-        for mobj in re.finditer(r'<li\s*class=".+?EpisodeList.+?"><a\s*href="(/[^"]+?)"', webpage):
-            playlist.append(self.url_result(urljoin('https://abema.tv/', mobj.group(1))))
+        playlist = [
+            self.url_result(urljoin('https://abema.tv/', mobj.group(1)))
+            for mobj in re.finditer(r'<li\s*class=".+?EpisodeList.+?"><a\s*href="(/[^"]+?)"', webpage)]
 
         return self.playlist_result(playlist, playlist_title=playlist_title, playlist_id=video_id)

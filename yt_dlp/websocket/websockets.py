@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import asyncio
+import atexit
 import websockets
 
 
@@ -47,12 +48,15 @@ def _cancel_all_tasks(loop):
 class WebSocketsWrapper():
     "Wraps websockets module to use in non-async scopes"
 
-    def __init__(self, url, headers=None):
+    def __init__(self, url, headers=None, connect=True):
         # self.loop = asyncio.events.get_event_loop() or asyncio.events.new_event_loop()
         self.loop = asyncio.events.new_event_loop()
         self.conn = websockets.connect(
             url, extra_headers=headers, ping_interval=None,
             close_timeout=float('inf'), loop=self.loop, ping_timeout=float('inf'))
+        if connect:
+            self.__enter__()
+        atexit.register(self.__exit__, None, None, None)
 
     def __enter__(self):
         self.pool = run_with_loop(self.conn.__aenter__(), self.loop)

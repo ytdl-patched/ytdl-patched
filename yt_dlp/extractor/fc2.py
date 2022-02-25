@@ -13,6 +13,7 @@ from ..utils import (
     sanitized_Request,
     std_headers,
     traverse_obj,
+    update_url_query,
     urlencode_postdata,
     urljoin,
 )
@@ -155,7 +156,7 @@ class FC2EmbedIE(InfoExtractor):
 
 
 class FC2LiveIE(InfoExtractor):
-    _VALID_URL = r'^https?://live\.fc2\.com/(?P<id>\d+)'
+    _VALID_URL = r'https?://live\.fc2\.com/(?P<id>\d+)'
     IE_NAME = 'fc2:live'
     _FEATURE_DEPENDENCY = ('websocket', )
 
@@ -163,7 +164,7 @@ class FC2LiveIE(InfoExtractor):
         'url': 'https://live.fc2.com/57892267/',
         'info_dict': {
             'id': '57892267',
-            'title': 'どこまで・・・ 2022-01-21 16:48',
+            'title': 'どこまで・・・',
             'uploader': 'あつあげ',
             'uploader_id': '57892267',
             'thumbnail': r're:https?://.+fc2.+',
@@ -200,7 +201,7 @@ class FC2LiveIE(InfoExtractor):
             }, headers={'X-Requested-With': 'XMLHttpRequest'})
         self._set_cookie('live.fc2.com', 'l_ortkn', control_server['orz_raw'])
 
-        ws_url = control_server['url'] + '?control_token=' + control_server['control_token']
+        ws_url = update_url_query(control_server['url'], {'control_token': control_server['control_token']})
         playlist_data = None
 
         self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
@@ -220,7 +221,6 @@ class FC2LiveIE(InfoExtractor):
             data = self._parse_json(recv, video_id, fatal=False)
             if not data or not isinstance(data, dict):
                 continue
-            # print(data)
 
             if data.get('name') == 'connect_complete':
                 break
@@ -233,11 +233,9 @@ class FC2LiveIE(InfoExtractor):
             data = self._parse_json(recv, video_id, fatal=False)
             if not data or not isinstance(data, dict):
                 continue
-            # print(data)
             if data.get('name') == '_response_' and data.get('id') == 1:
                 self.write_debug('[debug] Goodbye.')
                 playlist_data = data
-                # print(data)
                 break
             elif self._downloader.params.get('verbose', False):
                 if len(recv) > 100:
