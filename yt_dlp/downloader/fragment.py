@@ -4,7 +4,6 @@ import http.client
 import json
 import math
 import time
-import threading
 
 try:
     import concurrent.futures
@@ -139,7 +138,10 @@ class FragmentFD(FileDownloader):
         if fragment_info_dict.get('filetime'):
             ctx['fragment_filetime'] = fragment_info_dict.get('filetime')
         ctx['fragment_filename_sanitized'] = fragment_filename
-        return True, self._read_fragment(ctx)
+        try:
+            return True, self._read_fragment(ctx)
+        except OSError:
+            return False, None
 
     def _read_fragment(self, ctx):
         down, frag_sanitized = self.sanitize_open(ctx['fragment_filename_sanitized'], 'rb')
