@@ -419,20 +419,13 @@ class FragmentFD(FileDownloader):
         for idx, (ctx, fragments, info_dict) in enumerate(args):
             tpe = FTPE(math.ceil(max_workers / max_progress))
 
-            class InterruptTriggerIter():
-                def __init__(self) -> None:
-                    self.lock = threading.Lock()
+            def interrupt_trigger_iter(fg):
+                for f in fg:
+                    if not interrupt_trigger[0]:
+                        break
+                    yield f
 
-                def __iter__(self):
-                    return self
-
-                def __next__(self):
-                    with self.lock:
-                        if not interrupt_trigger[0]:
-                            raise StopIteration()
-                        return next(fragments)
-
-            job = tpe.submit(thread_func, idx, ctx, InterruptTriggerIter(), info_dict, tpe)
+            job = tpe.submit(thread_func, idx, ctx, interrupt_trigger_iter(fragments), info_dict, tpe)
             spins.append((tpe, job))
 
         result = True
