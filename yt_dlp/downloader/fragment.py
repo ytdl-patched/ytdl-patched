@@ -4,6 +4,7 @@ import http.client
 import json
 import math
 import time
+import threading
 
 try:
     import concurrent.futures
@@ -418,13 +419,20 @@ class FragmentFD(FileDownloader):
         for idx, (ctx, fragments, info_dict) in enumerate(args):
             tpe = FTPE(math.ceil(max_workers / max_progress))
 
-            def interrupt_trigger_iter():
-                for f in fragments:
-                    if not interrupt_trigger[0]:
-                        break
-                    yield f
+            class InterruptTriggerIter():
+                def __init__(self) -> None:
+                    self.lock = threading.Lock()
 
-            job = tpe.submit(thread_func, idx, ctx, interrupt_trigger_iter(), info_dict, tpe)
+                def __iter__(self):
+                    return self
+
+                def __next__(self):
+                    with self.lock:
+                        if not interrupt_trigger[0]:
+                            raise StopIteration()
+                        return next(fragments)
+
+            job = tpe.submit(thread_func, idx, ctx, InterruptTriggerIter(), info_dict, tpe)
             spins.append((tpe, job))
 
         result = True
