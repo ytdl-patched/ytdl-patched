@@ -145,12 +145,9 @@ class FragmentFD(FileDownloader):
 
     def _read_fragment(self, ctx):
         down, frag_sanitized = self.sanitize_open(ctx['fragment_filename_sanitized'], 'rb')
-        try:
+        with down:
             ctx['fragment_filename_sanitized'] = frag_sanitized
-            frag_content = down.read()
-        finally:
-            down.close()
-        return frag_content
+            return down.read()
 
     def _append_fragment(self, ctx, frag_content):
         try:
