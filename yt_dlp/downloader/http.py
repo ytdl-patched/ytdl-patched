@@ -70,6 +70,7 @@ class HttpFD(FileDownloader):
 
         count = 0
         retries = self.params.get('retries', 0)
+        show_dest = True
 
         class SucceedDownload(Exception):
             pass
@@ -208,7 +209,7 @@ class HttpFD(FileDownloader):
                 raise
 
         def download():
-            nonlocal throttle_start
+            nonlocal throttle_start, show_dest
             data_len = ctx.data.info().get('Content-length', None)
 
             # Range HTTP header may be ignored/unsupported by a webserver
@@ -281,7 +282,9 @@ class HttpFD(FileDownloader):
                             ctx.tmpfilename, ctx.open_mode)
                         assert ctx.stream is not None
                         ctx.filename = self.undo_temp_name(ctx.tmpfilename)
-                        self.report_destination(ctx.filename)
+                        if show_dest:
+                            self.report_destination(ctx.filename)
+                        show_dest = False
                     except (OSError, IOError) as err:
                         self.report_error('unable to open for writing: %s' % str(err))
                         return False
