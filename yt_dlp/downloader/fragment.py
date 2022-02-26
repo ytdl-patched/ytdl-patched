@@ -140,7 +140,9 @@ class FragmentFD(FileDownloader):
         ctx['fragment_filename_sanitized'] = fragment_filename
         try:
             return True, self._read_fragment(ctx)
-        except OSError:
+        except FileNotFoundError:
+            if not info_dict.get('is_live'):
+                raise
             return False, None
 
     def _read_fragment(self, ctx):
