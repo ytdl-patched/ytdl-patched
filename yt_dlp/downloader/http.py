@@ -385,6 +385,7 @@ class HttpFD(FileDownloader):
             return True
 
         while count <= retries:
+            no_close = False
             try:
                 establish_connection()
                 return download()
@@ -396,14 +397,15 @@ class HttpFD(FileDownloader):
                     self.to_screen(f'[download] Got server HTTP error: {e.source_error}')
                 continue
             except NextFragment:
+                no_close = False
                 continue
             except SucceedDownload:
                 return True
             finally:
-                if ctx.stream:
+                if ctx.stream and not no_close:
                     ctx.stream.close()
                     ctx.stream = None
-                if ctx.data:
+                if ctx.data and not no_close:
                     ctx.data.close()
                     ctx.data = None
 
