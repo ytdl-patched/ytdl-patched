@@ -2204,6 +2204,9 @@ class locked_file(object):
     def __iter__(self):
         return iter(self.f)
 
+    def fileno(self):
+        return self.f.fileno()
+
     def write(self, *args):
         return self.f.write(*args)
 
