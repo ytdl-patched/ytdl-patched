@@ -3920,7 +3920,7 @@ class YoutubeDL(object):
         ) or 'none'
         write_debug('exe versions: %s' % exe_str)
 
-        from .downloader.websocket import has_websockets
+        from .websocket import HAVE_WEBSOCKET
         from .postprocessor.embedthumbnail import has_mutagen
         from .cookies import SQLITE_AVAILABLE, SECRETSTORAGE_AVAILABLE
 
@@ -3929,7 +3929,7 @@ class YoutubeDL(object):
             SECRETSTORAGE_AVAILABLE and 'secretstorage',
             has_mutagen and 'mutagen',
             SQLITE_AVAILABLE and 'sqlite',
-            has_websockets and 'websockets',
+            HAVE_WEBSOCKET and 'websockets',
             delim=', ') or 'none'
         write_debug('Optional libraries: %s' % lib_str)
 
