@@ -62,6 +62,7 @@ class UnvariantedMotionIE(TokyoMotionBaseIE):
             raise ExtractorError('This is a private video.', expected=True)
 
         for fmt in entry['formats']:
+            # TODO: maybe Range can be used again
             fmt['external_downloader'] = 'ffmpeg'
             fmt['quality'] = 1 if fmt['format_id'] == 'HD' else -1
 
