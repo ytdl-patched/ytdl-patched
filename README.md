@@ -112,7 +112,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
     * `disneychris`
     * `dnatube`
-    * `fc2:live`
     * `fc2:user` (FC2 user-uploaded videos)
     * `iwara:user` (Iwara user-uploaded videos)
     * `javhub`
@@ -123,17 +122,18 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `niconico:playlist`, `niconico:series`, `niconico:user`
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
-    * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School)
-    * `mixch`, `mixch:archive` (merged in yt-dlp)
-    * `skeb` (merged in yt-dlp)
-    * `mirrativ`, `mirrativ:user` (merged in yt-dlp)
-    * `openrec`, `openrec:capture` (merged in yt-dlp)
+    * `17live`, `17live:clip` (merged in yt-dlp)
+    * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School) (merged in yt-dlp)
     * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!) (merged in yt-dlp)
+    * `damtomo:video`, `damtomo:record` (merged in yt-dlp)
+    * `fc2:live` (merged in yt-dlp)
+    * `mirrativ`, `mirrativ:user` (merged in yt-dlp)
+    * `mixch`, `mixch:archive` (merged in yt-dlp)
+    * `openrec`, `openrec:capture` (merged in yt-dlp)
+    * `pixiv:sketch`, `pixiv:sketch:user` (merged in yt-dlp)
+    * `skeb` (merged in yt-dlp)
     * `voicy`, `voicy:channel` (merged in yt-dlp)
     * `whowatch` (merged in yt-dlp)
-    * `damtomo:video`, `damtomo:record` (merged in yt-dlp)
-    * `17live`, `17live:clip` (merged in yt-dlp)
-    * `pixiv:sketch`, `pixiv:sketch:user` (merged in yt-dlp)
 
 * **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
     * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`.
