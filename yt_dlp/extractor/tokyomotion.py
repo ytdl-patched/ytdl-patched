@@ -2,55 +2,38 @@
 from __future__ import unicode_literals
 
 import re
-import itertools
+import functools
 
 from .common import InfoExtractor
 from ..utils import (
-    sanitized_Request,
     ExtractorError,
+    OnDemandPagedList,
     try_get,
 )
-from ..compat import (
-    compat_str,
-    compat_urllib_parse_quote,
-)
+from ..compat import compat_urllib_parse_quote
 
 
 class TokyoMotionBaseIE(InfoExtractor):
-    def _download_page(self, url, video_id, note=None):
-        # This fails
-        # return self._download_webpage(url, video_id)
-        # Use ones in generic extractor
-        request = sanitized_Request(url)
-        request.add_header('Accept-Encoding', '*')
-        full_response = self._request_webpage(request, video_id, note=note)
-        return self._webpage_read_content(full_response, url, video_id)
-
-    @staticmethod
-    def _int_id(url):
-        m = TokyoMotionIE._match_valid_url(url)
-        assert m
-        return int(compat_str(m.group('id')))
+    _COMMON_HEADERS = {
+        'Accept-Encoding': '*',
+    }
 
     @staticmethod
     def _extract_video_urls(variant, webpage):
         return ('https://www.%smotion.net%s' % (variant, compat_urllib_parse_quote(frg.group()))
                 for frg in re.finditer(r'/video/(?P<id>\d+)/[^#?&"\']+', webpage))
 
-    def _do_paging(self, variant, user_id):
-        for index in itertools.count(1):
-            newurl = self.USER_VIDEOS_FULL_URL % (variant, user_id, index)
-            webpage = self._download_page(newurl, user_id, note='Downloading page %d' % index)
-            for url in self._extract_video_urls(variant, webpage):
-                yield self.url_result(url)
-            if ('videos?page=%d"' % (index + 1)) not in webpage and ('&page=%d"' % (index + 1)) not in webpage:
-                break
+    def _do_paging(self, variant, user_id, index):
+        index += 1
+        newurl = self.USER_VIDEOS_FULL_URL % (variant, user_id, index)
+        webpage = self._download_webpage(newurl, user_id, headers=self._COMMON_HEADERS, note='Downloading page %d' % index)
+        return [self.url_result(url) for url in self._extract_video_urls(variant, webpage)][::2]
 
 
 class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
     def _real_extract(self, url):
         variant, user_id = self._match_valid_url(url).group('variant', 'id')
-        matches = self._do_paging(variant, user_id)
+        matches = OnDemandPagedList(functools.partial(self._do_paging, variant, user_id), 18)
         return self.playlist_result(matches, user_id, self.TITLE % user_id)
 
 
@@ -76,8 +59,7 @@ class TokyoMotionIE(TokyoMotionBaseIE):
                 url += '/'
             url += 'a'
 
-        webpage = self._download_page(url, video_id)
-
+        webpage = self._download_webpage(url, video_id, headers=self._COMMON_HEADERS)
         title = self._og_search_title(webpage, default=None)
 
         entry = try_get(
@@ -85,14 +67,11 @@ class TokyoMotionIE(TokyoMotionBaseIE):
             lambda x: self._parse_html5_media_entries(url, x, video_id, m3u8_id='hls')[0],
             dict)
         if not entry:
-            raise ExtractorError('Private video', expected=True)
+            raise ExtractorError('This is a private video.', expected=True)
 
         for fmt in entry['formats']:
             fmt['external_downloader'] = 'ffmpeg'
-            if fmt['format_id'] == 'HD':
-                fmt['preference'] = fmt['quality'] = 1
-            else:
-                fmt['preference'] = fmt['quality'] = -1
+            fmt['quality'] = 1 if fmt['format_id'] == 'HD' else -1
 
         self._sort_formats(entry['formats'])
         entry.update({
@@ -136,7 +115,7 @@ class TokyoMotionScannerIE(TokyoMotionBaseIE):
 
     def _real_extract(self, url):
         variant, user_id = self._match_valid_url(url).groups()
-        webpage = self._download_page(url[7:], user_id)
+        webpage = self._download_webpage(url[7:], user_id, headers=self._COMMON_HEADERS)
         matches = self._extract_video_urls(variant, webpage)
         return self.playlist_result(
             (self.url_result(url) for url in matches),
