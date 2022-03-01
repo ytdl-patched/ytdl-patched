@@ -108,7 +108,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * To embed comments without problems: `--sub-format ass --write-subs --embed-subs --remux-video mkv`
 
 * **New extractors**: Following extractors have been added: (broken/imcomplete ones not listed here)
-    * `AbemaTV` and `AbemaTVTitle`
     * `askmona` and `askmona3` (just scrapes embedded YouTube videos)
     * `disneychris`
     * `dnatube`
@@ -118,17 +117,18 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `peing`, `ask.fm`, `marshmallow-qa`, `mottohomete` (scrapes Q&A section and find video URLs in it)
     * `mastodon`, `mastodon:user`, `mastodon:user:numeric_id`
     * `misskey`, `misskey:user`
-    * `niconico:live` (**COMMENTS ARE NOT SUPPORTED**)
     * `niconico:playlist`, `niconico:series`, `niconico:user`
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
     * `17live`, `17live:clip` (merged in yt-dlp)
+    * `AbemaTV` and `AbemaTVTitle` (merged in yt-dlp)
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School) (merged in yt-dlp)
     * `Radiko`, `RadikoRadio` (does not have 24-hours limitation!) (merged in yt-dlp)
     * `damtomo:video`, `damtomo:record` (merged in yt-dlp)
     * `fc2:live` (merged in yt-dlp)
     * `mirrativ`, `mirrativ:user` (merged in yt-dlp)
     * `mixch`, `mixch:archive` (merged in yt-dlp)
+    * `niconico:live` (**COMMENTS ARE NOT SUPPORTED**) (merged in yt-dlp)
     * `openrec`, `openrec:capture` (merged in yt-dlp)
     * `pixiv:sketch`, `pixiv:sketch:user` (merged in yt-dlp)
     * `skeb` (merged in yt-dlp)
