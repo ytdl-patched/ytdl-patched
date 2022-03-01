@@ -753,61 +753,6 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         return result
 
 
-class NiconicoUserIE(NiconicoPlaylistBaseIE):
-    IE_NAME = 'niconico:user'
-    _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/user/(?P<id>\d+)'
-
-    _TESTS = [{
-        'url': 'https://www.nicovideo.jp/user/17988631',
-        'info_dict': {
-            'id': '17988631',
-            'title': 'USAGE',
-        },
-        'playlist_mincount': 37,  # as of 2021/01/13
-    }, {
-        'url': 'https://www.nicovideo.jp/user/1050860/video',
-        'info_dict': {
-            'id': '1050860',
-            'title': '花たんとかユリカとか✿',
-        },
-        'playlist_mincount': 165,  # as of 2021/04/04
-    }, {
-        'url': 'https://www.nicovideo.jp/user/805442/',
-        'only_matching': True,
-    }, {
-        'url': 'https://nico.ms/user/805442/',
-        'only_matching': True,
-    }]
-
-    @classmethod
-    def suitable(cls, url):
-        return super(NiconicoUserIE, cls).suitable(url) and not NiconicoPlaylistIE.suitable(url)
-
-    def _call_api(self, list_id, resource, query):
-        return self._download_json(
-            'https://nvapi.nicovideo.jp/v1/users/%s/videos' % list_id, list_id,
-            'Downloading %s' % resource, query=query,
-            headers=self._API_HEADERS)['data']
-
-    def _real_extract(self, url):
-        list_id = self._match_id(url)
-
-        user_webpage = self._download_webpage('https://www.nicovideo.jp/user/%s' % list_id, list_id)
-        user_info = self._search_regex(r'<div id="js-initial-userpage-data" .+? data-initial-data="(.+)?"', user_webpage, 'user info', default={})
-        user_info = unescapeHTML(user_info)
-        user_info = self._parse_json(user_info, list_id)
-        user_info = traverse_obj(user_info, ('userDetails', 'userDetails', 'user')) or {}
-
-        mylist = self._call_api(list_id, 'list', {
-            'pageSize': 1,
-        })
-        entries = self._entries(functools.partial(self._fetch_page, list_id))
-        result = self.playlist_result(
-            entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
-        result.update(self._parse_owner(mylist))
-        return result
-
-
 # cannot use NiconicoPlaylistBaseIE because /series/ has different structure than others
 class NiconicoSeriesIE(NiconicoBaseIE):
     IE_NAME = 'niconico:series'
@@ -1003,6 +948,61 @@ class NicovideoTagURLIE(NicovideoSearchBaseIE):
     def _real_extract(self, url):
         query = self._match_id(url)
         return self.playlist_result(self._entries(url, query), query, query)
+
+
+class NiconicoUserIE(NiconicoPlaylistBaseIE):
+    IE_NAME = 'niconico:user'
+    _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/user/(?P<id>\d+)'
+
+    _TESTS = [{
+        'url': 'https://www.nicovideo.jp/user/17988631',
+        'info_dict': {
+            'id': '17988631',
+            'title': 'USAGE',
+        },
+        'playlist_mincount': 37,  # as of 2021/01/13
+    }, {
+        'url': 'https://www.nicovideo.jp/user/1050860/video',
+        'info_dict': {
+            'id': '1050860',
+            'title': '花たんとかユリカとか✿',
+        },
+        'playlist_mincount': 165,  # as of 2021/04/04
+    }, {
+        'url': 'https://www.nicovideo.jp/user/805442/',
+        'only_matching': True,
+    }, {
+        'url': 'https://nico.ms/user/805442/',
+        'only_matching': True,
+    }]
+
+    @classmethod
+    def suitable(cls, url):
+        return super(NiconicoUserIE, cls).suitable(url) and not NiconicoPlaylistIE.suitable(url)
+
+    def _call_api(self, list_id, resource, query):
+        return self._download_json(
+            'https://nvapi.nicovideo.jp/v1/users/%s/videos' % list_id, list_id,
+            'Downloading %s' % resource, query=query,
+            headers=self._API_HEADERS)['data']
+
+    def _real_extract(self, url):
+        list_id = self._match_id(url)
+
+        user_webpage = self._download_webpage('https://www.nicovideo.jp/user/%s' % list_id, list_id)
+        user_info = self._search_regex(r'<div id="js-initial-userpage-data" .+? data-initial-data="(.+)?"', user_webpage, 'user info', default={})
+        user_info = unescapeHTML(user_info)
+        user_info = self._parse_json(user_info, list_id)
+        user_info = traverse_obj(user_info, ('userDetails', 'userDetails', 'user')) or {}
+
+        mylist = self._call_api(list_id, 'list', {
+            'pageSize': 1,
+        })
+        entries = self._entries(functools.partial(self._fetch_page, list_id))
+        result = self.playlist_result(
+            entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
+        result.update(self._parse_owner(mylist))
+        return result
 
 
 class NiconicoLiveIE(NiconicoBaseIE):
