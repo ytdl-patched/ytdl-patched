@@ -57,7 +57,7 @@ jobs:
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: ytdl-base
+          name: ytdl-artifacts
           path: |
             yt_dlp/version.py
             yt_dlp/build_config.py
@@ -75,7 +75,7 @@ jobs:
       - name: Download base
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-base
+          name: ytdl-artifacts
       - name: Create buildconfig.py
         run: python ./devscripts/make_buildconfig.py
       - name: Set up Python ${{ env.python_version }}
@@ -117,7 +117,7 @@ jobs:
       - name: Download base
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-base
+          name: ytdl-artifacts
       - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v2
         with:
@@ -163,7 +163,7 @@ jobs:
       - name: Download base
         uses: actions/download-artifact@v2
         with:
-          name: ytdl-base
+          name: ytdl-artifacts
       - name: Create buildconfig.py
         run: python ./devscripts/make_buildconfig.py variant=${{ matrix.icon }}
       - name: Set up Python ${{ env.python_version_pyinst }}
@@ -195,39 +195,23 @@ jobs:
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
-          name: "ytdl-artifacts"
+          name: ytdl-artifacts
           # README.md (or any other files in the repo) is required
           # to prevent upload-artifacts to find LCA
           path: |
             artifacts/
             README.md
 
-  upload-homebrew:
-    needs: [prepare, build-wheel]
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
-    env:
-      FILEHASH_TAR: ${{ needs.build-wheel.outputs.filehash_wheel_tar }}
-      VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
-      VERSION_NAME: ${{ needs.prepare.outputs.latest_version }}
-    steps:
-      - name: Upload to my homebrew repository
-        run: |
-          git config --global user.name lesmiscore
-          git config --global user.email nao20010128@gmail.com
-          git clone https://lesmiscore:${{ secrets.GH_PAT }}@github.com/lesmiscore/homebrew-my.git
-          cd homebrew-my
-          echo $FILEHASH_TAR $VERSION
-          wget https://github.com/ytdl-patched/ytdl-patched/raw/ytdlp/devscripts/update-formulae.py -O update-formulae.py
-          python3 update-formulae.py Formula/ytdl-patched.rb "$FILEHASH_TAR" "$VERSION" "https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/yt_dlp-wheel.tar.gz"
-          git add .
-          git commit -m "ytdl-patched: $VERSION"
-          git push
-  upload-releases-and-mirrors:
+  upload-releases:
     needs: [prepare, build-linux, build-windows, build-wheel]
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
     steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
+
       - name: Create release (for master)
         id: create_release
         uses: actions/create-release@v1
@@ -254,14 +238,6 @@ jobs:
         if: ${{ github.ref == 'refs/heads/ytdlp' }}
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
 
-      - name: Install ia command and configure
-        run: |
-          sudo apt update
-          sudo apt install -y squashfs-tools
-          brew install internetarchive
-          ia configure -u "${{ secrets.IA_USERNAME }}" -p "${{ secrets.IA_PASSWORD }}"
-
-
       - name: Create release (for non-master)
         id: create_release_nm
         uses: actions/create-release@v1
@@ -282,12 +258,6 @@ jobs:
       - name: Create release (for non-master)
         if: ${{ github.ref != 'refs/heads/ytdlp' }}
         run: echo "upload_url=${{ steps.create_release_nm.outputs.upload_url }}" >> $GITHUB_ENV
-
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: ytdl-artifacts
 
       - name: Upload bin (Releases)
         id: upload-1
@@ -354,6 +324,46 @@ jobs:
           asset_name: yt_dlp-wheel.tar.gz
           asset_content_type: application/gzip
 
+
+  upload-homebrew:
+    needs: [prepare, build-wheel, upload-releases]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
+    env:
+      FILEHASH_TAR: ${{ needs.build-wheel.outputs.filehash_wheel_tar }}
+      VERSION: ${{ needs.prepare.outputs.latest_version_numeric }}
+      VERSION_NAME: ${{ needs.prepare.outputs.latest_version }}
+    steps:
+      - name: Upload to my homebrew repository
+        run: |
+          git config --global user.name lesmiscore
+          git config --global user.email nao20010128@gmail.com
+          git clone https://lesmiscore:${{ secrets.GH_PAT }}@github.com/lesmiscore/homebrew-my.git
+          cd homebrew-my
+          echo $FILEHASH_TAR $VERSION
+          wget https://github.com/ytdl-patched/ytdl-patched/raw/ytdlp/devscripts/update-formulae.py -O update-formulae.py
+          python3 update-formulae.py Formula/ytdl-patched.rb "$FILEHASH_TAR" "$VERSION" "https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/yt_dlp-wheel.tar.gz"
+          git add .
+          git commit -m "ytdl-patched: $VERSION"
+          git push
+
+
+  upload-internetarchive:
+    needs: [prepare, build-linux, build-windows, build-wheel]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
+    steps:
+      - name: Install ia command and configure
+        run: |
+          sudo apt update
+          sudo apt install -y squashfs-tools
+          brew install internetarchive
+          ia configure -u "${{ secrets.IA_USERNAME }}" -p "${{ secrets.IA_PASSWORD }}"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ytdl-artifacts
 
       - name: Upload bin (IA)
         run: |
