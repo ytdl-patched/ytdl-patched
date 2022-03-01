@@ -24,6 +24,7 @@ from ..utils import (
     float_or_none,
     int_or_none,
     parse_duration,
+    parse_filesize,
     parse_iso8601,
     remove_start,
     std_headers,
@@ -267,30 +268,19 @@ class NiconicoIE(NiconicoBaseIE):
             self, api_data, video_id,
             audio_quality, video_quality,
             dmc_protocol, segment_duration=6000):
+        if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
+            return None
+
         def yesno(boolean):
             return 'yes' if boolean else 'no'
 
         def extract_video_quality(video_quality):
-            try:
-                # Example: 480p | 0.9M
-                r = re.match(r'^.*\| ([0-9]*\.?[0-9]*[MK])', video_quality)
-                if r is None:
-                    # Maybe conditionally throw depending on the settings?
-                    return 0
-
-                vbr_with_unit = r.group(1)
-                unit = vbr_with_unit[-1]
-                video_bitrate = float(vbr_with_unit[:-1])
-
-                if unit == 'M':
-                    video_bitrate *= 1000000
-                elif unit == 'K':
-                    video_bitrate *= 1000
-
-                return video_bitrate
-            except BaseException:
-                # Should at least log or something here
+            # Example: 480p | 0.9M
+            r = re.match(r'^.*\| ([0-9]*\.?[0-9]*[MK])', video_quality)
+            if not r:
+                # Maybe conditionally throw depending on the settings?
                 return 0
+            return parse_filesize(f'{r.group(1)}B') or 0
 
         session_api_data = api_data['media']['delivery']['movie']['session']
 
@@ -333,69 +323,69 @@ class NiconicoIE(NiconicoBaseIE):
             self.report_warning("Don't be panic. If the download works, this is mostly harmless.")
             return None
 
-        if True:  # indent this for mergeability
-            dmc_data = {
-                'session': {
-                    'client_info': {
-                        'player_id': session_api_data['playerId'],
-                    },
-                    'content_auth': {
-                        'auth_type': session_api_data['authTypes'][dmc_protocol],
-                        'content_key_timeout': session_api_data['contentKeyTimeout'],
-                        'service_id': 'nicovideo',
-                        'service_user_id': session_api_data['serviceUserId']
-                    },
-                    'content_id': session_api_data['contentId'],
-                    'content_src_id_sets': [{
-                        'content_src_ids': [{
-                            'src_id_to_mux': {
-                                'audio_src_ids': [audio_quality['id']],
-                                'video_src_ids': [video_quality['id']],
-                            }
-                        }]
-                    }],
-                    'content_type': 'movie',
-                    'content_uri': '',
-                    'keep_method': {
-                        'heartbeat': {
-                            'lifetime': session_api_data['heartbeatLifetime']
+        dmc_data = {
+            'session': {
+                'client_info': {
+                    'player_id': session_api_data['playerId'],
+                },
+                'content_auth': {
+                    'auth_type': session_api_data['authTypes'][dmc_protocol],
+                    'content_key_timeout': session_api_data['contentKeyTimeout'],
+                    'service_id': 'nicovideo',
+                    'service_user_id': session_api_data['serviceUserId']
+                },
+                'content_id': session_api_data['contentId'],
+                'content_src_id_sets': [{
+                    'content_src_ids': [{
+                        'src_id_to_mux': {
+                            'audio_src_ids': [audio_quality['id']],
+                            'video_src_ids': [video_quality['id']],
                         }
-                    },
-                    'priority': session_api_data['priority'],
-                    'protocol': {
-                        'name': 'http',
-                        'parameters': {
-                            'http_parameters': {
-                                'parameters': protocol_parameters
-                            }
+                    }]
+                }],
+                'content_type': 'movie',
+                'content_uri': '',
+                'keep_method': {
+                    'heartbeat': {
+                        'lifetime': session_api_data['heartbeatLifetime']
+                    }
+                },
+                'priority': session_api_data['priority'],
+                'protocol': {
+                    'name': 'http',
+                    'parameters': {
+                        'http_parameters': {
+                            'parameters': protocol_parameters
                         }
-                    },
-                    'recipe_id': session_api_data['recipeId'],
-                    'session_operation_auth': {
-                        'session_operation_auth_by_signature': {
-                            'signature': session_api_data['signature'],
-                            'token': session_api_data['token'],
-                        }
-                    },
-                    'timing_constraint': 'unlimited'
-                }
+                    }
+                },
+                'recipe_id': session_api_data['recipeId'],
+                'session_operation_auth': {
+                    'session_operation_auth_by_signature': {
+                        'signature': session_api_data['signature'],
+                        'token': session_api_data['token'],
+                    }
+                },
+                'timing_constraint': 'unlimited'
             }
+        }
 
-        resolution = video_quality['metadata'].get('resolution', {})
-        vid_quality = video_quality['metadata'].get('bitrate')
+        vid_metadata = video_quality.get('metadata') or {}
+        resolution = vid_metadata.get('resolution') or {}
+        vid_quality = vid_metadata.get('bitrate')
         is_low = 'low' in video_quality['id']
 
         return {
             'url': session_api_data['urls'][0]['url'],
             'format_id': format_id,
-            'format_note': 'DMC ' + video_quality['metadata']['label'] + ' ' + dmc_protocol.upper(),
+            'format_note': 'DMC ' + vid_metadata['label'] + ' ' + dmc_protocol.upper(),
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
             'acodec': 'aac',
             'vcodec': 'h264',  # As far as I'm aware DMC videos can only serve h264/aac combinations
             'abr': float_or_none(audio_quality['metadata'].get('bitrate'), 1000),
             # So this is kind of a hack; sometimes, the bitrate is incorrectly reported as 0kbs. If this is the case,
             # extract it from the rest of the metadata we have available
-            'vbr': float_or_none(vid_quality if vid_quality > 0 else extract_video_quality(video_quality['metadata'].get('label')), 1000),
+            'vbr': float_or_none(vid_quality if vid_quality > 0 else extract_video_quality(vid_metadata.get('label')), 1000),
             'height': resolution.get('height'),
             'width': resolution.get('width'),
             'quality': -2 if is_low else None,
@@ -459,8 +449,6 @@ class NiconicoIE(NiconicoBaseIE):
         quality_info = api_data['media']['delivery']['movie']
         session_api_data = quality_info['session']
         for (audio_quality, video_quality, protocol) in itertools.product(quality_info['audios'], quality_info['videos'], session_api_data['protocols']):
-            if not audio_quality['isAvailable'] or not video_quality['isAvailable']:
-                continue
             fmt = self._extract_format_for_quality(
                 api_data, video_id,
                 audio_quality, video_quality,
@@ -482,7 +470,7 @@ class NiconicoIE(NiconicoBaseIE):
         if not thumbnail:
             thumbnail = self._html_search_meta(('image', 'og:image'), webpage, 'thumbnail', default=None)
 
-        view_count = int_or_none(api_data['video']['count'].get('view'))
+        view_count = int_or_none(traverse_obj(api_data, ('video', 'count', 'view')))
 
         description = get_video_info('description')
 
