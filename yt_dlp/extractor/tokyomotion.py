@@ -25,33 +25,25 @@ class TokyoMotionBaseIE(InfoExtractor):
 
     def _do_paging(self, variant, user_id, index):
         index += 1
-        newurl = self.USER_VIDEOS_FULL_URL % (variant, user_id, index)
+        newurl = self._PAGING_BASE_TEMPLATE % (variant, user_id, index)
         webpage = self._download_webpage(newurl, user_id, headers=self._COMMON_HEADERS, note='Downloading page %d' % index)
         return [self.url_result(url) for url in self._extract_video_urls(variant, webpage)][::2]
 
 
 class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
     def _real_extract(self, url):
-        variant, user_id = self._match_valid_url(url).group('variant', 'id')
-        matches = OnDemandPagedList(functools.partial(self._do_paging, variant, user_id), 18)
-        return self.playlist_result(matches, user_id, self.TITLE % user_id)
+        user_id = self._match_id(url)
+        matches = OnDemandPagedList(functools.partial(self._do_paging, self._VARIANT, user_id), 18)
+        return self.playlist_result(matches, user_id, self._TITLE_TEMPLATE % user_id)
 
 
-class TokyoMotionIE(TokyoMotionBaseIE):
-    IE_NAME = 'tokyomotion'
-    _VALID_URL = r'https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/video/(?P<id>\d+)(?P<excess>/[^#\?]+)?'
-    _TESTS = [{
-        'url': 'https://www.tokyomotion.net/video/915034/%E9%80%86%E3%81%95',
-        'info_dict': {
-            'id': '915034',
-            'ext': 'mp4',
-            'title': '逆さ',
-        }
-    }]
+class UnvariantedMotionIE(TokyoMotionBaseIE):
+    IE_NAME = '%smotion'
+    _VALID_URL = r'https?://(?:www\.)?%smotion\.net/video/(?P<id>\d+)(?P<excess>/[^#\?]+)?'
 
     def _real_extract(self, url):
         mobj = self._match_valid_url(url)
-        url, variant, video_id, excess = mobj.group(0, 'variant', 'id', 'excess')
+        url, video_id, excess = mobj.group(0, 'id', 'excess')
         if not excess:
             # fix URL silently
             url = url.split('#')[0]
@@ -78,45 +70,83 @@ class TokyoMotionIE(TokyoMotionBaseIE):
             'id': video_id,
             'title': title,
             'age_limit': 18,
-            'series': 'TokyoMotion' if variant == 'tokyo' else 'OsakaMotion',
         })
         return entry
 
 
-class TokyoMotionUserIE(TokyoMotionPlaylistBaseIE):
-    IE_NAME = 'tokyomotion:user'
-    _VALID_URL = r'https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/user/(?P<id>[^/]+)(?:/videos)?'
-    _TESTS = []
-    USER_VIDEOS_FULL_URL = 'https://www.%smotion.net/user/%s/videos?page=%d'
-    TITLE = 'Uploads from %s'
+class UnvariantedMotionUserIE(TokyoMotionPlaylistBaseIE):
+    IE_NAME = '%smotion:user'
+    _VALID_URL = r'https?://(?:www\.)?%smotion\.net/user/(?P<id>[^/]+)(?:/videos)?'
+    _PAGING_BASE_TEMPLATE = 'https://www.%smotion.net/user/%s/videos?page=%d'
+    _TITLE_TEMPLATE = 'Uploads from %s'
 
 
-class TokyoMotionUserFavsIE(TokyoMotionPlaylistBaseIE):
-    IE_NAME = 'tokyomotion:user:favs'
-    _VALID_URL = r'https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/user/(?P<id>[^/]+)/favorite/videos'
-    _TESTS = []
-    USER_VIDEOS_FULL_URL = 'https://www.%smotion.net/user/%s/favorite/videos?page=%d'
-    TITLE = 'Favorites from %s'
+class UnvariantedMotionUserFavsIE(TokyoMotionPlaylistBaseIE):
+    IE_NAME = '%smotion:user:favs'
+    _VALID_URL = r'https?://(?:www\.)?%smotion\.net/user/(?P<id>[^/]+)/favorite/videos'
+    _PAGING_BASE_TEMPLATE = 'https://www.%smotion.net/user/%s/favorite/videos?page=%d'
+    _TITLE_TEMPLATE = 'Favorites from %s'
 
 
-class TokyoMotionSearchesIE(TokyoMotionPlaylistBaseIE):
-    IE_NAME = 'tokyomotion:searches'
-    _VALID_URL = r'https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/search\?search_query=(?P<id>[^/&]+)(?:&search_type=videos)?(?:&page=\d+)?'
-    _TESTS = []
-    USER_VIDEOS_FULL_URL = 'https://www.%smotion.net/search?search_query=%s&search_type=videos&page=%d'
-    TITLE = 'Search results for %s'
+class UnvariantedMotionSearchesIE(TokyoMotionPlaylistBaseIE):
+    IE_NAME = '%smotion:searches'
+    _VALID_URL = r'https?://(?:www\.)?%smotion\.net/search\?search_query=(?P<id>[^/&]+)(?:&search_type=videos)?(?:&page=\d+)?'
+    _PAGING_BASE_TEMPLATE = 'https://www.%smotion.net/search?search_query=%s&search_type=videos&page=%d'
+    _TITLE_TEMPLATE = 'Search results for %s'
+
+
+class TokyoMotionIE(UnvariantedMotionIE):
+    _VARIANT = 'tokyo'
+
+
+class TokyoMotionUserIE(UnvariantedMotionUserIE):
+    _VARIANT = 'tokyo'
+
+
+class TokyoMotionUserFavsIE(UnvariantedMotionUserFavsIE):
+    _VARIANT = 'tokyo'
+
+
+class TokyoMotionSearchesIE(UnvariantedMotionSearchesIE):
+    _VARIANT = 'tokyo'
+
+
+class OsakaMotionIE(UnvariantedMotionIE):
+    _VARIANT = 'osaka'
+
+
+class OsakaMotionUserIE(UnvariantedMotionUserIE):
+    _VARIANT = 'osaka'
+
+
+class OsakaMotionUserFavsIE(UnvariantedMotionUserFavsIE):
+    _VARIANT = 'osaka'
+
+
+class OsakaMotionSearchesIE(UnvariantedMotionSearchesIE):
+    _VARIANT = 'osaka'
 
 
 class TokyoMotionScannerIE(TokyoMotionBaseIE):
     IE_DESC = False  # Do not list
-    IE_NAME = 'tokyomotion:scanner'
-    _VALID_URL = r'tmscan:https?://(?:www\.)?(?P<variant>tokyo|osaka)motion\.net/(?P<id>.*)'
+    IE_NAME = '%smotion:scanner'
+    _VARIANT = 'tokyo'
+    _VALID_URL = r'tmscan:https?://(?:www\.)?%smotion\.net/(?P<id>.*)'
     _TESTS = []
 
     def _real_extract(self, url):
-        variant, user_id = self._match_valid_url(url).groups()
+        user_id = self._match_valid_url(url).groups()
         webpage = self._download_webpage(url[7:], user_id, headers=self._COMMON_HEADERS)
-        matches = self._extract_video_urls(variant, webpage)
+        matches = self._extract_video_urls(self._VARIANT, webpage)
         return self.playlist_result(
             (self.url_result(url) for url in matches),
             user_id, 'Scanned results for %s' % url)
+
+
+for k, v in list(locals().items()):
+    if not isinstance(v, type):
+        continue
+    if not getattr(v, '_VARIANT', None):
+        continue
+    v.IE_NAME = v.IE_NAME % v._VARIANT
+    v._VALID_URL = v._VALID_URL % v._VARIANT
