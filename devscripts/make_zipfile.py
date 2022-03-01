@@ -51,12 +51,10 @@ all_paths = [os.path.join(dir, file) for (dir, file) in files]
 if check_executable('7z', []):
     ret = subprocess.Popen(
         ['7z', 'a', '-mm=Deflate', '-mfb=258', '-mpass=15', '-mtc-', '../youtube-dl.zip'] + all_paths,
-        stdin=subprocess.DEVNULL, stdout=sys.stdout, stderr=sys.stderr,
         cwd='zip/').wait()
 elif check_executable('zip', ['-h']):
     ret = subprocess.Popen(
         ['zip', '-9', '../youtube-dl.zip'] + all_paths,
-        stdin=subprocess.DEVNULL, stdout=sys.stdout, stderr=sys.stderr,
         cwd='zip/').wait()
 else:
     raise Exception('Cannot find ZIP archiver')
@@ -66,8 +64,7 @@ if ret != 0:
 
 if check_executable('advzip', []):
     subprocess.Popen(
-        ['advzip', '-z', '-4', '-i', iterations, 'youtube-dl.zip'],
-        stdin=subprocess.DEVNULL, stdout=sys.stdout, stderr=sys.stderr).wait()
+        ['advzip', '-z', '-4', '-i', iterations, 'youtube-dl.zip']).wait()
 
 shutil.rmtree('zip/')
 
