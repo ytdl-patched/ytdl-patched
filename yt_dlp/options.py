@@ -1361,7 +1361,7 @@ def create_parser():
         '--no-cache-dir', action='store_false', dest='cachedir',
         help='Disable filesystem caching')
     filesystem.add_option(
-        '--rm-cache-dir',
+        '--rm-cache-dir', '--clear-cache',
         action='store_true', dest='rm_cachedir',
         help='Delete all filesystem cache files')
     filesystem.add_option(
