@@ -60,7 +60,7 @@ class MirrativIE(MirrativBaseIE):
         description = live_response.get('description')
         thumbnail = live_response.get('image_url')
 
-        duration = try_get(live_response, lambda x: x['ended_at'] - x['started_at'])
+        duration = try_get(live_response, lambda x: x['ended_at'] - x['started_at']) if not is_live else None
         view_count = live_response.get('total_viewer_num')
         release_timestamp = live_response.get('started_at')
         timestamp = live_response.get('created_at')
