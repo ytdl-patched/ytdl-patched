@@ -120,6 +120,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `niconico:playlist`, `niconico:series`, `niconico:user`
     * `sharevideos`
     * `tokyomotion`, `tokyomotion:searches`, `tokyomotion:user`, `tokyomotion:user:favs`
+    * `niconico:live` (**COMMENTS ARE NOT SUPPORTED**)
     * `17live`, `17live:clip` (merged in yt-dlp)
     * `AbemaTV` and `AbemaTVTitle` (merged in yt-dlp)
     * `NhkForSchoolBangumiIE`, `NhkForSchoolSubjectIE`, `NhkForSchoolProgramListIE` (NHK for School) (merged in yt-dlp)
@@ -128,7 +129,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `fc2:live` (merged in yt-dlp)
     * `mirrativ`, `mirrativ:user` (merged in yt-dlp)
     * `mixch`, `mixch:archive` (merged in yt-dlp)
-    * `niconico:live` (**COMMENTS ARE NOT SUPPORTED**) (merged in yt-dlp)
     * `openrec`, `openrec:capture` (merged in yt-dlp)
     * `pixiv:sketch`, `pixiv:sketch:user` (merged in yt-dlp)
     * `skeb` (merged in yt-dlp)
