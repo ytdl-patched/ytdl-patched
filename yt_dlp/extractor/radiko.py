@@ -91,8 +91,8 @@ class RadikoBaseIE(InfoExtractor):
 
     def _extract_formats(self, video_id, station, is_onair, ft, cursor, auth_token, area_id, query):
         m3u8_playlist_data = self._download_xml(
-            'https://radiko.jp/v3/station/stream/pc_html5/%s.xml' % station, video_id,
-            note='Downloading m3u8 information')
+            f'https://radiko.jp/v3/station/stream/pc_html5/{station}.xml', video_id,
+            note='Downloading stream information')
         m3u8_urls = m3u8_playlist_data.findall('.//url')
 
         formats = []
@@ -114,15 +114,16 @@ class RadikoBaseIE(InfoExtractor):
 
             time_to_skip = None if is_onair else cursor - ft
 
+            domain = compat_urllib_parse.urlparse(playlist_url).netloc
             subformats = self._extract_m3u8_formats(
                 playlist_url, video_id, ext='m4a',
-                live=True, fatal=False, m3u8_id=None,
+                live=True, fatal=False, m3u8_id=domain,
+                note=f'Downloading m3u8 information from {domain}',
                 headers={
                     'X-Radiko-AreaId': area_id,
                     'X-Radiko-AuthToken': auth_token,
                 })
             for sf in subformats:
-                domain = sf['format_id'] = compat_urllib_parse.urlparse(sf['url']).netloc
                 if re.match(r'^[cf]-radiko\.smartstream\.ne\.jp$', domain):
                     # Prioritize live radio vs playback based on extractor
                     sf['preference'] = 100 if is_onair else -100
