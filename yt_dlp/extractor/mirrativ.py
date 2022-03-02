@@ -42,17 +42,6 @@ class MirrativIE(MirrativBaseIE):
             hls_url, video_id,
             ext='mp4', entry_protocol='m3u8_native',
             m3u8_id='hls', live=is_live)
-        rtmp_url = live_response.get('streaming_url_edge')
-        if rtmp_url:
-            keys_to_copy = ('width', 'height', 'vcodec', 'acodec', 'tbr')
-            fmt = {
-                'format_id': 'rtmp',
-                'url': rtmp_url,
-                'protocol': 'rtmp',
-                'ext': 'mp4',
-            }
-            fmt.update({k: traverse_obj(formats, (0, k)) for k in keys_to_copy})
-            formats.append(fmt)
         self._sort_formats(formats)
 
         title = self._og_search_title(webpage, default=None) or self._search_regex(
