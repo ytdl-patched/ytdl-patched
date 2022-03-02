@@ -1780,6 +1780,8 @@ class InfoExtractor(object):
             propObj = self.settings[field]
             if key not in propObj:
                 type = propObj.get('type')
+                if type and ':' in type:
+                    type = type.split(':')[-1]
                 if key == 'field':
                     default = 'preference' if type == 'extractor' else (field,) if type in ('combined', 'multiple') else field
                 elif key == 'convert':
@@ -1928,11 +1930,10 @@ class InfoExtractor(object):
         def _calculate_field_preference(self, format, field):
             type = self._get_field_setting(field, 'type')  # extractor, boolean, ordered, field, multiple
             get_value = lambda f: format.get(self._get_field_setting(f, 'field'))
-            multiple_match = re.match(r'multiple(?::([a-z]+))?', type)
-            if multiple_match:
-                type = multiple_match.group(1) or 'field'
+            multiple_match = type.split(':')
+            if multiple_match[0] == 'multiple':
+                type = multiple_match[1] if len(multiple_match) > 1 else 'field'
                 actual_fields = variadic(self._get_field_setting(field, 'field'))
-
                 value = self._get_field_setting(field, 'function')(format.get(f) for f in actual_fields)
             else:
                 value = get_value(field)
