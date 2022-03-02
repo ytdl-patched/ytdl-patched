@@ -8,7 +8,9 @@ import json
 
 from .common import InfoExtractor
 from ..utils import (
+    determine_ext,
     std_headers,
+    traverse_obj,
     update_url_query,
     random_uuidv4,
     try_get,
@@ -107,7 +109,7 @@ class MildomIE(MildomBaseIE):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        url = 'https://www.mildom.com/%s' % video_id
+        url = f'https://www.mildom.com/{video_id}'
 
         webpage = self._download_webpage(url, video_id)
 
@@ -121,11 +123,7 @@ class MildomIE(MildomBaseIE):
                 lambda x: self._html_search_meta('twitter:description', webpage),
                 lambda x: x['anchor_intro'],
             ), compat_str)
-        description = try_get(
-            enterstudio, (
-                lambda x: x['intro'],
-                lambda x: x['live_intro'],
-            ), compat_str)
+        description = traverse_obj(enterstudio, 'intro', 'live_intro', expected_type=compat_str)
         uploader = try_get(
             enterstudio, (
                 lambda x: self._html_search_meta('twitter:title', webpage),
@@ -143,11 +141,11 @@ class MildomIE(MildomBaseIE):
             'streamReqId': random_uuidv4(),
             'is_lhls': '0',
         })
-        m3u8_url = update_url_query(servers['stream_server'] + '/%s_master.m3u8' % video_id, stream_query)
+        m3u8_url = update_url_query(servers['stream_server'] + f'/{video_id}_master.m3u8', stream_query)
         formats = self._extract_m3u8_formats(m3u8_url, result_video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
-        }, note='Downloading m3u8 information')
+        })
 
         del stream_query['streamReqId'], stream_query['timestamp']
         for fmt in formats:
@@ -169,7 +167,7 @@ class MildomIE(MildomBaseIE):
 
 class MildomVodIE(MildomBaseIE):
     IE_NAME = 'mildom:vod'
-    IE_DESC = 'Download a VOD in Mildom'
+    IE_DESC = 'VOD in Mildom'
     _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/playback/(?P<user_id>\d+)/(?P<id>(?P=user_id)-[a-zA-Z0-9]+-?[0-9]*)'
     _TESTS = [{
         'url': 'https://www.mildom.com/playback/10882672/10882672-1597662269',
@@ -216,9 +214,8 @@ class MildomVodIE(MildomBaseIE):
     }]
 
     def _real_extract(self, url):
-        m = self._match_valid_url(url)
-        user_id, video_id = m.group('user_id'), m.group('id')
-        url = 'https://www.mildom.com/playback/%s/%s' % (user_id, video_id)
+        user_id, video_id = self._match_valid_url(url).group('user_id', 'id')
+        url = f'https://www.mildom.com/playback/{user_id}/{video_id}'
 
         webpage = self._download_webpage(url, video_id)
 
@@ -228,19 +225,9 @@ class MildomVodIE(MildomBaseIE):
                 'v_id': video_id,
             })['playback']
 
-        title = try_get(
-            autoplay, (
-                lambda x: self._html_search_meta('og:description', webpage),
-                lambda x: x['title'],
-            ), compat_str)
-        description = try_get(
-            autoplay, (
-                lambda x: x['video_intro'],
-            ), compat_str)
-        uploader = try_get(
-            autoplay, (
-                lambda x: x['author_info']['login_name'],
-            ), compat_str)
+        title = self._html_search_meta(('og:description', 'description'), webpage, fatal=False) or autoplay.get('title')
+        description = traverse_obj(autoplay, 'video_intro')
+        uploader = traverse_obj(autoplay, ('author_info', 'login_name'))
 
         formats = [{
             'url': autoplay['audio_url'],
@@ -268,12 +255,79 @@ class MildomVodIE(MildomBaseIE):
             'id': video_id,
             'title': title,
             'description': description,
-            'timestamp': float_or_none(autoplay['publish_time'], scale=1000),
-            'duration': float_or_none(autoplay['video_length'], scale=1000),
+            'timestamp': float_or_none(autoplay.get('publish_time'), scale=1000),
+            'duration': float_or_none(autoplay.get('video_length'), scale=1000),
             'thumbnail': dict_get(autoplay, ('upload_pic', 'video_pic')),
             'uploader': uploader,
             'uploader_id': user_id,
             'formats': formats,
+        }
+
+
+class MildomClipIE(MildomBaseIE):
+    IE_NAME = 'mildom:clip'
+    IE_DESC = 'Clip in Mildom'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)mildom\.com/clip/(?P<id>(?P<user_id>\d+)-[a-zA-Z0-9]+)'
+    _TESTS = [{
+        'url': 'https://www.mildom.com/clip/10042245-63921673e7b147ebb0806d42b5ba5ce9',
+        'info_dict': {
+            'id': '10042245-63921673e7b147ebb0806d42b5ba5ce9',
+            'title': '全然違ったよ',
+            'timestamp': 1619181890,
+            'duration': 59,
+            'thumbnail': r're:https?://.+',
+            'uploader': 'ざきんぽ',
+            'uploader_id': '10042245',
+        },
+    }, {
+        'url': 'https://www.mildom.com/clip/10111524-ebf4036e5aa8411c99fb3a1ae0902864',
+        'info_dict': {
+            'id': '10111524-ebf4036e5aa8411c99fb3a1ae0902864',
+            'title': 'かっこいい',
+            'timestamp': 1621094003,
+            'duration': 59,
+            'thumbnail': r're:https?://.+',
+            'uploader': '(ルーキー',
+            'uploader_id': '10111524',
+        },
+    }, {
+        'url': 'https://www.mildom.com/clip/10660174-2c539e6e277c4aaeb4b1fbe8d22cb902',
+        'info_dict': {
+            'id': '10660174-2c539e6e277c4aaeb4b1fbe8d22cb902',
+            'title': 'あ',
+            'timestamp': 1614769431,
+            'duration': 31,
+            'thumbnail': r're:https?://.+',
+            'uploader': 'ドルゴルスレンギーン＝ダグワドルジ',
+            'uploader_id': '10660174',
+        },
+    }]
+
+    def _real_extract(self, url):
+        user_id, video_id = self._match_valid_url(url).group('user_id', 'id')
+        url = f'https://www.mildom.com/clip/{video_id}'
+
+        webpage = self._download_webpage(url, video_id)
+
+        clip_detail = self._call_api(
+            'https://cloudac-cf-jp.mildom.com/nonolive/videocontent/clip/detail', video_id,
+            note='Downloading playback metadata', query={
+                'clip_id': video_id,
+            })
+
+        return {
+            'id': video_id,
+            'title': self._html_search_meta(
+                ('og:description', 'description'), webpage, fatal=False) or clip_detail.get('title'),
+            'timestamp': float_or_none(clip_detail.get('create_time')),
+            'duration': float_or_none(clip_detail.get('length')),
+            'thumbnail': clip_detail.get('cover'),
+            'uploader': traverse_obj(clip_detail, ('user_info', 'loginname')),
+            'uploader_id': user_id,
+            'formats': [{
+                'url': clip_detail.get('url'),
+                'ext': determine_ext(clip_detail.get('url'), 'mp4'),
+            }],
         }
 
 
