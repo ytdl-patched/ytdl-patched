@@ -47,7 +47,7 @@ class WhoWatchIE(InfoExtractor):
 
             if hls_url:
                 hls_fmts = self._extract_m3u8_formats(
-                    hls_url, video_id, ext='mp4', m3u8_id='hls-%s' % name, quality=quality)
+                    hls_url, video_id, ext='mp4', m3u8_id=f'hls-{name}', quality=quality)
                 formats.extend(hls_fmts)
             else:
                 hls_fmts = []
@@ -56,7 +56,7 @@ class WhoWatchIE(InfoExtractor):
             if rtmp_url and not audio_only:
                 formats.append({
                     'url': rtmp_url,
-                    'format_id': 'rtmp-%s' % name,
+                    'format_id': f'rtmp-{name}',
                     'ext': 'mp4',
                     'protocol': 'rtmp_ffmpeg',  # ffmpeg can, while rtmpdump can't
                     'vcodec': 'h264',
@@ -73,7 +73,7 @@ class WhoWatchIE(InfoExtractor):
 
         uploader_url = try_get(metadata, lambda x: x['live']['user']['user_path'], compat_str)
         if uploader_url:
-            uploader_url = 'https://whowatch.tv/profile/%s' % uploader_url
+            uploader_url = f'https://whowatch.tv/profile/{uploader_url}'
         uploader_id = compat_str(try_get(metadata, lambda x: x['live']['user']['id'], int))
         uploader = try_get(metadata, lambda x: x['live']['user']['name'], compat_str)
         thumbnail = try_get(metadata, lambda x: x['live']['latest_thumbnail_url'], compat_str)
