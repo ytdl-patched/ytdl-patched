@@ -643,8 +643,9 @@
  - **MiaoPai**
  - **microsoftstream**: Microsoft Stream
  - **mildom**: Record ongoing live by specific user in Mildom
+ - **mildom:clip**: Clip in Mildom
  - **mildom:user:vod**: Download all VODs from specific user in Mildom
- - **mildom:vod**: Download a VOD in Mildom
+ - **mildom:vod**: VOD in Mildom
  - **minds**
  - **minds:channel**
  - **minds:group**
