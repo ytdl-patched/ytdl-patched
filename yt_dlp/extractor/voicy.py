@@ -34,14 +34,14 @@ class VoicyBaseIE(InfoExtractor):
 
     def _extract_single_article(self, entry):
         formats = [{
-            'url': entry['VoiceHlsFile'],
+            'url': entry.get('VoiceHlsFile'),
             'format_id': 'hls',
             'ext': 'm4a',
             'acodec': 'aac',
             'vcodec': 'none',
             'protocol': 'm3u8_native',
         }, {
-            'url': entry['VoiceFile'],
+            'url': entry.get('VoiceFile'),
             'format_id': 'mp3',
             'ext': 'mp3',
             'acodec': 'mp3',
@@ -62,7 +62,7 @@ class VoicyBaseIE(InfoExtractor):
         if response.get('Status') != 0:
             message = traverse_obj(response, ('Value', 'Error', 'Message'), expected_type=compat_str)
             if not message:
-                message = 'There was a error in the response: %d' % response.get('Status')
+                message = 'There was an error in the response: %d' % response.get('Status')
             raise ExtractorError(message, expected=False)
         return response.get('Value')
 
@@ -97,7 +97,6 @@ class VoicyIE(VoicyBaseIE):
 class VoicyChannelIE(VoicyBaseIE):
     IE_NAME = 'voicy:channel'
     _VALID_URL = r'https?://voicy\.jp/channel/(?P<id>\d+)'
-    PROGRAM_LIST_API_URL = 'https://vmw.api.voicy.jp/program_list/all?channel_id=%s&limit=20&public_type=3%s'
     _TESTS = [{
         'note': 'chomado wa iizo (iitowaittenai)',
         'url': 'https://voicy.jp/channel/1253/',
@@ -115,15 +114,23 @@ class VoicyChannelIE(VoicyBaseIE):
         return not VoicyIE.suitable(url) and super(VoicyChannelIE, cls).suitable(url)
 
     def _entries(self, channel_id):
-        pager = ''
+        pager = {}
         for count in itertools.count(1):
-            article_list = self._call_api(self.PROGRAM_LIST_API_URL % (channel_id, pager), channel_id, note='Paging #%d' % count)
+            article_list = self._call_api(
+                'https://vmw.api.voicy.jp/program_list/all',
+                channel_id, note=f'Paging #{count}',
+                query={
+                    'channel_id': channel_id,
+                    'limit': '20',
+                    'public_type': '3',
+                    **pager,
+                })
             playlist_data = article_list.get('PlaylistData')
             if not playlist_data:
                 break
             yield from playlist_data
             last = playlist_data[-1]
-            pager = '&pid=%d&p_date=%s&play_count=%s' % (last['PlaylistId'], last['Published'], last['PlayCount'])
+            pager = {'pid': last['PlaylistId'], 'p_date': last['Published'], 'play_count': last['PlayCount']}
 
     def _real_extract(self, url):
         channel_id = self._match_id(url)
