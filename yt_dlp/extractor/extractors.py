@@ -1368,6 +1368,11 @@ from .reverbnation import ReverbNationIE
 from .rice import RICEIE
 from .rmcdecouverte import RMCDecouverteIE
 from .rockstargames import RockstarGamesIE
+from .rokfin import (
+    RokfinIE,
+    RokfinStackIE,
+    RokfinChannelIE,
+)
 from .roosterteeth import RoosterTeethIE, RoosterTeethSeriesIE
 from .rottentomatoes import RottenTomatoesIE
 from .rozhlas import RozhlasIE

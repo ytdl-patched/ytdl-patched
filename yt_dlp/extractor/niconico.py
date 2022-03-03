@@ -20,6 +20,7 @@ from ..neonippori import (
 )
 from ..utils import (
     ExtractorError,
+    OnDemandPagedList,
     clean_html,
     float_or_none,
     int_or_none,
@@ -640,7 +641,7 @@ class NiconicoIE(NiconicoBaseIE):
         return None
 
 
-class NiconicoPlaylistBaseIE(NiconicoBaseIE):
+class NiconicoPlaylistBaseIE(InfoExtractor):
     _PAGE_SIZE = 100
 
     _API_HEADERS = {
@@ -655,25 +656,22 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
 
     @staticmethod
     def _parse_owner(item):
-        owner = item.get('owner') or {}
-        if owner:
-            return {
-                'uploader': owner.get('name'),
-                'uploader_id': owner.get('id'),
-            }
-        return {}
+        return {
+            'uploader': traverse_obj(item, ('owner', 'name')),
+            'uploader_id': traverse_obj(item, ('owner', 'id')),
+        }
 
     def _fetch_page(self, list_id, page):
         page += 1
-        items = self._call_api(list_id, 'page %d' % page, {
+        resp = self._call_api(list_id, 'page %d' % page, {
             'page': page,
             'pageSize': self._PAGE_SIZE,
-        })['items']
-        for video in items:
-            # this is needed to support both mylist and user
-            video = traverse_obj(video, ('video',), (), expected_type=dict)
+        })
+        # this is needed to support both mylist and user
+        for video in traverse_obj(resp, ('items', ..., ('video', None))) or []:
             video_id = video.get('id')
             if not video_id:
+                # skip {"video": {"id": "blablabla", ...}}
                 continue
             count = video.get('count') or {}
             get_count = lambda x: int_or_none(count.get(x))
@@ -681,24 +679,18 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
                 '_type': 'url',
                 'id': video_id,
                 'title': video.get('title'),
-                'url': 'https://www.nicovideo.jp/watch/' + video_id,
+                'url': f'https://www.nicovideo.jp/watch/{video_id}',
                 'description': video.get('shortDescription'),
                 'duration': int_or_none(video.get('duration')),
                 'view_count': get_count('view'),
                 'comment_count': get_count('comment'),
+                'thumbnail': traverse_obj(video, ('thumbnail', ('nHdUrl', 'largeUrl', 'listingUrl', 'url'))),
                 'ie_key': NiconicoIE.ie_key(),
                 **self._parse_owner(video),
             }
 
-    def _entries(self, pagefunc):
-        NO_ENTRY = object()
-        for i in itertools.count(0):
-            r = pagefunc(i)
-            n = next(r, NO_ENTRY)
-            if n is NO_ENTRY:
-                break
-            yield n
-            yield from r
+    def _entries(self, list_id):
+        return OnDemandPagedList(functools.partial(self._fetch_page, list_id), self._PAGE_SIZE)
 
 
 class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
@@ -714,7 +706,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
             'uploader': 'のっく',
             'uploader_id': '805442',
         },
-        'playlist_mincount': 225,
+        'playlist_mincount': 291,
     }, {
         'url': 'https://www.nicovideo.jp/user/805442/mylist/27411728',
         'only_matching': True,
@@ -725,8 +717,8 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
 
     def _call_api(self, list_id, resource, query):
         return self._download_json(
-            'https://nvapi.nicovideo.jp/v2/mylists/' + list_id, list_id,
-            'Downloading %s' % resource, query=query,
+            f'https://nvapi.nicovideo.jp/v2/mylists/{list_id}', list_id,
+            f'Downloading {resource}', query=query,
             headers=self._API_HEADERS)['data']['mylist']
 
     def _real_extract(self, url):
@@ -734,15 +726,12 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = self._entries(functools.partial(self._fetch_page, list_id))
-        result = self.playlist_result(
-            entries, list_id, mylist.get('name'), mylist.get('description'))
-        result.update(self._parse_owner(mylist))
-        return result
+        return self.playlist_result(
+            self._entries(list_id), list_id,
+            mylist.get('name'), mylist.get('description'), **self._parse_owner(mylist))
 
 
-# cannot use NiconicoPlaylistBaseIE because /series/ has different structure than others
-class NiconicoSeriesIE(NiconicoBaseIE):
+class NiconicoSeriesIE(InfoExtractor):
     IE_NAME = 'niconico:series'
     _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/series/(?P<id>\d+)'
 
@@ -767,7 +756,7 @@ class NiconicoSeriesIE(NiconicoBaseIE):
 
     def _real_extract(self, url):
         list_id = self._match_id(url)
-        webpage = self._download_webpage('https://www.nicovideo.jp/series/%s' % list_id, list_id)
+        webpage = self._download_webpage(f'https://www.nicovideo.jp/series/{list_id}', list_id)
 
         title = self._search_regex(
             (r'<title>「(.+)（全',
@@ -775,16 +764,15 @@ class NiconicoSeriesIE(NiconicoBaseIE):
             webpage, 'title', fatal=False)
         if title:
             title = unescapeHTML(title)
-        playlist = []
-        for match in re.finditer(r'href="/watch/([a-z0-9]+)" data-href="/watch/\1', webpage):
-            playlist.append(self.url_result('https://www.nicovideo.jp/watch/%s' % match.group(1), video_id=match.group(1)))
+        playlist = [
+            self.url_result(f'https://www.nicovideo.jp/watch/{v_id}', video_id=v_id)
+            for v_id in re.findall(r'href="/watch/([a-z0-9]+)" data-href="/watch/\1', webpage)]
         return self.playlist_result(playlist, list_id, title)
 
 
 class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
     IE_NAME = 'niconico:history'
     IE_DESC = 'NicoNico user history. Requires cookies.'
-    # actual url of history page is "https://www.nicovideo.jp/my/history/video", but /video is omitted to widen matches
     _VALID_URL = r'https?://(?:www\.|sp\.)?nicovideo\.jp/my/history'
 
     _TESTS = [{
@@ -808,18 +796,20 @@ class NiconicoHistoryIE(NiconicoPlaylistBaseIE):
     def _call_api(self, list_id, resource, query):
         return self._download_json(
             'https://nvapi.nicovideo.jp/v1/users/me/watch/history', 'history',
-            'Downloading %s' % resource, query=query,
+            f'Downloading {resource}', query=query,
             headers=self._API_HEADERS)['data']
 
     def _real_extract(self, url):
         list_id = 'history'
-        mylist = self._call_api(list_id, 'list', {
-            'pageSize': 1,
-        })
-        entries = self._entries(functools.partial(self._fetch_page, list_id))
-        result = self.playlist_result(entries, list_id)
-        result.update(self._parse_owner(mylist))
-        return result
+        try:
+            mylist = self._call_api(list_id, 'list', {
+                'pageSize': 1,
+            })
+        except ExtractorError as e:
+            if isinstance(e.cause, compat_HTTPError) and e.cause.code == 401:
+                self.raise_login_required('You have to be logged in to get your watch history')
+            raise
+        return self.playlist_result(self._entries(list_id), list_id, **self._parse_owner(mylist))
 
 
 class NicovideoSearchBaseIE(InfoExtractor):
