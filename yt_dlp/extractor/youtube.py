@@ -3409,7 +3409,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if is_live and self.get_param('live_from_start'):
             self._prepare_live_from_start_formats(formats, video_id, live_start_time, url, webpage_url, smuggled_data)
 
-        formats.extend(self._extract_storyboard(player_responses, duration))
+        # formats.extend(self._extract_storyboard(player_responses, duration))
 
         # Source is given priority since formats that throttle are given lower source_preference
         # When throttling issue is fully fixed, remove this
