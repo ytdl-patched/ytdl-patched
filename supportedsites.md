@@ -1023,6 +1023,9 @@
  - **RICE**
  - **RMCDecouverte**
  - **RockstarGames**
+ - **Rokfin**
+ - **rokfin:channel**
+ - **rokfin:stack**
  - **RoosterTeeth**
  - **RoosterTeethSeries**
  - **RottenTomatoes**
