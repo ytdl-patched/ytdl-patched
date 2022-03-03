@@ -993,17 +993,16 @@ class NiconicoLiveIE(NiconicoBaseIE):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        webpage, urlh = self._download_webpage_handle('https://live2.nicovideo.jp/watch/%s' % video_id, video_id)
+        webpage, urlh = self._download_webpage_handle(f'https://live2.nicovideo.jp/watch/{video_id}', video_id)
 
-        embedded_data = self._search_regex(r'<script\s+id="embedded-data"\s*data-props="(.+?)"', webpage, 'embedded data')
-        embedded_data = unescapeHTML(embedded_data)
-        embedded_data = self._parse_json(embedded_data, video_id)
+        embedded_data = self._parse_json(unescapeHTML(self._search_regex(
+            r'<script\s+id="embedded-data"\s*data-props="(.+?)"', webpage, 'embedded data')), video_id)
 
-        ws_url = embedded_data['site']['relive']['webSocketUrl']
+        ws_url = traverse_obj(embedded_data, ('site', 'relive', 'webSocketUrl'))
         if not ws_url:
-            raise ExtractorError('the live hasn\'t started yet or already ended', expected=True)
+            raise ExtractorError('The live hasn\'t started yet or already ended.', expected=True)
         ws_url = update_url_query(ws_url, {
-            'frontend_id': embedded_data['site']['frontendId'],
+            'frontend_id': traverse_obj(embedded_data, ('site', 'frontendId')) or '9',
         })
 
         cookies = try_get(urlh.geturl(), self._get_cookie_header)
@@ -1020,19 +1019,19 @@ class NiconicoLiveIE(NiconicoBaseIE):
 
         self.write_debug('[debug] Sending HLS server request')
         ws.send(json.dumps({
-            "type": "startWatching",
-            "data": {
-                "stream": {
-                    "quality": 'abr',
-                    "protocol": "hls+fmp4",
-                    "latency": latency,
-                    "chasePlay": False
+            'type': 'startWatching',
+            'data': {
+                'stream': {
+                    'quality': 'abr',
+                    'protocol': 'hls+fmp4',
+                    'latency': latency,
+                    'chasePlay': False
                 },
-                "room": {
-                    "protocol": "webSocket",
-                    "commentable": True
+                'room': {
+                    'protocol': 'webSocket',
+                    'commentable': True
                 },
-                "reconnect": False,
+                'reconnect': False,
             }
         }))
 
@@ -1041,7 +1040,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
             if not recv:
                 continue
             data = json.loads(recv)
-            if not data or not isinstance(data, dict):
+            if not isinstance(data, dict):
                 continue
             if data.get('type') == 'stream':
                 m3u8_url = data['data']['uri']
@@ -1052,18 +1051,15 @@ class NiconicoLiveIE(NiconicoBaseIE):
                 raise ExtractorError('Disconnected at middle of extraction')
             elif data.get('type') == 'error':
                 self.write_debug(recv)
-                message = try_get(data, lambda x: x["body"]["code"], compat_str) or recv
+                message = traverse_obj(data, ('body', 'code')) or recv
                 raise ExtractorError(message)
             elif self.get_param('verbose', False):
                 if len(recv) > 100:
                     recv = recv[:100] + '...'
                 self.to_screen('[debug] Server said: %s' % recv)
 
-        title = try_get(
-            None,
-            (lambda x: embedded_data['program']['title'],
-             lambda x: self._html_search_meta(('og:title', 'twitter:title'), webpage, 'live title', fatal=False)),
-            compat_str)
+        title = traverse_obj(embedded_data, ('program', 'title')) or self._html_search_meta(
+            ('og:title', 'twitter:title'), webpage, 'live title', fatal=False)
 
         is_from_start = False
         if self.get_param('live_from_start'):
