@@ -6,7 +6,7 @@ WebSocket = None
 # WebSocket: (URI, header={'Accept': 'nothing', 'X-Magic-Number': '42'})->WebSocket
 # only send, recv, close are guaranteed to exist
 
-HAVE_WS_WEBSOCKET_CLIENT, HAVE_WS_WEBSOCKETS, HAVE_WS_WEBSOCAT, HAVE_WS_NODEJS_WS_WRAPPER, HAVE_WS_NODEJS_WEBSOCKET_WRAPPER = (False, ) * 5
+HAVE_WS_WEBSOCKET_CLIENT, HAVE_WS_WEBSOCKETS = False, False
 
 try:
     from websocket import create_connection, WebSocket
