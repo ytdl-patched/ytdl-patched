@@ -206,7 +206,7 @@ class FC2LiveIE(InfoExtractor):
 
         self.to_screen('%s: Fetching HLS playlist info via WebSocket' % video_id)
         ws = WebSocket(ws_url, {
-            'Cookie': str(self._get_cookies('https://live.fc2.com/'))[12:],
+            'Cookie': self._get_cookie_header('https://live.fc2.com/'),
             'Origin': 'https://live.fc2.com',
             'Accept': '*/*',
             'User-Agent': std_headers['User-Agent'],
