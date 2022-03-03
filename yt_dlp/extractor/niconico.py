@@ -641,7 +641,7 @@ class NiconicoIE(NiconicoBaseIE):
         return None
 
 
-class NiconicoPlaylistBaseIE(InfoExtractor):
+class NiconicoPlaylistBaseIE(NiconicoBaseIE):
     _PAGE_SIZE = 100
 
     _API_HEADERS = {
@@ -731,7 +731,7 @@ class NiconicoPlaylistIE(NiconicoPlaylistBaseIE):
             mylist.get('name'), mylist.get('description'), **self._parse_owner(mylist))
 
 
-class NiconicoSeriesIE(InfoExtractor):
+class NiconicoSeriesIE(NiconicoBaseIE):
     IE_NAME = 'niconico:series'
     _VALID_URL = r'https?://(?:(?:www\.|sp\.)?nicovideo\.jp|nico\.ms)/series/(?P<id>\d+)'
 
