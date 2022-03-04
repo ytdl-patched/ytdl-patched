@@ -8,6 +8,7 @@ import json
 
 from .common import InfoExtractor
 from ..utils import (
+    ExtractorError,
     determine_ext,
     std_headers,
     traverse_obj,
@@ -26,12 +27,14 @@ class MildomBaseIE(InfoExtractor):
     _GUEST_ID = None
     _DISPATCHER_CONFIG = None
 
-    def _call_api(self, url, video_id, query=None, note='Downloading JSON metadata', init=False):
+    def _call_api(self, url, video_id, query=None, note='Downloading JSON metadata', init=False, body=None):
         query = query or {}
         if query:
             query['__platform'] = 'web'
         url = update_url_query(url, self._common_queries(query, init=init))
-        content = self._download_json(url, video_id, note=note)
+        content = self._download_json(
+            url, video_id, note=note, data=json.dumps(body).encode() if body else None,
+            headers={'Content-Type': 'application/json'} if body else {})
         if content['code'] == 0:
             return content['body']
         else:
@@ -39,9 +42,9 @@ class MildomBaseIE(InfoExtractor):
                 f'Video not found or premium content. {content["code"]} - {content["message"]}',
                 expected=True)
 
-    def _common_queries(self, query={}, init=False):
+    def _common_queries(self, query=None, init=False):
         dc = self._fetch_dispatcher_config()
-        r = {
+        return {
             'timestamp': self.iso_timestamp(),
             '__guest_id': '' if init else self.guest_id(),
             '__location': dc['location'],
@@ -49,17 +52,16 @@ class MildomBaseIE(InfoExtractor):
             '__cluster': dc['cluster'],
             '__platform': 'web',
             '__la': self.lang_code(),
-            '__pcv': 'v2.9.44',
+            '__pcv': 'v3.8.15',
             'sfr': 'pc',
             'accessToken': '',
+            **(query or {}),
         }
-        r.update(query)
-        return r
 
     def _fetch_dispatcher_config(self):
         if not self._DISPATCHER_CONFIG:
             tmp = self._download_json(
-                'https://disp.mildom.com/serverListV2', 'initialization',
+                'https://disp.mildom.com/serverListV2', None,
                 note='Downloading dispatcher_config', data=json.dumps({
                     'protover': 0,
                     'data': base64.b64encode(json.dumps({
@@ -87,14 +89,8 @@ class MildomBaseIE(InfoExtractor):
         'getGuestId'
         if self._GUEST_ID:
             return self._GUEST_ID
-        self._GUEST_ID = try_get(
-            self, (
-                lambda x: x._call_api(
-                    'https://cloudac.mildom.com/nonolive/gappserv/guest/h5init', 'initialization',
-                    note='Downloading guest token', init=True)['guest_id'] or None,
-                lambda x: x._get_cookies('https://www.mildom.com').get('gid').value,
-                lambda x: x._get_cookies('https://m.mildom.com').get('gid').value,
-            ), compat_str) or ''
+        # we're allowed to forge guest_id (!!)
+        self._GUEST_ID = f'pc-gp-{random_uuidv4()}'
         return self._GUEST_ID
 
     def lang_code(self):
@@ -137,17 +133,22 @@ class MildomIE(MildomBaseIE):
                 'live_server_type': 'hls',
             })
 
-        stream_query = self._common_queries({
-            'streamReqId': random_uuidv4(),
-            'is_lhls': '0',
-        })
-        m3u8_url = update_url_query(servers['stream_server'] + f'/{video_id}_master.m3u8', stream_query)
+        playback_token = self._call_api(
+            'https://cloudac.mildom.com/nonolive/gappserv/live/token', result_video_id,
+            note='Obtaining live playback token', query=self._common_queries(),
+            body={
+                'host_id': video_id, 'type': 'hls',
+            })
+        playback_token = traverse_obj(playback_token, ('data', ..., 'token'), get_all=False)
+        if not playback_token:
+            raise ExtractorError('Failed to obtain live playback token')
+
+        m3u8_url = f'{servers["stream_server"]}/{video_id}_master.m3u8?{playback_token}'
         formats = self._extract_m3u8_formats(m3u8_url, result_video_id, 'mp4', headers={
             'Referer': 'https://www.mildom.com/',
             'Origin': 'https://www.mildom.com',
         })
 
-        del stream_query['streamReqId'], stream_query['timestamp']
         for fmt in formats:
             fmt.setdefault('http_headers', {})['Referer'] = 'https://www.mildom.com/'
 
