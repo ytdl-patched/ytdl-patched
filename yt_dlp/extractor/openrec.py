@@ -32,15 +32,6 @@ class OpenRecBaseIE(InfoExtractor):
         def get_first(path):
             return traverse_obj(movie_stores, (..., *variadic(path)), get_all=False)
 
-        title = get_first('title')
-        description = get_first('introduction')
-        thumbnail = get_first('thumbnailUrl')
-
-        uploader = get_first(('channel', 'user', 'name'))
-        uploader_id = get_first(('channel', 'user', 'id'))
-
-        timestamp = int_or_none(get_first(['publishedAt', 'time']), scale=1000) or unified_timestamp(get_first('publishedAt'))
-
         m3u8_playlists = get_first('media') or {}
         formats = []
         for name, m3u8_url in m3u8_playlists.items():
@@ -53,13 +44,13 @@ class OpenRecBaseIE(InfoExtractor):
 
         return {
             'id': video_id,
-            'title': title,
-            'description': description,
-            'thumbnail': thumbnail,
+            'title': get_first('title'),
+            'description': get_first('introduction'),
+            'thumbnail': get_first('thumbnailUrl'),
             'formats': formats,
-            'uploader': uploader,
-            'uploader_id': uploader_id,
-            'timestamp': timestamp,
+            'uploader': get_first(('channel', 'user', 'name')),
+            'uploader_id': get_first(('channel', 'user', 'id')),
+            'timestamp': int_or_none(get_first(['publishedAt', 'time']), scale=1000) or unified_timestamp(get_first('publishedAt')),
             'is_live': is_live,
         }
 
@@ -77,7 +68,7 @@ class OpenRecIE(OpenRecBaseIE):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        webpage = self._download_webpage('https://www.openrec.tv/live/%s' % video_id, video_id)
+        webpage = self._download_webpage(f'https://www.openrec.tv/live/{video_id}', video_id)
 
         return self._extract_movie(webpage, video_id, 'live', True)
 
@@ -144,6 +135,6 @@ class OpenRecMovieIE(OpenRecBaseIE):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        webpage = self._download_webpage('https://www.openrec.tv/movie/%s' % video_id, video_id)
+        webpage = self._download_webpage(f'https://www.openrec.tv/movie/{video_id}', video_id)
 
         return self._extract_movie(webpage, video_id, 'movie', False)
