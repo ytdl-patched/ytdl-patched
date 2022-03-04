@@ -39,7 +39,7 @@ class MildomBaseIE(InfoExtractor):
             return content['body']
         else:
             self.raise_no_formats(
-                f'Video not found or premium content. {content["code"]} - {content["message"]}',
+                f'Mildom says: {content["message"]} (code {content["code"]})',
                 expected=True)
 
     def _common_queries(self, query=None, init=False):
@@ -51,7 +51,7 @@ class MildomBaseIE(InfoExtractor):
             '__country': dc['country'],
             '__cluster': dc['cluster'],
             '__platform': 'web',
-            '__la': self.lang_code(),
+            '__la': 'ja',
             '__pcv': 'v3.8.15',
             'sfr': 'pc',
             'accessToken': '',
@@ -92,10 +92,6 @@ class MildomBaseIE(InfoExtractor):
         # we're allowed to forge guest_id (!!)
         self._GUEST_ID = f'pc-gp-{random_uuidv4()}'
         return self._GUEST_ID
-
-    def lang_code(self):
-        'getCurrentLangCode'
-        return 'ja'
 
 
 class MildomIE(MildomBaseIE):
