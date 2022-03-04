@@ -271,6 +271,7 @@
  - **daum.net:clip**
  - **daum.net:playlist**
  - **daum.net:user**
+ - **daystar:clip**
  - **DBTV**
  - **DctpTv**
  - **DeezerAlbum**
@@ -1207,6 +1208,7 @@
  - **TeleBruxelles**
  - **Telecinco**: telecinco.es, cuatro.com and mediaset.es
  - **Telegraaf**
+ - **telegram:embed**
  - **TeleMB**
  - **Telemundo**
  - **TeleQuebec**
@@ -1545,7 +1547,7 @@
  - **ZenYandex**
  - **ZenYandexChannel**
  - **Zhihu**
- - **zingmp3**: mp3.zing.vn
+ - **zingmp3**: zingmp3.vn
  - **zingmp3:album**
  - **zoom**
  - **Zype**
