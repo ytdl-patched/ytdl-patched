@@ -1,39 +1,30 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import base64
-from datetime import datetime
-import itertools
+import functools
 import json
 
 from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
+    OnDemandPagedList,
     determine_ext,
-    std_headers,
+    dict_get,
+    float_or_none,
+    random_uuidv4,
     traverse_obj,
     update_url_query,
-    random_uuidv4,
-    try_get,
-    float_or_none,
-    dict_get
 )
-from ..compat import (
-    compat_str,
-)
+from ..compat import compat_str
 
 
 class MildomBaseIE(InfoExtractor):
     _GUEST_ID = None
-    _DISPATCHER_CONFIG = None
 
-    def _call_api(self, url, video_id, query=None, note='Downloading JSON metadata', init=False, body=None):
-        query = query or {}
-        if query:
-            query['__platform'] = 'web'
-        url = update_url_query(url, self._common_queries(query, init=init))
+    def _call_api(self, url, video_id, query=None, note='Downloading JSON metadata', body=None):
         content = self._download_json(
-            url, video_id, note=note, data=json.dumps(body).encode() if body else None,
+            update_url_query(url, self._common_queries(query)),
+            video_id, note=note, data=json.dumps(body).encode() if body else None,
             headers={'Content-Type': 'application/json'} if body else {})
         if content['code'] == 0:
             return content['body']
@@ -42,48 +33,12 @@ class MildomBaseIE(InfoExtractor):
                 f'Mildom says: {content["message"]} (code {content["code"]})',
                 expected=True)
 
-    def _common_queries(self, query=None, init=False):
-        dc = self._fetch_dispatcher_config()
+    def _common_queries(self, query=None, guest=True):
         return {
-            'timestamp': self.iso_timestamp(),
-            '__guest_id': '' if init else self.guest_id(),
-            '__location': dc['location'],
-            '__country': dc['country'],
-            '__cluster': dc['cluster'],
+            '__guest_id': self.guest_id(),
             '__platform': 'web',
-            '__la': 'ja',
-            '__pcv': 'v3.8.15',
-            'sfr': 'pc',
-            'accessToken': '',
             **(query or {}),
         }
-
-    def _fetch_dispatcher_config(self):
-        if not self._DISPATCHER_CONFIG:
-            tmp = self._download_json(
-                'https://disp.mildom.com/serverListV2', None,
-                note='Downloading dispatcher_config', data=json.dumps({
-                    'protover': 0,
-                    'data': base64.b64encode(json.dumps({
-                        'fr': 'web',
-                        'sfr': 'pc',
-                        'devi': 'Windows',
-                        'la': 'ja',
-                        'gid': None,
-                        'loc': '',
-                        'clu': '',
-                        'wh': '1919*810',
-                        'rtm': self.iso_timestamp(),
-                        'ua': std_headers['User-Agent'],
-                    }).encode('utf8')).decode('utf8').replace('\n', ''),
-                }).encode('utf8'))
-            self._DISPATCHER_CONFIG = self._parse_json(base64.b64decode(tmp['data']), 'initialization')
-        return self._DISPATCHER_CONFIG
-
-    @staticmethod
-    def iso_timestamp():
-        'new Date().toISOString()'
-        return datetime.utcnow().isoformat()[0:-3] + 'Z'
 
     def guest_id(self):
         'getGuestId'
@@ -101,26 +56,16 @@ class MildomIE(MildomBaseIE):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        url = f'https://www.mildom.com/{video_id}'
-
-        webpage = self._download_webpage(url, video_id)
+        webpage = self._download_webpage(f'https://www.mildom.com/{video_id}', video_id)
 
         enterstudio = self._call_api(
             'https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio', video_id,
             note='Downloading live metadata', query={'user_id': video_id})
         result_video_id = enterstudio.get('log_id', video_id)
 
-        title = try_get(
-            enterstudio, (
-                lambda x: self._html_search_meta('twitter:description', webpage),
-                lambda x: x['anchor_intro'],
-            ), compat_str)
+        title = self._html_search_meta('twitter:description', webpage, fatal=False) or traverse_obj(enterstudio, 'anchor_intro')
         description = traverse_obj(enterstudio, 'intro', 'live_intro', expected_type=compat_str)
-        uploader = try_get(
-            enterstudio, (
-                lambda x: self._html_search_meta('twitter:title', webpage),
-                lambda x: x['loginname'],
-            ), compat_str)
+        uploader = self._html_search_meta('twitter:title', webpage, fatal=False) or traverse_obj(enterstudio, 'loginname')
 
         servers = self._call_api(
             'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', result_video_id,
@@ -338,29 +283,28 @@ class MildomUserVodIE(MildomBaseIE):
             'id': '10093333',
             'title': 'Uploads from ねこばたけ',
         },
-        'playlist_mincount': 351,
+        'playlist_mincount': 732,
     }, {
         'url': 'https://www.mildom.com/profile/10882672',
         'info_dict': {
             'id': '10882672',
             'title': 'Uploads from kson組長(けいそん)',
         },
-        'playlist_mincount': 191,
+        'playlist_mincount': 201,
     }]
 
-    def _entries(self, user_id):
-        for page in itertools.count(1):
-            reply = self._call_api(
-                'https://cloudac.mildom.com/nonolive/videocontent/profile/playbackList',
-                user_id, note='Downloading page %d' % page, query={
-                    'user_id': user_id,
-                    'page': page,
-                    'limit': '30',
-                })
-            if not reply:
-                break
-            for x in reply:
-                yield self.url_result('https://www.mildom.com/playback/%s/%s' % (user_id, x['v_id']))
+    def _fetch_page(self, user_id, page):
+        page += 1
+        reply = self._call_api(
+            'https://cloudac.mildom.com/nonolive/videocontent/profile/playbackList',
+            user_id, note=f'Downloading page {page}', query={
+                'user_id': user_id,
+                'page': page,
+                'limit': '30',
+            })
+        if not reply:
+            return
+        yield from (self.url_result(f'https://www.mildom.com/playback/{user_id}/{x["v_id"]}') for x in reply)
 
     def _real_extract(self, url):
         user_id = self._match_id(url)
@@ -371,4 +315,5 @@ class MildomUserVodIE(MildomBaseIE):
             query={'user_id': user_id}, note='Downloading user profile')['user_info']
 
         return self.playlist_result(
-            self._entries(user_id), user_id, 'Uploads from %s' % profile['loginname'])
+            OnDemandPagedList(functools.partial(self._fetch_page, user_id), 30),
+            user_id, f'Uploads from {profile["loginname"]}')
