@@ -47,6 +47,8 @@
  - **AlJazeera**
  - **Allocine**
  - **AlphaPorno**
+ - **Alsace20TV**
+ - **Alsace20TVEmbed**
  - **Alura**
  - **AluraCourse**
  - **Amara**
@@ -60,6 +62,9 @@
  - **AnimeLab**
  - **AnimeLabShows**
  - **AnimeOnDemand**
+ - **ant1newsgr:article**: ant1news.gr articles
+ - **ant1newsgr:embed**: ant1news.gr embedded videos
+ - **ant1newsgr:watch**: ant1news.gr videos
  - **Anvato**
  - **aol.com**: Yahoo screen and movies
  - **APA**
@@ -77,6 +82,7 @@
  - **Arkena**
  - **arte.sky.it**
  - **ArteTV**
+ - **ArteTVCategory**
  - **ArteTVEmbed**
  - **ArteTVPlaylist**
  - **AsianCrush**
@@ -239,6 +245,8 @@
  - **Coub**
  - **CozyTV**
  - **cp24**
+ - **cpac**
+ - **cpac:playlist**
  - **Cracked**
  - **Crackle**
  - **CrooksAndLiars**
@@ -1374,6 +1382,8 @@
  - **video.google:search**: Google Video search; "gvsearch:" prefix
  - **video.sky.it**
  - **video.sky.it:live**
+ - **VideocampusSachsen**
+ - **VideocampusSachsenEmbed**
  - **VideoDetective**
  - **videofy.me**
  - **videomore**
@@ -1451,7 +1461,7 @@
  - **WatchBox**
  - **WatchIndianPorn**: Watch Indian Porn
  - **WDR**
- - **wdr:mobile**
+ - **wdr:mobile** (Currently broken)
  - **WDRElefant**
  - **WDRPage**
  - **web.archive:youtube**: web.archive.org saved youtube videos, "ytarchive:" prefix
