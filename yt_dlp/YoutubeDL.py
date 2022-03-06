@@ -3726,7 +3726,7 @@ class YoutubeDL(object):
                 found_fmt = next(func(ctx), None)
                 selector_text = sel.selector
                 if sel.filters:
-                    selector_text += '[' + ']['.join(sel.filters) + ']'
+                    selector_text += ''.join(f'[{x}]' for x in sel.filters)
                 if found_fmt:
                     found.setdefault(found_fmt['format_id'], []).append(selector_text)
                 else:
@@ -3734,11 +3734,8 @@ class YoutubeDL(object):
 
             def debug_info(f):
                 if new_format:
-                    columns = ['|']
-                else:
-                    columns = []
-                columns.append(', '.join(found.get(f['format_id']) or []))
-                return columns
+                    yield delim
+                yield ', '.join(found.get(f['format_id']) or [])
         else:
             def debug_info(f):
                 return []
@@ -3759,7 +3756,7 @@ class YoutubeDL(object):
 
         delim = self._format_screen('\u2502', self.Styles.DELIM, '|', test_encoding=True)
         if verbose:
-            debug_info_title = ['|', 'DEBUG']
+            debug_info_title = [delim, 'DEBUG']
         table = [
             [
                 self._format_screen(format_field(f, 'format_id'), self.Styles.ID),
@@ -3788,6 +3785,7 @@ class YoutubeDL(object):
                                   format_field(f, 'container', ignore=(None, f.get('ext'))),
                                   delim=', '),
                     delim=' '),
+                *debug_info(f),
             ] for f in formats if f.get('preference') is None or f['preference'] >= -1000]
         header_line = self._list_format_headers(
             'ID', 'EXT', 'RESOLUTION', '\tFPS', 'HDR', delim, '\tFILESIZE', '\tTBR', 'PROTO',
