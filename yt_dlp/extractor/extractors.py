@@ -1658,7 +1658,7 @@ from .teletask import TeleTaskIE
 from .telewebion import TelewebionIE
 from .tennistv import TennisTVIE
 from .tenplay import TenPlayIE
-from .testurl import TestURLIE
+from .testurl import TestURLIE, TestInfoDictIE
 from .tf1 import TF1IE
 from .tfo import TFOIE
 from .theintercept import TheInterceptIE

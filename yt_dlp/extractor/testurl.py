@@ -62,3 +62,29 @@ class TestURLIE(InfoExtractor):
         self.to_screen('Test URL: %s' % tc['url'])
 
         return self.url_result(tc['url'], video_id=video_id)
+
+
+class TestInfoDictIE(InfoExtractor):
+    """ IE to carry out some tests """
+
+    IE_DESC = False  # Do not list
+    _VALID_URL = r'^testdict$'
+
+    def _real_extract(self, url):
+        return {
+            'id': 'testdict',
+            'title': 'taitoru',
+            'formats': [{
+                'format_id': ' space',
+                'url': 'https://example.com/'
+            }, {
+                'format_id': 'middle space',
+                'url': 'https://example.com/'
+            }, {
+                'format_id': 'what*the!fuck',
+                'url': 'https://example.com/'
+            }, {
+                'format_id': 'some(more)thing',
+                'url': 'https://example.com/'
+            }],
+        }
