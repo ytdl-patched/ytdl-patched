@@ -85,6 +85,8 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
 * [MORE](#more)
 <!-- MANPAGE: END EXCLUDED SECTION -->
 
+**Disclaimer:** ytdl-patched does exist for my use, so there's no absolute warranty for anything. Use yt-dlp if you don't like it.
+
 # NEW FEATURES
 ## NEW FEATURES IN YTDL-PATCHED
 The major new features from the latest release of [yt-dlp](https://github.com/yt-dlp/yt-dlp) are:
@@ -144,6 +146,16 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 
 * **Format debugger**: You can debug `-f FORMAT` specs, by just adding `-Fv`. This doesn't work if specs passed to `-f` is malformed.
 You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens.
+
+
+### GOALS
+- keep merging with [`yt-dlp/yt-dlp`](https://github.com/yt-dlp/yt-dlp)
+- implement miscellaneous extractors as possible
+- make `-U` work (yes, really works)
+- do anything best
+
+### NOT TO DO
+- don't change very much from yt-dlp
 
 
 ## NEW FEATURES IN YT-DLP
@@ -225,15 +237,6 @@ For ease of use, a few more compat options are available:
 * `--compat-options all`: Use all compat options
 * `--compat-options youtube-dl`: Same as `--compat-options all,-multistreams`
 * `--compat-options youtube-dlc`: Same as `--compat-options all,-no-live-chat,-no-youtube-channel-redirect`
-
-### GOALS
-- keep merging with [`yt-dlp/yt-dlp`](https://github.com/yt-dlp/yt-dlp)
-- implement miscellaneous extractors as possible
-- make `-U` work (yes, really works)
-- do anything best
-
-### NOT TO DO
-- don't change very much from yt-dlp
 
 # INSTALLATION
 
