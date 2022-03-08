@@ -1,42 +1,21 @@
 # coding: utf-8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
 import sys
-import re
+sys.path[:0] = ['.', 'devscripts']
 
-sys.path[:0] = ['.']
-
+from scraper_helper import ie, traverse_sanitize
 from yt_dlp.utils import ExtractorError
-from yt_dlp.extractor.common import InfoExtractor
-from test.helper import FakeYDL
 
-
-class TestIE(InfoExtractor):
-    pass
-
-
-ie = TestIE(FakeYDL({
-    'verbose': False,
-    'socket_timeout': 120,
-}))
 script_id = 'misskey'
 results = set()
-
-
-def sanitize_hostname(hostname):
-    # trim trailing slashes
-    hostname = re.sub(r'[/\\]+$', '', hostname)
-    # trim port number
-    hostname = re.sub(r':\d+$', '', hostname)
-    return hostname
 
 
 if True:
     url = 'https://instanceapp.misskey.page/instances.json'
     data = ie._download_json(
         url, script_id, note=f'Scraping join.misskey.page, len(results)={len(results)}')
-    for instance in data['instancesInfos']:
-        results.add(sanitize_hostname(instance['url']))
+    results.update(traverse_sanitize(data, ('instancesInfos', ..., 'url')))
 
 
 if True:
@@ -48,8 +27,7 @@ if True:
                 'content-type': 'application/json, application/graphql',
                 'accept': 'application/json, application/graphql',
             })
-        for instance in data['data']['nodes']:
-            results.add(sanitize_hostname(instance['host']))
+        results.update(traverse_sanitize(data, ('data', 'nodes', ..., 'host')))
     except BaseException:
         pass
 

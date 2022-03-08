@@ -1,39 +1,19 @@
 # coding: utf-8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
 import sys
 import os
 import re
 import itertools
+sys.path[:0] = ['.', 'devscripts']
 
-sys.path[:0] = ['.']
-
+from scraper_helper import ie, sanitize_hostname, traverse_sanitize
 from yt_dlp.utils import ExtractorError, parse_qs
-from yt_dlp.extractor.common import InfoExtractor
-from test.helper import FakeYDL
 
-
-class TestIE(InfoExtractor):
-    pass
-
-
-ie = TestIE(FakeYDL({
-    'verbose': False,
-    'socket_timeout': 120,
-}))
 script_id = 'mastodon'
 results = set()
 
-
-def sanitize_hostname(hostname):
-    # trim trailing slashes
-    hostname = re.sub(r'[/\\]+$', '', hostname)
-    # trim port number
-    hostname = re.sub(r':\d+$', '', hostname)
-    return hostname
-
 # Mastodon
-
 
 instance_social_api_key = os.environ.get('INSTANCE_SOCIAL_API_SECRET')
 if instance_social_api_key:
@@ -45,8 +25,7 @@ if instance_social_api_key:
         data = ie._download_json(
             url, script_id, note=f'Paging {min_id}, len(results)={len(results)}',
             headers={'Authorization': f'Bearer {instance_social_api_key}'})
-        for instance in data['instances']:
-            results.add(sanitize_hostname(instance['name']))
+        results.update(traverse_sanitize(data, ('instances', ..., 'name')))
         min_id = data['pagination'].get('next_id')
         if not min_id:
             break
@@ -75,8 +54,7 @@ if True:
                 'content-type': 'application/json, application/graphql',
                 'accept': 'application/json, application/graphql',
             })
-        for instance in data['data']['nodes']:
-            results.add(sanitize_hostname(instance['host']))
+        results.update(traverse_sanitize(data, ('data', 'nodes', ..., 'host')))
     except KeyboardInterrupt:
         raise
     except BaseException as ex:
@@ -138,8 +116,7 @@ if True:
                 'content-type': 'application/json, application/graphql',
                 'accept': 'application/json, application/graphql',
             })
-        for instance in data['data']['nodes']:
-            results.add(sanitize_hostname(instance['host']))
+        results.update(traverse_sanitize(data, ('data', 'nodes', ..., 'host')))
     except KeyboardInterrupt:
         raise
     except BaseException as ex:

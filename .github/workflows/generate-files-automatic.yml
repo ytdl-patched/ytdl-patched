@@ -8,6 +8,7 @@ on:
       - devscripts/make_peertube_instance_list.py
       - devscripts/make_misskey_version_list.py
       - devscripts/make_chrome_version_list.py
+      - devscripts/scraper_helper.py
     branches:
       - ytdlp
   schedule:

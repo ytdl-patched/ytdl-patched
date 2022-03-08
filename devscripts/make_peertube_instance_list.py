@@ -1,34 +1,15 @@
 # coding: utf-8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
 import sys
 import re
+sys.path[:0] = ['.', 'devscripts']
 
-sys.path[:0] = ['.']
-
+from scraper_helper import ie, sanitize_hostname, traverse_sanitize
 from yt_dlp.utils import ExtractorError
-from yt_dlp.extractor.common import InfoExtractor
-from test.helper import FakeYDL
 
-
-class TestIE(InfoExtractor):
-    pass
-
-
-ie = TestIE(FakeYDL({
-    'verbose': False,
-    'socket_timeout': 120,
-}))
 script_id = 'peertube'
 results = set()
-
-
-def sanitize_hostname(hostname):
-    # trim trailing slashes
-    hostname = re.sub(r'[/\\]+$', '', hostname)
-    # trim port number
-    hostname = re.sub(r':\d+$', '', hostname)
-    return hostname
 
 
 begin, page_size = 0, 10
@@ -36,13 +17,12 @@ while True:
     url = 'https://instances.joinpeertube.org/api/v1/instances?start=%d&count=%d&sort=-createdAt' % (begin, page_size)
     data = ie._download_json(
         url, script_id, note=f'Paging https://instances.joinpeertube.org {begin}, len(results)={len(results)}')
-    for instance in data['data']:
-        results.add(sanitize_hostname(instance['host']))
+    results.update(traverse_sanitize(data, ('data', ..., 'host')))
     begin += page_size
     if not data['data']:
         break
 
-while True:
+if True:
     try:
         url = 'https://the-federation.info/graphql?query=query%20Platform(%24name%3A%20String!)%20%7B%0A%20%20platforms(name%3A%20%24name)%20%7B%0A%20%20%20%20name%0A%20%20%20%20code%0A%20%20%20%20displayName%0A%20%20%20%20description%0A%20%20%20%20tagline%0A%20%20%20%20website%0A%20%20%20%20icon%0A%20%20%20%20__typename%0A%20%20%7D%0A%20%20nodes(platform%3A%20%24name)%20%7B%0A%20%20%20%20id%0A%20%20%20%20name%0A%20%20%20%20version%0A%20%20%20%20openSignups%0A%20%20%20%20host%0A%20%20%20%20platform%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%20%20icon%0A%20%20%20%20%20%20__typename%0A%20%20%20%20%7D%0A%20%20%20%20countryCode%0A%20%20%20%20countryFlag%0A%20%20%20%20countryName%0A%20%20%20%20services%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%20%20__typename%0A%20%20%20%20%7D%0A%20%20%20%20__typename%0A%20%20%7D%0A%20%20statsGlobalToday(platform%3A%20%24name)%20%7B%0A%20%20%20%20usersTotal%0A%20%20%20%20usersHalfYear%0A%20%20%20%20usersMonthly%0A%20%20%20%20localPosts%0A%20%20%20%20localComments%0A%20%20%20%20__typename%0A%20%20%7D%0A%20%20statsNodes(platform%3A%20%24name)%20%7B%0A%20%20%20%20node%20%7B%0A%20%20%20%20%20%20id%0A%20%20%20%20%20%20__typename%0A%20%20%20%20%7D%0A%20%20%20%20usersTotal%0A%20%20%20%20usersHalfYear%0A%20%20%20%20usersMonthly%0A%20%20%20%20localPosts%0A%20%20%20%20localComments%0A%20%20%20%20__typename%0A%20%20%7D%0A%7D%0A&operationName=Platform&variables=%7B%22name%22%3A%22peertube%22%7D'
         data = ie._download_json(
@@ -51,9 +31,7 @@ while True:
                 'content-type': 'application/json, application/graphql',
                 'accept': 'application/json, application/graphql',
             })
-        for instance in data['data']['nodes']:
-            results.add(sanitize_hostname(instance['host']))
-        break
+        results.update(traverse_sanitize(data, ('data', 'nodes', ..., 'host')))
     except BaseException as ex:
         ie.report_warning(ex)
 
