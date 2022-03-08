@@ -46,8 +46,14 @@ def main():
 def filter_excluded_sections(readme):
     EXCLUDED_SECTION_BEGIN_STRING = re.escape('<!-- MANPAGE: BEGIN EXCLUDED SECTION -->')
     EXCLUDED_SECTION_END_STRING = re.escape('<!-- MANPAGE: END EXCLUDED SECTION -->')
-    return re.sub(
+    readme = re.sub(
         rf'(?s){EXCLUDED_SECTION_BEGIN_STRING}.+?{EXCLUDED_SECTION_END_STRING}\n',
+        '', readme)
+
+    EXCLUDED_MARKER_BEGIN_STRING = re.escape('<!-- MARKER BEGIN -->')
+    EXCLUDED_MARKER_END_STRING = re.escape('<!-- MARKER END -->')
+    return re.sub(
+        rf'(?s){EXCLUDED_MARKER_BEGIN_STRING}.+?{EXCLUDED_MARKER_END_STRING}\n',
         '', readme)
 
 
