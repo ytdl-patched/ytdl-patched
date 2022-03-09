@@ -13,40 +13,30 @@ from ..utils import (
     OnDemandPagedList,
     random_uuidv4,
     traverse_obj,
-    update_url_query,
 )
-from ..compat import compat_str
 
 
 class MildomBaseIE(InfoExtractor):
     _GUEST_ID = None
 
     def _call_api(self, url, video_id, query=None, note='Downloading JSON metadata', body=None):
+        if not self._GUEST_ID:
+            self._GUEST_ID = f'pc-gp-{random_uuidv4()}'
+
         content = self._download_json(
-            update_url_query(url, self._common_queries(query)),
-            video_id, note=note, data=json.dumps(body).encode() if body else None,
-            headers={'Content-Type': 'application/json'} if body else {})
-        if content['code'] == 0:
-            return content['body']
-        else:
-            self.raise_no_formats(
+            url, video_id, note=note, data=json.dumps(body).encode() if body else None,
+            headers={'Content-Type': 'application/json'} if body else {},
+            query={
+                '__guest_id': self._GUEST_ID,
+                '__platform': 'web',
+                **(query or {}),
+            })
+
+        if content['code'] != 0:
+            raise ExtractorError(
                 f'Mildom says: {content["message"]} (code {content["code"]})',
                 expected=True)
-
-    def _common_queries(self, query=None, guest=True):
-        return {
-            '__guest_id': self.guest_id(),
-            '__platform': 'web',
-            **(query or {}),
-        }
-
-    def guest_id(self):
-        'getGuestId'
-        if self._GUEST_ID:
-            return self._GUEST_ID
-        # we're allowed to forge guest_id (!!)
-        self._GUEST_ID = f'pc-gp-{random_uuidv4()}'
-        return self._GUEST_ID
+        return content['body']
 
 
 class MildomIE(MildomBaseIE):
@@ -63,10 +53,6 @@ class MildomIE(MildomBaseIE):
             note='Downloading live metadata', query={'user_id': video_id})
         result_video_id = enterstudio.get('log_id', video_id)
 
-        title = self._html_search_meta('twitter:description', webpage, fatal=False) or traverse_obj(enterstudio, 'anchor_intro')
-        description = traverse_obj(enterstudio, 'intro', 'live_intro', expected_type=compat_str)
-        uploader = self._html_search_meta('twitter:title', webpage, fatal=False) or traverse_obj(enterstudio, 'loginname')
-
         servers = self._call_api(
             'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver', result_video_id,
             note='Downloading live server list', query={
@@ -76,19 +62,17 @@ class MildomIE(MildomBaseIE):
 
         playback_token = self._call_api(
             'https://cloudac.mildom.com/nonolive/gappserv/live/token', result_video_id,
-            note='Obtaining live playback token', query=self._common_queries(),
-            body={
-                'host_id': video_id, 'type': 'hls',
-            })
+            note='Obtaining live playback token', body={'host_id': video_id, 'type': 'hls'})
         playback_token = traverse_obj(playback_token, ('data', ..., 'token'), get_all=False)
         if not playback_token:
             raise ExtractorError('Failed to obtain live playback token')
 
-        m3u8_url = f'{servers["stream_server"]}/{video_id}_master.m3u8?{playback_token}'
-        formats = self._extract_m3u8_formats(m3u8_url, result_video_id, 'mp4', headers={
-            'Referer': 'https://www.mildom.com/',
-            'Origin': 'https://www.mildom.com',
-        })
+        formats = self._extract_m3u8_formats(
+            f'{servers["stream_server"]}/{video_id}_master.m3u8?{playback_token}',
+            result_video_id, 'mp4', headers={
+                'Referer': 'https://www.mildom.com/',
+                'Origin': 'https://www.mildom.com',
+            })
 
         for fmt in formats:
             fmt.setdefault('http_headers', {})['Referer'] = 'https://www.mildom.com/'
@@ -97,10 +81,10 @@ class MildomIE(MildomBaseIE):
 
         return {
             'id': result_video_id,
-            'title': title,
-            'description': description,
+            'title': self._html_search_meta('twitter:description', webpage, default=None) or traverse_obj(enterstudio, 'anchor_intro'),
+            'description': traverse_obj(enterstudio, 'intro', 'live_intro', expected_type=str),
             'timestamp': float_or_none(enterstudio.get('live_start_ms'), scale=1000),
-            'uploader': uploader,
+            'uploader': self._html_search_meta('twitter:title', webpage, default=None) or traverse_obj(enterstudio, 'loginname'),
             'uploader_id': video_id,
             'formats': formats,
             'is_live': True,
@@ -165,10 +149,6 @@ class MildomVodIE(MildomBaseIE):
                 'v_id': video_id,
             })['playback']
 
-        title = self._html_search_meta(('og:description', 'description'), webpage, fatal=False) or autoplay.get('title')
-        description = traverse_obj(autoplay, 'video_intro')
-        uploader = traverse_obj(autoplay, ('author_info', 'login_name'))
-
         formats = [{
             'url': autoplay['audio_url'],
             'format_id': 'audio',
@@ -193,12 +173,12 @@ class MildomVodIE(MildomBaseIE):
 
         return {
             'id': video_id,
-            'title': title,
-            'description': description,
+            'title': self._html_search_meta(('og:description', 'description'), webpage, default=None) or autoplay.get('title'),
+            'description': traverse_obj(autoplay, 'video_intro'),
             'timestamp': float_or_none(autoplay.get('publish_time'), scale=1000),
             'duration': float_or_none(autoplay.get('video_length'), scale=1000),
             'thumbnail': dict_get(autoplay, ('upload_pic', 'video_pic')),
-            'uploader': uploader,
+            'uploader': traverse_obj(autoplay, ('author_info', 'login_name')),
             'uploader_id': user_id,
             'formats': formats,
         }
@@ -256,16 +236,15 @@ class MildomClipIE(MildomBaseIE):
         return {
             'id': video_id,
             'title': self._html_search_meta(
-                ('og:description', 'description'), webpage, fatal=False) or clip_detail.get('title'),
+                ('og:description', 'description'), webpage, default=None) or clip_detail.get('title'),
             'timestamp': float_or_none(clip_detail.get('create_time')),
             'duration': float_or_none(clip_detail.get('length')),
             'thumbnail': clip_detail.get('cover'),
             'uploader': traverse_obj(clip_detail, ('user_info', 'loginname')),
             'uploader_id': user_id,
-            'formats': [{
-                'url': clip_detail.get('url'),
-                'ext': determine_ext(clip_detail.get('url'), 'mp4'),
-            }],
+
+            'url': clip_detail['url'],
+            'ext': determine_ext(clip_detail.get('url'), 'mp4'),
         }
 
 
@@ -300,7 +279,11 @@ class MildomUserVodIE(MildomBaseIE):
             })
         if not reply:
             return
-        yield from (self.url_result(f'https://www.mildom.com/playback/{user_id}/{x["v_id"]}') for x in reply)
+        for x in reply:
+            v_id = x.get('v_id')
+            if not v_id:
+                continue
+            yield self.url_result(f'https://www.mildom.com/playback/{user_id}/{v_id}')
 
     def _real_extract(self, url):
         user_id = self._match_id(url)

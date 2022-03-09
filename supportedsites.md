@@ -393,6 +393,7 @@
  - **foxnews**: Fox News and Fox Business Video
  - **foxnews:article**
  - **FoxSports**
+ - **fptplay**: fptplay.vn
  - **FranceCulture**
  - **FranceInter**
  - **FranceTV**
@@ -793,6 +794,10 @@
  - **niconico:smile** (Currently broken)
  - **niconico:tag**: NicoNico video tag URLs
  - **niconico:user**
+ - **niconico:playlist**
+ - **niconico:series**
+ - **niconico:tag**: NicoNico video tag URLs
+ - **NiconicoUser**
  - **nicovideo:search**: Nico video search; "nicosearch:" prefix
  - **nicovideo:search:date**: Nico video search, newest first; "nicosearchdate:" prefix
  - **nicovideo:search_url**: Nico video search URLs
@@ -1497,6 +1502,7 @@
  - **xiami:song**: 虾米音乐
  - **ximalaya**: 喜马拉雅FM
  - **ximalaya:album**: 喜马拉雅FM 专辑
+ - **xinpianchang**: xinpianchang.com
  - **XMinus**
  - **XNXX**
  - **Xstream**

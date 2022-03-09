@@ -1,4 +1,5 @@
 mutagen
 pycryptodomex
 websockets
-streamlink==2.3.0
+brotli; platform_python_implementation=='CPython'
+brotlicffi; platform_python_implementation!='CPython'

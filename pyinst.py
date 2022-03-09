@@ -1,95 +1,85 @@
 #!/usr/bin/env python3
 # coding: utf-8
-
-from __future__ import unicode_literals
-import sys
-import platform
-
-from PyInstaller.utils.hooks import collect_submodules
-from PyInstaller.utils.win32.versioninfo import (
-    VarStruct, VarFileInfo, StringStruct, StringTable,
-    StringFileInfo, FixedFileInfo, VSVersionInfo, SetVersion,
-)
-import PyInstaller.__main__
-
-import zlib
-import zopfli
 import os
-
-try:
-    iterations = int(os.environ['ZOPFLI_ITERATIONS'])
-except BaseException:
-    iterations = 30
+import platform
+import sys
+from PyInstaller.utils.hooks import collect_submodules
 
 
-def zlib_compress(data, level=-1):
-    c = zopfli.ZopfliCompressor(zopfli.ZOPFLI_FORMAT_ZLIB, iterations=iterations)
-    return c.compress(data) + c.flush()
+OS_NAME = platform.system()
+if OS_NAME == 'Windows':
+    from PyInstaller.utils.win32.versioninfo import (
+        VarStruct, VarFileInfo, StringStruct, StringTable,
+        StringFileInfo, FixedFileInfo, VSVersionInfo, SetVersion,
+    )
+elif OS_NAME == 'Darwin':
+    pass
+else:
+    raise Exception('{OS_NAME} is not supported')
+
+ARCH = platform.architecture()[0][:2]
+ICON = sys.argv[2] if len(sys.argv) > 2 else 'red'
 
 
-zlib.compress = zlib_compress
+def main():
+    opts = parse_options()
+    version = read_version()
 
+    suffix = '_macos' if OS_NAME == 'Darwin' else '_x86' if ARCH == '32' else ''
+    final_file = 'dist/%sytdl-patched%s%s' % (
+        'ytdl-patched/' if '--onedir' in opts else '', suffix, '.exe' if OS_NAME == 'Windows' else '')
 
-arch = platform.architecture()[0][:2]
-icon = sys.argv[1] if len(sys.argv) > 1 else 'red'
-assert arch in ('32', '64')
+    print(f'Building ytdl-patched v{version} ({ICON}) {ARCH}bit for {OS_NAME} with options {opts}')
+    print('Remember to update the version using  "devscripts/update-version.py"')
+    if not os.path.isfile('yt_dlp/extractor/lazy_extractors.py'):
+        print('WARNING: Building without lazy_extractors. Run  '
+              '"devscripts/make_lazy_extractors.py"  to build lazy extractors', file=sys.stderr)
+    print(f'Destination: {final_file}\n')
 
-_x86 = '_x86' if arch == '32' else ''
-
-# Compatability with older arguments
-opts = sys.argv[2:]
-if opts[0:1] in (['32'], ['64']):
-    if arch != opts[0]:
-        raise Exception(f'{opts[0]}bit executable cannot be built on a {arch}bit system')
-    opts = opts[1:]
-opts = opts or ['--onefile']
-
-print(f'Building {arch}bit version with options {opts}')
-
-FILE_DESCRIPTION = 'ytdl-patched%s' % (' (32 Bit)' if _x86 else '')
-
-exec(compile(open('yt_dlp/version.py').read(), 'yt_dlp/version.py', 'exec'))
-VERSION = locals()['__version__']
-
-VERSION_LIST = VERSION.split('.')
-VERSION_LIST = list(map(int, VERSION_LIST)) + [0] * (4 - len(VERSION_LIST))
-
-print('Version: %s%s' % (VERSION, _x86))
-print('Remember to update the version using devscipts\\update-version.py')
-
-VERSION_FILE = VSVersionInfo(
-    ffi=FixedFileInfo(
-        filevers=VERSION_LIST,
-        prodvers=VERSION_LIST,
-        mask=0x3F,
-        flags=0x0,
-        OS=0x4,
-        fileType=0x1,
-        subtype=0x0,
-        date=(0, 0),
-    ),
-    kids=[
-        StringFileInfo([
-            StringTable(
-                '040904B0', [
-                    StringStruct('Comments', 'ytdl-patched%s Command Line Interface.' % _x86),
-                    StringStruct('CompanyName', 'https://github.com/ytdl-patched'),
-                    StringStruct('FileDescription', FILE_DESCRIPTION),
-                    StringStruct('FileVersion', VERSION),
-                    StringStruct('InternalName', 'ytdl-patched%s' % _x86),
-                    StringStruct(
-                        'LegalCopyright',
-                        'nao20010128@gmail.com | UNLICENSE',
-                    ),
-                    StringStruct('OriginalFilename', 'ytdl-patched%s.exe' % _x86),
-                    StringStruct('ProductName', 'ytdl-patched%s' % _x86),
-                    StringStruct(
-                        'ProductVersion',
-                        '%s%s on Python %s' % (VERSION, _x86, platform.python_version())),
-                ])]),
-        VarFileInfo([VarStruct('Translation', [0, 1200])])
+    opts = [
+        f'--name=ytdl-patched{suffix}',
+        f'--icon=icons\\youtube_social_squircle_{ICON}.ico',
+        '--upx-exclude=vcruntime140.dll',
+        '--noconfirm',
+        *dependency_options(),
+        *opts,
+        'yt_dlp/__main__.py',
     ]
-)
+    print(f'Running PyInstaller with {opts}')
+
+    import PyInstaller.__main__
+
+    PyInstaller.__main__.run(opts)
+
+    set_version_info(final_file, version)
+
+
+def parse_options():
+    # Compatability with older arguments
+    opts = sys.argv[1:]
+    if opts[0:1] in (['32'], ['64']):
+        if ARCH != opts[0]:
+            raise Exception(f'{opts[0]}bit executable cannot be built on a {ARCH}bit system')
+        opts = opts[1:]
+    return opts or ['--onefile']
+
+
+def read_version():
+    exec(compile(open('yt_dlp/version.py').read(), 'yt_dlp/version.py', 'exec'))
+    return locals()['__version__']
+
+
+def version_to_list(version):
+    version_list = version.split('.')
+    return list(map(int, version_list)) + [0] * (4 - len(version_list))
+
+
+def dependency_options():
+    dependencies = [pycryptodome_module(), 'mutagen', 'brotli'] + collect_submodules('websockets')
+    excluded_modules = ['test', 'ytdlp_plugins', 'youtube-dl', 'youtube-dlc']
+
+    yield from (f'--hidden-import={module}' for module in dependencies)
+    yield from (f'--exclude-module={module}' for module in excluded_modules)
 
 
 def pycryptodome_module():
@@ -106,18 +96,41 @@ def pycryptodome_module():
     return 'Cryptodome'
 
 
-dependancies = [pycryptodome_module(), 'mutagen'] + collect_submodules('websockets')
-excluded_modules = ['test', 'ytdlp_plugins', 'youtube-dl', 'youtube-dlc']
+def set_version_info(exe, version):
+    if OS_NAME == 'Windows':
+        windows_set_version(exe, version)
 
-PyInstaller.__main__.run([
-    '--name=youtube-dl%s' % _x86,
-    '--console', '--distpath', '.',
-    f'--icon=icons\\youtube_social_squircle_{icon}.ico',
-    *[f'--exclude-module={module}' for module in excluded_modules],
-    *[f'--hidden-import={module}' for module in dependancies],
-    '--upx-exclude=vcruntime140.dll',
-    '--noconfirm',
-    *opts,
-    'yt_dlp/__main__.py',
-])
-SetVersion('%syoutube-dl%s.exe' % ('yt-dlp/' if '--onedir' in opts else '', _x86), VERSION_FILE)
+
+def windows_set_version(exe, version):
+    version_list = version_to_list(version)
+    suffix = '_x86' if ARCH == '32' else ''
+    SetVersion(exe, VSVersionInfo(
+        ffi=FixedFileInfo(
+            filevers=version_list,
+            prodvers=version_list,
+            mask=0x3F,
+            flags=0x0,
+            OS=0x4,
+            fileType=0x1,
+            subtype=0x0,
+            date=(0, 0),
+        ),
+        kids=[
+            StringFileInfo([StringTable('040904B0', [
+                StringStruct('Comments', 'ytdl-patched%s Command Line Interface.' % suffix),
+                StringStruct('CompanyName', 'https://github.com/ytdl-patched'),
+                StringStruct('FileDescription', 'ytdl-patched%s' % (' (32 Bit)' if ARCH == '32' else '')),
+                StringStruct('FileVersion', version),
+                StringStruct('InternalName', f'ytdl-patched{suffix}'),
+                StringStruct('LegalCopyright', 'nao20010128gmail.com | UNLICENSE'),
+                StringStruct('OriginalFilename', f'ytdl-patched{suffix}.exe'),
+                StringStruct('ProductName', f'ytdl-patched{suffix}'),
+                StringStruct(
+                    'ProductVersion', f'{version}{suffix} on Python {platform.python_version()}'),
+            ])]), VarFileInfo([VarStruct('Translation', [0, 1200])])
+        ]
+    ))
+
+
+if __name__ == '__main__':
+    main()

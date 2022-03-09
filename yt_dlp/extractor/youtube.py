@@ -39,6 +39,7 @@ from ..utils import (
     ExtractorError,
     float_or_none,
     format_field,
+    get_first,
     int_or_none,
     is_html,
     join_nonempty,
@@ -70,10 +71,6 @@ from ..utils import (
     urljoin,
     variadic,
 )
-
-
-def get_first(obj, keys, **kwargs):
-    return traverse_obj(obj, (..., *variadic(keys)), **kwargs, get_all=False)
 
 
 # any clients starting with _ cannot be explicity requested by the user
@@ -3170,6 +3167,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             # Some formats may have much smaller duration than others (possibly damaged during encoding)
             # Eg: 2-nOtRESiUc Ref: https://github.com/yt-dlp/yt-dlp/issues/2823
             is_damaged = try_get(fmt, lambda x: float(x['approxDurationMs']) < approx_duration - 10000)
+            if is_damaged:
+                self.report_warning(f'{video_id}: Some formats are possibly damaged. They will be deprioritized', only_once=True)
             dct = {
                 'asr': int_or_none(fmt.get('audioSampleRate')),
                 'filesize': int_or_none(fmt.get('contentLength')),
@@ -3189,7 +3188,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'language': join_nonempty(audio_track.get('id', '').split('.')[0],
                                           'desc' if language_preference < -1 else ''),
                 'language_preference': language_preference,
-                'preference': -10 if is_damaged else None,
+                # Strictly de-prioritize damaged and 3gp formats
+                'preference': -10 if is_damaged else -2 if itag == '17' else None,
             }
             mime_mobj = re.match(
                 r'((?:[^/]+)/(?:[^;]+))(?:;\s*codecs="([^"]+)")?', fmt.get('mimeType') or '')
