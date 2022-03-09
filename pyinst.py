@@ -5,6 +5,21 @@ import platform
 import sys
 from PyInstaller.utils.hooks import collect_submodules
 
+import zlib
+import zopfli
+
+try:
+    iterations = int(os.environ['ZOPFLI_ITERATIONS'])
+except BaseException:
+    iterations = 30
+
+
+def zlib_compress(data, level=-1):
+    c = zopfli.ZopfliCompressor(zopfli.ZOPFLI_FORMAT_ZLIB, iterations=iterations)
+    return c.compress(data) + c.flush()
+
+
+zlib.compress = zlib_compress
 
 OS_NAME = platform.system()
 if OS_NAME == 'Windows':
