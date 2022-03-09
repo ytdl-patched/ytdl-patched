@@ -441,8 +441,8 @@ class NiconicoIE(NiconicoBaseIE):
 
         formats = []
 
-        def get_video_info(items):
-            return traverse_obj(api_data, ('video', items))
+        def get_video_info(items, get_first=True):
+            return traverse_obj(api_data, ('video', items), get_all=not get_first)
 
         # --extractor-args niconico:segment_duration=TIME
         # TIME is in milliseconds. should not be changed unless you're an experienced NicoNico investigator
@@ -464,7 +464,7 @@ class NiconicoIE(NiconicoBaseIE):
 
         # Start extracting information
         title = (
-            get_video_info(['originalTitle', 'title'])
+            get_video_info(['originalTitle', 'title'], get_first=True)
             or self._og_search_title(webpage, default=None))
 
         thumbnail = traverse_obj(api_data, ('video', 'thumbnail', 'url'))
@@ -473,7 +473,7 @@ class NiconicoIE(NiconicoBaseIE):
 
         view_count = int_or_none(traverse_obj(api_data, ('video', 'count', 'view')))
 
-        description = get_video_info('description')
+        description = clean_html(get_video_info('description'))
 
         timestamp = parse_iso8601(get_video_info('registeredAt'))
         if not timestamp:
