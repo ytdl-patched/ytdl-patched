@@ -154,9 +154,10 @@ class PokemonSoundLibraryIE(InfoExtractor):
 
         song_entries = [{
             'id': f'pokemon-soundlibrary-{song_id}',
-            'url': f'https://soundlibrary.pokemon.co.jp/assets/sounds/wav/{song_id}.wav',
+            'url': f'https://soundlibrary.pokemon.co.jp/api/assets/signing/sounds/wav/{song_id}.wav',
             'ext': 'mp3',
             'vcodec': 'none',
+            'acodec': 'mp3',
             'title': song_title,
             'track': song_title,
             'artist': 'Nintendo / Creatures Inc. / GAME FREAK inc.',
@@ -167,4 +168,4 @@ class PokemonSoundLibraryIE(InfoExtractor):
             'album': 'ポケットモンスター ダイヤモンド・パール' if True else 'Pokémon Diamond and Pearl',
         } for song_id, song_title in enumerate(song_titles, 1)]
 
-        return self.playlist_result(song_entries, playlist_title='Pokémon Diamond and Pearl Sound Track')
+        return self.playlist_result(song_entries, playlist_title='Pokémon Diamond and Pearl Sound Tracks')
