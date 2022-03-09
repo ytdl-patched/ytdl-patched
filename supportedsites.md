@@ -794,10 +794,6 @@
  - **niconico:smile** (Currently broken)
  - **niconico:tag**: NicoNico video tag URLs
  - **niconico:user**
- - **niconico:playlist**
- - **niconico:series**
- - **niconico:tag**: NicoNico video tag URLs
- - **NiconicoUser**
  - **nicovideo:search**: Nico video search; "nicosearch:" prefix
  - **nicovideo:search:date**: Nico video search, newest first; "nicosearchdate:" prefix
  - **nicovideo:search_url**: Nico video search URLs
@@ -886,6 +882,9 @@
  - **PalcoMP3:song**
  - **PalcoMP3:video**
  - **pandora.tv**: 판도라TV
+ - **Panopto**
+ - **PanoptoList**
+ - **PanoptoPlaylist**
  - **ParamountNetwork**
  - **ParamountPlus**
  - **ParamountPlusSeries**
