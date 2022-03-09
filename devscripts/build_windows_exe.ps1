@@ -6,11 +6,13 @@ $ErrorActionPreference = "Stop"
 
 switch ($BuilderName) {
     "PyInstaller" {
+        $env:windows_icon="${IconName}"
+
         write-host "Building an EXE using PyInstaller"
-        python -OO pyinst.py "${IconName}"
+        python -OO pyinst.py
 
         write-host "Moving built EXE into artifacts/"
-        Move-Item youtube-dl.exe artifacts/
+        Move-Item dist/ytdl-patched.exe artifacts/youtube-dl.exe
     }
     "py2exe" {
         $env:PY2EXE_WINDOWS_ICON_PATH="icons\youtube_social_squircle_${IconName}.ico"

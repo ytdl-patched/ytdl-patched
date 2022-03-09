@@ -18,7 +18,7 @@ else:
     raise Exception('{OS_NAME} is not supported')
 
 ARCH = platform.architecture()[0][:2]
-ICON = sys.argv[2] if len(sys.argv) > 2 else 'red'
+ICON = os.getenv('windows_icon') or 'red'
 
 
 def main():
