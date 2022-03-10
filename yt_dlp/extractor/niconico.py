@@ -482,9 +482,7 @@ class NiconicoIE(NiconicoBaseIE):
                 timestamp = parse_iso8601(match)
 
         comment_count = traverse_obj(
-            api_data,
-            ('video', 'count', 'comment'),
-            expected_type=int)
+            api_data, ('video', 'count', 'comment'), expected_type=int)
 
         duration = (
             parse_duration(self._html_search_meta('video:duration', webpage, 'video duration', default=None))
@@ -505,7 +503,7 @@ class NiconicoIE(NiconicoBaseIE):
         if webpage:
             # use og:video:tag (not logged in)
             og_video_tags = re.finditer(r'<meta\s+property="og:video:tag"\s*content="(.*?)">', webpage)
-            tags = list(filter(bool, (clean_html(x.group(1)) for x in og_video_tags)))
+            tags = list(filter(None, (clean_html(x.group(1)) for x in og_video_tags)))
             if not tags:
                 # use keywords and split with comma (not logged in)
                 kwds = self._html_search_meta('keywords', webpage, default=None)
@@ -536,7 +534,7 @@ class NiconicoIE(NiconicoBaseIE):
             user_id_str = session_api_data.get('serviceUserId')
 
             thread_ids = [x for x in traverse_obj(api_data, ('comment', 'threads')) if x['isActive']]
-            raw_danmaku = self._extract_all_comments(video_id, thread_ids, 0, user_id_str, comment_user_key)
+            raw_danmaku = self._extract_all_comments(video_id, thread_ids, user_id_str, comment_user_key)
             if raw_danmaku:
                 raw_danmaku = json.dumps(raw_danmaku)
                 danmaku = load_comments(raw_danmaku, 'NiconicoJson', w, h, report_warning=self.report_warning)
@@ -576,7 +574,7 @@ class NiconicoIE(NiconicoBaseIE):
             'subtitles': subtitles,
         }
 
-    def _extract_all_comments(self, video_id, threads, language_id, user_id, user_key):
+    def _extract_all_comments(self, video_id, threads, user_id, user_key):
         if user_id and user_key:
             # authenticate as an user
             auth_data = {
@@ -596,7 +594,7 @@ class NiconicoIE(NiconicoBaseIE):
             post_data.append({'ping': {'content': f'ps:{i * 2}'}})
             post_data.append({'thread': {
                 'fork': thread_fork,
-                'language': language_id,
+                'language': 0,
                 'nicoru': 3,
                 'scores': 1,
                 'thread': thread_id,
@@ -614,7 +612,7 @@ class NiconicoIE(NiconicoBaseIE):
                 # unfortunately NND limits (deletes?) comment returns this way, so you're only able to grab the last 1000 per language
                 'content': '0-999999:999999,999999,nicoru:999999',
                 'fork': thread_fork,
-                'language': language_id,
+                'language': 0,
                 'nicoru': 3,
                 'scores': 1,
                 'thread': thread_id,
@@ -635,7 +633,7 @@ class NiconicoIE(NiconicoBaseIE):
                         'Content-Type': 'text/plain;charset=UTF-8',
                     },
                     data=json.dumps(post_data).encode(),
-                    note='Downloading comments (%s)' % ('jp', 'en', 'cn')[language_id])
+                    note='Downloading comments (jp)')
             except ExtractorError as e:
                 self.report_warning(f'Failed to access endpoint {api_url} .\n{e}')
         return None
