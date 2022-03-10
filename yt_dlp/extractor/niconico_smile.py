@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .common import InfoExtractor
 from .niconico import NiconicoIE
 from ..utils import (
+    js_to_json,
     lowercase_escape,
     try_get,
 )
@@ -19,12 +20,10 @@ class NiconicoSmileIE(InfoExtractor):
     _VALID_URL = r'(?:https?://www\.nicozon\.net/downloader\.html\?video_id=|nicozon:(?:%s)?)(?P<id>(?:[a-z]{2})?[0-9]+)' % NiconicoIE._URL_BEFORE_ID_PART
     IE10_USERAGENT = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)'
     _WORKING = False  # This will never be removed
-    _FEATURE_DEPENDENCY = ('yaml', )
 
     def _real_extract(self, url):
         # NOTE: If you're interested in SWF file and decompiled ActionScript, contact me
         # NOTE: SWF is ActionScript 3.0, which Ruffle cannot load it
-        import yaml
 
         video_id = self._match_id(url)
         _headers = {'User-Agent': self.IE10_USERAGENT}
@@ -34,8 +33,8 @@ class NiconicoSmileIE(InfoExtractor):
             note='Fetching niconico old player')
 
         # data set for Nicovideo.MiniPlayer is mostly valid as YAML, so it can be parsed as below
-        niconico_video_data = yaml.safe_load(self._search_regex(r'(?s)Nicovideo\.Video\(({.+})\);', niconico_thumb_watch_js, 'niconico info data', group=1).replace('\t', ''))
-        niconico_player_data = yaml.safe_load(self._search_regex(r'(?s)video,\s*({.+}),\s*\'', niconico_thumb_watch_js, 'niconico info data', group=1).replace('\t', ''))
+        niconico_video_data = self._parse_json(js_to_json(self._search_regex(r'(?s)Nicovideo\.Video\(({.+})\);', niconico_thumb_watch_js, 'niconico info data', group=1)), video_id)
+        niconico_player_data = self._parse_json(js_to_json(self._search_regex(r'(?s)video,\s*({.+}),\s*\'', niconico_thumb_watch_js, 'niconico info data', group=1)), video_id)
 
         tap_url = 'http://ext.nicovideo.jp/thumb_watch?as3=1&v=' + video_id + '&k=' + niconico_player_data.get('thumbPlayKey', 'undefined')
         thumb_watch_data = self._download_webpage(tap_url, video_id, note='Tapping thumb_watch URL', headers=_headers, fatal=False)
