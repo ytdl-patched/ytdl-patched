@@ -526,7 +526,7 @@ class NiconicoIE(NiconicoBaseIE):
                 self.report_warning('Failed to acquire permission for playing video. Video download may fail.')
 
         subtitles = None
-        if self._downloader.params.get('getcomments', False) or self._downloader.params.get('writesubtitles', False):
+        if self.get_param('getcomments', False) or self.get_param('writesubtitles', False):
             player_size = try_get(self._configuration_arg('player_size'), lambda x: x[0], compat_str)
             w, h = self._parse_player_size(player_size)
 
