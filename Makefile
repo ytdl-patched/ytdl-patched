@@ -18,7 +18,7 @@ clean-test:
 	*.frag.aria2 *.frag.urls *.info.json *.live_chat.json *.meta *.part* *.tmp *.temp *.unknown_video *.ytdl \
 	*.3gp *.ape *.ass *.avi *.desktop *.flac *.flv *.jpeg *.jpg *.m4a *.m4v *.mhtml *.mkv *.mov *.mp3 \
 	*.mp4 *.ogg *.opus *.png *.sbv *.srt *.swf *.swp *.ttml *.url *.vtt *.wav *.webloc *.webm *.webp \
-	*.images
+	*.images *.lock
 clean-dist:
 	rm -rf yt-dlp.1.temp.md yt-dlp.1 README.txt MANIFEST build/ dist/ .coverage cover/ yt-dlp.tar.gz completions/ \
 	yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp youtube-dl youtube-dl*.exe yt_dlp.egg-info/ AUTHORS .mailmap
