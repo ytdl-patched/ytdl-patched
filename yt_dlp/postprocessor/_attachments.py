@@ -275,9 +275,9 @@ class ShowsProgress(object):
         elif self._ydl.params.get('logger'):
             self._multiline = MultilineLogger(self._ydl.params['logger'], lines)
         elif self._params.get('progress_with_newline'):
-            self._multiline = BreaklineStatusPrinter(self._ydl._screen_file, lines)
+            self._multiline = BreaklineStatusPrinter(self._ydl._out_files['screen'], lines)
         else:
-            self._multiline = MultilinePrinter(self._ydl._screen_file, lines, not self._params.get('quiet'))
+            self._multiline = MultilinePrinter(self._ydl._out_files['screen'], lines, not self._params.get('quiet'))
         self._multiline.allow_colors = self._multiline._HAVE_FULLCAP and not self._params.get('no_color')
 
     def _finish_multiline_status(self):

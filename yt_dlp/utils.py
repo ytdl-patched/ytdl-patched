@@ -5540,4 +5540,4 @@ def get_first_group(match, *groups, default=None):
 
 def merge_headers(*dicts):
     """Merge dicts of http headers case insensitively, prioritizing the latter ones"""
-    return {k.capitalize(): v for k, v in itertools.chain.from_iterable(map(dict.items, dicts))}
+    return {k.title(): v for k, v in itertools.chain.from_iterable(map(dict.items, dicts))}

@@ -74,7 +74,7 @@ class FileDownloader(ShowsProgress):
         self._enable_progress()
 
     def to_screen(self, *args, **kargs):
-        self.ydl.to_stdout(*args, quiet=self.params.get('quiet'), **kargs)
+        self.ydl.to_screen(*args, quiet=self.params.get('quiet'), **kargs)
 
     def to_stderr(self, message):
         self.ydl.to_stderr(message)
