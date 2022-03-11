@@ -570,17 +570,6 @@ class YoutubeDL(object):
         'storyboards': {'mhtml'},
     }
 
-    params = None
-    _ies = {}
-    _pps = {k: [] for k in POSTPROCESS_WHEN}
-    _printed_messages = set()
-    _first_webpage_request = True
-    _download_retcode = None
-    _num_downloads = None
-    _playlist_level = 0
-    _playlist_urls = set()
-    _screen_file = None
-
     def __init__(self, params=None, auto_init=True):
         """Create a FileDownloader object with the given options.
         @param auto_init    Whether to load the default extractors and print header (if verbose).
@@ -588,6 +577,7 @@ class YoutubeDL(object):
         """
         if params is None:
             params = {}
+        self.params = params
         self._ies = {}
         self._ies_instances = {}
         self._pps = {k: [] for k in POSTPROCESS_WHEN}
@@ -600,7 +590,8 @@ class YoutubeDL(object):
         self._download_retcode = 0
         self._num_downloads = 0
         self._num_videos = 0
-        self.params = params
+        self._playlist_level = 0
+        self._playlist_urls = set()
         self.cache = Cache(self)
 
         windows_enable_vt_mode()
