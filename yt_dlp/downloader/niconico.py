@@ -9,6 +9,7 @@ from ..downloader import get_suitable_downloader
 from ..extractor.niconico import NiconicoIE
 from .external import FFmpegFD
 from ..utils import (
+    sanitized_Request,
     str_or_none,
     std_headers,
     DownloadError,
@@ -22,50 +23,51 @@ from ..websocket import (
 
 
 class NiconicoDmcFD(FileDownloader):
-    """
-    Performs niconico DMC request and download the video \n
-    Note that this FD very differs from upstream one
-    """
+    """ Downloading niconico douga from DMC with heartbeat """
+
+    FD_NAME = 'niconico_dmc'
 
     def real_download(self, filename, info_dict):
-        nie: NiconicoIE = self.ydl.get_info_extractor(NiconicoIE.ie_key())
+        self.to_screen('[%s] Downloading from DMC' % self.FD_NAME)
 
-        video_id = info_dict['video_id']
-        session_api_data = info_dict['session_api_data']
+        ie = NiconicoIE(self.ydl)
+        info_dict, heartbeat_info_dict = ie._get_heartbeat_info(info_dict)
 
-        session_response = nie._download_json(
-            info_dict['url'], video_id,
-            query={'_format': 'json'},
-            headers={'Content-Type': 'application/json'},
-            note='Downloading JSON metadata for %s' % info_dict['format_id'],
-            data=json.dumps(info_dict['dmc_data']).encode())
+        fd = get_suitable_downloader(info_dict, params=self.params)(self.ydl, self.params)
 
-        # get heartbeat info
-        heartbeat_url = f"{session_api_data['urls'][0]['url']}/{session_response['data']['session']['id']}?_format=json&_method=PUT"
-        heartbeat_data = json.dumps(session_response['data']).encode()
-        # interval, convert milliseconds to seconds, then halve to make a buffer.
-        heartbeat_interval = session_api_data['heartbeatLifetime'] / 8000
+        success = download_complete = False
+        timer = [None]
+        heartbeat_lock = threading.Lock()
+        heartbeat_url = heartbeat_info_dict['url']
+        heartbeat_data = heartbeat_info_dict['data'].encode()
+        heartbeat_interval = heartbeat_info_dict.get('interval', 30)
 
-        new_info_dict = info_dict.copy()
-        new_info_dict.update({
-            'url': session_response['data']['session']['content_uri'],
-            'protocol': info_dict['expected_protocol'],
-            'heartbeat_url': heartbeat_url,
-            'heartbeat_data': heartbeat_data,
-            'heartbeat_interval': heartbeat_interval,
-        })
+        request = sanitized_Request(heartbeat_url, heartbeat_data)
 
-        if info_dict['extract_m3u8']:
+        def heartbeat():
             try:
-                m3u8_format = nie._extract_m3u8_formats(
-                    new_info_dict['url'], video_id, ext='mp4', entry_protocol='m3u8_native', note=False)[0]
-            except BaseException:
-                new_info_dict['protocol'] = 'm3u8'
-            else:
-                del m3u8_format['format_id'], m3u8_format['protocol']
-                new_info_dict.update(m3u8_format)
+                self.ydl.urlopen(request).read()
+            except Exception:
+                self.to_screen('[%s] Heartbeat failed' % self.FD_NAME)
 
-        return get_suitable_downloader(new_info_dict, params=self.params)(self.ydl, self.params).download(filename, new_info_dict)
+            with heartbeat_lock:
+                if not download_complete:
+                    timer[0] = threading.Timer(heartbeat_interval, heartbeat)
+                    timer[0].start()
+
+        heartbeat_info_dict['ping']()
+        self.to_screen('[%s] Heartbeat with %d second interval ...' % (self.FD_NAME, heartbeat_interval))
+        try:
+            heartbeat()
+            if type(fd).__name__ == 'HlsFD':
+                info_dict.update(ie._extract_m3u8_formats(info_dict['url'], info_dict['id'])[0])
+            success = fd.real_download(filename, info_dict)
+        finally:
+            if heartbeat_lock:
+                with heartbeat_lock:
+                    timer[0].cancel()
+                    download_complete = True
+            return success
 
 
 class NiconicoLiveFD(FileDownloader):
