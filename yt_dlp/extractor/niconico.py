@@ -372,6 +372,9 @@ class NiconicoIE(NiconicoBaseIE):
             'ping': ping
         }
 
+        if dmc_protocol == 'hls':
+            info_dict.update(self._extract_m3u8_formats(info_dict['url'], info_dict['id'])[0])
+
         return info_dict, heartbeat_info_dict
 
     def _extract_format_for_quality(self, video_id, audio_quality, video_quality, dmc_protocol):

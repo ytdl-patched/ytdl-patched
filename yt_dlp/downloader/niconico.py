@@ -30,7 +30,7 @@ class NiconicoDmcFD(FileDownloader):
     def real_download(self, filename, info_dict):
         self.to_screen('[%s] Downloading from DMC' % self.FD_NAME)
 
-        ie = NiconicoIE(self.ydl)
+        ie: NiconicoIE = self.ydl.get_info_extractor(NiconicoIE.ie_key())
         info_dict, heartbeat_info_dict = ie._get_heartbeat_info(info_dict)
 
         fd = get_suitable_downloader(info_dict, params=self.params)(self.ydl, self.params)
@@ -59,8 +59,6 @@ class NiconicoDmcFD(FileDownloader):
         self.to_screen('[%s] Heartbeat with %d second interval ...' % (self.FD_NAME, heartbeat_interval))
         try:
             heartbeat()
-            if type(fd).__name__ == 'HlsFD':
-                info_dict.update(ie._extract_m3u8_formats(info_dict['url'], info_dict['id'])[0])
             success = fd.real_download(filename, info_dict)
         finally:
             if heartbeat_lock:
