@@ -1057,7 +1057,6 @@ from .niconico import (
     NicovideoTagURLIE,
     NiconicoLiveIE,
 )
-# from .niconico_smile import NiconicoSmileIE
 from .ninecninemedia import (
     NineCNineMediaIE,
     CPTwentyFourIE,

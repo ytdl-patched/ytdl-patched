@@ -202,9 +202,18 @@ class NiconicoIE(NiconicoBaseIE):
         'note': 'a video that is only served as an ENCRYPTED HLS.',
         'url': 'https://www.nicovideo.jp/watch/so38016254',
         'only_matching': True,
+    }, {
+        'url': 'nico:sm25182253',
+        'only_matching': True,
+    }, {
+        'url': 'niconico:sm25182253',
+        'only_matching': True,
+    }, {
+        'url': 'nicovideo:sm25182253',
+        'only_matching': True,
     }]
 
-    _VALID_URL = r'https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/(?P<id>(?:[a-z]{2})?[0-9]+)'
+    _VALID_URL = r'(?:https?://(?:(?:www\.|secure\.|sp\.)?nicovideo\.jp/watch|nico\.ms)/|nico(?:nico|video)?:)(?P<id>(?:[a-z]{2})?[0-9]+)'
     _NETRC_MACHINE = 'niconico'
     _COMMENT_API_ENDPOINTS = (
         'https://nvcomment.nicovideo.jp/legacy/api.json',
