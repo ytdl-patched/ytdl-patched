@@ -491,6 +491,7 @@
  - **Hungama**
  - **HungamaAlbumPlaylist**
  - **HungamaSong**
+ - **huya:live**: huya.com
  - **Hypem**
  - **ign.com**
  - **IGNArticle**
@@ -791,7 +792,6 @@
  - **niconico:live**: ニコニコ生放送
  - **niconico:playlist**
  - **niconico:series**
- - **niconico:smile** (Currently broken)
  - **niconico:tag**: NicoNico video tag URLs
  - **niconico:user**
  - **nicovideo:search**: Nico video search; "nicosearch:" prefix
