@@ -327,7 +327,7 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
 
         use_native_progress = self.use_native_progress
         if use_native_progress:
-            cmd.extend(['-progress', 'pipe:1'])
+            cmd.extend(['-progress', 'pipe:1', '-stats_period', '0.1'])
         # avconv does not have repeat option
         if self.basename == 'ffmpeg':
             cmd += [encodeArgument('-loglevel'), encodeArgument('repeat+info')]

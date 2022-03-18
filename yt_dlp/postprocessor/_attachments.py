@@ -1,6 +1,6 @@
 import re
+import shlex
 import time
-import os
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 
 from ..utils import (
+    float_or_none,
     int_or_none,
     timetuple_from_msec,
     format_bytes,
@@ -23,6 +24,55 @@ from ..minicurses import (
 
 
 class RunsFFmpeg(object):
+    # https://kevinmccarthy.org/2016/07/25/streaming-subprocess-stdin-and-stdout-with-asyncio-in-python/
+
+    def compute_total_filesize(self, info_dict, duration_to_track, duration):
+        if not duration:
+            return 0
+        filesize = info_dict.get('filesize')
+        if not filesize:
+            filesize = info_dict.get('filesize_approx', 0)
+        total_filesize = filesize * duration_to_track // duration
+        return total_filesize
+
+    def compute_duration_to_track(self, info_dict, args):
+        duration = info_dict.get('duration')
+        if not duration:
+            return 0, 0
+
+        start_time, end_time = 0, duration
+        for i, arg in enumerate(args):
+            arg_timestamp = re.match(r'(?P<at>(-ss|-sseof|-to))', arg)
+            if arg_timestamp and i + 1 < len(args):
+                timestamp_seconds = self.parse_ffmpeg_time_string(args[i + 1])
+                if arg_timestamp.group('at') == '-ss':
+                    start_time = timestamp_seconds
+                elif arg_timestamp.group('at') == '-sseof':
+                    start_time = end_time - timestamp_seconds
+                elif arg_timestamp.group('at') == '-to':
+                    end_time = timestamp_seconds
+
+        duration_to_track = end_time - start_time
+        if duration_to_track >= 0:
+            return duration_to_track, duration
+        else:
+            return 0, duration
+
+    @staticmethod
+    def compute_eta(ffmpeg_prog_infos: dict, duration_to_track, total=None, downloaded=None, elapsed=None):
+        try:
+            speed = float_or_none(ffmpeg_prog_infos['speed'][:-1])
+            out_time_second = int_or_none(ffmpeg_prog_infos['out_time_us']) // 1_000_000
+            return (duration_to_track - out_time_second) // speed
+        except (TypeError, KeyError, ZeroDivisionError):
+            pass
+
+        if total and downloaded:
+            # downloaded : (total - downloaded) = elapsed : ETA
+            eta_seconds = (total - downloaded) * elapsed / downloaded
+            if eta_seconds < 0:
+                return eta_seconds
+
     @staticmethod
     def parse_ffmpeg_time_string(time_string):
         time = 0
@@ -45,7 +95,8 @@ class RunsFFmpeg(object):
         return time
 
     @staticmethod
-    def compute_prefix(match):
+    def compute_bitrate(bitrate):
+        match = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', bitrate)
         if not match:
             return None
         res = int(match.group('E'))
@@ -60,6 +111,14 @@ class RunsFFmpeg(object):
                 res *= 1_000
         return res
 
+    @staticmethod
+    def get_popen_args(popen):
+        args = popen.args
+        if isinstance(args, str):
+            return shlex.split(args)
+        else:
+            return args or []
+
     def read_ffmpeg_status(self, info_dict, proc, is_pp=False):
         if not info_dict:
             info_dict = {}
@@ -67,19 +126,12 @@ class RunsFFmpeg(object):
         if not stdout:
             self.write_debug('Gave up reading progress; stdout == None')
             return proc.wait()
-        started, total_filesize, total_time_to_dl, dl_bytes_int = time.time(), 0, None, None
+        started, dl_bytes_int = time.time(), None
 
-        total_filesize = 0
-        for fmt in info_dict.get('requested_formats') or [info_dict]:
-            if fmt.get('filepath'):
-                # PPs are given this
-                total_filesize += os.path.getsize(fmt['filepath'])
-            elif fmt.get('filesize'):
-                total_filesize += fmt['filesize']
-            elif fmt.get('filesize_approx'):
-                total_filesize += fmt['filesize_approx']
+        ffmpeg_args = self.get_popen_args(proc)
+        duration_to_track, duration = self.compute_duration_to_track(info_dict, ffmpeg_args)
+        total_filesize = self.compute_total_filesize(info_dict, duration_to_track, duration)
 
-        duration = info_dict.get('duration')
         guessed_size = total_filesize
 
         status = {
@@ -114,27 +166,24 @@ class RunsFFmpeg(object):
             speed = None if ffmpeg_prog_infos['speed'] == 'N/A' else float(ffmpeg_prog_infos['speed'][:-1])
 
             out_time = self.parse_ffmpeg_time_string(ffmpeg_prog_infos['out_time'])
-            eta_seconds = None
-            if speed and total_time_to_dl:
-                eta_seconds = (total_time_to_dl - out_time) / speed
-                if eta_seconds < 0:
-                    eta_seconds = None
-            if eta_seconds is None and total_filesize and dl_bytes_int:
-                # dl_bytes_int : (total_filesize - dl_bytes_int) = status['elapsed'] : ETA
-                eta_seconds = (total_filesize - dl_bytes_int) * status['elapsed'] / dl_bytes_int
-                if eta_seconds < 0:
-                    eta_seconds = None
+            eta_seconds = self.compute_eta(ffmpeg_prog_infos, duration_to_track, total_filesize, dl_bytes_int, status['elapsed'])
 
-            if duration and dl_bytes_int and out_time:
-                guessed_size = dl_bytes_int * duration / out_time
+            bitrate_int = self.compute_bitrate(ffmpeg_prog_infos['bitrate'])
+
+            out_time_second = int_or_none(ffmpeg_prog_infos['out_time_us']) // 1_000_000
+            try:
+                dl_bytes_int = int_or_none(out_time_second / duration_to_track * total_filesize)
+            except ZeroDivisionError:
+                # Not using ffmpeg 'total_size' value primarily as it's imprecise and gives progress percentage over 100
+                dl_bytes_int = int_or_none(ffmpeg_prog_infos['total_size'], default=0)
+
+            if duration_to_track and dl_bytes_int and out_time:
+                # only estimate the remaining part, keep the other intact
+                guessed_size = dl_bytes_int + (dl_bytes_int * (duration_to_track - out_time) / out_time)
             # reduce terminal flick caused by drastic estimation change
             if total_filesize and guessed_size and (abs(guessed_size - total_filesize) / total_filesize) > 0.1:
                 guessed_size = total_filesize
 
-            bitrate_str = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', ffmpeg_prog_infos['bitrate'])
-            bitrate_int = self.compute_prefix(bitrate_str)
-
-            dl_bytes_int = int_or_none(ffmpeg_prog_infos['total_size'], default=0)
             time_and_size.append((dl_bytes_int, time.time()))
             time_and_size = time_and_size[-avg_len:]
             if len(time_and_size) > 1:

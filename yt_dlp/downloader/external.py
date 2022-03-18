@@ -511,7 +511,7 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
         args = [encodeArgument(opt) for opt in args]
         args.append(encodeFilename(ffpp._ffmpeg_filename_argument(tmpfilename), True))
         if use_native_progress:
-            args.extend(['-progress', 'pipe:1'])
+            args.extend(['-progress', 'pipe:1', '-stats_period', '0.1'])
         self._debug_cmd(args)
 
         if use_native_progress:
