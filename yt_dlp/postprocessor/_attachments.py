@@ -1,6 +1,7 @@
 import re
 import shlex
 import time
+import os
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -23,17 +24,47 @@ from ..minicurses import (
 )
 
 
+def find_YoutubeDL(obj) -> 'YoutubeDL':
+    from ..YoutubeDL import YoutubeDL
+
+    if isinstance(obj, YoutubeDL):
+        return obj
+
+    for name in (
+        '_ydl',  # ShowsProgress and cache
+        'ydl',  # FileDownloader
+        '_downloader',  # PostProcessor/InfoExtractor
+    ):
+        candidate = getattr(obj, name, None)
+        if isinstance(candidate, YoutubeDL):
+            if name != '_ydl':
+                setattr(obj, '_ydl', candidate)
+            return candidate
+
+
+def getsize(o, filename):
+    ydl = find_YoutubeDL(o)
+    return ydl.getsize(filename) if ydl else os.path.getsize(filename)
+
+
 class RunsFFmpeg(object):
     # https://kevinmccarthy.org/2016/07/25/streaming-subprocess-stdin-and-stdout-with-asyncio-in-python/
 
     def compute_total_filesize(self, info_dict, duration_to_track, duration):
         if not duration:
             return 0
-        filesize = info_dict.get('filesize')
-        if not filesize:
-            filesize = info_dict.get('filesize_approx', 0)
-        total_filesize = filesize * duration_to_track // duration
-        return total_filesize
+
+        filesize = 0
+        for fmt in info_dict.get('requested_formats') or [info_dict]:
+            if fmt.get('filepath'):
+                # PPs are given this
+                filesize += getsize(self, fmt['filepath'])
+            elif fmt.get('filesize'):
+                filesize += int_or_none(fmt['filesize'])
+            elif fmt.get('filesize_approx'):
+                filesize += int_or_none(fmt['filesize_approx'])
+
+        return filesize * duration_to_track // duration
 
     def compute_duration_to_track(self, info_dict, args):
         duration = info_dict.get('duration')
