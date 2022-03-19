@@ -409,6 +409,7 @@ class NiconicoIE(NiconicoBaseIE):
                 api_data = self._download_json(
                     'https://www.nicovideo.jp/api/watch/v3/%s?_frontendId=6&_frontendVersion=0&actionTrackId=AAAAAAAAAA_%d' % (video_id, round(time.time() * 1000)), video_id,
                     note='Downloading API JSON', errnote='Unable to fetch data')['data']
+                webpage = None
             except ExtractorError:
                 if not isinstance(e.cause, compat_HTTPError):
                     raise
