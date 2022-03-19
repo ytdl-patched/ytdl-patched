@@ -83,7 +83,7 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
     @property
     def use_native_progress(self):
         # don't take --verbose in account since PPs don't redirect ffmpeg output to respective stdfds
-        return self._NATIVE_PROGRESS_ENABLED and self._downloader and self._downloader.params.get('enable_ffmpeg_native_progress')
+        return self._NATIVE_PROGRESS_ENABLED and self._downloader and self.get_param('enable_ffmpeg_native_progress')
 
     def set_downloader(self, downloader):
         PostProcessor.set_downloader(self, downloader)
