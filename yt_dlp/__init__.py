@@ -824,7 +824,6 @@ def parse_options(argv=None):
         'live_download_mkv': opts.live_download_mkv,
         'lock_exclusive': opts.lock_exclusive,
         'use_modern_tls_cipher': opts.use_modern_tls_cipher,
-        'continue_on_any_sock_error': opts.continue_on_any_sock_error,
         'enable_ffmpeg_native_progress': opts.enable_ffmpeg_native_progress,
     }
 

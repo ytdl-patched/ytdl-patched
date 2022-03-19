@@ -219,16 +219,7 @@ class NiconicoIE(NiconicoBaseIE):
         'https://nvcomment.nicovideo.jp/legacy/api.json',
         'https://nmsg.nicovideo.jp/api.json',)
 
-    def _real_initialize(self):
-        self._login()
-
-    def _login(self):
-        username, password = self._get_login_info()
-        # No authentication to be performed
-        if not username:
-            return True
-
-        # Log in
+    def _perform_login(self, username, password):
         login_ok = True
         login_form_strs = {
             'mail_tel': username,
