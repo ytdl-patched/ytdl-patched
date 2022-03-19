@@ -246,43 +246,60 @@ class NiconicoIE(NiconicoBaseIE):
             self.report_warning('unable to log in: bad username or password')
         return login_ok
 
-    def _get_heartbeat_info(self, info_dict):
-        video_id, video_src_id, audio_src_id = info_dict['url'].split(':')[1].split('/')
-        protocol = info_dict['protocol']
+    def _get_heartbeat_info(self, info_dict, params):
+        self.to_screen('Downloading from DMC')
 
-        api_data = (
-            info_dict.get('_api_data')
-            or self._parse_json(
-                self._html_search_regex(
-                    'data-api-data="([^"]+)"',
-                    self._download_webpage('http://www.nicovideo.jp/watch/' + video_id, video_id),
-                    'API data', default='{}'),
-                video_id))
+        session_response = self._download_json(
+            info_dict['url'], info_dict['id'],
+            query={'_format': 'json'},
+            headers={'Content-Type': 'application/json'},
+            note='Downloading JSON metadata for %s' % info_dict['format_id'],
+            data=json.dumps(info_dict['_dmc_data']).encode())
+
+        # get heartbeat info
+        params.update({
+            'url': info_dict['url'] + '/' + session_response['data']['session']['id'] + '?_format=json&_method=PUT',
+            'data': json.dumps(session_response['data']),
+            # interval, convert milliseconds to seconds, then halve to make a buffer.
+            'interval': float_or_none(info_dict['_heartbeat_interval'], scale=3000),
+        })
+
+        info_dict['url'] = session_response['data']['session']['content_uri']
+
+        if info_dict['protocol'].startswith('m3u8'):
+            info_dict.update(self._extract_m3u8_formats(info_dict['url'], info_dict['id'])[0])
+
+        return info_dict, params
+
+    def _extract_format_for_quality(self, api_data, video_id, audio_quality, video_quality, dmc_protocol):
+        if not audio_quality.get('isAvailable') or not video_quality.get('isAvailable'):
+            return None
+
+        def extract_video_quality(video_quality):
+            return parse_filesize('%sB' % self._search_regex(
+                r'\| ([0-9]*\.?[0-9]*[MK])', video_quality, 'vbr', default=''))
 
         session_api_data = try_get(api_data, lambda x: x['media']['delivery']['movie']['session'])
         session_api_endpoint = try_get(session_api_data, lambda x: x['urls'][0])
 
-        def ping(a):
-            tracking_id = traverse_obj(api_data, ('media', 'delivery', 'trackingId'))
-            if tracking_id:
-                tracking_url = update_url_query('https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch', {'t': tracking_id})
-                watch_request_response = self._download_json(
-                    tracking_url, video_id,
-                    note='Acquiring permission for downloading video', fatal=False,
-                    headers=self._API_HEADERS)
-                if traverse_obj(watch_request_response, ('meta', 'status')) != 200:
-                    self.report_warning('Failed to acquire permission for playing video. Video download may fail.')
-
         yesno = lambda x: 'yes' if x else 'no'
 
-        if protocol == 'http':
+        format_id = '-'.join(
+            [remove_start(s['id'], 'archive_') for s in (video_quality, audio_quality)] + [dmc_protocol])
+
+        vid_qual_label = traverse_obj(video_quality, ('metadata', 'label'))
+        vid_quality = traverse_obj(video_quality, ('metadata', 'bitrate'))
+
+        if dmc_protocol == 'http':
+            protocol = 'http'
             protocol_parameters = {
                 'http_output_download_parameters': {
                     'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
                     'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
                 }
             }
-        elif protocol == 'm3u8_native':
+        elif dmc_protocol == 'hls':
+            protocol = 'm3u8'
             segment_duration = try_get(self._configuration_arg('segment_duration'), lambda x: int(x[0])) or 6000
             parsed_token = self._parse_json(session_api_data['token'], video_id)
             encryption = traverse_obj(api_data, ('media', 'delivery', 'encryption'))
@@ -301,110 +318,61 @@ class NiconicoIE(NiconicoBaseIE):
                         'key_uri': encryption['keyUri'],
                     }
                 }
-        else:
-            raise ExtractorError(f'Unsupported DMC protocol: {protocol}')
-
-        session_response = self._download_json(
-            session_api_endpoint['url'], video_id,
-            query={'_format': 'json'},
-            headers={'Content-Type': 'application/json'},
-            note='Downloading JSON metadata for %s' % info_dict['format_id'],
-            data=json.dumps({
-                'session': {
-                    'client_info': {
-                        'player_id': session_api_data.get('playerId'),
-                    },
-                    'content_auth': {
-                        'auth_type': try_get(session_api_data, lambda x: x['authTypes'][session_api_data['protocols'][0]]),
-                        'content_key_timeout': session_api_data.get('contentKeyTimeout'),
-                        'service_id': 'nicovideo',
-                        'service_user_id': session_api_data.get('serviceUserId')
-                    },
-                    'content_id': session_api_data.get('contentId'),
-                    'content_src_id_sets': [{
-                        'content_src_ids': [{
-                            'src_id_to_mux': {
-                                'audio_src_ids': [audio_src_id],
-                                'video_src_ids': [video_src_id],
-                            }
-                        }]
-                    }],
-                    'content_type': 'movie',
-                    'content_uri': '',
-                    'keep_method': {
-                        'heartbeat': {
-                            'lifetime': session_api_data.get('heartbeatLifetime')
-                        }
-                    },
-                    'priority': session_api_data['priority'],
-                    'protocol': {
-                        'name': 'http',
-                        'parameters': {
-                            'http_parameters': {
-                                'parameters': protocol_parameters
-                            }
-                        }
-                    },
-                    'recipe_id': session_api_data.get('recipeId'),
-                    'session_operation_auth': {
-                        'session_operation_auth_by_signature': {
-                            'signature': session_api_data.get('signature'),
-                            'token': session_api_data.get('token'),
-                        }
-                    },
-                    'timing_constraint': 'unlimited'
-                }
-            }).encode())
-
-        info_dict['url'] = session_response['data']['session']['content_uri']
-
-        # get heartbeat info
-        heartbeat_info_dict = {
-            'url': session_api_endpoint['url'] + '/' + session_response['data']['session']['id'] + '?_format=json&_method=PUT',
-            'data': json.dumps(session_response['data']),
-            # interval, convert milliseconds to seconds, then halve to make a buffer.
-            'interval': float_or_none(session_api_data.get('heartbeatLifetime'), scale=3000),
-            'before_dl': ping
-        }
-
-        if protocol == 'm3u8_native':
-            info_dict.update(self._extract_m3u8_formats(info_dict['url'], info_dict['id'])[0])
-
-        return info_dict, heartbeat_info_dict
-
-    def _augment_callback(self, info_dict, params):
-        self.to_screen('Downloading from DMC')
-
-        ret = self._get_heartbeat_info(info_dict)
-        if ret[0]['protocol'].startswith('m3u8'):
-            ret[0].update(self._extract_m3u8_formats(ret[0]['url'], ret[0]['id'])[0])
-        return ret
-
-    def _extract_format_for_quality(self, video_id, audio_quality, video_quality, dmc_protocol):
-
-        if not audio_quality.get('isAvailable') or not video_quality.get('isAvailable'):
-            return None
-
-        def extract_video_quality(video_quality):
-            return parse_filesize('%sB' % self._search_regex(
-                r'\| ([0-9]*\.?[0-9]*[MK])', video_quality, 'vbr', default=''))
-
-        format_id = '-'.join(
-            [remove_start(s['id'], 'archive_') for s in (video_quality, audio_quality)] + [dmc_protocol])
-
-        vid_qual_label = traverse_obj(video_quality, ('metadata', 'label'))
-        vid_quality = traverse_obj(video_quality, ('metadata', 'bitrate'))
-
-        if dmc_protocol == 'http':
-            protocol = 'http'
-        elif dmc_protocol == 'hls':
-            protocol = 'm3u8_native'
+            else:
+                protocol = 'm3u8_native'
         else:
             self.report_warning(f'Unsupported DMC protocol: {dmc_protocol}')
-            return False
+
+        # am not willing for mergeability anymore
+        dmc_data = {
+            'session': {
+                'client_info': {
+                    'player_id': session_api_data.get('playerId'),
+                },
+                'content_auth': {
+                    'auth_type': try_get(session_api_data, lambda x: x['authTypes'][session_api_data['protocols'][0]]),
+                    'content_key_timeout': session_api_data.get('contentKeyTimeout'),
+                    'service_id': 'nicovideo',
+                    'service_user_id': session_api_data.get('serviceUserId')
+                },
+                'content_id': session_api_data.get('contentId'),
+                'content_src_id_sets': [{
+                    'content_src_ids': [{
+                        'src_id_to_mux': {
+                            'audio_src_ids': [audio_quality['id']],
+                            'video_src_ids': [video_quality['id']],
+                        }
+                    }]
+                }],
+                'content_type': 'movie',
+                'content_uri': '',
+                'keep_method': {
+                    'heartbeat': {
+                        'lifetime': session_api_data.get('heartbeatLifetime')
+                    }
+                },
+                'priority': session_api_data['priority'],
+                'protocol': {
+                    'name': 'http',
+                    'parameters': {
+                        'http_parameters': {
+                            'parameters': protocol_parameters
+                        }
+                    }
+                },
+                'recipe_id': session_api_data.get('recipeId'),
+                'session_operation_auth': {
+                    'session_operation_auth_by_signature': {
+                        'signature': session_api_data.get('signature'),
+                        'token': session_api_data.get('token'),
+                    }
+                },
+                'timing_constraint': 'unlimited'
+            }
+        }
 
         return {
-            'url': 'niconico_dmc:%s/%s/%s' % (video_id, video_quality['id'], audio_quality['id']),
+            'url': session_api_endpoint['url'],
             'format_id': format_id,
             'format_note': join_nonempty('DMC', vid_qual_label, dmc_protocol.upper(), delim=' '),
             'ext': 'mp4',  # Session API are used in HTML5, which always serves mp4
@@ -419,7 +387,9 @@ class NiconicoIE(NiconicoBaseIE):
             'http_headers': {
                 'Origin': 'https://www.nicovideo.jp',
                 'Referer': 'https://www.nicovideo.jp/watch/' + video_id,
-            }
+            },
+            '_dmc_data': dmc_data,
+            '_heartbeat_interval': session_api_data.get('heartbeatLifetime'),
         }
 
     def _real_extract(self, url):
@@ -458,7 +428,7 @@ class NiconicoIE(NiconicoBaseIE):
         quality_info = api_data['media']['delivery']['movie']
         session_api_data = quality_info['session']
         for (audio_quality, video_quality, protocol) in itertools.product(quality_info['audios'], quality_info['videos'], session_api_data['protocols']):
-            fmt = self._extract_format_for_quality(video_id, audio_quality, video_quality, protocol)
+            fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
             if fmt:
                 formats.append(fmt)
 
@@ -479,9 +449,19 @@ class NiconicoIE(NiconicoBaseIE):
             # find in json (logged in)
             tags = traverse_obj(api_data, ('tag', 'items', ..., 'name'))
 
+        def ping(a):
+            tracking_id = traverse_obj(api_data, ('media', 'delivery', 'trackingId'))
+            if tracking_id:
+                tracking_url = update_url_query('https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch', {'t': tracking_id})
+                watch_request_response = self._download_json(
+                    tracking_url, video_id,
+                    note='Acquiring permission for downloading video', fatal=False,
+                    headers=self._API_HEADERS)
+                if traverse_obj(watch_request_response, ('meta', 'status')) != 200:
+                    self.report_warning('Failed to acquire permission for playing video. Video download may fail.')
+
         return {
             'id': video_id,
-            '_api_data': api_data,
             'title': get_video_info(('originalTitle', 'title')) or self._og_search_title(webpage, default=None),
             'formats': formats,
             'thumbnail': get_video_info('thumbnail', 'url') or self._html_search_meta(
@@ -505,7 +485,8 @@ class NiconicoIE(NiconicoBaseIE):
 
             'augments': [{
                 'key': 'heartbeat',
-                'init_callback': self._augment_callback,
+                'init_callback': self._get_heartbeat_info,
+                'before_dl': ping,
             }]
         }
 
