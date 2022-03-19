@@ -165,6 +165,7 @@ class RunsFFmpeg(object):
 
         guessed_size = total_filesize
 
+        bytes_key = 'processed_bytes' if is_pp else 'downloaded_bytes'
         status = {
             '__from_ffmpeg_native_status': True,
             'filename': info_dict.get('_filename'),
@@ -224,8 +225,7 @@ class RunsFFmpeg(object):
                 average_speed = None
 
             status.update({
-                'processed_bytes': dl_bytes_int,
-                'downloaded_bytes': dl_bytes_int,
+                bytes_key: dl_bytes_int,
                 'speed': average_speed,
                 'speed_rate': speed,
                 'bitrate': None if bitrate_int is None else bitrate_int / 8,
@@ -236,8 +236,7 @@ class RunsFFmpeg(object):
 
         status.update({
             'status': 'finished',
-            'processed_bytes': dl_bytes_int,
-            'downloaded_bytes': dl_bytes_int,
+            bytes_key: dl_bytes_int,
             'total_bytes': dl_bytes_int,
         })
         self._hook_progress(status, info_dict)
@@ -419,17 +418,19 @@ class ShowsProgress(object):
         if s['status'] not in ('downloading', 'processing'):
             return
 
+        downloaded_bytes = s.get('downloaded_bytes') or s.get('processed_bytes')
+
         if s.get('eta') is not None:
             s['_eta_str'] = self.format_eta(s['eta'])
         else:
             s['_eta_str'] = 'Unknown'
 
-        if s.get('total_bytes') and s.get('downloaded_bytes') is not None:
-            s['_percent_str'] = self.format_percent(100 * s['downloaded_bytes'] / s['total_bytes'])
-        elif s.get('total_bytes_estimate') and s.get('downloaded_bytes') is not None:
-            s['_percent_str'] = self.format_percent(100 * s['downloaded_bytes'] / s['total_bytes_estimate'])
+        if s.get('total_bytes') and downloaded_bytes is not None:
+            s['_percent_str'] = self.format_percent(100 * downloaded_bytes / s['total_bytes'])
+        elif s.get('total_bytes_estimate') and downloaded_bytes is not None:
+            s['_percent_str'] = self.format_percent(100 * downloaded_bytes / s['total_bytes_estimate'])
         else:
-            if s.get('downloaded_bytes') == 0:
+            if downloaded_bytes == 0:
                 s['_percent_str'] = self.format_percent(0)
             else:
                 s['_percent_str'] = 'Unknown %'
@@ -448,8 +449,8 @@ class ShowsProgress(object):
             s['_total_bytes_estimate_str'] = format_bytes(s['total_bytes_estimate'])
             msg_template = '%(_percent_str)s of ~%(_total_bytes_estimate_str)s at %(_speed_str)s ETA %(_eta_str)s'
         else:
-            if s.get('downloaded_bytes') is not None:
-                s['_downloaded_bytes_str'] = format_bytes(s['downloaded_bytes'])
+            if downloaded_bytes is not None:
+                s['_downloaded_bytes_str'] = format_bytes(downloaded_bytes)
                 if s.get('elapsed'):
                     s['_elapsed_str'] = self.format_seconds(s['elapsed'])
                     msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s (%(_elapsed_str)s)'
