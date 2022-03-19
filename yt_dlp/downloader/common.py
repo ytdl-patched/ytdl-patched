@@ -2,8 +2,8 @@ from __future__ import division, unicode_literals
 
 import time
 import random
-import threading
 import errno
+import contextlib
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -15,9 +15,9 @@ from ..utils import (
     error_to_compat_str,
     shell_quote,
     timeconvert,
-    sanitized_Request,
 )
 from ..postprocessor._attachments import ShowsProgress
+from .augment import AUGMENT_MAP
 
 
 class FileDownloader(ShowsProgress):
@@ -254,42 +254,10 @@ class FileDownloader(ShowsProgress):
                     '[download] Sleeping %s seconds ...' % (
                         sleep_interval_sub))
                 time.sleep(sleep_interval_sub)
-
-        timer = [None]
-        heartbeat_lock = None
-        download_complete = False
-        if 'heartbeat_url' in info_dict:
-            heartbeat_lock = threading.Lock()
-
-            heartbeat_url = info_dict['heartbeat_url']
-            heartbeat_data = info_dict['heartbeat_data']
-            heartbeat_interval = info_dict.get('heartbeat_interval', 30)
-            self.to_screen('[download] Heartbeat with %s second interval...' % heartbeat_interval)
-
-            request = sanitized_Request(heartbeat_url, heartbeat_data)
-
-            def heartbeat():
-                try:
-                    self.ydl.urlopen(request).read()
-                except Exception:
-                    self.to_screen("[download] Heartbeat failed")
-
-                with heartbeat_lock:
-                    if not download_complete:
-                        timer[0] = threading.Timer(heartbeat_interval, heartbeat)
-                        timer[0]._daemonic = True
-                        timer[0].start()
-
-            heartbeat()
-
-        try:
-            return self.real_download(filename, info_dict), True
-        finally:
-            self._finish_multiline_status()
-            if heartbeat_lock:
-                with heartbeat_lock:
-                    timer[0].cancel()
-                    download_complete = True
+        with self._enter_augmented(info_dict):
+            ret = self.real_download(filename, info_dict)
+        self._finish_multiline_status()
+        return ret, True
 
     def real_download(self, filename, info_dict):
         """Real download process. Redefine in subclasses."""
@@ -320,3 +288,13 @@ class FileDownloader(ShowsProgress):
             exe = self.ydl.basename(str_args[0])
 
         self.write_debug('%s command line: %s' % (exe, shell_quote(str_args)))
+
+    def _enter_augmented(self, info_dict):
+        augmentation = info_dict.get('augments') or []
+        es = contextlib.ExitStack()
+        if not augmentation:
+            return es
+        for a in augmentation:
+            # TODO: add contitional activation
+            es.enter_context(AUGMENT_MAP[a['key']](self, info_dict, a))
+        return es
