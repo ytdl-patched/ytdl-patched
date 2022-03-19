@@ -13,10 +13,6 @@ import re
 import sys
 import time
 import math
-try:
-    from typing import Generator, Iterator
-except ImportError:
-    from collections.abc import Generator, Iterator
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -1725,10 +1721,8 @@ class InfoExtractor(object):
                        'order': ['[af]lac', 'wav|aiff', 'opus', 'vorbis|ogg', 'aac', 'mp?4a?', 'mp3', 'e-?a?c-?3', 'ac-?3', 'dts', '', None, 'none']},
             'hdr': {'type': 'ordered', 'regex': True, 'field': 'dynamic_range',
                     'order': ['dv', '(hdr)?12', r'(hdr)?10\+', '(hdr)?10', 'hlg', '', 'sdr', None]},
-            # sort with multiple:ordered from "expected_protocol", "protocol" in this order to make DMC formats properly sorted
-            'proto': {'type': 'multiple:ordered', 'regex': True, 'field': ('expected_protocol', 'protocol'),
-                      'order': ['m3u8.*', '(ht|f)tps', '(ht|f)tp$', '.*dash', 'websocket_frag', 'rtmpe?', '', 'mms|rtsp', 'ws|websocket', 'f4'],
-                      'function': lambda x: next(filter(None, x), None)},
+            'proto': {'type': 'ordered', 'regex': True, 'field': 'protocol',
+                      'order': ['(ht|f)tps', '(ht|f)tp$', 'm3u8.*', '.*dash', 'websocket_frag', 'rtmpe?', '', 'mms|rtsp', 'ws|websocket', 'f4']},
             'vext': {'type': 'ordered', 'field': 'video_ext',
                      'order': ('mp4', 'webm', 'flv', '', 'none'),
                      'order_free': ('webm', 'mp4', 'flv', '', 'none')},
@@ -1792,7 +1786,6 @@ class InfoExtractor(object):
             'has_audio': {'type': 'alias', 'field': 'hasaud', 'deprecated': True},
             'extractor': {'type': 'alias', 'field': 'ie_pref', 'deprecated': True},
             'extractor_preference': {'type': 'alias', 'field': 'ie_pref', 'deprecated': True},
-            'expected_protocol': {'type': 'alias', 'field': 'proto'},
         }
 
         def __init__(self, ie, field_preference):
@@ -1813,8 +1806,6 @@ class InfoExtractor(object):
             propObj = self.settings[field]
             if key not in propObj:
                 type = propObj.get('type')
-                if type and ':' in type:
-                    type = type.split(':')[-1]
                 if key == 'field':
                     default = 'preference' if type == 'extractor' else (field,) if type in ('combined', 'multiple') else field
                 elif key == 'convert':
@@ -1829,14 +1820,11 @@ class InfoExtractor(object):
                 if not convertNone:
                     return None
             else:
-                if isinstance(value, (list, tuple, Iterator, Generator)):
-                    value = next((x for x in value if x is not None), None)
-                if isinstance(value, compat_str):
-                    value = value.lower()
+                value = value.lower()
             conversion = self._get_field_setting(field, 'convert')
             if conversion == 'ignore':
                 return None
-            elif conversion == 'string':
+            if conversion == 'string':
                 return value
             elif conversion == 'float_none':
                 return float_or_none(value)
@@ -1854,7 +1842,7 @@ class InfoExtractor(object):
                     return list_length - empty_pos  # not in list
                 else:  # not regex or  value = None
                     return list_length - (order_list.index(value) if value in order_list else empty_pos)
-            elif value is not None:
+            else:
                 if value.isnumeric():
                     return float(value)
                 else:
@@ -1963,11 +1951,11 @@ class InfoExtractor(object):
         def _calculate_field_preference(self, format, field):
             type = self._get_field_setting(field, 'type')  # extractor, boolean, ordered, field, multiple
             get_value = lambda f: format.get(self._get_field_setting(f, 'field'))
-            multiple_match = type.split(':')
-            if multiple_match[0] == 'multiple':
-                type = multiple_match[1] if len(multiple_match) > 1 else 'field'
-                actual_fields = variadic(self._get_field_setting(field, 'field'))
-                value = self._get_field_setting(field, 'function')(format.get(f) for f in actual_fields)
+            if type == 'multiple':
+                type = 'field'  # Only 'field' is allowed in multiple for now
+                actual_fields = self._get_field_setting(field, 'field')
+
+                value = self._get_field_setting(field, 'function')(get_value(f) for f in actual_fields)
             else:
                 value = get_value(field)
             return self._calculate_field_preference_from_value(format, field, type, value)
