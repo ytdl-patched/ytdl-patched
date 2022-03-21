@@ -395,6 +395,8 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             # Trailing \r\n after each HTTP header is important to prevent warning from ffmpeg/avconv:
             # [http @ 00000000003d2fa0] No trailing CRLF found in HTTP header.
             headers = handle_youtubedl_headers(info_dict['http_headers'])
+            # drop Accept-Encoding from request header; it should be added by each client rather than forcing from ytdl-patched itself
+            headers.pop(next((x for x in headers.keys() if x.lower() == 'accept-encoding'), None), None)
             args += [
                 '-headers',
                 ''.join('%s: %s\r\n' % (key, val) for key, val in headers.items())]
