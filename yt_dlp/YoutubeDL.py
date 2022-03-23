@@ -4119,9 +4119,8 @@ class YoutubeDL(object):
                 sub_info['filepath'] = sub_filename
                 ret.append((sub_filename, sub_filename_final))
             except (DownloadError, ExtractorError, IOError, OSError, ValueError) + network_exceptions as err:
-                if self.params.get('ignoreerrors') is not True:  # False or 'only_download'
-                    raise DownloadError(f'Unable to download video subtitles for {sub_lang!r}: {err}', err)
-                self.report_warning(f'Unable to download video subtitles for {sub_lang!r}: {err}')
+                report = self.report_warning if self.params.get('ignoreerrors') is True else self.report_error  # Report error if False or 'only_download'
+                report(f'Unable to download video subtitles for {sub_lang!r}: {err}')
         return ret
 
     def _write_thumbnails(self, label, info_dict, filename, thumb_filename_base=None):
