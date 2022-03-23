@@ -1112,6 +1112,7 @@
  - **sharevideos**
  - **ShemarooMe**
  - **ShowRoomLive**
+ - **ShugiinItvVod**: 衆議院インターネット審議中継 (ビデオライブラリ)
  - **simplecast**
  - **simplecast:episode**
  - **simplecast:podcast**
