@@ -76,6 +76,7 @@ from .utils import (
     formatSeconds,
     GeoRestrictedError,
     get_domain,
+    has_certifi,
     HEADRequest,
     InAdvancePagedList,
     int_or_none,
@@ -3936,6 +3937,7 @@ class YoutubeDL(object):
 
         lib_str = join_nonempty(
             compat_brotli and compat_brotli.__name__,
+            has_certifi and 'certifi',
             compat_pycrypto_AES and compat_pycrypto_AES.__name__.split('.')[0],
             SECRETSTORAGE_AVAILABLE and 'secretstorage',
             has_mutagen and 'mutagen',
