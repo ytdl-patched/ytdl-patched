@@ -1493,6 +1493,7 @@ from .shared import (
 from .sharevideos import ShareVideosIE
 from .shemaroome import ShemarooMeIE
 from .showroomlive import ShowRoomLiveIE
+from .shugiin import ShugiinItvVodIE
 from .simplecast import (
     SimplecastIE,
     SimplecastEpisodeIE,
