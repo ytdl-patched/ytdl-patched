@@ -18,6 +18,7 @@ from ..compat import (
 )
 from ..utils import (
     determine_ext,
+    dict_get,
     ExtractorError,
     float_or_none,
     HEADRequest,
@@ -33,6 +34,7 @@ from ..utils import (
     sanitized_Request,
     smuggle_url,
     try_get,
+    str_or_none,
     unescapeHTML,
     unified_timestamp,
     unsmuggle_url,
@@ -3888,7 +3890,7 @@ class GenericIE(InfoExtractor):
 
         # Video.js embed
         mobj = re.search(
-            r'(?s)\bvideojs\s*\(.+?([a-zA-Z0-9_$]+?)\.src\s*\(\s*((?:\[.+?\]|{.+?}))\s*\)\s*;',
+            r'(?s)\bvideojs\s*\(.+?([a-zA-Z0-9_$]+)\.src\s*\(\s*((?:\[.+?\]|{.+?}))\s*\)\s*;',
             webpage)
         if mobj is not None:
             varname = mobj.group(1)
@@ -3932,16 +3934,13 @@ class GenericIE(InfoExtractor):
                     })
             # https://docs.videojs.com/player#addRemoteTextTrack
             # https://html.spec.whatwg.org/multipage/media.html#htmltrackelement
-            for sub_match in re.finditer(rf'(?s){re.escape(varname)}' r'\.addRemoteTextTrack\(({.+?})\s*(?:,\s*(?:true|false))\)', webpage):
+            for sub_match in re.finditer(rf'(?s){re.escape(varname)}' r'\.addRemoteTextTrack\(({.+?})\s*,\s*(?:true|false)\)', webpage):
                 sub = self._parse_json(
-                    sub_match.group(1), video_id, transform_source=js_to_json,
-                    fatal=False)
-                if not sub or not isinstance(sub, dict):
+                    sub_match.group(1), video_id, transform_source=js_to_json, fatal=False) or {}
+                src = str_or_none(sub.get('src'))
+                if not src:
                     continue
-                src = sub.get('src')
-                if not src or not isinstance(src, str):
-                    continue
-                subtitles.setdefault(sub.get('language') or sub.get('srclang') or 'und', []).append({
+                subtitles.setdefault(dict_get(sub, ('language', 'srclang')) or 'und', []).append({
                     'url': compat_urlparse.urljoin(url, src),
                     'name': sub.get('label'),
                     'http_headers': {
