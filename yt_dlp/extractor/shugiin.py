@@ -71,7 +71,7 @@ class ShugiinItvVodIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?P<lang>jp|en)/index\.php\?ex=VL(?:\&[^=]+=[^&]*)*\&deli_id=(?P<id>\d+)'
     IE_DESC = '衆議院インターネット審議中継 (ビデオライブラリ)'
     _TESTS = [{
-        'url': '',
+        'url': 'https://www.shugiintv.go.jp/jp/index.php?ex=VL&media_type=&deli_id=53846',
         'info_dict': {
             'id': '53846',
             'title': 'ウクライナ大統領国会演説（オンライン）',
