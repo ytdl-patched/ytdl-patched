@@ -566,6 +566,9 @@
  - **la7.it:podcast**
  - **laola1tv**
  - **laola1tv:embed**
+ - **LastFM**
+ - **LastFMPlaylist**
+ - **LastFMUser**
  - **lbry**
  - **lbry:channel**
  - **LCI**
