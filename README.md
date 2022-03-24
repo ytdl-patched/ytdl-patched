@@ -165,7 +165,7 @@ You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens
 
 * **[Format Sorting](#sorting-formats)**: The default format sorting options have been changed so that higher resolution and better codecs will be now preferred instead of simply using larger bitrate. Furthermore, you can now specify the sort order using `-S`. This allows for much easier format selection than what is possible by simply using `--format` ([examples](#format-selection-examples))
 
-* **Merged with animelover1984/youtube-dl**: You get most of the features and improvements from [animelover1984/youtube-dl](https://github.com/animelover1984/youtube-dl) including `--write-comments`, `BiliBiliSearch`, `BilibiliChannel`, Embedding thumbnail in mp4/ogg/opus, playlist infojson etc. Note that the NicoNico improvements are not available. See [#31](https://github.com/yt-dlp/yt-dlp/pull/31) for details.
+* **Merged with animelover1984/youtube-dl**: You get most of the features and improvements from [animelover1984/youtube-dl](https://github.com/animelover1984/youtube-dl) including `--write-comments`, `BiliBiliSearch`, `BilibiliChannel`, Embedding thumbnail in mp4/ogg/opus, playlist infojson etc. Note that the NicoNico livestreams are not available. See [#31](https://github.com/yt-dlp/yt-dlp/pull/31) for details.
 
 * **Youtube improvements**:
     * All Feeds (`:ytfav`, `:ytwatchlater`, `:ytsubs`, `:ythistory`, `:ytrec`) and private playlists supports downloading multiple pages of content
@@ -290,7 +290,7 @@ python3 -m pip install --no-deps -U yt-dlp
 
 If you want to be on the cutting edge, you can also install the master branch with:
 ```
-python3 -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.zip
+python3 -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
 ```
 
 Note that on some systems, you may need to use `py` or `python` instead of `python3`
@@ -1263,11 +1263,11 @@ The available fields are:
  - `license` (string): License name the video is licensed under
  - `creator` (string): The creator of the video
  - `timestamp` (numeric): UNIX timestamp of the moment the video became available
- - `upload_date` (string): Video upload date (YYYYMMDD)
+ - `upload_date` (string): Video upload date in UTC (YYYYMMDD)
  - `release_timestamp` (numeric): UNIX timestamp of the moment the video was released
- - `release_date` (string): The date (YYYYMMDD) when the video was released
+ - `release_date` (string): The date (YYYYMMDD) when the video was released in UTC
  - `modified_timestamp` (numeric): UNIX timestamp of the moment the video was last modified
- - `modified_date` (string): The date (YYYYMMDD) when the video was last modified
+ - `modified_date` (string): The date (YYYYMMDD) when the video was last modified in UTC
  - `uploader_id` (string): Nickname or id of the video uploader
  - `channel` (string): Full name of the channel the video is uploaded on
  - `channel_id` (string): Id of the channel
@@ -1472,7 +1472,7 @@ You can also use special names to select particular edge case formats:
  - `bv`, `bestvideo`: Select the best quality **video-only** format. Equivalent to `best*[acodec=none]`
  - `bv*`, `bestvideo*`: Select the best quality format that **contains video**. It may also contain audio. Equivalent to `best*[vcodec!=none]`
  - `ba`, `bestaudio`: Select the best quality **audio-only** format. Equivalent to `best*[vcodec=none]`
- - `ba*`, `bestaudio*`: Select the best quality format that **contains audio**. It may also contain video. Equivalent to `best*[acodec!=none]`
+ - `ba*`, `bestaudio*`: Select the best quality format that **contains audio**. It may also contain video. Equivalent to `best*[acodec!=none]` ([Do not use!](https://github.com/yt-dlp/yt-dlp/issues/979#issuecomment-919629354))
  - `w*`, `worst*`: Select the worst quality format that contains either a video or an audio
  - `w`, `worst`: Select the worst quality format that contains both video and audio. Equivalent to `worst*[vcodec!=none][acodec!=none]`
  - `wv`, `worstvideo`: Select the worst quality video-only format. Equivalent to `worst*[acodec=none]`
@@ -1480,7 +1480,7 @@ You can also use special names to select particular edge case formats:
  - `wa`, `worstaudio`: Select the worst quality audio-only format. Equivalent to `worst*[vcodec=none]`
  - `wa*`, `worstaudio*`: Select the worst quality format that contains audio. It may also contain video. Equivalent to `worst*[acodec!=none]`
 
-For example, to download the worst quality video-only format you can use `-f worstvideo`. It is however recommended not to use `worst` and related options. When your format selector is `worst`, the format which is worst in all respects is selected. Most of the time, what you actually want is the video with the smallest filesize instead. So it is generally better to use `-f best -S +size,+br,+res,+fps` instead of `-f worst`. See [sorting formats](#sorting-formats) for more details.
+For example, to download the worst quality video-only format you can use `-f worstvideo`. It is however recommended not to use `worst` and related options. When your format selector is `worst`, the format which is worst in all respects is selected. Most of the time, what you actually want is the video with the smallest filesize instead. So it is generally better to use `-S +size` or more rigorously, `-S +size,+br,+res,+fps` instead of `-f worst`. See [sorting formats](#sorting-formats) for more details.
 
 You can select the n'th best format of a type by using `best<type>.<n>`. For example, `best.2` will select the 2nd best combined format. Similarly, `bv*.3` will select the 3rd best format that contains a video stream.
 
@@ -1787,7 +1787,7 @@ The following extractors use this feature:
 * `language`: Languages to extract. Eg: `crunchyroll:language=jaJp`
 * `hardsub`: Which hard-sub versions to extract. Eg: `crunchyroll:hardsub=None,enUS`
 
-#### crunchyroll:beta
+#### crunchyrollbeta
 * `format`: Which stream type(s) to extract. Default is `adaptive_hls` Eg: `crunchyrollbeta:format=vo_adaptive_hls`
     * Potentially useful values include `adaptive_hls`, `adaptive_dash`, `vo_adaptive_hls`, `vo_adaptive_dash`, `download_hls`, `trailer_hls`, `trailer_dash`
 * `hardsub`: Preference order for which hardsub versions to extract. Default is `None` (no hardsubs). Eg: `crunchyrollbeta:hardsub=en-US,None`
