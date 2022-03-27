@@ -107,6 +107,8 @@
  - **awaan:video**
  - **AZMedien**: AZ Medien videos
  - **BaiduVideo**: 百度视频
+ - **BanBye**
+ - **BanByeChannel**
  - **bandaichannel**
  - **Bandcamp**
  - **Bandcamp:album**
@@ -520,6 +522,8 @@
  - **iq.com**: International version of iQiyi
  - **iq.com:album**
  - **iqiyi**: 爱奇艺
+ - **ITProTV**
+ - **ITProTVCourse**
  - **ITTF**
  - **ITV**
  - **ITVBTCC**
