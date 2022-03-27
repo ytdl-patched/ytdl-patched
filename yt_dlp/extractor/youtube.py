@@ -827,12 +827,17 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             renderer, ('thumbnailOverlays', ..., 'thumbnailOverlayTimeStatusRenderer', 'style'), get_all=False, expected_type=str)
         badges = self._extract_badges(renderer)
         thumbnails = self._extract_thumbnails(renderer, 'thumbnail')
+        navigation_url = urljoin('https://www.youtube.com/', traverse_obj(
+            renderer, ('navigationEndpoint', 'commandMetadata', 'webCommandMetadata', 'url'), expected_type=str))
+        url = f'https://www.youtube.com/watch?v={video_id}'
+        if overlay_style == 'SHORTS' or (navigation_url and '/shorts/' in navigation_url):
+            url = f'https://www.youtube.com/shorts/{video_id}'
 
         return {
             '_type': 'url',
             'ie_key': YoutubeIE.ie_key(),
             'id': video_id,
-            'url': f'https://www.youtube.com/watch?v={video_id}',
+            'url': url,
             'title': title,
             'description': description,
             'duration': duration,
@@ -3067,7 +3072,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         streaming_formats = traverse_obj(streaming_data, (..., ('formats', 'adaptiveFormats'), ...), default=[])
 
         for fmt in streaming_formats:
-            if fmt.get('targetDurationSec') or fmt.get('drmFamilies'):
+            if fmt.get('targetDurationSec'):
                 continue
 
             itag = str_or_none(fmt.get('itag'))
@@ -3176,6 +3181,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'fps': int_or_none(fmt.get('fps')) or None,
                 'height': height,
                 'quality': q(quality),
+                'has_drm': bool(fmt.get('drmFamilies')),
                 'tbr': tbr,
                 'url': fmt_url,
                 'width': int_or_none(fmt.get('width')),
