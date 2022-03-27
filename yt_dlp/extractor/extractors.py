@@ -126,6 +126,10 @@ from .awaan import (
 )
 from .azmedien import AZMedienIE
 from .baidu import BaiduVideoIE
+from .banbye import (
+    BanByeIE,
+    BanByeChannelIE,
+)
 from .bandaichannel import BandaiChannelIE
 from .bandcamp import (
     BandcampIE,
@@ -684,6 +688,12 @@ from .iqiyi import (
     IqIE,
     IqAlbumIE
 )
+
+from .itprotv import (
+    ITProTVIE,
+    ITProTVCourseIE
+)
+
 from .itv import (
     ITVIE,
     ITVBTCCIE,
