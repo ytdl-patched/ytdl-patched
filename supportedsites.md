@@ -1467,6 +1467,9 @@
  - **Wakanim**
  - **Walla**
  - **WalyTV**
+ - **wasdtv:clip**
+ - **wasdtv:record**
+ - **wasdtv:stream**
  - **washingtonpost**
  - **washingtonpost:article**
  - **wat.tv**
