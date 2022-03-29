@@ -14,10 +14,14 @@ from .utils import dict_get, encode_compat_str, Popen, write_string
 
 from .version import __version__
 try:
-    from .build_config import variant, is_brew
+    from .build_config import variant
 except ImportError:
-    globals().setdefault('variant', 'red')
-    globals().setdefault('is_brew', False)
+    variant = 'red'
+
+try:
+    from .build_config import is_brew
+except ImportError:
+    is_brew = False
 
 
 def detect_variant():
