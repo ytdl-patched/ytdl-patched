@@ -144,9 +144,17 @@ class HttpServerAugment(Augment):
         if 'before_dl' in self.params:
             self.params['before_dl'](self)
 
+        self.httpd = http.server.HTTPServer(
+            ('127.0.0.1', 0), self.create_handler_class(self.params))
+        self.port = self.httpd.socket.getsockname()[1]
+        self.server_thread = threading.Thread(
+            target=self.httpd.serve_forever, daemon=True)
+        self.server_thread.start()
+
     def end(self):
         if 'after_dl' in self.params:
             self.params['after_dl'](self)
+        self.httpd.shutdown()
 
     def create_handler_class(self, struct):
         # struct = {
