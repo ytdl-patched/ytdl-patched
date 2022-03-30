@@ -72,6 +72,7 @@ class ShugiinItvLiveIE(InfoExtractor):
         } for x in re.finditer(r'<a\s+href=".+?\?room_id=(room\d+)"\s*class="play_live".+?class="s12_14">(.+?)</td>', webpage)]
 
     def _real_extract(self, url):
+        self.report_warning('Listing up all running proceedings as of now. To specify one proceedings to record, use link direct from the website.')
         webpage = self._download_webpage(
             'https://www.shugiintv.go.jp/jp/index.php', None,
             encoding='euc-jp')
