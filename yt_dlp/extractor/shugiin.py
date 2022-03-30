@@ -55,20 +55,13 @@ def _parse_japanese_duration(text):
     return duration
 
 
-def _get_last(iter):
-    obj = None
-    for o in iter:
-        obj = o
-    return obj
-
-
 class ShugiinItvLiveIE(InfoExtractor):
-    # not implemented
-    pass
+    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)/index\.php\?ex=VL(?:\&[^=]+=[^&]*)*\&deli_id=(?P<id>\d+)'
+    IE_DESC = '衆議院インターネット審議中継'
 
 
 class ShugiinItvVodIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?P<lang>jp|en)/index\.php\?ex=VL(?:\&[^=]+=[^&]*)*\&deli_id=(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)/index\.php\?ex=VL(?:\&[^=]+=[^&]*)*\&deli_id=(?P<id>\d+)'
     IE_DESC = '衆議院インターネット審議中継 (ビデオライブラリ)'
     _TESTS = [{
         'url': 'https://www.shugiintv.go.jp/jp/index.php?ex=VL&media_type=&deli_id=53846',
@@ -78,17 +71,13 @@ class ShugiinItvVodIE(InfoExtractor):
             'release_date': '20220323',
             'chapters': 'count:4',
         }
+    }, {
+        'url': 'https://www.shugiintv.go.jp/en/index.php?ex=VL&media_type=&deli_id=53846',
+        'only_matching': True
     }]
 
     def _real_extract(self, url):
-        lang, video_id = self._match_valid_url(url).group('lang', 'id')
-        force_japanese = self._configuration_arg('force_japanese', default=False)
-        if lang == 'jp' or force_japanese:
-            return self._extract_japanese(video_id)
-        else:
-            return self._extract_english(video_id)
-
-    def _extract_japanese(self, video_id):
+        video_id = self._match_id(url)
         webpage = self._download_webpage(
             f'https://www.shugiintv.go.jp/jp/index.php?ex=VL&media_type=&deli_id={video_id}', video_id,
             encoding='euc-jp')
@@ -120,9 +109,9 @@ class ShugiinItvVodIE(InfoExtractor):
         for idx, chp in enumerate(chapters[1:]):
             chapters[idx]['end_time'] = chapters[idx + 1]['start_time']
 
-        last_tr = _get_last(re.finditer(r'(?s)<TR\s*class="s14_24">(.+?)</TR>', webpage))
+        last_tr = re.findall(r'(?s)<TR\s*class="s14_24">(.+?)</TR>', webpage)[-1]
         if last_tr and chapters:
-            last_td = _get_last(re.finditer(r'<TD.+?</TD>', last_tr.group(0)))
+            last_td = re.finditer(r'<TD.+?</TD>', last_tr.group(0))[-1]
             if last_td:
                 chapters[-1]['end_time'] = chapters[-1]['start_time'] + _parse_japanese_duration(clean_html(last_td.group(0)))
 
