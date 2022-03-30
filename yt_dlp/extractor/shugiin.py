@@ -6,7 +6,9 @@ import re
 from ..utils import (
     clean_html,
     float_or_none,
-    int_or_none
+    int_or_none,
+    smuggle_url,
+    unsmuggle_url
 )
 
 from .common import InfoExtractor
@@ -56,8 +58,54 @@ def _parse_japanese_duration(text):
 
 
 class ShugiinItvLiveIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)/index\.php\?ex=VL(?:\&[^=]+=[^&]*)*\&deli_id=(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)(?:/index\.php)?'
     IE_DESC = '衆議院インターネット審議中継'
+
+    @classmethod
+    def _find_rooms(cls, webpage):
+        return [{
+            '_type': 'url',
+            'id': x.group(1),
+            'title': clean_html(x.group(2)).strip(),
+            'url': smuggle_url(f'https://www.shugiintv.go.jp/jp/index.php?room_id={x.group(1)}', x.groups()),
+            'ie_key': ShugiinItvLiveIE.ie_key(),
+        } for x in re.finditer(r'<a\s+href=".+?\?room_id=(room\d+)"\s*class="play_live".+?class="s12_14">(.+?)</td>', webpage)]
+
+    def _real_extract(self, url):
+        webpage = self._download_webpage(
+            'https://www.shugiintv.go.jp/jp/index.php', None,
+            encoding='euc-jp')
+        return self.playlist_result(self._find_rooms(webpage))
+
+
+class ShugiinItvLiveRoomIE(ShugiinItvLiveIE):
+    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)/index\.php\?room_id=(?P<id>room\d+)'
+    IE_DESC = '衆議院インターネット審議中継 (中継)'
+
+    def _real_extract(self, url):
+        url, smug = unsmuggle_url(url)
+        if smug:
+            room_id, title = smug
+        else:
+            room_id = self._match_id(url)
+            webpage = self._download_webpage(
+                'https://www.shugiintv.go.jp/jp/index.php', None,
+                encoding='euc-jp')
+            title = next((x.get('id') == room_id for x in self._find_rooms(webpage)), {}).get('title')
+
+        # I doubt there's also subtitles
+        formats, subtitles = self._extract_m3u8_formats_and_subtitles(
+            f'https://hlslive.shugiintv.go.jp/{room_id}/amlst:{room_id}/playlist.m3u8',
+            room_id, ext='mp4')
+        self._sort_formats(formats)
+
+        return {
+            'id': room_id,
+            'title': title,
+            'formats': formats,
+            'subtitles': subtitles,
+            'is_live': True,
+        }
 
 
 class ShugiinItvVodIE(InfoExtractor):
