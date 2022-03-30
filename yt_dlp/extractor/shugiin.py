@@ -62,6 +62,10 @@ class ShugiinItvLiveIE(InfoExtractor):
     IE_DESC = '衆議院インターネット審議中継'
 
     @classmethod
+    def suitable(cls, url):
+        return super().suitable(url) and not any(x.suitable(url) for x in (ShugiinItvLiveRoomIE, ShugiinItvVodIE))
+
+    @classmethod
     def _find_rooms(cls, webpage):
         return [{
             '_type': 'url',
@@ -82,6 +86,10 @@ class ShugiinItvLiveIE(InfoExtractor):
 class ShugiinItvLiveRoomIE(ShugiinItvLiveIE):
     _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)/index\.php\?room_id=(?P<id>room\d+)'
     IE_DESC = '衆議院インターネット審議中継 (中継)'
+
+    @classmethod
+    def suitable(cls, url):
+        return InfoExtractor.suitable.__func__(cls, url)
 
     def _real_extract(self, url):
         url, smug = unsmuggle_url(url)
