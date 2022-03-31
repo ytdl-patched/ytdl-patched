@@ -3121,15 +3121,19 @@ def dict_get(d, key_or_keys, default=None, skip_false_values=True):
     return d.get(key_or_keys, default)
 
 
-def try_get(src, getter, expected_type=None):
-    for get in variadic(getter):
+def try_call(*funcs, expected_type=None, args=[], kwargs={}):
+    for f in funcs:
         try:
-            v = get(src)
-        except (AttributeError, KeyError, TypeError, IndexError):
+            val = f(*args, **kwargs)
+        except (AttributeError, KeyError, TypeError, IndexError, ZeroDivisionError):
             pass
         else:
-            if expected_type is None or isinstance(v, expected_type):
-                return v
+            if expected_type is None or isinstance(val, expected_type):
+                return val
+
+
+def try_get(src, getter, expected_type=None):
+    return try_call(*variadic(getter), args=(src,), expected_type=expected_type)
 
 
 def filter_dict(dct, cndn=lambda _, v: v is not None):
@@ -5175,8 +5179,8 @@ def traverse_obj(
     @param path_list        A list of paths which are checked one by one.
                             Each path is a list of keys where each key is a string,
                             a function, a tuple of strings/None or "...".
-                            When a fuction is given, it takes the key as argument and
-                            returns whether the key matches or not. When a tuple is given,
+                            When a fuction is given, it takes the key and value as arguments
+                            and returns whether the key matches or not. When a tuple is given,
                             all the keys given in the tuple are traversed, and
                             "..." traverses all the keys in the object
                             "None" returns the object without traversal
@@ -5221,7 +5225,7 @@ def traverse_obj(
                     obj = str(obj)
                 _current_depth += 1
                 depth = max(depth, _current_depth)
-                return [_traverse_obj(v, path[i + 1:], _current_depth) for k, v in obj if key(k)]
+                return [_traverse_obj(v, path[i + 1:], _current_depth) for k, v in obj if try_call(key, args=(k, v))]
             elif isinstance(obj, dict) and not (is_user_input and key == ':'):
                 obj = (obj.get(key) if casesense or (key in obj)
                        else next((v for k, v in obj.items() if _lower(k) == key), None))
