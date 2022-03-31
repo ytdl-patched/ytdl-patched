@@ -1025,7 +1025,7 @@ def make_HTTPS_handler(params, **kwargs):
 
 
 def bug_reports_message(before=';'):
-    msg = ('please report this issue on  https://github.com/yt-dlp/yt-dlp , '
+    msg = ('please report this issue on  https://github.com/ytdl-patched/ytdl-patched/issues/new/choose , '
            'filling out the appropriate issue template. '
            'Confirm you are on the latest version using  yt-dlp -U')
 
