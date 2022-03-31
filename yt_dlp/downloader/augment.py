@@ -155,6 +155,8 @@ class HttpServerAugment(Augment):
         if 'after_dl' in self.params:
             self.params['after_dl'](self)
         self.httpd.shutdown()
+        self.httpd = None
+        self.server_thread = None
 
     def create_handler_class(self, struct):
         # struct = {
