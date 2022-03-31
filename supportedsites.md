@@ -251,6 +251,7 @@
  - **cpac:playlist**
  - **Cracked**
  - **Crackle**
+ - **Craftsy**
  - **CrooksAndLiars**
  - **CrowdBunker**
  - **CrowdBunkerChannel**
