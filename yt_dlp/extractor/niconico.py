@@ -30,6 +30,7 @@ from ..utils import (
     parse_duration,
     parse_filesize,
     parse_iso8601,
+    parse_resolution,
     remove_start,
     std_headers,
     str_or_none,
@@ -465,8 +466,32 @@ class NiconicoIE(NiconicoBaseIE):
             'id': video_id,
             'title': get_video_info(('originalTitle', 'title')) or self._og_search_title(webpage, default=None),
             'formats': formats,
-            'thumbnail': get_video_info('thumbnail', 'url') or self._html_search_meta(
-                ('image', 'og:image'), webpage, 'thumbnail', default=None),
+            'thumbnails': [{
+                **x,
+                'ext': 'jpg',
+                'preference': idx,
+                **parse_resolution(x['url'], lenient=True),
+            } for idx, x in enumerate([{
+                # 130x100
+                'id': 'url',
+                'url': get_video_info('thumbnail', 'url'),
+            }, {
+                # 320x180
+                'id': 'middleUrl',
+                'url': get_video_info('thumbnail', 'middleUrl'),
+            }, {
+                # 360x270
+                'id': 'largeUrl',
+                'url': get_video_info('thumbnail', 'largeUrl'),
+            }, {
+                # 960x540
+                'id': 'player',
+                'url': get_video_info('thumbnail', 'player'),
+            }, {
+                # 1280x720
+                'id': 'og',
+                'url': get_video_info('thumbnail', 'ogp') or self._html_search_meta(('image', 'og:image'), webpage, 'thumbnail', default=None)
+            }]) if x.get('url')],
             'description': clean_html(get_video_info('description')),
             'uploader': traverse_obj(api_data, ('owner', 'nickname')),
             'timestamp': parse_iso8601(get_video_info('registeredAt')) or parse_iso8601(
