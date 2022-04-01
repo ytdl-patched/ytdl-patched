@@ -493,10 +493,10 @@ class NiconicoIE(NiconicoBaseIE):
                 'url': get_video_info('thumbnail', 'ogp') or self._html_search_meta(('image', 'og:image'), webpage, 'thumbnail', default=None)
             }]) if x.get('url')],
             'description': clean_html(get_video_info('description')),
-            'uploader': traverse_obj(api_data, ('owner', 'nickname')),
+            'uploader': traverse_obj(api_data, ('owner', 'nickname'), ('channel', 'name'), ('community', 'name')),
+            'uploader_id': traverse_obj(api_data, ('owner', 'id'), ('channel', 'id'), ('community', 'id')),
             'timestamp': parse_iso8601(get_video_info('registeredAt')) or parse_iso8601(
                 self._html_search_meta('video:release_date', webpage, 'date published', default=None)),
-            'uploader_id': traverse_obj(api_data, ('owner', 'id')),
             'channel': traverse_obj(api_data, ('channel', 'name'), ('community', 'name')),
             'channel_id': traverse_obj(api_data, ('channel', 'id'), ('community', 'id')),
             'view_count': int_or_none(get_video_info('count', 'view')),
