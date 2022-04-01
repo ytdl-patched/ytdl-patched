@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 
 
 from .common import InfoExtractor
-from ..compat import compat_str
 from ..utils import (
     smuggle_url,
+    str_or_none,
     traverse_obj,
 )
 
@@ -35,8 +35,8 @@ class TVerIE(InfoExtractor):
 
         return {
             '_type': 'url_transparent',
-            'title': traverse_obj(video_info, 'title', expected_type=compat_str),
-            'description': traverse_obj(video_info, 'description', expected_type=compat_str),
+            'title': str_or_none(video_info.get('title')),
+            'description': str_or_none(video_info.get('description')),
             'url': bc_url,
             'ie_key': 'BrightcoveNew',
         }
