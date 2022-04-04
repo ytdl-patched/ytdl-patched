@@ -4033,5 +4033,6 @@ class SelfHostedInfoExtractor(InfoExtractor):
                 return False
 
             nodeinfo = ie._download_json(nodeinfo_url, hostname, 'Downloading instance nodeinfo')
+            SelfHostedInfoExtractor._NODEINFO_CACHE[hostname] = nodeinfo
 
         return traverse_obj(nodeinfo, ('software', 'name'))
