@@ -550,6 +550,15 @@ class InfoExtractor(object):
     def supports_login(cls):
         return bool(cls._NETRC_MACHINE)
 
+    @classmethod
+    def get_extractor_groups(cls):
+        """ Returns "extractor groups" used by --force-extractor """
+        mod = cls.__module__
+        if not mod.startswith('yt_dlp.extractor.'):
+            # extractors from plugins
+            return ('external', cls.ie_key())
+        return (mod.split('.')[2], cls.ie_key())
+
     def initialize(self):
         """Initializes an instance (authentication, etc)."""
         self._printed_messages = set()
@@ -3947,6 +3956,10 @@ class SelfHostedInfoExtractor(InfoExtractor):
         prefix = get_first_group(mobj, *cls._PREFIX_GROUPS)
         hostname = get_first_group(mobj, *cls._HOSTNAME_GROUPS)
         return cls._test_selfhosted_instance(None, hostname, True, prefix)
+
+    @classmethod
+    def get_extractor_groups(cls):
+        return super().get_extractor_groups() + ('selfhosted', )
 
     @classmethod
     def _test_selfhosted_instance(cls, ie, hostname, skip, prefix, webpage=None):
