@@ -1428,12 +1428,7 @@ class YoutubeDL(object):
         if not ie_key and force_generic_extractor:
             ie_key = 'Generic'
 
-        if ie_key:
-            ies = {ie_key: self._get_info_extractor_class(ie_key)}
-        else:
-            ies = self._ies
-
-        for ie_key, ie in ies.items():
+        for ie_key, ie in self._enumerate_extractors(ie_key):
             if not ie.suitable(url):
                 continue
 
@@ -1450,6 +1445,12 @@ class YoutubeDL(object):
             return self.__extract_info(url, self.get_info_extractor(ie_key), download, extra_info, process)
         else:
             self.report_error('no suitable InfoExtractor for URL %s' % url)
+
+    def _enumerate_extractors(self, ie_key=None):
+        if ie_key:
+            yield (ie_key, self._get_info_extractor_class(ie_key))
+        else:
+            yield from self._ies.items()
 
     def __handle_extraction_exceptions(func):
         @functools.wraps(func)
@@ -3548,7 +3549,7 @@ class YoutubeDL(object):
             if not url:
                 return
             # Try to find matching extractor for the URL and take its ie_key
-            for ie_key, ie in self._ies.items():
+            for ie_key, ie in self._enumerate_extractors():
                 if ie.suitable(url):
                     extractor = ie_key
                     break
