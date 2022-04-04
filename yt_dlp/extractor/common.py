@@ -552,7 +552,7 @@ class InfoExtractor(object):
 
     @classmethod
     def get_extractor_groups(cls):
-        """ Returns "extractor groups" used by --force-extractor """
+        """ Returns "extractor groups" used by --extractor """
         mod = cls.__module__
         if not mod.startswith('yt_dlp.extractor.'):
             # extractors from plugins

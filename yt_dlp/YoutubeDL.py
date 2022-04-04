@@ -789,7 +789,9 @@ class YoutubeDL(object):
             ie.set_downloader(self)
         # add extractor into groups
         for grp in ie.get_extractor_groups():
-            self._extractor_groups.setdefault(grp.lower()).add(ie_key)
+            self._extractor_groups.setdefault(grp.lower(), set()).add(ie_key)
+        if isinstance(ie.IE_NAME, str):
+            self._extractor_groups.setdefault(ie.IE_NAME.lower(), set()).add(ie_key)
 
         self._filtered_extractors = None
         self._activated_extractors = None
@@ -859,6 +861,7 @@ class YoutubeDL(object):
             # the default tokens, mixed with both extractors and groups
             x: set(itertools.chain(exact_ex_token.get(x, []), self._extractor_groups.get(x, [])))
             for x in set(map(str.lower, itertools.chain(self._ies.keys(), self._extractor_groups.keys())))}
+        # specifiers = '-+/@'
 
         for tok in tokens:
             orig, group_set, source_dict, func = tok, extractor_set, default_mode, set.update

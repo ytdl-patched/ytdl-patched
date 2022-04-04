@@ -1230,5 +1230,19 @@ class TestFilenameTest(unittest.TestCase):
         self.assertFalse(ydl.test_filename_external("Es gibt eine mond"))
 
 
+class TestExtractorFilter(unittest.TestCase):
+    def test_filters(self):
+        ydl = YDL({
+            'extractors': 'youtube,@peertube,+@peertube,-/youtubetab',
+        })
+        ydl.add_default_info_extractors()
+        ydl._filter_extractors()
+        print(ydl._filtered_extractors)
+
+        self.assertTrue('Youtube' in ydl._filtered_extractors)
+        self.assertTrue('PeerTube' in ydl._filtered_extractors)
+        self.assertFalse('YoutubeTab' in ydl._filtered_extractors)
+
+
 if __name__ == '__main__':
     unittest.main()
