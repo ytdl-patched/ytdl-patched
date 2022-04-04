@@ -605,6 +605,10 @@ class YoutubeDL(object):
         self._num_videos = 0
         self._playlist_level = 0
         self._playlist_urls = set()
+        self._extractor_groups = {}
+        # filled by YoutubeDL._filter_extractors
+        self._filtered_extractors = None
+        self._activated_extractors = None
         self.cache = Cache(self)
 
         windows_enable_vt_mode()
@@ -783,6 +787,12 @@ class YoutubeDL(object):
         if not isinstance(ie, type):
             self._ies_instances[ie_key] = ie
             ie.set_downloader(self)
+        # add extractor into groups
+        for grp in ie.get_extractor_groups():
+            self._extractor_groups.setdefault(grp.lower()).add(ie_key)
+
+        self._filtered_extractors = None
+        self._activated_extractors = None
 
     def _get_info_extractor_class(self, ie_key):
         ie = self._ies.get(ie_key)
@@ -809,6 +819,88 @@ class YoutubeDL(object):
         """
         for ie in gen_extractor_classes():
             self.add_info_extractor(ie)
+
+    def _filter_extractors(self):
+        if self._filtered_extractors is not None and self._activated_extractors is not None:
+            return
+        if self.params.get('force_generic_extractor', False):
+            # don't filter when --force-generic-extractor is set
+            self._filtered_extractors = None
+            self._activated_extractors = None
+            return
+
+        self._filtered_extractors = extractor_set = set()
+        self._activated_extractors = activated_set = set()
+
+        if self.params.get('check_peertube_instance', False):
+            # compat: activate PeerTube extractors
+            activated_set.update(self._extractor_groups['peertube'])
+
+        if self.params.get('check_misskey_instance', False):
+            # compat: activate Misskey extractors
+            activated_set.update(self._extractor_groups['misskey'])
+
+        if self.params.get('check_mastodon_instance', False):
+            # compat: activate Mastodon extractors
+            activated_set.update(self._extractor_groups['mastodon'])
+
+        query = (self.params.get('extractors') or '').strip()
+        if not isinstance(query, str):
+            # one hack here to reduce early return to one
+            query = ''
+        tokens = list(filter(None, (x.strip() for x in query.split(','))))
+        if not tokens:
+            extractor_set.update(self._ies.keys())
+            return
+
+        all_ex = set(self._ies.keys())
+        exact_ex_token = {x.lower(): {x, } for x in self._ies.keys()}
+        default_mode = {
+            # the default tokens, mixed with both extractors and groups
+            x: set(itertools.chain(exact_ex_token.get(x, []), self._extractor_groups.get(x, [])))
+            for x in set(map(str.lower, itertools.chain(self._ies.keys(), self._extractor_groups.keys())))}
+
+        for tok in tokens:
+            orig, group_set, source_dict, func = tok, extractor_set, default_mode, set.update
+            if tok.startswith('-'):
+                # remove from the set
+                # "-+mastodon"? it's valid!
+                func = set.discard
+                tok = tok[1:]
+            if tok.startswith('+'):
+                # activation (e.g. instance checking for self-hosted extractors)
+                group_set = activated_set
+                tok = tok[1:]
+            if tok.startswith('/'):
+                # exact extractor
+                source_dict = exact_ex_token
+                tok = tok[1:]
+            elif tok.startswith('@'):
+                # exact group
+                source_dict = self._extractor_groups
+                tok = tok[1:]
+            if tok == 'all':
+                # special case: all
+                func(group_set, all_ex)
+            elif source_dict.get(tok):
+                func(group_set, source_dict[tok])
+            else:
+                self.report_warning(f'Token "{orig}" is invalid for --extractor option.', only_once=True)
+
+    def _enumerate_extractors(self, ie_key=None, force_generic_extractor=False):
+        if not ie_key and force_generic_extractor:
+            yield ('Generic', self._get_info_extractor_class('Generic'))
+            return
+
+        self._filter_extractors()
+        filtered = self._filtered_extractors
+
+        if ie_key:
+            yield (ie_key, self._get_info_extractor_class(ie_key))
+        elif filtered is None:
+            yield from self._ies.items()
+        else:
+            yield from (x for x in self._ies.items() if x[0] in filtered)
 
     def add_post_processor(self, pp, when='post_process'):
         """Add a PostProcessor object to the end of the chain."""
@@ -1425,10 +1517,7 @@ class YoutubeDL(object):
         if extra_info is None:
             extra_info = {}
 
-        if not ie_key and force_generic_extractor:
-            ie_key = 'Generic'
-
-        for ie_key, ie in self._enumerate_extractors(ie_key):
+        for ie_key, ie in self._enumerate_extractors(ie_key=ie_key, force_generic_extractor=force_generic_extractor):
             if not ie.suitable(url):
                 continue
 
@@ -1445,12 +1534,6 @@ class YoutubeDL(object):
             return self.__extract_info(url, self.get_info_extractor(ie_key), download, extra_info, process)
         else:
             self.report_error('no suitable InfoExtractor for URL %s' % url)
-
-    def _enumerate_extractors(self, ie_key=None):
-        if ie_key:
-            yield (ie_key, self._get_info_extractor_class(ie_key))
-        else:
-            yield from self._ies.items()
 
     def __handle_extraction_exceptions(func):
         @functools.wraps(func)
