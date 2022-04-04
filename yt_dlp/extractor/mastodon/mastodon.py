@@ -154,10 +154,6 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
             'authorization': f"{actual_token['token_type']} {actual_token['access_token']}",
         }
 
-    @staticmethod
-    def _is_probe_enabled(ydl):
-        return ydl.params.get('check_mastodon_instance', False)
-
     def _determine_instance_software(self, host, webpage=None):
         if webpage:
             for i, string in enumerate(self._SH_VALID_CONTENT_STRINGS):
