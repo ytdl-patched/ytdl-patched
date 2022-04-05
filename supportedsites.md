@@ -270,6 +270,8 @@
  - **curiositystream:collections**
  - **curiositystream:series**
  - **CWTV**
+ - **Cybrary**
+ - **CybraryCourse**
  - **Daftsex**
  - **DagelijkseKost**: dagelijksekost.een.be
  - **DailyMail**
