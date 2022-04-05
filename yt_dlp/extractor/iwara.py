@@ -10,10 +10,11 @@ from ..compat import (
 from ..utils import (
     int_or_none,
     mimetype2ext,
+    remove_end,
+    strip_or_none,
+    unified_strdate,
     url_or_none,
     urljoin,
-    unified_strdate,
-    strip_or_none,
 )
 
 
@@ -80,7 +81,7 @@ class IwaraIE(InfoExtractor):
                 'age_limit': age_limit,
             }
 
-        title = self._html_search_regex(r'<title>(.+?) \| Iwara</title>', webpage, 'title')
+        title = remove_end(self._html_extract_title(webpage), ' | Iwara')
 
         thumbnail = self._html_search_regex(
             r'poster=[\'"]([^\'"]+)', webpage, 'thumbnail', default=None)
