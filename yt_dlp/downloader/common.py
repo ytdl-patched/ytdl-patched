@@ -13,6 +13,7 @@ from ..utils import (
     decodeArgument,
     encodeFilename,
     error_to_compat_str,
+    LockingUnsupportedError,
     shell_quote,
     timeconvert,
 )
@@ -146,7 +147,10 @@ class FileDownloader(ShowsProgress):
 
     @wrap_file_access('open', fatal=True)
     def sanitize_open(self, filename, open_mode):
-        return self.ydl.sanitize_open(filename, open_mode)
+        f, filename = self.ydl.sanitize_open(filename, open_mode)
+        if not getattr(f, 'locked', None):
+            self.write_debug(f'{LockingUnsupportedError.msg}. Proceeding without locking', only_once=True)
+        return f, filename
 
     @wrap_file_access('remove')
     def try_remove(self, filename):
