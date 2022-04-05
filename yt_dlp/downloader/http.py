@@ -6,7 +6,6 @@ import random
 
 from .common import FileDownloader
 from ..compat import (
-    compat_str,
     compat_urllib_error,
     compat_http_client
 )
@@ -59,8 +58,6 @@ class HttpFD(FileDownloader):
         ctx.resume_len = 0
         ctx.block_size = self.params.get('buffersize', 1024)
         ctx.start_time = time.time()
-        ctx.chunk_size = None
-        throttle_start = None
 
         # parse given Range
         req_start, req_end, _ = parse_http_range(headers.get('Range'))
@@ -75,7 +72,7 @@ class HttpFD(FileDownloader):
 
         count = 0
         retries = self.params.get('retries', 0)
-        show_dest = True
+        ctx.show_dest = True
 
         class SucceedDownload(Exception):
             pass
@@ -86,12 +83,6 @@ class HttpFD(FileDownloader):
 
         class NextFragment(Exception):
             pass
-
-        def set_range(req, start, end):
-            range_header = 'bytes=%d-' % start
-            if end:
-                range_header += compat_str(end)
-            req.add_header('Range', range_header)
 
         def establish_connection():
             ctx.chunk_size = (random.randint(int(chunk_size * 0.95), chunk_size)
@@ -133,7 +124,7 @@ class HttpFD(FileDownloader):
             request = sanitized_Request(url, request_data, headers)
             has_range = range_start is not None
             if has_range:
-                set_range(request, range_start, range_end)
+                request.add_header('Range', f'bytes={int(range_start)}-{int_or_none(range_end) or ""}')
             # Establish connection
             try:
                 ctx.data = self.ydl.urlopen(request)
@@ -218,7 +209,6 @@ class HttpFD(FileDownloader):
                 raise RetryDownload(err)
 
         def download():
-            nonlocal throttle_start, show_dest
             data_len = ctx.data.info().get('Content-length', None)
 
             # Range HTTP header may be ignored/unsupported by a webserver
@@ -277,9 +267,9 @@ class HttpFD(FileDownloader):
                             ctx.tmpfilename, ctx.open_mode)
                         assert ctx.stream is not None
                         ctx.filename = self.undo_temp_name(ctx.tmpfilename)
-                        if show_dest:
+                        if ctx.show_dest:
                             self.report_destination(ctx.filename)
-                        show_dest = False
+                        ctx.show_dest = False
                     except (OSError, IOError) as err:
                         self.report_error('unable to open for writing: %s' % str(err))
                         return False
@@ -335,14 +325,14 @@ class HttpFD(FileDownloader):
                 if speed and speed < (self.params.get('throttledratelimit') or 0):
                     # The speed must stay below the limit for 3 seconds
                     # This prevents raising error when the speed temporarily goes down
-                    if throttle_start is None:
-                        throttle_start = now
-                    elif now - throttle_start > 3:
+                    if ctx.throttle_start is None:
+                        ctx.throttle_start = now
+                    elif now - ctx.throttle_start > 3:
                         if ctx.stream is not None and ctx.tmpfilename != '-':
                             ctx.stream.close()
                         raise ThrottledDownload()
                 elif speed:
-                    throttle_start = None
+                    ctx.throttle_start = None
 
             if not is_test and ctx.chunk_size and ctx.content_len is not None and byte_counter < ctx.content_len:
                 ctx.resume_len = byte_counter
