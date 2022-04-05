@@ -852,6 +852,7 @@ class YoutubeDL(object):
             query = ''
         tokens = list(filter(None, (x.strip() for x in query.split(','))))
         if not tokens:
+            # nothing speficied, assume user wants everything without activated extractors
             extractor_set.update(self._ies.keys())
             return
 
@@ -862,18 +863,23 @@ class YoutubeDL(object):
             x: set(itertools.chain(exact_ex_token.get(x, []), self._extractor_groups.get(x, [])))
             for x in set(map(str.lower, itertools.chain(self._ies.keys(), self._extractor_groups.keys())))}
         # specifiers = '-+/@'
+        # token_re = re.compile(r'(-?\+?[/@]?)\s*([a-zA-Z0-9:-]+)')
 
+        # if the user requested only activations, assume all extractors are added (later)
+        activation_only = True
         for tok in tokens:
-            orig, group_set, source_dict, func = tok, extractor_set, default_mode, set.update
+            orig, subtract, activate, source_dict = tok, False, False, default_mode
             if tok.startswith('-'):
                 # remove from the set
                 # "-+mastodon"? it's valid!
-                func = set.discard
+                subtract = True
                 tok = tok[1:]
             if tok.startswith('+'):
                 # activation (e.g. instance checking for self-hosted extractors)
-                group_set = activated_set
+                activate = True
                 tok = tok[1:]
+            else:
+                activation_only = False
             if tok.startswith('/'):
                 # exact extractor
                 source_dict = exact_ex_token
@@ -884,11 +890,29 @@ class YoutubeDL(object):
                 tok = tok[1:]
             if tok == 'all':
                 # special case: all
-                func(group_set, all_ex)
+                if subtract:
+                    if activate:
+                        activated_set.clear()
+                    extractor_set.clear()
+                else:
+                    if activate:
+                        activated_set.update(all_ex)
+                    extractor_set.update(all_ex)
             elif source_dict.get(tok):
-                func(group_set, source_dict[tok])
+                target_set = source_dict[tok]
+                if subtract:
+                    if activate:
+                        activated_set -= target_set
+                    extractor_set -= target_set
+                else:
+                    if activate:
+                        activated_set.update(target_set)
+                    extractor_set.update(target_set)
             else:
                 self.report_warning(f'Token "{orig}" is invalid for --extractor option.', only_once=True)
+
+        if activation_only:
+            self._filtered_extractors = None
 
     def _enumerate_extractors(self, ie_key=None, force_generic_extractor=False):
         if not ie_key and force_generic_extractor:
