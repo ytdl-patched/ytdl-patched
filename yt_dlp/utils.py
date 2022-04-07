@@ -654,8 +654,9 @@ def sanitize_open(filename, open_mode):
         try:
             try:
                 if sys.platform == 'win32':
-                    # FIXME: Windows only has mandatory locking which also locks the file from being read.
-                    # So for now, don't lock the file on windows. Ref: https://github.com/yt-dlp/yt-dlp/issues/3124
+                    # FIXME: An exclusive lock also locks the file from being read.
+                    # Since windows locks are mandatory, don't lock the file on windows (for now).
+                    # Ref: https://github.com/yt-dlp/yt-dlp/issues/3124
                     raise LockingUnsupportedError()
                 stream = locked_file(filename, open_mode, block=False).__enter__()
             except LockingUnsupportedError:
@@ -2204,18 +2205,15 @@ else:
         import fcntl
 
         def _lock_file(f, exclusive, block):
+            flags = fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH
+            if not block:
+                flags |= fcntl.LOCK_NB
             try:
-                fcntl.flock(f,
-                            fcntl.LOCK_SH if not exclusive
-                            else fcntl.LOCK_EX if block
-                            else fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(f, flags)
             except BlockingIOError:
                 raise
             except OSError:  # AOSP does not have flock()
-                fcntl.lockf(f,
-                            fcntl.LOCK_SH if not exclusive
-                            else fcntl.LOCK_EX if block
-                            else fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.lockf(f, flags)
 
         def _unlock_file(f):
             try:

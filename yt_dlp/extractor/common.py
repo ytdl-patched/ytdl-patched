@@ -27,6 +27,7 @@ from ..compat import (
     compat_getpass,
     compat_http_client,
     compat_os_name,
+    compat_Pattern,
     compat_str,
     compat_urllib_error,
     compat_urllib_parse_unquote,
@@ -45,7 +46,6 @@ from ..utils import (
     base_url,
     bug_reports_message,
     clean_html,
-    compiled_regex_type,
     determine_ext,
     determine_protocol,
     dict_get,
@@ -1270,7 +1270,7 @@ class InfoExtractor(object):
         """
         if string is None:
             return None
-        if isinstance(pattern, (str, compat_str, compiled_regex_type)):
+        elif isinstance(pattern, (str, compat_Pattern)):
             mobj = re.search(pattern, string, flags)
         else:
             for p in pattern:

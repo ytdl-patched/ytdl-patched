@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
-
 from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
@@ -13,15 +11,13 @@ from ..utils import (
 
 
 class TVerIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?tver\.jp/(?:(?:lp|corner|series|episodes?|feature|tokyo2020/video)/)+(?P<id>[a-zA-Z0-9]+)'
-    # NOTE: episode/ is an old URL
-    _NEW_URL_COMPONENT = '|'.join(re.escape(f'/{x}/') for x in ('series', 'episodes'))
+    _VALID_URL = r'https?://(?:www\.)?tver\.jp/(?:(?P<type>lp|corner|series|episodes?|feature|tokyo2020/video)/)+(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
         'skip': 'videos are only available for 7 days',
         'url': 'https://tver.jp/episodes/ephss8yveb',
         'info_dict': {
             'title': '#44　料理と値段と店主にびっくり　オモてなしすぎウマい店　2時間SP',
-            'description': '【宮城】極厚とんかつ定食５００円　マル秘女性歌手大ファン店主\n【福岡】学生感動パワー店主！！名物パワー定食って！？\n【埼玉】暴れん坊そば名人！！弟子５０人に！？師弟愛シーズン３',
+            'description': 'md5:66985373a66fed8ad3cd595a3cfebb13',
         },
         'add_ie': ['BrightcoveNew'],
     }, {
@@ -30,7 +26,7 @@ class TVerIE(InfoExtractor):
         'info_dict': {
             # sorry but this is "correct"
             'title': '4月11日(月)23時06分 ~ 放送予定',
-            'description': '吉祥寺の格安シェアハウスに引っ越して来た高校教師の安彦聡（増田貴久）や、元ファッション誌編集長の大庭桜（田中みな実）など6人。鍵が掛かった部屋に絶対入らないことが絶対ルール。奇妙な共同生活が今始まる！　テレビ東京にて4月11日(月)夜11時6分放送スタート！',
+            'description': 'md5:4029cc5f4b1e8090dfc5b7bd2bc5cd0b',
         },
         'add_ie': ['BrightcoveNew'],
     }, {
@@ -56,12 +52,11 @@ class TVerIE(InfoExtractor):
         self._PLATFORM_TOKEN = traverse_obj(create_response, ('result', 'platform_token'))
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        if not re.search(self._NEW_URL_COMPONENT, url):
-            webpage = self._download_webpage(
-                url, video_id, note='Resolving to new URL')
+        video_id, video_type = self._match_valid_url(url).group('id', 'type')
+        if video_type not in {'series', 'episodes'}:
+            webpage = self._download_webpage(url, video_id, note='Resolving to new URL')
             video_id = self._match_id(self._search_regex(
-                (r'canonical"\s*href="(https?://tver\.jp/.+?)"', r'&link=(https?://tver\.jp/.+?)[?&]'),
+                (r'canonical"\s*href="(https?://tver\.jp/[^"]+)"', r'&link=(https?://tver\.jp/[^?&]+)[?&]'),
                 webpage, 'url regex'))
         video_info = self._download_json(
             f'https://statics.tver.jp/content/episode/{video_id}.json', video_id,
@@ -78,7 +73,7 @@ class TVerIE(InfoExtractor):
 
         additional_info = self._download_json(
             f'https://platform-api.tver.jp/service/api/v1/callEpisode/{video_id}?require_data=mylist,later[epefy106ur],good[epefy106ur],resume[epefy106ur]',
-            video_id,
+            video_id, fatal=False,
             query={
                 'platform_uid': self._PLATFORM_UID,
                 'platform_token': self._PLATFORM_TOKEN,
