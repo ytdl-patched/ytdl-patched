@@ -131,15 +131,16 @@ class HttpServerAugment(Augment):
 
     Keys:
 
-    before_dl: Callable to run before download starts. Arguments are: (HeartbeatAugment)
+    before_dl: Callable to run before download starts. Arguments are: (HttpServerAugment)
                Can be used even if any of "callback", "url" and "data" are used.
-    after_dl: Callable to run after download ends. Arguments are: (HeartbeatAugment)
+    after_dl:  Callable to run after download ends. Arguments are: (HttpServerAugment)
+    tag:       Key for retrieving port number in subsequent Augments.
+               Assigned to "_httpserverport_<tag>" key. (optional)
     """
     _AUGMENT_KEY = 'http_server'
 
     def __init__(self, dl: 'FileDownloader', info_dict, params: dict) -> None:
         super().__init__(dl, info_dict, params)
-        params, info_dict = self.params, self.info_dict
 
     def start(self):
         if 'before_dl' in self.params:
@@ -147,7 +148,8 @@ class HttpServerAugment(Augment):
 
         self.httpd = http.server.HTTPServer(
             ('127.0.0.1', 0), self.create_handler_class(self.params))
-        self.port = self.httpd.socket.getsockname()[1]
+        self.port = self.info_dict[f'_httpserverport_{self.params["tag"]}' if self.params.get('tag') else '_httpserverport'] = \
+            self.httpd.socket.getsockname()[1]
         self.server_thread = threading.Thread(
             target=self.httpd.serve_forever, daemon=True)
         self.server_thread.start()
@@ -187,9 +189,11 @@ class HttpServerAugment(Augment):
                 route = re.escape(route)
             return re.compile(route)
 
-        def process_route(regex, callback, handler):
+        def process_route(regex, callback, method, handler):
             mobj = re.fullmatch(regex, handler.path)
             if not mobj:
+                return False
+            if method and method != handler.command:
                 return False
             try:
                 setattr(handler, 'route_params', mobj.groupdict())
@@ -220,7 +224,7 @@ class HttpServerAugment(Augment):
                         respond_constant, dd, r.get('status_code', 200), r.get('headers') or {})
 
                 route_callbacks.append(functools.partial(
-                    process_route, compile_route(r['route']), r['callback']))
+                    process_route, compile_route(r['route']), r['callback'], r.get('method')))
 
             struct = functools.partial(chain, route_callbacks)
 
@@ -255,8 +259,7 @@ class MetadataEditorAugment(Augment, MetadataParserPP):
         # create backlog of modification to revert things back in end()
         self.backlog = [
             x for z in self.params['actions']
-            for y in getattr(self, z[0].value)(*z[1:])
-            for x in y(self.info_dict)]
+            for x in getattr(self, z[0].value)(*z[1:])(self.info_dict)]
 
     def end(self):
         infodict = self.info_dict
@@ -280,4 +283,4 @@ class MetadataEditorAugment(Augment, MetadataParserPP):
         super().report_warning(text, *args, **kwargs)
 
 
-AUGMENT_MAP = {v._AUGMENT_KEY: v for v in (HeartbeatAugment, HttpServerAugment)}
+AUGMENT_MAP = {v._AUGMENT_KEY: v for v in (HeartbeatAugment, HttpServerAugment, MetadataEditorAugment)}

@@ -14,11 +14,11 @@ from ..utils import (
     encodeFilename,
     error_to_compat_str,
     LockingUnsupportedError,
+    get_argcount,
     match_filter_func,
     merge_dicts,
     shell_quote,
     timeconvert,
-    try_get,
 )
 from ..postprocessor._attachments import ShowsProgress
 from .augment import AUGMENT_MAP
@@ -311,7 +311,7 @@ class FileDownloader(ShowsProgress):
                     # so that you can do "_downloader == HlsFD"
                     cond = lambda ifd, dl: mfilter(merge_dicts({'_downloader': type(dl).__name__}, ifd))
                 # let's not hope some based guy passes a __call__able with (self,) signature
-                argcount = try_get(cond, lambda x: x.__code__.co_argcount, int) or 2
+                argcount = get_argcount(cond) or 2
                 if not cond(*[info_dict, self][:argcount]):
                     # do not enable Augment as predicate fails
                     continue

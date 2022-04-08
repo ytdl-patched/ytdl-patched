@@ -1,6 +1,9 @@
+import functools
+import inspect
 import re
 from enum import Enum
 
+from ..utils import get_argcount
 from .common import PostProcessor
 
 
@@ -10,6 +13,10 @@ class MetadataParserPP(PostProcessor):
     class Actions(Enum):
         INTERPRET = 'interpretter'
         REPLACE = 'replacer'
+
+    class _functools_partial(functools.partial):
+        def __repr__(self) -> str:
+            return '<functools.partial object with infodict>'
 
     def __init__(self, downloader, actions):
         PostProcessor.__init__(self, downloader)
@@ -85,6 +92,10 @@ class MetadataParserPP(PostProcessor):
 
     def replacer(self, field, search, replace):
         def f(info):
+            nonlocal replace
+            # let function have info_dict on invocation (for MetadataEditorAugment)
+            if inspect.isfunction(replace) and get_argcount(replace) == 2:
+                replace = self._functools_partial(replace, info)
             val = info.get(field)
             if val is None:
                 self.to_screen(f'Video does not have a {field}')

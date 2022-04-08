@@ -148,7 +148,7 @@ class AbemaLicenseHandler(compat_urllib_request.BaseHandler):
 
     def augment_key_handler(self, handler):
         # For /key/:ticket
-        ticket = handler.params['ticket']
+        ticket = handler.route_params['ticket']
         response_data = self._get_videokey_from_ticket(ticket)
         handler.send_header('Content-Length', str(len(response_data)))
         handler.end_headers()
@@ -156,13 +156,18 @@ class AbemaLicenseHandler(compat_urllib_request.BaseHandler):
         return True
 
     def augment_hls_handler(self, handler):
-        # for /hls/:base_url
-        hex_url = handler.params['base_url']
+        # for /hls/:hex_url
+        hex_url = handler.route_params['hex_url']
         url = codecs.decode(hex_url, 'hex').decode('utf8')
+        headers = dict(handler.headers)
+        # drop some "bad" headers which ffmpeg likes to add or needed to be
+        if headers.get('Range') == 'bytes=0-':
+            headers.pop('Range', None)
+        headers.pop('Host', None)
         content, uoh = self.ie._download_webpage_handle(
             url, False, note='Proxying HLS manifest request',
-            fatal=False, data=None if handler.command == 'GET' else handler.rfile.read(),
-            headers=handler.headers)
+            fatal=True, data=None if handler.command == 'GET' else handler.rfile.read(),
+            headers=headers)
 
         def convert_lines(line):
             if 'abematv-license://' in line:
@@ -472,10 +477,16 @@ class AbemaTVIE(AbemaTVBaseIE):
             raise ExtractorError('Unreachable')
 
         if is_live:
-            self.report_warning("This is a livestream; yt-dlp doesn't support downloading natively, but FFmpeg cannot handle m3u8 manifests from AbemaTV")
-            self.report_warning('Please consider using Streamlink to download these streams (https://github.com/streamlink/streamlink)')
+            self.report_warning('This is a livestream; downloading livestreams from AbemaTV is an experimental feature.')
+            self.report_warning('Open bug report at https://github.com/ytdl-patched/ytdl-patched/issues?q= for unplayable file')
         formats = self._extract_m3u8_formats(
             m3u8_url, video_id, ext='mp4', live=is_live)
+
+        def aug_predicate(info_dict, dl):
+            from ..downloader.external import ExternalFD
+            return info_dict.get('is_live') or isinstance(dl, ExternalFD)
+
+        from ..postprocessor.metadataparser import MetadataParserPP
 
         info.update({
             'id': video_id,
@@ -483,6 +494,27 @@ class AbemaTVIE(AbemaTVBaseIE):
             'description': description,
             'formats': formats,
             'is_live': is_live,
+            'augments': [{
+                'key': 'http_server',
+                'condition': aug_predicate,
+                'routes': [{
+                    'route': r're:/hls/(?P<hex_url>[0-9a-fA-F]+)',
+                    'callback': self._LICENSE_HANDLER.augment_hls_handler,
+                }, {
+                    'route': r're:/key/(?P<ticket>[^/&?]+)',
+                    'callback': self._LICENSE_HANDLER.augment_key_handler,
+                }]
+            }, {
+                'key': 'metadata_editor',
+                'condition': aug_predicate,
+                'actions': [
+                    # neat hack here: `replace` here can be a function
+                    # https://docs.python.org/3/library/re.html#re.sub
+                    # the first arg is an extension of MetadataParserPP, to get info_dict
+                    (MetadataParserPP.Actions.REPLACE, 'url', r'^.+$',
+                        lambda info, m: f'http://localhost:{info["_httpserverport"]}/hls/{codecs.encode(m.group(0).encode("utf-8"), "hex").decode()}'),
+                ],
+            }],
         })
         return info
 

@@ -5604,3 +5604,7 @@ class classproperty:
 
     def __get__(self, _, cls):
         return self.f(cls)
+
+
+def get_argcount(func):
+    return try_get(func, lambda x: x.__code__.co_argcount, int)
