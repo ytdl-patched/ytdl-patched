@@ -1,3 +1,4 @@
+import codecs
 import io
 import json
 import time
@@ -145,6 +146,47 @@ class AbemaLicenseHandler(compat_urllib_request.BaseHandler):
             'Content-Length': len(response_data),
         }, url=url, code=200)
 
+    def augment_key_handler(self, handler):
+        # For /key/:ticket
+        ticket = handler.params['ticket']
+        response_data = self._get_videokey_from_ticket(ticket)
+        handler.send_header('Content-Length', str(len(response_data)))
+        handler.end_headers()
+        handler.wfile.write(response_data)
+        return True
+
+    def augment_hls_handler(self, handler):
+        # for /hls/:base_url
+        hex_url = handler.params['base_url']
+        url = codecs.decode(hex_url, 'hex').decode('utf8')
+        content, uoh = self.ie._download_webpage_handle(
+            url, False, note='Proxying HLS manifest request',
+            fatal=False, data=None if handler.command == 'GET' else handler.rfile.read(),
+            headers=handler.headers)
+
+        def convert_lines(line):
+            if 'abematv-license://' in line:
+                # rewrite abematv-license
+                return line.replace('abematv-license://', '/key/')
+            if line.startswith('#'):
+                # metadata
+                return line
+            # segment url (which is usually relative)
+            return urljoin(url, line)
+
+        content = '\n'.join(map(convert_lines, content.splitlines())).encode('utf-8')
+        resp_headers = dict(uoh.info())
+        # drop/update some headers
+        resp_headers.pop('Content-Encoding', None)
+        resp_headers.pop('Keep-Alive', None)
+        resp_headers['Connection'] = 'close'
+        resp_headers['Content-Length'] = str(len(content))
+        for k, v in resp_headers.items():
+            handler.send_header(k, v)
+        handler.end_headers()
+        handler.wfile.write(content)
+        return True
+
 
 class AbemaTVBaseIE(InfoExtractor):
     def _extract_breadcrumb_list(self, webpage, video_id):
@@ -213,6 +255,7 @@ class AbemaTVIE(AbemaTVBaseIE):
     _DEVICE_ID = None
     _TIMETABLE = None
     _MEDIATOKEN = None
+    _LICENSE_HANDLER = None
 
     _SECRETKEY = b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9BRbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$k9cD=3TxwWe86!x#Zyhe'
 
@@ -267,8 +310,10 @@ class AbemaTVIE(AbemaTVBaseIE):
         self._USERTOKEN = user_data['token']
 
         # don't allow adding it 2 times or more, though it's guarded
+        if not self._LICENSE_HANDLER:
+            self._LICENSE_HANDLER = AbemaLicenseHandler(self)
         remove_opener(self._downloader, AbemaLicenseHandler)
-        add_opener(self._downloader, AbemaLicenseHandler(self))
+        add_opener(self._downloader, self._LICENSE_HANDLER)
 
         return self._USERTOKEN
 

@@ -162,12 +162,12 @@ class HttpServerAugment(Augment):
         # struct = {
         #     'routes': [{
         #         'method': 'GET',
-        #         'route': '/hello/:world',
+        #         'route': '/hello/(?P<world>[^/]+)',
         #         'callback': lambda handler: True
         #     }, {
         #         'method': 'GET',
         #         'route': '/static/test',
-        #         'data': b'',
+        #         'data': b'hello world',
         #     }]
         # }
 
