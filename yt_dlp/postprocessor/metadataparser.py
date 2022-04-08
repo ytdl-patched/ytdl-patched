@@ -5,6 +5,8 @@ from .common import PostProcessor
 
 
 class MetadataParserPP(PostProcessor):
+    BACKLOG_UNSET = object()
+
     class Actions(Enum):
         INTERPRET = 'interpretter'
         REPLACE = 'replacer'
@@ -61,7 +63,7 @@ class MetadataParserPP(PostProcessor):
 
     def run(self, info):
         for f in self._actions:
-            f(info)
+            next(filter(lambda x: 0, f(info)), None)
         return [], info
 
     def interpretter(self, inp, out):
@@ -73,6 +75,7 @@ class MetadataParserPP(PostProcessor):
                 self.to_screen(f'Could not interpret {inp!r} as {out!r}')
                 return
             for attribute, value in match.groupdict().items():
+                yield (attribute, info.get(attribute, MetadataParserPP.BACKLOG_UNSET))
                 info[attribute] = value
                 self.to_screen('Parsed %s from %r: %r' % (attribute, template, value if value is not None else 'NA'))
 
@@ -90,6 +93,7 @@ class MetadataParserPP(PostProcessor):
                 self.report_warning(f'Cannot replace in field {field} since it is a {type(val).__name__}')
                 return
             self.write_debug(f'Replacing all {search!r} in {field} with {replace!r}')
+            yield (field, info.get(field, MetadataParserPP.BACKLOG_UNSET))
             info[field], n = search_re.subn(replace, val)
             if n:
                 self.to_screen(f'Changed {field} to: {info[field]}')
