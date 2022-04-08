@@ -237,13 +237,14 @@ class ReqHandlerBase(http.server.BaseHTTPRequestHandler):
 
 class MetadataEditorAugment(Augment, MetadataParserPP):
     """
-    Augment for temporarily rewriting info dict.
+    Augment for temporarily rewriting info_dict.
     Values are reverted when end() is called.
 
     Keys:
 
     actions: Same as what you pass to MetadataParserPP.
     """
+    _AUGMENT_KEY = 'metadata_editor'
 
     def __init__(self, dl: 'FileDownloader', info_dict, params: dict) -> None:
         super().__init__(dl, info_dict, params)
