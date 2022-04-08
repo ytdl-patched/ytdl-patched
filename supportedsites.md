@@ -538,6 +538,8 @@
  - **iwara:playlist**
  - **iwara:user**
  - **Izlesene**
+ - **Jable**
+ - **JablePlaylist**
  - **Jamendo**
  - **JamendoAlbum**
  - **javhub**
@@ -735,7 +737,6 @@
  - **MyVideoGe**
  - **MyVidster**
  - **MyviEmbed**
- - **MyVisionTV**
  - **n-tv.de**
  - **N1Info:article**
  - **N1InfoAsset**
@@ -995,8 +996,6 @@
  - **qqmusic:toplist**: QQ音乐 - 排行榜
  - **QuantumTV**
  - **Qub**
- - **Quickline**
- - **QuicklineLive**
  - **R7**
  - **R7Article**
  - **Radiko**
@@ -1573,6 +1572,8 @@
  - **Zapiks**
  - **Zattoo**
  - **ZattooLive**
+ - **ZattooMovies**
+ - **ZattooRecordings**
  - **ZDF**
  - **ZDFChannel**
  - **Zee5**
