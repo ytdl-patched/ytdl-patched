@@ -7,6 +7,8 @@ import typing
 import http.server
 import inspect
 
+from yt_dlp.postprocessor.metadataparser import MetadataParserPP
+
 if typing.TYPE_CHECKING:
     from .common import FileDownloader
 
@@ -232,6 +234,50 @@ class HttpServerAugment(Augment):
 class ReqHandlerBase(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
+
+
+class MetadataEditorAugment(Augment, MetadataParserPP):
+    """
+    Augment for temporarily rewriting info dict.
+    Values are reverted when end() is called.
+
+    Keys:
+
+    actions: Same as what you pass to MetadataParserPP.
+    """
+
+    def __init__(self, dl: 'FileDownloader', info_dict, params: dict) -> None:
+        super().__init__(dl, info_dict, params)
+        MetadataParserPP.__init__(self, dl.ydl, [])
+        self.backlog = None
+
+    def start(self):
+        # create backlog of modification to revert things back in end()
+        self.backlog = [
+            x for z in self.params['actions']
+            for y in getattr(self, z[0].value)(*z[1:])
+            for x in y(self.info_dict)]
+
+    def end(self):
+        infodict = self.info_dict
+        # rollback
+        for k, v in reversed(self.backlog):
+            if v is MetadataParserPP.BACKLOG_UNSET:
+                infodict.pop(k, None)
+            else:
+                infodict[k] = v
+        # clear backlog
+        self.backlog = None
+
+    def to_screen(self, text, prefix=True, *args, **kwargs):
+        if not self.get_param('verbose', False):
+            return  # don't print anything without -v
+        super().to_screen(text, prefix, *args, **kwargs)
+
+    def report_warning(self, text, *args, **kwargs):
+        if not self.get_param('verbose', False):
+            return  # don't print anything without -v
+        super().report_warning(text, *args, **kwargs)
 
 
 AUGMENT_MAP = {v._AUGMENT_KEY: v for v in (HeartbeatAugment, HttpServerAugment)}
