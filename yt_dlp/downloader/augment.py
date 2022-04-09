@@ -5,7 +5,6 @@ import re
 import threading
 import typing
 import http.server
-import inspect
 
 if typing.TYPE_CHECKING:
     from .common import FileDownloader
@@ -210,10 +209,10 @@ class HttpServerAugment(Augment):
         def wrapper(handler):
             assert struct(handler)
 
-        if not inspect.isfunction(struct):
+        if not callable(struct):
             route_callbacks = []
             for r in struct['routes']:
-                if inspect.isfunction(r):
+                if callable(r):
                     route_callbacks.append(r)
                     continue
                 if 'data' in r:

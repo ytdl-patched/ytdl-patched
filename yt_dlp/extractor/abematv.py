@@ -23,7 +23,6 @@ from ..utils import (
     random_uuidv4,
     request_to_url,
     time_seconds,
-    update_url_query,
     traverse_obj,
     intlist_to_bytes,
     bytes_to_intlist,
@@ -443,15 +442,10 @@ class AbemaTVIE(AbemaTVBaseIE):
         is_live, m3u8_url = False, None
         if video_type == 'now-on-air':
             is_live = True
-            channel_url = 'https://api.abema.io/v1/channels'
-            if video_id == 'news-global':
-                channel_url = update_url_query(channel_url, {'division': '1'})
-            onair_channels = self._download_json(channel_url, video_id)
-            for ch in onair_channels['channels']:
-                if video_id == ch['id']:
-                    m3u8_url = ch['playback']['hls']
-                    break
-            else:
+            onair_channels = self._download_json(
+                'https://api.abema.io/v1/channels', video_id)
+            m3u8_url = traverse_obj(onair_channels, ('channels', lambda _, v: v['id'] == video_id, 'playback', 'hls'), get_all=False)
+            if not m3u8_url:
                 raise ExtractorError(f'Cannot find on-air {video_id} channel.', expected=True)
         elif video_type == 'episode':
             api_response = self._download_json(
@@ -460,7 +454,6 @@ class AbemaTVIE(AbemaTVBaseIE):
                 headers=headers)
             ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'), default=[])
             if 3 not in ondemand_types:
-                # cannot acquire decryption key for these streams
                 self.report_warning('This is a premium-only stream')
 
             m3u8_url = f'https://vod-abematv.akamaized.net/program/{video_id}/playlist.m3u8'
