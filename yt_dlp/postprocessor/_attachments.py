@@ -73,9 +73,14 @@ class RunsFFmpeg(object):
 
         start_time, end_time = 0, duration
         for i, arg in enumerate(args):
-            arg_timestamp = re.match(r'(?P<at>(-ss|-sseof|-to))', arg)
-            if arg_timestamp and i + 1 < len(args):
+            arg_timestamp, timestamp_seconds = re.match(r'(?P<at>-(?:ss|sseof|to))', arg), None
+            if '=' in arg:
+                # e.g. -ss=100
+                timestamp_seconds = self.parse_ffmpeg_time_string(arg.split('=', 1)[1])
+            elif arg_timestamp and i + 1 < len(args):
                 timestamp_seconds = self.parse_ffmpeg_time_string(args[i + 1])
+
+            if timestamp_seconds is not None:
                 if arg_timestamp.group('at') == '-ss':
                     start_time = timestamp_seconds
                 elif arg_timestamp.group('at') == '-sseof':
@@ -127,12 +132,10 @@ class RunsFFmpeg(object):
 
     @staticmethod
     def compute_bitrate(bitrate):
-        match = re.match(r'(?P<E>\d+)(\.(?P<f>\d+))?(?P<U>g|m|k)?bits/s', bitrate)
+        match = re.match(r'(?P<E>\d+(?:\.\d+)?)(?P<U>g|m|k)?bits/s', bitrate)
         if not match:
             return None
-        res = int(match.group('E'))
-        if match.group('f') is not None:
-            res += int(match.group('f'))
+        res = float(match.group('E'))
         if match.group('U') is not None:
             if match.group('U') == 'g':
                 res *= 1_000_000_000
@@ -202,7 +205,7 @@ class RunsFFmpeg(object):
 
             bitrate_int = self.compute_bitrate(ffmpeg_prog_infos['bitrate'])
 
-            out_time_second = int_or_none(ffmpeg_prog_infos['out_time_us']) // 1_000_000
+            out_time_second = int_or_none(ffmpeg_prog_infos['out_time_us'], scale=1_000_000)
             try:
                 dl_bytes_int = int_or_none(out_time_second / duration_to_track * total_filesize)
             except ZeroDivisionError:
