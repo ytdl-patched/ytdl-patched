@@ -3283,9 +3283,7 @@ POSTPROCESS_WHEN = {'pre_process', 'after_filter', 'before_dl', 'after_move', 'p
 
 
 DEFAULT_OUTTMPL = {
-    # reverted to match older version of ytdl-patched behavior.
-    # changing this will trigger disastrous bugs in my local scripts
-    'default': '%(title)s-%(id)s.%(ext)s',
+    'default': '%(title)s [%(id)s].%(ext)s',
     'chapter': '%(title)s - %(section_number)03d %(section_title)s [%(id)s].%(ext)s',
 }
 OUTTMPL_TYPES = {
