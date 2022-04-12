@@ -1,30 +1,28 @@
-from __future__ import division, unicode_literals
-
-import time
-import random
-import errno
 import contextlib
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from ..YoutubeDL import YoutubeDL
+import errno
+import random
+import time
 
 from ..utils import (
+    LockingUnsupportedError,
     decodeArgument,
     encodeFilename,
     error_to_compat_str,
-    LockingUnsupportedError,
     get_argcount,
     match_filter_func,
     merge_dicts,
     shell_quote,
     timeconvert,
 )
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..YoutubeDL import YoutubeDL
 from ..postprocessor._attachments import ShowsProgress
 from .augment import AUGMENT_MAP
 
 
-class FileDownloader(ShowsProgress):
+class FileDownloader:
     """File Downloader class.
 
     File downloader objects are the ones responsible of downloading the
@@ -134,7 +132,7 @@ class FileDownloader(ShowsProgress):
                 while True:
                     try:
                         return func(self, *args, **kwargs)
-                    except (IOError, OSError) as err:
+                    except OSError as err:
                         retry = retry + 1
                         if retry > file_access_retries or err.errno not in (errno.EACCES, errno.EINVAL):
                             if not fatal:
@@ -294,7 +292,7 @@ class FileDownloader(ShowsProgress):
         if exe is None:
             exe = self.ydl.basename(str_args[0])
 
-        self.write_debug('%s command line: %s' % (exe, shell_quote(str_args)))
+        self.write_debug(f'{exe} command line: {shell_quote(str_args)}')
 
     def _enter_augmented(self, info_dict):
         augmentation = info_dict.get('augments') or []

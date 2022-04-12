@@ -1,11 +1,8 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
+import datetime
 import functools
 import itertools
 import re
 import json
-import datetime
 import time
 
 from .common import InfoExtractor, SearchInfoExtractor

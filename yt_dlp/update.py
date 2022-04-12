@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import hashlib
 import json
 import os
@@ -34,7 +32,7 @@ def detect_variant():
                 return f'exe_{variant}'
             return f'{prefix}_exe'
         return 'py2exe'
-    elif isinstance(globals().get('__loader__'), zipimporter):
+    elif isinstance(__loader__, zipimporter):
         return 'zip'
     elif os.path.basename(sys.argv[0]) == '__main__.py':
         return 'source'
@@ -150,7 +148,7 @@ def run_update(ydl):
         return (f'youtube-dl{postfix}', f'ytdl-patched{postfix}')
 
     def get_bin_info(bin_or_exe, version):
-        label = version_labels['%s_%s' % (bin_or_exe, version)]
+        label = version_labels[f'{bin_or_exe}_{version}']
         return next((i for i in version_info['assets'] if i['name'] in get_bin_names(label)), {})
 
     def get_sha256sum(bin_or_exe, version):
@@ -176,7 +174,7 @@ def run_update(ydl):
         try:
             if os.path.exists(filename + '.old'):
                 os.remove(filename + '.old')
-        except (IOError, OSError):
+        except OSError:
             return report_unable('remove the old version')
 
         try:
@@ -187,13 +185,13 @@ def run_update(ydl):
             urlh = ydl._opener.open(url)
             newcontent = urlh.read()
             urlh.close()
-        except (IOError, OSError):
+        except OSError:
             return report_network_error('download latest version')
 
         try:
             with open(filename + '.new', 'wb') as outf:
                 outf.write(newcontent)
-        except (IOError, OSError):
+        except OSError:
             return report_permission_error(f'{filename}.new')
 
         expected_sum = get_sha256sum(variant, arch)
@@ -208,11 +206,11 @@ def run_update(ydl):
 
         try:
             os.rename(filename, filename + '.old')
-        except (IOError, OSError):
+        except OSError:
             return report_unable('move current version')
         try:
             os.rename(filename + '.new', filename)
-        except (IOError, OSError):
+        except OSError:
             report_unable('overwrite current version')
             os.rename(filename + '.old', filename)
             return
@@ -235,7 +233,7 @@ def run_update(ydl):
             urlh = ydl._opener.open(url)
             newcontent = urlh.read()
             urlh.close()
-        except (IOError, OSError):
+        except OSError:
             return report_network_error('download the latest version')
 
         expected_sum = get_sha256sum(variant, pack_type)

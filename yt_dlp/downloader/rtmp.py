@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import re
 import subprocess
 import time
@@ -7,11 +5,11 @@ import time
 from .common import FileDownloader
 from ..compat import compat_str
 from ..utils import (
-    check_executable,
-    encodeFilename,
-    encodeArgument,
-    get_exe_version,
     Popen,
+    check_executable,
+    encodeArgument,
+    encodeFilename,
+    get_exe_version,
 )
 
 
