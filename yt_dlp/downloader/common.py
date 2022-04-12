@@ -22,7 +22,7 @@ from ..postprocessor._attachments import ShowsProgress
 from .augment import AUGMENT_MAP
 
 
-class FileDownloader:
+class FileDownloader(ShowsProgress):
     """File Downloader class.
 
     File downloader objects are the ones responsible of downloading the
