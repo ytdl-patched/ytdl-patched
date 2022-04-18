@@ -1172,8 +1172,8 @@
  - **Sport5**
  - **SportBox**
  - **SportDeutschland**
- - **spotify**
- - **spotify:show**
+ - **spotify**: Spotify episodes
+ - **spotify:show**: Spotify shows
  - **Spreaker**
  - **SpreakerPage**
  - **SpreakerShow**

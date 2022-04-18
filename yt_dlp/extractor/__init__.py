@@ -1,3 +1,4 @@
+import contextlib
 import os
 
 from ..utils import load_plugins
@@ -8,17 +9,15 @@ if TYPE_CHECKING:
 
 _LAZY_LOADER = False
 if not os.environ.get('YTDLP_NO_LAZY_EXTRACTORS'):
-    try:
-        from .lazy_extractors import *
+    with contextlib.suppress(ImportError):
+        from .lazy_extractors import *  # noqa: F403
         from .lazy_extractors import _ALL_CLASSES
         _SELFHOSTED_CLASSES = []
         _LAZY_LOADER = True
-    except ImportError:
-        pass
 
 if not _LAZY_LOADER:
-    from .extractors import *
-    _ALL_CLASSES = [
+    from .extractors import *  # noqa: F403
+    _ALL_CLASSES = [  # noqa: F811
         klass
         for name, klass in globals().items()
         if name.endswith('IE') and name not in ('GenericIE', 'StreamlinkIE')
@@ -26,7 +25,7 @@ if not _LAZY_LOADER:
     _SELFHOSTED_CLASSES = [
         ie for ie in _ALL_CLASSES if ie._SELF_HOSTED
     ]
-    _ALL_CLASSES.append(GenericIE)
+    _ALL_CLASSES.append(GenericIE)  # noqa: F405
 
 _PLUGIN_CLASSES = load_plugins('extractor', 'IE', globals())
 _ALL_CLASSES = list(_PLUGIN_CLASSES.values()) + _ALL_CLASSES
