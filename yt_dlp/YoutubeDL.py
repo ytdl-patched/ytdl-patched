@@ -27,7 +27,6 @@ from string import ascii_letters
 
 from .cache import Cache
 from .compat import (
-    compat_Pattern,
     compat_brotli,
     compat_get_terminal_size,
     compat_os_name,
@@ -3527,10 +3526,10 @@ class YoutubeDL:
 
     def test_filename_external(self, filename):
         cmd = self.params.get('test_filename')
-        if not cmd or not isinstance(cmd, (str, compat_Pattern)):
+        if not cmd or not isinstance(cmd, (str, re.Pattern)):
             return True
 
-        if isinstance(cmd, compat_Pattern) or cmd.startswith('re:'):
+        if isinstance(cmd, re.Pattern) or cmd.startswith('re:'):
             # allow Patten object or string begins with 're:' to test against regex
             if isinstance(cmd, compat_str):
                 cmd = cmd[3:]
