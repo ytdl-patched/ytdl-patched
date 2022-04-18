@@ -69,6 +69,7 @@ class FileDownloader(ShowsProgress):
 
     def __init__(self, ydl, params):
         """Create a FileDownloader object with the given options."""
+        ShowsProgress.__init__(self, ydl, params)
         self._set_ydl(ydl)
         self._progress_hooks = []
         self.params = params
