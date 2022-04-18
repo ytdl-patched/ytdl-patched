@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import re
 import functools
+import urllib.parse
 
 from .common import InfoExtractor
 from ..utils import (
@@ -10,7 +11,6 @@ from ..utils import (
     OnDemandPagedList,
     try_get,
 )
-from ..compat import compat_urllib_parse_quote
 
 
 class TokyoMotionBaseIE(InfoExtractor):
@@ -20,7 +20,7 @@ class TokyoMotionBaseIE(InfoExtractor):
 
     @staticmethod
     def _extract_video_urls(variant, webpage):
-        return ('https://www.%smotion.net%s' % (variant, compat_urllib_parse_quote(frg.group()))
+        return ('https://www.%smotion.net%s' % (variant, urllib.parse.quote(frg.group()))
                 for frg in re.finditer(r'/video/(?P<id>\d+)/[^#?&"\']+', webpage))
 
     def _do_paging(self, variant, user_id, index):
