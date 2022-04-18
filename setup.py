@@ -34,11 +34,11 @@ if sys.argv[1:2] == ['py2exe']:
     params = {
         'console': [{
             'script': './yt_dlp/__main__.py',
-            'dest_base': 'yt-dlp',
+            'dest_base': 'ytdl-patched',
             'version': __version__,
             'description': DESCRIPTION,
             'comments': LONG_DESCRIPTION.split('\n')[0],
-            'product_name': 'yt-dlp',
+            'product_name': 'ytdl-patched',
             'product_version': __version__,
         }],
         'options': {
@@ -56,11 +56,11 @@ if sys.argv[1:2] == ['py2exe']:
 
 else:
     files_spec = [
-        ('share/bash-completion/completions', ['completions/bash/yt-dlp']),
-        ('share/zsh/site-functions', ['completions/zsh/_yt-dlp']),
-        ('share/fish/vendor_completions.d', ['completions/fish/yt-dlp.fish']),
+        ('share/bash-completion/completions', ['completions/bash/ytdl-patched']),
+        ('share/zsh/site-functions', ['completions/zsh/_ytdl-patched']),
+        ('share/fish/vendor_completions.d', ['completions/fish/ytdl-patched.fish']),
         ('share/doc/yt_dlp', ['README.txt']),
-        ('share/man/man1', ['yt-dlp.1'])
+        ('share/man/man1', ['ytdl-patched.1'])
     ]
     root = os.path.dirname(os.path.abspath(__file__))
     data_files = []
@@ -78,9 +78,9 @@ else:
     }
 
     if setuptools_available:
-        params['entry_points'] = {'console_scripts': ['youtube-dl = yt_dlp:main']}
+        params['entry_points'] = {'console_scripts': ['ytdl-patched = yt_dlp:main']}
     else:
-        params['scripts'] = ['yt-dlp']
+        params['scripts'] = ['ytdl-patched']
 
 
 class build_lazy_extractors(Command):

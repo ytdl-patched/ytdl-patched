@@ -12,7 +12,7 @@ switch ($BuilderName) {
         python -OO pyinst.py
 
         write-host "Moving built EXE into artifacts/"
-        Move-Item dist/ytdl-patched.exe artifacts/youtube-dl.exe
+        Move-Item dist/ytdl-patched.exe artifacts/
     }
     "py2exe" {
         $env:PY2EXE_WINDOWS_ICON_PATH="icons\youtube_social_squircle_${IconName}.ico"
@@ -21,7 +21,7 @@ switch ($BuilderName) {
         python setup.py py2exe
 
         write-host "Moving built EXE into artifacts/"
-        Move-Item youtube-dl.exe artifacts/
+        Move-Item ytdl-patched.exe artifacts/
     }
     default {
         throw "Invalid BuilderName: $BuilderName"

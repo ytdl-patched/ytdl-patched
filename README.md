@@ -398,7 +398,7 @@ You can also fork the project on github and run your fork's [build workflow](.gi
 <!-- Auto generated -->
 ## General Options:
     -h, --help                       Print this help text and exit
-    --version                        Print program version and exit
+    -V, --version                    Print program version and exit
     -U, --update                     Update this program to latest version. Make
                                      sure that you have sufficient permissions
                                      (run with sudo if needed)
@@ -464,20 +464,28 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      like URL
     --check-peertube-instance        Always perform online checks for PeerTube-
                                      like URL
+    --check-misskey-instance         Always perform online checks for Misskey-
+                                     like URL
     --test-filename CMD              Like --exec option, but used for testing if
                                      downloading should be started. You can
                                      begin with "re:" to use regex instead of
                                      commands
-    --print-infojson-types           DO NOT USE. IT'S MEANINGLESS FOR MOST
-                                     PEOPLE. Prints types of object in info
-                                     json. Use this for extractors that --print-
-                                     json won' work.
     --enable-lock                    Locks downloading exclusively. Blocks other
                                      ytdl-patched process downloading the same
                                      video.
     --no-lock                        Do not lock downloading exclusively.
                                      Download will start even if other process
                                      is working on it.
+    --ffmpeg-native-progress         Show FFmpeg download (and postprocessing in
+                                     the future) progress with built-in
+                                     progress. This is an experimental feature,
+                                     and disabled on live streams. (see yt-
+                                     dlp/yt-dlp#1947)
+    --no-ffmpeg-native-progress      Show FFmpeg download (and postprocessing in
+                                     the future) progress with built-in
+                                     progress. This is an experimental feature,
+                                     and disabled on live streams. (see yt-
+                                     dlp/yt-dlp#1947)
 
 ## Network Options:
     --proxy URL                      Use the specified HTTP/HTTPS/SOCKS proxy.
@@ -827,7 +835,8 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      "info" key and the progress attributes are
                                      accessible under "progress" key. E.g.:
                                      --console-title --progress-template
-                                     "download-title:%(info.id)s-%(progress.eta)s"
+                                     "download-
+                                     title:%(info.id)s-%(progress.eta)s"
     -v, --verbose                    Print various debugging information
     --dump-pages                     Print downloaded pages encoded using base64
                                      to debug problems (very verbose)
@@ -845,7 +854,7 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     --prefer-insecure                Use an unencrypted connection to retrieve
                                      information about the video (Currently
                                      supported only for YouTube)
-    --add-header FIELD:VALUE         Specify a custom HTTP header and its value,
+    -H, --add-header FIELD:VALUE     Specify a custom HTTP header and its value,
                                      separated by a colon ":". You can use this
                                      option multiple times
     --bidi-workaround                Work around terminals that lack
@@ -862,9 +871,26 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      interval
     --sleep-subtitles SECONDS        Number of seconds to sleep before each
                                      subtitle download
+    --sleep-before-extract SECONDS   Number of seconds to sleep before each
+                                     extraction when used alone or a lower bound
+                                     of a range for randomized sleep before each
+                                     extraction (minimum possible number of
+                                     seconds to sleep) when used along with
+                                     --max-sleep-before-extract.
+    --max-sleep-before-extract SECONDS
+                                     Upper bound of a range for randomized sleep
+                                     before each extraction (maximum possible
+                                     number of seconds to sleep). Must only be
+                                     used along with --min-sleep-before-extract.
     --escape-long-names              Split filename longer than 255 bytes into
                                      few path segments. This may create dumb
                                      directories.
+    --use-modern-tls-ciphers         Report servers that client is only capable
+                                     of modern cipher suites for TLS. See
+                                     https://github.com/yt-dlp/yt-dlp/pull/1049
+                                     for details.
+    --no-use-modern-tls-ciphers      Report servers that client is capable of
+                                     Python's default cipher suites for TLS.
 
 ## Video Format Options:
     -f, --format FORMAT              Video format code, see "FORMAT SELECTION"
@@ -913,7 +939,8 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     --write-auto-subs                Write automatically generated subtitle file
                                      (Alias: --write-automatic-subs)
     --no-write-auto-subs             Do not write auto-generated subtitles
-                                     (default) (Alias: --no-write-automatic-subs)
+                                     (default) (Alias: --no-write-automatic-
+                                     subs)
     --list-subs                      List available subtitles of each video.
                                      Simulate unless --no-simulate is used
     --sub-format FORMAT              Subtitle format, accepts formats
@@ -923,9 +950,9 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      be regex) or "all" separated by commas.
                                      (Eg: --sub-langs "en.*,ja") You can prefix
                                      the language code with a "-" to exempt it
-                                     from the requested languages. (Eg:
-                                     --sub-langs all,-live_chat) Use --list-subs
-                                     for a list of available language tags
+                                     from the requested languages. (Eg: --sub-
+                                     langs all,-live_chat) Use --list-subs for a
+                                     list of available language tags
 
 ## Authentication Options:
     -u, --username USERNAME          Login with this account ID
@@ -970,7 +997,8 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      m4a, mov to mp4 and anything else to mkv.
     --recode-video FORMAT            Re-encode the video into another format if
                                      re-encoding is necessary. The syntax and
-                                     supported formats are the same as --remux-video
+                                     supported formats are the same as --remux-
+                                     video
     --postprocessor-args NAME:ARGS   Give these arguments to the postprocessors.
                                      Specify the postprocessor/executable name
                                      and the arguments separated by a colon ":"
@@ -1083,8 +1111,8 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     --no-remove-chapters             Do not remove any chapters from the file
                                      (default)
     --force-keyframes-at-cuts        Force keyframes around the chapters before
-                                     removing/splitting them. Requires a
-                                     re-encode and thus is very slow, but the
+                                     removing/splitting them. Requires a re-
+                                     encode and thus is very slow, but the
                                      resulting video may have fewer artifacts
                                      around the cuts
     --no-force-keyframes-at-cuts     Do not force keyframes around the chapters
@@ -1109,9 +1137,9 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                      different postprocessors
 
 ## SponsorBlock Options:
-Make chapter entries for, or remove various segments (sponsor,
+    Make chapter entries for, or remove various segments (sponsor,
     introductions, etc.) from downloaded YouTube videos using the
-    [SponsorBlock API](https://sponsor.ajay.app)
+    SponsorBlock API (https://sponsor.ajay.app)
 
     --sponsorblock-mark CATS         SponsorBlock categories to create chapters
                                      for, separated by commas. Available
@@ -1120,8 +1148,9 @@ Make chapter entries for, or remove various segments (sponsor,
                                      interaction, music_offtopic, poi_highlight.
                                      You can prefix the category with a "-" to
                                      exempt it. See [1] for description of the
-                                     categories. Eg: --sponsorblock-mark all,-preview
-                                     [1] https://wiki.sponsor.ajay.app/w/Segment_Categories
+                                     categories. Eg: --sponsorblock-mark
+                                     all,-preview [1] https://wiki.sponsor.ajay.
+                                     app/w/Segment_Categories
     --sponsorblock-remove CATS       SponsorBlock categories to be removed from
                                      the video file, separated by commas. If a
                                      category is present in both mark and

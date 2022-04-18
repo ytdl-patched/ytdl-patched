@@ -50,11 +50,11 @@ files[:0] = [('', '__main__.py')]
 all_paths = [os.path.join(dir, file) for (dir, file) in files]
 if check_executable('7z', []):
     ret = subprocess.Popen(
-        ['7z', 'a', '-mm=Deflate', '-mfb=258', '-mpass=15', '-mtc-', '../youtube-dl.zip'] + all_paths,
+        ['7z', 'a', '-mm=Deflate', '-mfb=258', '-mpass=15', '-mtc-', '../ytdl-patched.zip'] + all_paths,
         cwd='zip/').wait()
 elif check_executable('zip', ['-h']):
     ret = subprocess.Popen(
-        ['zip', '-9', '../youtube-dl.zip'] + all_paths,
+        ['zip', '-9', '../ytdl-patched.zip'] + all_paths,
         cwd='zip/').wait()
 else:
     raise Exception('Cannot find ZIP archiver')
@@ -64,15 +64,15 @@ if ret != 0:
 
 if check_executable('advzip', []):
     subprocess.Popen(
-        ['advzip', '-z', '-4', '-i', iterations, 'youtube-dl.zip']).wait()
+        ['advzip', '-z', '-4', '-i', iterations, 'ytdl-patched.zip']).wait()
 
 shutil.rmtree('zip/')
 
-with open('youtube-dl', 'wb') as ytdl:
+with open('ytdl-patched', 'wb') as ytdl:
     ytdl.write(b'#!%s\n' % PYTHON.encode('utf8'))
-    with open('youtube-dl.zip', 'rb') as zip:
+    with open('ytdl-patched.zip', 'rb') as zip:
         ytdl.write(zip.read())
 
-os.remove('youtube-dl.zip')
+os.remove('ytdl-patched.zip')
 
-os.chmod('youtube-dl', 0o755)
+os.chmod('ytdl-patched', 0o755)

@@ -90,11 +90,11 @@ jobs:
           brew install advancecomp
       - name: Build patched YTDL for Linux
         run: |
-          make youtube-dl youtube-dl.tar.gz
-          mv youtube-dl artifacts/
-          mv youtube-dl.tar.gz artifacts/
-          echo "::set-output name=filehash_bin::$(sha256sum artifacts/youtube-dl | awk '{print $1}')"
-          echo "::set-output name=filehash_tar::$(sha256sum artifacts/youtube-dl.tar.gz | awk '{print $1}')"
+          make ytdl-patched ytdl-patched.tar.gz
+          mv ytdl-patched artifacts/
+          mv ytdl-patched.tar.gz artifacts/
+          echo "::set-output name=filehash_bin::$(sha256sum artifacts/ytdl-patched | awk '{print $1}')"
+          echo "::set-output name=filehash_tar::$(sha256sum artifacts/ytdl-patched.tar.gz | awk '{print $1}')"
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -185,13 +185,13 @@ jobs:
         shell: pwsh
         run: pwsh ./devscripts/build_windows_exe.ps1 PyInstaller ${{ matrix.icon }}
       - name: Compress generated EXE
-        run: upx --lzma --best artifacts/youtube-dl.exe
+        run: upx --lzma --best artifacts/ytdl-patched.exe
         continue-on-error: true
       - name: Calculate hash
         id: hash
-        run: echo "::set-output name=filehash_exe_${{ matrix.icon }}::$((Get-FileHash artifacts/youtube-dl.exe -Algorithm SHA256).Hash.ToLower())"
+        run: echo "::set-output name=filehash_exe_${{ matrix.icon }}::$((Get-FileHash artifacts/ytdl-patched.exe -Algorithm SHA256).Hash.ToLower())"
       - name: Rename file
-        run: mv artifacts/youtube-dl.exe artifacts/youtube-dl-${{ matrix.icon }}.exe
+        run: mv artifacts/ytdl-patched.exe artifacts/ytdl-patched-${{ matrix.icon }}.exe
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
@@ -225,7 +225,7 @@ jobs:
           prerelease: false
           body: |
             What to download?
-            - for Linux/macOS - `youtube-dl` (requires Python 3.x installed)
+            - for Linux/macOS - `ytdl-patched` (requires Python 3.x installed)
             - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
@@ -266,8 +266,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./artifacts/youtube-dl
-          asset_name: youtube-dl
+          asset_path: ./artifacts/ytdl-patched
+          asset_name: ytdl-patched
           asset_content_type: application/zip
       - name: Upload source tar (Releases)
         id: upload-2
@@ -276,8 +276,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./artifacts/youtube-dl.tar.gz
-          asset_name: youtube-dl.tar.gz
+          asset_path: ./artifacts/ytdl-patched.tar.gz
+          asset_name: ytdl-patched.tar.gz
           asset_content_type: application/gzip
 
 
@@ -288,8 +288,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./artifacts/youtube-dl-red.exe
-          asset_name: youtube-dl-red.exe
+          asset_path: ./artifacts/ytdl-patched-red.exe
+          asset_name: ytdl-patched-red.exe
           asset_content_type: application/vnd.microsoft.portable-executable
       - name: Upload white exe (Releases)
         id: upload-4
@@ -298,8 +298,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./artifacts/youtube-dl-white.exe
-          asset_name: youtube-dl-white.exe
+          asset_path: ./artifacts/ytdl-patched-white.exe
+          asset_name: ytdl-patched-white.exe
           asset_content_type: application/vnd.microsoft.portable-executable
 
 
@@ -368,23 +368,23 @@ jobs:
       - name: Upload bin (IA)
         run: |
           ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl" \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/ytdl-patched" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
-            ./artifacts/youtube-dl
+            ./artifacts/ytdl-patched
       - name: Upload source tar (IA)
         run: |
           ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/youtube-dl.tar.gz" \
+            --remote-name "${{ needs.prepare.outputs.latest_version }}/ytdl-patched.tar.gz" \
             -H x-archive-keep-old-version:0 \
             -H x-archive-queue-derive:0 \
-            ./artifacts/youtube-dl.tar.gz
+            ./artifacts/ytdl-patched.tar.gz
 
 
       - name: Upload compressed exe files (IA)
         run: |
           mkdir exe_files/
-          cp ./artifacts/youtube-dl-red.exe ./artifacts/youtube-dl-white.exe exe_files/
+          cp ./artifacts/ytdl-patched-red.exe ./artifacts/ytdl-patched-white.exe exe_files/
           mksquashfs exe_files/ win_exe.sqfs \
             -comp xz -progress -b 1M -Xdict-size 50% \
             -no-xattrs -force-uid 1000 -force-gid 1000
@@ -440,18 +440,18 @@ jobs:
       - name: Move executable file
         if: ${{ startsWith(runner.os, 'windows') }}
         run: |
-          mv ./artifacts/youtube-dl-white.exe ./artifacts/youtube-dl.exe
-      - name: youtube-dl --help and --version
+          mv ./artifacts/ytdl-patched-white.exe ./artifacts/ytdl-patched.exe
+      - name: ytdl-patched --help and --version
         shell: bash
         run: |
-          chmod a+x ./artifacts/youtube-dl || true
-          ./artifacts/youtube-dl --help
-          ./artifacts/youtube-dl --version
+          chmod a+x ./artifacts/ytdl-patched || true
+          ./artifacts/ytdl-patched --help
+          ./artifacts/ytdl-patched --version
       - name: Download some videos
         shell: bash
         continue-on-error: true
         run: |
-          ./artifacts/youtube-dl \
+          ./artifacts/ytdl-patched \
               https://www.youtube.com/watch?v=XEY7UQJxw-o \
               https://twitter.com/twetchapp/status/1311686520793829376
   docker-linux:
@@ -518,7 +518,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-artifacts
-      - run: mv artifacts/youtube-dl-${{ env.windows_icon }}.exe artifacts/youtube-dl.exe
+      - run: mv artifacts/ytdl-patched-${{ env.windows_icon }}.exe artifacts/ytdl-patched.exe
       - run: ls artifacts/
       - name: Login
         run: docker login --username nao20010128nao --password ${{ secrets.DHUB_TOKEN }}
