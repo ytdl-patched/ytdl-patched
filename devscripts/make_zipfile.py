@@ -35,12 +35,13 @@ except FileNotFoundError:
 os.makedirs('zip/', exist_ok=True)
 
 files = [(dir, file) for (dir, _, c) in os.walk('yt_dlp') for file in c if file.endswith('.py')]
+all_paths = []
 
 for (dir, file) in files:
     joined = os.path.join(dir, file)
     dest = os.path.join('zip', joined)
     os.makedirs(os.path.join('zip', dir), exist_ok=True)
-    shutil.copy(joined, dest)
+    shutil.copy(joined, dest, follow_symlinks=False)
     os.utime(dest, (modTime, modTime))
 
 os.rename('zip/yt_dlp/__main__.py', 'zip/__main__.py')
