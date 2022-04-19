@@ -39,16 +39,16 @@ all_paths = []
 
 for (dir, file) in files:
     joined = os.path.join(dir, file)
+    all_paths.append(joined)
     dest = os.path.join('zip', joined)
     os.makedirs(os.path.join('zip', dir), exist_ok=True)
     shutil.copy(joined, dest, follow_symlinks=False)
     os.utime(dest, (modTime, modTime))
 
 os.rename('zip/yt_dlp/__main__.py', 'zip/__main__.py')
-files.remove(('yt_dlp', '__main__.py'))
-files[:0] = [('', '__main__.py')]
+all_paths.remove('yt_dlp/__main__.py')
+all_paths[:0] = ['__main__.py']
 
-all_paths = [os.path.join(dir, file) for (dir, file) in files]
 if check_executable('7z', []):
     ret = subprocess.Popen(
         ['7z', 'a', '-mm=Deflate', '-mfb=258', '-mpass=15', '-mtc-', '../ytdl-patched.zip'] + all_paths,
