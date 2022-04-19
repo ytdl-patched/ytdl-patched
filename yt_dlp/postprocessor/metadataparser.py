@@ -14,12 +14,12 @@ class MetadataParserPP(PostProcessor):
             return '<functools.partial object with infodict>'
 
     def __init__(self, downloader, actions):
-        super().__init__(self, downloader)
+        super().__init__(downloader)
         self._actions = []
         for f in actions:
             action, *args = f
             assert action in self.Actions
-            self._actions.append(action(*args))
+            self._actions.append(action(self, *args))
 
     @classmethod
     def validate_action(cls, action, *data):
@@ -29,7 +29,7 @@ class MetadataParserPP(PostProcessor):
         """
         if action not in cls.Actions:
             raise ValueError(f'{action!r} is not a valid action')
-        getattr(cls, action.value)(cls, *data)  # So this can raise error to validate
+        action(cls, *data)  # So this can raise error to validate
 
     @staticmethod
     def field_to_template(tmpl):
