@@ -45,7 +45,6 @@ except (ImportError, SyntaxError):
     HAVE_DATEUTIL = False
 
 from .compat import (
-    compat_brotli,
     compat_chr,
     compat_cookiejar,
     compat_etree_fromstring,
@@ -70,19 +69,9 @@ from .compat import (
     compat_urlparse,
 )
 
-from .socks import (
-    ProxyType,
-    sockssocket,
-)
+from .dependencies import brotli, certifi, websockets
+from .socks import ProxyType, sockssocket
 from .chrome_versions import versions as _CHROME_VERSIONS
-
-try:
-    import certifi
-
-    # The certificate may not be bundled in executable
-    has_certifi = os.path.exists(certifi.where())
-except ImportError:
-    has_certifi = False
 
 
 def register_socks_protocols():
@@ -112,7 +101,7 @@ def random_user_agent():
 SUPPORTED_ENCODINGS = [
     'gzip', 'deflate'
 ]
-if compat_brotli:
+if brotli:
     SUPPORTED_ENCODINGS.append('br')
 
 std_headers = {
@@ -1274,7 +1263,7 @@ class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
     def brotli(data):
         if not data:
             return data
-        return compat_brotli.decompress(data)
+        return brotli.decompress(data)
 
     def http_request(self, req):
         # According to RFC 3986, URLs can not contain non-ASCII characters, however this is not
@@ -3040,7 +3029,7 @@ def qualities(quality_ids):
     return q
 
 
-POSTPROCESS_WHEN = {'pre_process', 'after_filter', 'before_dl', 'after_move', 'post_process', 'after_video', 'playlist'}
+POSTPROCESS_WHEN = ('pre_process', 'after_filter', 'before_dl', 'after_move', 'post_process', 'after_video', 'playlist')
 
 
 DEFAULT_OUTTMPL = {
@@ -5363,3 +5352,8 @@ def get_argcount(func):
 
 def Namespace(**kwargs):
     return collections.namedtuple('Namespace', kwargs)(**kwargs)
+
+
+# Deprecated
+has_certifi = bool(certifi)
+has_websockets = bool(websockets)

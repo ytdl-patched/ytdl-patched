@@ -170,6 +170,7 @@ class FC2LiveIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
+        # NOTE: ytdl-patched allows omitting dependency checks by declaring at _FEATURE_DEPENDENCY
         video_id = self._match_id(url)
         webpage = self._download_webpage('https://live.fc2.com/%s/' % video_id, video_id)
 
