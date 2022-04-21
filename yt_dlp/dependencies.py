@@ -56,6 +56,14 @@ except ImportError:
     sqlite3 = None
 
 
+try:
+    import websockets
+except (ImportError, SyntaxError):
+    # websockets 3.10 on python 3.6 causes SyntaxError
+    # See https://github.com/yt-dlp/yt-dlp/issues/2633
+    websockets = None
+
+
 from .websocket import WebSocket
 
 
