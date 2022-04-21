@@ -35,4 +35,6 @@ try:
 except (ImportError, ValueError, SyntaxError):
     WebSocketsWrapper = None
 
-WebSocket = WebSocketClientWrapper or WebSocketsWrapper
+WebSocket = (WebSocketClientWrapper or WebSocketsWrapper) if HAVE_WEBSOCKET else None
+
+# NOTE: directly importing this module is now deprecated. import via .dependencies

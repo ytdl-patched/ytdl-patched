@@ -31,6 +31,7 @@ from ..compat import (
     compat_urlparse,
     re,
 )
+from ..dependencies import WebSocket
 from ..downloader import FileDownloader
 from ..downloader.f4m import get_base_url, remove_encrypted_media
 from ..utils import (
@@ -92,7 +93,6 @@ from ..utils import (
     xpath_text,
     xpath_with_ns,
 )
-from ..websocket import HAVE_WEBSOCKET
 
 
 class InfoExtractor:
@@ -649,7 +649,7 @@ class InfoExtractor:
     def extract(self, url):
         """Extracts URL information and returns it in list of dicts."""
 
-        if 'websocket' in self._FEATURE_DEPENDENCY and not HAVE_WEBSOCKET:
+        if 'websocket' in self._FEATURE_DEPENDENCY and not WebSocket:
             raise ExtractorError('Please install websockets or websocket_client package via pip', expected=True)
         try:
             if 'yaml' in self._FEATURE_DEPENDENCY:

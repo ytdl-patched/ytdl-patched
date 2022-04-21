@@ -4,6 +4,7 @@ from .common import InfoExtractor
 from ..compat import (
     compat_parse_qs,
 )
+from ..dependencies import WebSocket
 from ..utils import (
     ExtractorError,
     js_to_json,
@@ -14,7 +15,6 @@ from ..utils import (
     urlencode_postdata,
     urljoin,
 )
-from ..websocket import WebSocket
 
 
 class FC2IE(InfoExtractor):

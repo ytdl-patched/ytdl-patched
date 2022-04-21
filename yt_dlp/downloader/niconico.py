@@ -4,6 +4,7 @@ import time
 
 from .common import FileDownloader
 from .external import FFmpegFD
+from ..dependencies import WebSocket
 from ..utils import (
     str_or_none,
     std_headers,
@@ -11,17 +12,13 @@ from ..utils import (
     try_get,
 )
 from ..compat import compat_str
-from ..websocket import (
-    WebSocket,
-    HAVE_WEBSOCKET,
-)
 
 
 class NiconicoLiveFD(FileDownloader):
     """ Downloads niconico live without being stopped """
 
     def real_download(self, filename, info_dict):
-        if not HAVE_WEBSOCKET:  # this is unreachable because this is checked at Extractor
+        if not WebSocket:  # this is unreachable because this is checked at Extractor
             raise DownloadError('Install websockets or websocket_client package via pip, or install websockat program')
 
         video_id = info_dict['video_id']

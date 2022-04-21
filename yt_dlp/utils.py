@@ -69,7 +69,7 @@ from .compat import (
     compat_urlparse,
 )
 
-from .dependencies import brotli, certifi, websockets
+from .dependencies import brotli, certifi
 from .socks import ProxyType, sockssocket
 from .chrome_versions import versions as _CHROME_VERSIONS
 
@@ -5356,4 +5356,3 @@ def Namespace(**kwargs):
 
 # Deprecated
 has_certifi = bool(certifi)
-has_websockets = bool(websockets)

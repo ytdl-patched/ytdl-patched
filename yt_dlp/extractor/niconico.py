@@ -12,6 +12,7 @@ from ..compat import (
     compat_urllib_parse_urlparse,
     compat_HTTPError,
 )
+from ..dependencies import WebSocket
 from ..neonippori import (
     load_comments,
     convert_niconico_json_to_xml,
@@ -39,7 +40,6 @@ from ..utils import (
     url_or_none,
     urlencode_postdata,
 )
-from ..websocket import WebSocket
 
 
 class NiconicoBaseIE(InfoExtractor):
