@@ -163,7 +163,7 @@ class ShugiinItvVodIE(InfoExtractor):
                 'start_time': float_or_none(chp.group(1).strip()),
             })
         # the exact duration of the last chapter is unknown! (we can get at most minutes of granularity)
-        for idx, chp in enumerate(chapters[1:]):
+        for idx in range(len(chapters) - 1):
             chapters[idx]['end_time'] = chapters[idx + 1]['start_time']
 
         last_tr = re.findall(r'(?s)<TR\s*class="s14_24">(.+?)</TR>', webpage)[-1]
