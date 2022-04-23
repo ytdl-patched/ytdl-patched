@@ -168,7 +168,7 @@ class ShugiinItvVodIE(InfoExtractor):
 
         last_tr = re.findall(r'(?s)<TR\s*class="s14_24">(.+?)</TR>', webpage)[-1]
         if last_tr and chapters:
-            last_td = re.finditer(r'<TD.+?</TD>', last_tr.group(0))[-1]
+            last_td = re.findall(r'<TD.+?</TD>', last_tr.group(0))[-1]
             if last_td:
                 chapters[-1]['end_time'] = chapters[-1]['start_time'] + _parse_japanese_duration(clean_html(last_td.group(0)))
 
