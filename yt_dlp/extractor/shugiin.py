@@ -10,61 +10,10 @@ from ..utils import (
     smuggle_url,
     unsmuggle_url
 )
-
 from .common import InfoExtractor
 
 
-def _parse_japanese_date(text):
-    if not text:
-        return None
-    ERA_TABLE = {
-        '明治': 1868,
-        '大正': 1912,
-        '昭和': 1926,
-        '平成': 1989,
-        '令和': 2019,
-    }
-    ERA_RE = '|'.join(map(re.escape, ERA_TABLE.keys()))
-    mobj = re.search(rf'({ERA_RE})?(\d+)年(\d+)月(\d+)日', re.sub(r'[\s\u3000]+', '', text))
-    if not mobj:
-        return None
-    era, year, month, day = mobj.groups()
-    year, month, day = map(int, (year, month, day))
-    if era:
-        # example input: 令和5年3月34日
-        # even though each era have their end, don't check here
-        year += ERA_TABLE[era]
-    return '%04d%02d%02d' % (year, month, day)
-
-
-def _parse_japanese_duration(text):
-    if not text:
-        return None
-    mobj = re.search(r'(?:(\d+)日間?)?(?:(\d+)時間?)?(?:(\d+)分)?(?:(\d+)秒)?', re.sub(r'[\s\u3000]+', '', text))
-    if not mobj:
-        return None
-    days, hours, mins, secs = map(int_or_none, mobj.groups())
-
-    duration = 0
-    if secs:
-        duration += float(secs)
-    if mins:
-        duration += float(mins) * 60
-    if hours:
-        duration += float(hours) * 60 * 60
-    if days:
-        duration += float(days) * 24 * 60 * 60
-    return duration
-
-
-class ShugiinItvLiveIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)(?:/index\.php)?'
-    IE_DESC = '衆議院インターネット審議中継'
-
-    @classmethod
-    def suitable(cls, url):
-        return super().suitable(url) and not any(x.suitable(url) for x in (ShugiinItvLiveRoomIE, ShugiinItvVodIE))
-
+class ShugiinItvBaseIE(InfoExtractor):
     @classmethod
     def _find_rooms(cls, webpage):
         return [{
@@ -75,6 +24,58 @@ class ShugiinItvLiveIE(InfoExtractor):
             'ie_key': ShugiinItvLiveIE.ie_key(),
         } for x in re.finditer(r'<a\s+href=".+?\?room_id=(room\d+)"\s*class="play_live".+?class="s12_14">(.+?)</td>', webpage)]
 
+    @staticmethod
+    def _parse_japanese_date(text):
+        if not text:
+            return None
+        ERA_TABLE = {
+            '明治': 1868,
+            '大正': 1912,
+            '昭和': 1926,
+            '平成': 1989,
+            '令和': 2019,
+        }
+        ERA_RE = '|'.join(map(re.escape, ERA_TABLE.keys()))
+        mobj = re.search(rf'({ERA_RE})?(\d+)年(\d+)月(\d+)日', re.sub(r'[\s\u3000]+', '', text))
+        if not mobj:
+            return None
+        era, year, month, day = mobj.groups()
+        year, month, day = map(int, (year, month, day))
+        if era:
+            # example input: 令和5年3月34日
+            # even though each era have their end, don't check here
+            year += ERA_TABLE[era]
+        return '%04d%02d%02d' % (year, month, day)
+
+    @staticmethod
+    def _parse_japanese_duration(text):
+        if not text:
+            return None
+        mobj = re.search(r'(?:(\d+)日間?)?(?:(\d+)時間?)?(?:(\d+)分)?(?:(\d+)秒)?', re.sub(r'[\s\u3000]+', '', text))
+        if not mobj:
+            return None
+        days, hours, mins, secs = map(int_or_none, mobj.groups())
+
+        duration = 0
+        if secs:
+            duration += float(secs)
+        if mins:
+            duration += float(mins) * 60
+        if hours:
+            duration += float(hours) * 60 * 60
+        if days:
+            duration += float(days) * 24 * 60 * 60
+        return duration
+
+
+class ShugiinItvLiveIE(ShugiinItvBaseIE):
+    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)(?:/index\.php)?'
+    IE_DESC = '衆議院インターネット審議中継'
+
+    @classmethod
+    def suitable(cls, url):
+        return super().suitable(url) and not any(x.suitable(url) for x in (ShugiinItvLiveRoomIE, ShugiinItvVodIE))
+
     def _real_extract(self, url):
         self.report_warning('Listing up all running proceedings as of now. To specify one proceedings to record, use link direct from the website.')
         webpage = self._download_webpage(
@@ -83,13 +84,9 @@ class ShugiinItvLiveIE(InfoExtractor):
         return self.playlist_result(self._find_rooms(webpage))
 
 
-class ShugiinItvLiveRoomIE(ShugiinItvLiveIE):
+class ShugiinItvLiveRoomIE(ShugiinItvBaseIE):
     _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)/index\.php\?room_id=(?P<id>room\d+)'
     IE_DESC = '衆議院インターネット審議中継 (中継)'
-
-    @classmethod
-    def suitable(cls, url):
-        return InfoExtractor.suitable.__func__(cls, url)
 
     def _real_extract(self, url):
         url, smug = unsmuggle_url(url)
@@ -117,7 +114,7 @@ class ShugiinItvLiveRoomIE(ShugiinItvLiveIE):
         }
 
 
-class ShugiinItvVodIE(InfoExtractor):
+class ShugiinItvVodIE(ShugiinItvBaseIE):
     _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)/index\.php\?ex=VL(?:\&[^=]+=[^&]*)*\&deli_id=(?P<id>\d+)'
     IE_DESC = '衆議院インターネット審議中継 (ビデオライブラリ)'
     _TESTS = [{
@@ -151,7 +148,7 @@ class ShugiinItvVodIE(InfoExtractor):
             (r'<td\s+align="left">(.+)\s*\(\d+分\)',
              r'<TD.+?<IMG\s*src=".+?/spacer\.gif".+?height="15">(.+?)<IMG'), webpage, 'title', fatal=False)
 
-        release_date = _parse_japanese_date(self._html_search_regex(
+        release_date = self._parse_japanese_date(self._html_search_regex(
             r'開会日</td>\s*<td.+?/td>\s*<TD>(.+?)</TD>',
             webpage, 'title', fatal=False))
 
@@ -170,7 +167,7 @@ class ShugiinItvVodIE(InfoExtractor):
         if last_tr and chapters:
             last_td = re.findall(r'<TD.+?</TD>', last_tr.group(0))[-1]
             if last_td:
-                chapters[-1]['end_time'] = chapters[-1]['start_time'] + _parse_japanese_duration(clean_html(last_td.group(0)))
+                chapters[-1]['end_time'] = chapters[-1]['start_time'] + self._parse_japanese_duration(clean_html(last_td.group(0)))
 
         return {
             'id': video_id,
