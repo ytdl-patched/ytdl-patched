@@ -40,6 +40,8 @@ SYSCONFDIR = $(shell if [ $(PREFIX) = /usr -o $(PREFIX) = /usr/local ]; then ech
 # set markdown input format to "markdown-smart" for pandoc version 2 and to "markdown" for pandoc prior to version 2
 MARKDOWN = $(shell if [ `pandoc -v | head -n1 | cut -d" " -f2 | head -c1` = "2" ]; then echo markdown-smart; else echo markdown; fi)
 
+# it won't run in BSD install!
+# you should install GNU coreutils and replace these install command with ginstall, if needed
 install: lazy-extractors ytdl-patched ytdl-patched.1 completions
 	install -Dm755 ytdl-patched $(DESTDIR)$(BINDIR)/ytdl-patched
 	install -Dm644 ytdl-patched.1 $(DESTDIR)$(MANDIR)/man1/ytdl-patched.1
