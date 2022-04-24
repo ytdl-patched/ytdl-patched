@@ -109,6 +109,7 @@ class MetadataParserPP(PostProcessor):
         search_re = re.compile(search)
         return f
 
+    BACKLOG_UNSET = object()
     Actions = Namespace(INTERPRET=interpretter, REPLACE=replacer)
 
 
