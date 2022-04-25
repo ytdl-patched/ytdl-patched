@@ -499,6 +499,7 @@
  - **HungamaSong**
  - **huya:live**: huya.com
  - **Hypem**
+ - **Icareus**
  - **ign.com**
  - **IGNArticle**
  - **IGNVideo**
