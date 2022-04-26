@@ -4,10 +4,9 @@ from __future__ import unicode_literals
 import re
 
 from typing import Union
-
 from os import PathLike, fsdecode, remove, rename, sep, stat, utime, unlink, makedirs, replace
-from os.path import exists, isfile, getsize, normpath, join, basename, dirname, isabs
-from .compat import compat_str
+from os.path import exists, isfile, getsize, normpath, basename, dirname, isabs
+
 from .utils import (
     sanitize_open,
     get_filesystem_encoding,
@@ -15,7 +14,7 @@ from .utils import (
 
 # this file is to escape long file names in following manner:
 # 1. split each path segment in 255-N bytes (N=byte length of DEFAULT_DELIMITER below)
-# 2. prepend DEFAULT_DELIMITER, and then path segments are split within filesystem limit,
+# 2. append DEFAULT_DELIMITER, so path segments are split within filesystem limit,
 #      with a marker on each split chunks
 
 FS_LENGTH_LIMIT = 255  # length limit from filesystem
@@ -29,8 +28,7 @@ MIN_LOW_SURROGATE = 0xDC00
 MAX_LOW_SURROGATE = 0xDFFF
 
 
-def split_longname(input, encoding=get_filesystem_encoding()):
-    # type: (Union[bytes, compat_str, PathLike], compat_str) -> bytes
+def split_longname(input: Union[bytes, str, PathLike], encoding: str = get_filesystem_encoding()) -> bytes:
     if PathLike and isinstance(input, PathLike):
         input = fsdecode(input)
 
@@ -45,8 +43,7 @@ def split_longname(input, encoding=get_filesystem_encoding()):
     return result
 
 
-def combine_longname(input, encoding=get_filesystem_encoding()):
-    # type: (Union[bytes, compat_str, PathLike], compat_str) -> bytes
+def combine_longname(input: Union[bytes, str, PathLike], encoding: str = get_filesystem_encoding()) -> bytes:
     if PathLike and isinstance(input, PathLike):
         input = fsdecode(input)
 
@@ -54,15 +51,14 @@ def combine_longname(input, encoding=get_filesystem_encoding()):
     if was_bytes:
         input = input.decode(encoding)
 
-    result = combine_longname_str(input, encoding)
+    result = combine_longname_str(input)
 
     if was_bytes:
         result = result.encode(encoding)
     return result
 
 
-def split_longname_str(input, encoding=get_filesystem_encoding()):
-    # type: (compat_str, compat_str) -> compat_str
+def split_longname_str(input: str, encoding: str = get_filesystem_encoding()) -> str:
     # https://docs.python.org/3/library/codecs.html
     chunks = re.split(r'[\\/]', input)
     result = []
@@ -129,7 +125,7 @@ def split_longname_str(input, encoding=get_filesystem_encoding()):
                     result.append(chunk[i:i + 4])
     else:
         # slow path: encode each charaters
-        # any encoding with header/marking will break this (like UTF-16 with BOM, or 'idna')
+        # any encoding with header/marking will break this (e.g. UTF-16 with BOM, 'idna')
         CHUNK_LENGTH = FS_LENGTH_LIMIT - len(DEFAULT_DELIMITER.encode(encoding))
         for chunk in chunks:
             if len(chunk.encode(encoding)) <= FS_LENGTH_LIMIT:
@@ -152,8 +148,7 @@ def split_longname_str(input, encoding=get_filesystem_encoding()):
     return sep.join(result)
 
 
-def combine_longname_str(input, encoding=get_filesystem_encoding()):
-    # type: (compat_str, compat_str) -> str
+def combine_longname_str(input: str) -> str:
     result = []
     for part in re.split(r'[\\/]', input):
         if result and result[-1].endswith(DEFAULT_DELIMITER):
@@ -163,10 +158,9 @@ def combine_longname_str(input, encoding=get_filesystem_encoding()):
     return sep.join(result)
 
 
-def utf8_byte_length(chr):
+def utf8_byte_length(chr: Union[str, int]) -> int:
     "Calculates byte length in UTF-8 without encode/decode"
-    # type: (Union[compat_str, int]) -> int
-    if isinstance(chr, compat_str):
+    if isinstance(chr, str):
         chr = ord(chr[0])
 
     if chr <= 0x7F:
@@ -182,9 +176,8 @@ def utf8_byte_length(chr):
     return 3
 
 
-def utf8_byte_length_all_chr(string):
+def utf8_byte_length_all_chr(string: str) -> int:
     "Calculates byte length in UTF-8 without encode/decode"
-    # type: (compat_str) -> int
     result = 0
     for chr in string:
         chr = ord(chr[0])
@@ -206,7 +199,7 @@ def ensure_directory(filename):
     split = split_longname(filename, get_filesystem_encoding())
     if split != filename:
         try:
-            makedirs(normpath(join(split, '..')))
+            makedirs(normpath(dirname(split)))
         except FileExistsError:
             pass
     return split
