@@ -393,15 +393,17 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
         if end_time:
             args += ['-t', compat_str(end_time - start_time)]
 
-        if info_dict.get('http_headers') is not None and re.match(r'^https?://', urls[0]):
-            # Trailing \r\n after each HTTP header is important to prevent warning from ffmpeg/avconv:
-            # [http @ 00000000003d2fa0] No trailing CRLF found in HTTP header.
-            headers = handle_youtubedl_headers(info_dict['http_headers'])
+        http_headers = None
+        if info_dict.get('http_headers'):
+            youtubedl_headers = handle_youtubedl_headers(info_dict['http_headers'])
             # drop Accept-Encoding from request header; it should be added by each client rather than forcing from ytdl-patched itself
-            headers.pop(next((x for x in headers.keys() if x.lower() == 'accept-encoding'), None), None)
-            args += [
+            youtubedl_headers.pop(next((x for x in youtubedl_headers.keys() if x.lower() == 'accept-encoding'), None), None)
+            http_headers = [
+                # Trailing \r\n after each HTTP header is important to prevent warning from ffmpeg/avconv:
+                # [http @ 00000000003d2fa0] No trailing CRLF found in HTTP header.
                 '-headers',
-                ''.join(f'{key}: {val}\r\n' for key, val in headers.items())]
+                ''.join(f'{key}: {val}\r\n' for key, val in youtubedl_headers.items())
+            ]
 
         env = None
         proxy = self.params.get('proxy')
@@ -466,6 +468,11 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             return result
 
         for i, url in enumerate(urls):
+            # We need to specify headers for each http input stream
+            # otherwise, it will only be applied to the first.
+            # https://github.com/yt-dlp/yt-dlp/issues/2696
+            if http_headers is not None and re.match(r'^https?://', url):
+                args += http_headers
             args += get_infodict_list((f'input_params_{i + 1}', 'input_params')) + self._configuration_args((f'_i{i + 1}', '_i')) + ['-i', url]
 
         args += ['-c', 'copy']
