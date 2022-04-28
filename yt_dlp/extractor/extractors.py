@@ -650,7 +650,7 @@ from .hungama import (
     HungamaAlbumPlaylistIE,
 )
 from .hypem import HypemIE
-from .icareus import IcareusIE 
+from .icareus import IcareusIE
 from .ichinanalive import (
     IchinanaLiveIE,
     IchinanaLiveClipIE,
@@ -830,7 +830,10 @@ from .lnkgo import (
 )
 from .localnews8 import LocalNews8IE
 from .lovehomeporn import LoveHomePornIE
-from .lrt import LRTIE
+from .lrt import (
+    LRTVODIE,
+    LRTStreamIE
+)
 from .lynda import (
     LyndaIE,
     LyndaCourseIE
