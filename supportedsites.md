@@ -616,7 +616,8 @@
  - **loc**: Library of Congress
  - **LocalNews8**
  - **LoveHomePorn**
- - **lrt.lt**
+ - **LRTStream**
+ - **LRTVOD**
  - **lynda**: lynda.com videos
  - **lynda:course**: lynda.com online courses
  - **m6**
