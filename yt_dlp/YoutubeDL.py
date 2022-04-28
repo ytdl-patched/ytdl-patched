@@ -448,6 +448,8 @@ class YoutubeDL:
                        every video.
                        If it returns a message, the video is ignored.
                        If it returns None, the video is downloaded.
+                       If it returns utils.NO_DEFAULT, the user is interactively
+                       asked whether to download the video.
                        match_filter_func in utils.py is one example for this.
     no_color:          Do not emit color codes in output.
     geo_bypass:        Bypass geographic restriction via faking X-Forwarded-For
@@ -932,6 +934,7 @@ class YoutubeDL:
     Styles = Namespace(
         HEADERS='yellow',
         EMPHASIS='light blue',
+        FILENAME='green',
         ID='green',
         DELIM='blue',
         ERROR='red',
@@ -1008,7 +1011,7 @@ class YoutubeDL:
             self.to_screen('Deleting existing file')
 
     def raise_no_formats(self, info, forced=False, *, msg=None):
-        has_drm = info.get('__has_drm')
+        has_drm = info.get('_has_drm')
         ignored, expected = self.params.get('ignore_no_formats_error'), bool(msg)
         msg = msg or has_drm and 'This video is DRM protected' or 'No video formats found!'
         if forced or not ignored:
@@ -1107,7 +1110,7 @@ class YoutubeDL:
         # For fields playlist_index, playlist_autonumber and autonumber convert all occurrences
         # of %(field)s to %(field)0Nd for backward compatibility
         field_size_compat_map = {
-            'playlist_index': number_of_digits(info_dict.get('_last_playlist_index') or 0),
+            'playlist_index': number_of_digits(info_dict.get('__last_playlist_index') or 0),
             'playlist_autonumber': number_of_digits(info_dict.get('n_entries') or 0),
             'autonumber': self.params.get('autonumber_size') or 5,
         }
@@ -1357,7 +1360,17 @@ class YoutubeDL:
                 except TypeError:
                     # For backward compatibility
                     ret = None if incomplete else match_filter(info_dict)
-                if ret is not None:
+                if ret is NO_DEFAULT:
+                    while True:
+                        filename = self._format_screen(self.prepare_filename(info_dict), self.Styles.FILENAME)
+                        reply = input(self._format_screen(
+                            f'Download "{filename}"? (Y/n): ', self.Styles.EMPHASIS)).lower().strip()
+                        if reply in {'y', ''}:
+                            return None
+                        elif reply == 'n':
+                            return f'Skipping {video_title}'
+                    return True
+                elif ret is not None:
                     return ret
             return None
 
@@ -1846,7 +1859,7 @@ class YoutubeDL:
                 entry['__x_forwarded_for_ip'] = x_forwarded_for
             extra = {
                 'n_entries': n_entries,
-                '_last_playlist_index': max(playlistitems) if playlistitems and not infinite else (playlistend or n_entries),
+                '__last_playlist_index': max(playlistitems) if playlistitems and not infinite else (playlistend or n_entries),
                 'playlist_count': ie_result.get('playlist_count'),
                 'playlist_index': playlist_index,
                 'playlist_autonumber': i,
@@ -2543,10 +2556,11 @@ class YoutubeDL:
         else:
             formats = info_dict['formats']
 
-        info_dict['__has_drm'] = any(f.get('has_drm') for f in formats)
+        # or None ensures --clean-infojson removes it
+        info_dict['_has_drm'] = any(f.get('has_drm') for f in formats) or None
         if not self.params.get('allow_unplayable_formats'):
             formats = [f for f in formats if not f.get('has_drm')]
-            if info_dict['__has_drm'] and all(
+            if info_dict['_has_drm'] and all(
                     f.get('acodec') == f.get('vcodec') == 'none' for f in formats):
                 self.report_warning(
                     'This video is DRM protected and only images are available for download. '
@@ -3414,9 +3428,9 @@ class YoutubeDL:
         info_dict.setdefault('_type', 'video')
 
         if remove_private_keys:
-            reject = lambda k, v: v is None or (k.startswith('_') and k != '_type') or k in {
+            reject = lambda k, v: v is None or k.startswith('__') or k in {
                 'requested_downloads', 'requested_formats', 'requested_subtitles', 'requested_entries',
-                'entries', 'filepath', 'infojson_filename', 'original_url', 'playlist_autonumber',
+                'entries', 'filepath', '_filename', 'infojson_filename', 'original_url', 'playlist_autonumber',
             }
         else:
             reject = lambda k, v: False
@@ -3834,7 +3848,7 @@ class YoutubeDL:
         def get_encoding(stream):
             ret = str(getattr(stream, 'encoding', 'missing (%s)' % type(stream).__name__))
             if not supports_terminal_sequences(stream):
-                from .compat import WINDOWS_VT_MODE
+                from .compat import WINDOWS_VT_MODE  # Must be imported locally
                 ret += ' (No VT)' if WINDOWS_VT_MODE is False else ' (No ANSI)'
             return ret
 

@@ -1868,6 +1868,10 @@ def write_string(s, out=None, encoding=None):
     assert isinstance(s, str)
     out = out or sys.stderr
 
+    from .compat import WINDOWS_VT_MODE  # Must be imported locally
+    if WINDOWS_VT_MODE:
+        s = s.replace('\n', ' \n')
+
     if 'b' in getattr(out, 'mode', ''):
         byt = s.encode(encoding or preferredencoding(), 'ignore')
         out.write(byt)
@@ -3428,11 +3432,15 @@ def match_str(filter_str, dct, incomplete=False):
 def match_filter_func(filters):
     if not filters:
         return None
-    filters = variadic(filters)
+    filters = set(variadic(filters))
 
-    def _match_func(info_dict, *args, **kwargs):
-        if any(match_str(f, info_dict, *args, **kwargs) for f in filters):
-            return None
+    interactive = '-' in filters
+    if interactive:
+        filters.remove('-')
+
+    def _match_func(info_dict, incomplete=False):
+        if not filters or any(match_str(f, info_dict, incomplete) for f in filters):
+            return NO_DEFAULT if interactive and not incomplete else None
         else:
             video_title = info_dict.get('title') or info_dict.get('id') or 'video'
             filter_str = ') | ('.join(map(str.strip, filters))

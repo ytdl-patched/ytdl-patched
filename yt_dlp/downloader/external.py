@@ -24,6 +24,7 @@ from ..utils import (
     handle_youtubedl_headers,
     remove_end,
     variadic,
+    traverse_obj,
 )
 from ..longname import split_longname
 
@@ -373,10 +374,11 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             args += ['-hide_banner']
 
         live = info_dict.get('live') or info_dict.get('is_live')
+        args += traverse_obj(info_dict, ('downloader_options', 'ffmpeg_args'), default=[])
 
-        args += info_dict.get('_ffmpeg_args', [])
-
-        # This option exists only for compatibility. Extractors should use `_ffmpeg_args` instead
+        # These exists only for compatibility. Extractors should use
+        # info_dict['downloader_options']['ffmpeg_args'] instead
+        args += info_dict.get('_ffmpeg_args')
         seekable = info_dict.get('_seekable')
         if seekable is not None:
             # setting -seekable prevents ffmpeg from guessing if the server
