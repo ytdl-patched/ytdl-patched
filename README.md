@@ -138,9 +138,6 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
     * `voicy`, `voicy:channel` (merged in yt-dlp)
     * `whowatch` (merged in yt-dlp)
 
-* **Some features/behaviors are reverted**: Some changes in yt-dlp has been reverted to match that of youtube-dl.
-    * Output filename template. In yt-dlp, it was `%(title)s [%(id)s].%(ext)s`. But ytdl-patched uses `%(title)s-%(id)s.%(ext)s`. (It is planned to be reverted.)
-
 * **New extractor arguments**: Some extractor arguments are added. Check [**EXTRACTOR ARGUMENTS**](#extractor-arguments) section for details.
 
 * **Merging**: MKV file is preferred for merging, but can be overriden using `--merge-output-format`. ytdl-patched does not determine merge format from downloaded formats.
@@ -216,7 +213,7 @@ Some of yt-dlp's default options are different from that of youtube-dl and youtu
 * The options `--auto-number` (`-A`), `--title` (`-t`) and `--literal` (`-l`), no longer work. See [removed options](#Removed) for details
 * `avconv` is not supported as an alternative to `ffmpeg`
 * yt-dlp stores config files in slightly different locations to youtube-dl. See [configuration](#configuration) for a list of correct locations
-* ~~The default [output template](#output-template) is `%(title)s [%(id)s].%(ext)s`. There is no real reason for this change. This was changed before yt-dlp was ever made public and now there are no plans to change it back to `%(title)s-%(id)s.%(ext)s`. Instead, you may use `--compat-options filename`~~ **This is reverted in ytdl-patched to keep consistent with old versions. See above.**
+* The default [output template](#output-template) is `%(title)s [%(id)s].%(ext)s`. There is no real reason for this change. This was changed before yt-dlp was ever made public and now there are no plans to change it back to `%(title)s-%(id)s.%(ext)s`. Instead, you may use `--compat-options filename`
 * The default [format sorting](#sorting-formats) is different from youtube-dl and prefers higher resolution and better codecs rather than higher bitrates. You can use the `--format-sort` option to change this to any order you prefer, or use `--compat-options format-sort` to use youtube-dl's sorting order
 * The default format selector is `bv*+ba/b`. This means that if a combined video + audio format that is better than the best video-only format is found, the former will be preferred. Use `-f bv+ba/b` or `--compat-options format-spec` to revert this
 * Unlike youtube-dlc, yt-dlp does not allow merging multiple audio/video streams into one file by default (since this conflicts with the use of `-f bv*+ba`). If needed, this feature must be enabled using `--audio-multistreams` and `--video-multistreams`. You can also use `--compat-options multistreams` to enable both
@@ -245,7 +242,7 @@ For ease of use, a few more compat options are available:
 
 # INSTALLATION
 
-You can install yt-dlp using one of the following methods:
+You can install ytdl-patched using one of the following methods:
 
 ### Using the release binary
 
@@ -265,18 +262,18 @@ Note: The manpages, shell completion files etc. are available in the [source tar
 In UNIX-like OSes (MacOS, Linux, BSD), you can also install the same in one of the following ways:
 
 ```
-sudo curl -L https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/youtube-dl -o /usr/local/bin/yt-dlp
-sudo chmod a+rx /usr/local/bin/yt-dlp
+sudo curl -L https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/ytdl-patched -o /usr/local/bin/ytdl-patched
+sudo chmod a+rx /usr/local/bin/ytdl-patched
 ```
 
 ```
-sudo wget https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/youtube-dl -O /usr/local/bin/yt-dlp
-sudo chmod a+rx /usr/local/bin/yt-dlp
+sudo wget https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/ytdl-patched -O /usr/local/bin/ytdl-patched
+sudo chmod a+rx /usr/local/bin/ytdl-patched
 ```
 
 ```
-sudo aria2c https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/youtube-dl -o /usr/local/bin/yt-dlp
-sudo chmod a+rx /usr/local/bin/yt-dlp
+sudo aria2c https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/ytdl-patched -o /usr/local/bin/ytdl-patched
+sudo chmod a+rx /usr/local/bin/ytdl-patched
 ```
 
 
@@ -284,17 +281,12 @@ sudo chmod a+rx /usr/local/bin/yt-dlp
 
 You can install the [PyPI package](https://pypi.org/project/yt-dlp) with:
 ```
-python3 -m pip install -U yt-dlp
+python3 -m pip install --force-reinstall -U https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
 ```
 
 You can install without any of the optional dependencies using:
 ```
-python3 -m pip install --no-deps -U yt-dlp
-```
-
-If you want to be on the cutting edge, you can also install the master branch with:
-```
-python3 -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
+python3 -m pip install --no-deps --force-reinstall -U https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
 ```
 
 Note that on some systems, you may need to use `py` or `python` instead of `python3`
