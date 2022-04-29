@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 from ..utils import (
+    NUMBER_RE,
     float_or_none,
     int_or_none,
     timetuple_from_msec,
@@ -340,7 +341,7 @@ class ShowsProgress(object):
     @staticmethod
     def parse_bytes(bytestr):
         """Parse a string indicating a byte quantity into an integer."""
-        matchobj = re.match(r'(?i)^(\d+(?:\.\d+)?)([kMGTPEZY]?)$', bytestr)
+        matchobj = re.match(rf'(?i)^({NUMBER_RE})([kMGTPEZY]?)$', bytestr)
         if matchobj is None:
             return None
         number = float(matchobj.group(1))

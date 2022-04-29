@@ -50,9 +50,9 @@ def main():
     if not onedir and '-F' not in opts and '--onefile' not in opts:
         opts.append('--onefile')
 
-    suffix = '_macos' if OS_NAME == 'Darwin' else '_x86' if ARCH == '32' else ''
-    final_file = 'dist/%sytdl-patched%s%s' % (
-        'ytdl-patched/' if onedir else '', suffix, '.exe' if OS_NAME == 'Windows' else '')
+    name = 'ytdl-patched%s' % ('_macos' if OS_NAME == 'Darwin' else '_x86' if ARCH == '32' else '')
+    final_file = ''.join((
+        'dist/', f'{name}/' if onedir else '', name, '.exe' if OS_NAME == 'Windows' else ''))
 
     print(f'Building ytdl-patched v{version} ({ICON}) {ARCH}bit for {OS_NAME} with options {opts}')
     print('Remember to update the version using  "devscripts/update-version.py"')
@@ -62,8 +62,8 @@ def main():
     print(f'Destination: {final_file}\n')
 
     opts = [
-        f'--name=ytdl-patched{suffix}',
-        f'--icon=icons\\youtube_social_squircle_{ICON}.ico',
+        f'--name={name}',
+        f'--icon=icons/youtube_social_squircle_{ICON}.ico',
         '--upx-exclude=vcruntime140.dll',
         '--noconfirm',
         # NB: Modules that are only imported dynamically must be added here.

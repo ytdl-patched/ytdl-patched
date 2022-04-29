@@ -89,7 +89,8 @@ class FileDownloader(ShowsProgress):
             'trouble',
             'write_debug',
         ):
-            setattr(self, func, getattr(ydl, func))
+            if not hasattr(self, func):
+                setattr(self, func, getattr(ydl, func))
 
     def to_screen(self, *args, **kargs):
         self.ydl.to_screen(*args, quiet=self.params.get('quiet'), **kargs)
