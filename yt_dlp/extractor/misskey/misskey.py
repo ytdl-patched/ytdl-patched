@@ -83,15 +83,6 @@ class MisskeyIE(MisskeyBaseIE):
         'note': 'no video',
         'url': 'https://misskey.io/notes/8pp04mprzx',
         'only_matching': True,
-    }, {
-        'url': 'https://catgirl.life/notes/8lh52dlrii',
-        'info_dict': {
-            'id': '8lh52dlrii',
-            'ext': 'mp4',
-            'timestamp': 1604387877,
-            'upload_date': '20201103',
-            'title': '@graf@poa.st @Moon@shitposter.club \n*kickstarts your federation*',
-        },
     }]
 
     def _real_extract(self, url):
