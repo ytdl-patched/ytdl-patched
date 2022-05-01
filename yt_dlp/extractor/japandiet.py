@@ -177,3 +177,9 @@ class ShugiinItvVodIE(ShugiinItvBaseIE):
             'formats': formats,
             'subtitles': subtitles,
         }
+
+
+# IDR=Internet Deliberation Relay
+class SangiinIDRIE(InfoExtractor):
+    def _real_extract(self, url):
+        return super()._real_extract(url)
