@@ -1565,6 +1565,7 @@
  - **youtube:search**: YouTube search; "ytsearch:" prefix
  - **youtube:search:date**: YouTube search, newest videos first; "ytsearchdate:" prefix
  - **youtube:search_url**: YouTube search URLs with sorting and filter support
+ - **youtube:stories**: YouTube channel stories; "ytstories:" prefix
  - **youtube:subscriptions**: YouTube subscriptions feed; ":ytsubs" keyword (requires cookies)
  - **youtube:tab**: YouTube Tabs
  - **youtube:user**: YouTube user videos; "ytuser:" prefix
