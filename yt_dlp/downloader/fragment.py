@@ -124,7 +124,7 @@ class FragmentFD(FileDownloader):
             'ctx_id': ctx.get('ctx_id'),
             'unrecoverable_http_error': info_dict.get('unrecoverable_http_error'),
         }
-        success = ctx['dl'].download(fragment_filename, fragment_info_dict)
+        success, _ = ctx['dl'].download(fragment_filename, fragment_info_dict)
         if not success:
             return False
         if fragment_info_dict.get('filetime'):

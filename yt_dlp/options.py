@@ -240,7 +240,7 @@ def create_parser():
     general.add_option(
         '-U', '--update',
         action='store_true', dest='update_self',
-        help='Update this program to latest version. Make sure that you have sufficient permissions (run with sudo if needed)')
+        help='Update this program to latest version')
     general.add_option(
         '-i', '--ignore-errors',
         action='store_true', dest='ignoreerrors',
@@ -1517,7 +1517,7 @@ def create_parser():
         dest='parse_metadata', metavar='FIELDS REGEX REPLACE', action='append', nargs=3,
         help='Replace text in a metadata field using the given regex. This option can be used multiple times')
     postproc.add_option(
-        '--xattrs',
+        '--xattrs', '--xattr',
         action='store_true', dest='xattrs', default=False,
         help='Write metadata to the video file\'s xattrs (using dublin core and xdg standards)')
     postproc.add_option(

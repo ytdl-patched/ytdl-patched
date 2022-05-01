@@ -78,6 +78,15 @@ except (ImportError, SyntaxError):
 from .websocket import WebSocket
 
 
+try:
+    import xattr  # xattr or pyxattr
+except ImportError:
+    xattr = None
+else:
+    if hasattr(xattr, 'set'):  # pyxattr
+        xattr._yt_dlp__identifier = 'pyxattr'
+
+
 all_dependencies = {k: v for k, v in globals().items() if not k.startswith('_')}
 
 
