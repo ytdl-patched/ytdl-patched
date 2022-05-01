@@ -78,14 +78,36 @@ class TVerIE(InfoExtractor):
                 'x-tver-platform-type': 'web'
             })
 
+        additional_content_info = traverse_obj(
+            additional_info, ('result', ('episode', 'series'), 'content'),
+            get_all=False)
+        content_episode = str_or_none(additional_content_info.get('title')).rstrip()
+        content_series = str_or_none(additional_content_info.get('seriesTitle'))
+        content_title = '　'.join([content_series, content_episode]).rstrip()
+        # content_brdcst_name = str_or_none(additional_content_info.get('broadcasterName'))
+        content_brdcst_name = str_or_none(additional_content_info.get('productionProviderName'))
+        content_brdcst_date = str_or_none(additional_content_info.get('broadcastDateLabel'))
+        content_alt_title = '　'.join([content_title, content_brdcst_name, content_brdcst_date])
+
         return {
             '_type': 'url_transparent',
-            'title': str_or_none(video_info.get('title')),
+            # コンテンツの説明
             'description': str_or_none(video_info.get('description')),
+            # 標準的なタイトル
+            'title': content_title,
+            # シリーズ名
+            'series': content_series,
+            # エピソード名
+            'episode': content_episode,
+            # 放送局（コンテンツホルダー）
+            'channel': content_brdcst_name,
+            # 'brdcst_name': content_brdcst_name,
+            # 放送日・放送年
+            'release_date': content_brdcst_date,
+            # 'brdcst_date': content_brdcst_date,
+            # 標準的なタイトル ＋ 放送局 ＋ 放送日・放送年
+            'alt_title': content_alt_title,
             'url': smuggle_url(
                 self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id), {'geo_countries': ['JP']}),
-            'series': traverse_obj(
-                additional_info, ('result', ('episode', 'series'), 'content', ('seriesTitle', 'title')),
-                get_all=False),
             'ie_key': 'BrightcoveNew',
         }
