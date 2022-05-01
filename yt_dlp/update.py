@@ -8,7 +8,7 @@ import platform
 from zipimport import zipimporter
 
 from .compat import compat_realpath
-from .utils import dict_get, encode_compat_str, Popen, write_string
+from .utils import encode_compat_str, Popen, write_string
 
 from .version import __version__
 try:
@@ -143,16 +143,12 @@ def run_update(ydl):
         'mac_exe_64': '_macos',
     }
 
-    def get_bin_names(postfix):
-        # TODO: make sure to revert the commit introduced this method after #19
-        return (f'youtube-dl{postfix}', f'ytdl-patched{postfix}')
-
     def get_bin_info(bin_or_exe, version):
-        label = version_labels[f'{bin_or_exe}_{version}']
-        return next((i for i in version_info['assets'] if i['name'] in get_bin_names(label)), {})
+        label = version_labels['%s_%s' % (bin_or_exe, version)]
+        return next((i for i in version_info['assets'] if i['name'] == f'ytdl-patched{label}'), {})
 
     def get_sha256sum(bin_or_exe, version):
-        filenames = get_bin_names(version_labels['%s_%s' % (bin_or_exe, version)])
+        filename = 'ytdl-patched%s' % version_labels['%s_%s' % (bin_or_exe, version)]
         urlh = next(
             (i for i in version_info['assets'] if i['name'] in ('SHA2-256SUMS')),
             {}).get('browser_download_url')
@@ -160,7 +156,7 @@ def run_update(ydl):
             return None
         hash_data = ydl._opener.open(urlh).read().decode('utf-8')
 
-        return dict_get(dict(ln.split()[::-1] for ln in hash_data.splitlines()), filenames)
+        return dict(ln.split()[::-1] for ln in hash_data.splitlines()).get(filename)
 
     if not os.access(filename, os.W_OK):
         return report_permission_error(filename)
