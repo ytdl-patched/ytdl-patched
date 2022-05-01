@@ -378,12 +378,12 @@ def create_parser():
     general.add_option(
         '--enable-lock',
         action='store_true', dest='lock_exclusive',
-        default=True,
+        default=False,
         help='Locks downloading exclusively. Blocks other ytdl-patched process downloading the same video.')
     general.add_option(
         '--no-lock',
         action='store_false', dest='lock_exclusive',
-        default=True,
+        default=False,
         help='Do not lock downloading exclusively. '
              'Download will start even if other process is working on it.')
     general.add_option(
