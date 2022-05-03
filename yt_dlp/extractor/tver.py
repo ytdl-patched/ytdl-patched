@@ -4,6 +4,7 @@ from ..utils import (
     smuggle_url,
     str_or_none,
     traverse_obj,
+    try_get,
 )
 
 
@@ -24,6 +25,20 @@ class TVerIE(InfoExtractor):
             # sorry but this is "correct"
             'title': '4月11日(月)23時06分 ~ 放送予定',
             'description': 'md5:4029cc5f4b1e8090dfc5b7bd2bc5cd0b',
+        },
+        'add_ie': ['BrightcoveNew'],
+    }, {
+        'skip': 'videos are only available for 7 days',
+        'url': 'https://tver.jp/episodes/ep83nf3w4p',
+        'info_dict': {
+            "title": "家事ヤロウ!!! 売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！",
+            "description": "【毎週火曜 よる7時00分放送　※一部地域を除く】\n\n今スーパーの売り場を席巻中の話題のチーズを紹介！家事ヤロウ3人が売れまくっているチーズでアレンジ飯！爆売れ中のブッラータチーズのフルーツ添え、カロリーオフのチーズで敢えての背徳チーズケーキなど。\nさらに財前直見＆森泉・森パメラ親子の脱東京暮らし完全密着！各々が作る激ウマ料理も大公開！",
+            "series": "家事ヤロウ!!!",
+            "episode": "売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！",
+            "alt_title": "売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！",
+            "channel": "テレビ朝日",
+            "onair_label": "5月3日(火)放送分",
+            "ext_title": "家事ヤロウ!!! 売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！ テレビ朝日 5月3日(火)放送分",
         },
         'add_ie': ['BrightcoveNew'],
     }, {
@@ -80,13 +95,12 @@ class TVerIE(InfoExtractor):
 
         additional_content_info = traverse_obj(
             additional_info, ('result', 'episode', 'content'),
-            get_all=False)
-        content_episode = str_or_none(additional_content_info.get('title')).rstrip()
+            get_all=False) or {}
+        content_episode = try_get(additional_content_info, lambda x: str_or_none(x.get('title')).rstrip())
         content_series = str_or_none(additional_content_info.get('seriesTitle'))
         content_title = (
-            '\u3000'.join([content_series, content_episode]).rstrip()
+            ' '.join(filter(None, [content_series, content_episode])).rstrip()
             or str_or_none(video_info.get('title')))
-        # content_provider = str_or_none(additional_content_info.get('broadcasterName'))
         content_provider = str_or_none(additional_content_info.get('productionProviderName'))
         content_onair_label = str_or_none(additional_content_info.get('broadcastDateLabel'))
 
@@ -97,12 +111,11 @@ class TVerIE(InfoExtractor):
             'series': content_series,
             'episode': content_episode,
             'alt_title': content_episode,
-            # broadcaster (contents holder) name
-            'provider': content_provider,
+            'channel': content_provider,
             # broadcast date or year
             'onair_label': content_onair_label,
-            # extra title
-            'ext_title': '\u3000'.join([content_title, content_provider, content_onair_label]),
+            # an another title which is considered "full title" for some viewers
+            'ext_title': ' '.join([content_title, content_provider, content_onair_label]),
             'description': str_or_none(video_info.get('description')),
             'url': smuggle_url(
                 self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id), {'geo_countries': ['JP']}),
