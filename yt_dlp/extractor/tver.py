@@ -89,7 +89,6 @@ class TVerIE(InfoExtractor):
 
         return {
             '_type': 'url_transparent',
-            # standard title: series + episode
             'title': title,
             'series': series,
             'episode': episode,
