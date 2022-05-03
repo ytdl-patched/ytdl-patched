@@ -12,23 +12,6 @@ class TVerIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www\.)?tver\.jp/(?:(?P<type>lp|corner|series|episodes?|feature|tokyo2020/video)/)+(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
         'skip': 'videos are only available for 7 days',
-        'url': 'https://tver.jp/episodes/ephss8yveb',
-        'info_dict': {
-            'title': '#44　料理と値段と店主にびっくり　オモてなしすぎウマい店　2時間SP',
-            'description': 'md5:66985373a66fed8ad3cd595a3cfebb13',
-        },
-        'add_ie': ['BrightcoveNew'],
-    }, {
-        'skip': 'videos are only available for 7 days',
-        'url': 'https://tver.jp/lp/episodes/ep6f16g26p',
-        'info_dict': {
-            # sorry but this is "correct"
-            'title': '4月11日(月)23時06分 ~ 放送予定',
-            'description': 'md5:4029cc5f4b1e8090dfc5b7bd2bc5cd0b',
-        },
-        'add_ie': ['BrightcoveNew'],
-    }, {
-        'skip': 'videos are only available for 7 days',
         'url': 'https://tver.jp/episodes/ep83nf3w4p',
         'info_dict': {
             'title': '家事ヤロウ!!! 売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！',
