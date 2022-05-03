@@ -31,14 +31,14 @@ class TVerIE(InfoExtractor):
         'skip': 'videos are only available for 7 days',
         'url': 'https://tver.jp/episodes/ep83nf3w4p',
         'info_dict': {
-            "title": "家事ヤロウ!!! 売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！",
-            "description": "【毎週火曜 よる7時00分放送　※一部地域を除く】\n\n今スーパーの売り場を席巻中の話題のチーズを紹介！家事ヤロウ3人が売れまくっているチーズでアレンジ飯！爆売れ中のブッラータチーズのフルーツ添え、カロリーオフのチーズで敢えての背徳チーズケーキなど。\nさらに財前直見＆森泉・森パメラ親子の脱東京暮らし完全密着！各々が作る激ウマ料理も大公開！",
-            "series": "家事ヤロウ!!!",
-            "episode": "売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！",
-            "alt_title": "売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！",
-            "channel": "テレビ朝日",
-            "onair_label": "5月3日(火)放送分",
-            "ext_title": "家事ヤロウ!!! 売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！ テレビ朝日 5月3日(火)放送分",
+            'title': '家事ヤロウ!!! 売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！',
+            'description': 'md5:dc2c06b6acc23f1e7c730c513737719b',
+            'series': '家事ヤロウ!!!',
+            'episode': '売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！',
+            'alt_title': '売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！',
+            'channel': 'テレビ朝日',
+            'onair_label': '5月3日(火)放送分',
+            'ext_title': '家事ヤロウ!!! 売り場席巻のチーズSP＆財前直見×森泉親子の脱東京暮らし密着！ テレビ朝日 5月3日(火)放送分',
         },
         'add_ie': ['BrightcoveNew'],
     }, {
@@ -96,26 +96,25 @@ class TVerIE(InfoExtractor):
         additional_content_info = traverse_obj(
             additional_info, ('result', 'episode', 'content'),
             get_all=False) or {}
-        content_episode = try_get(additional_content_info, lambda x: str_or_none(x.get('title')).rstrip())
-        content_series = str_or_none(additional_content_info.get('seriesTitle'))
-        content_title = (
-            ' '.join(filter(None, [content_series, content_episode])).rstrip()
+        episode = try_get(additional_content_info, lambda x: str_or_none(x.get('title')).rstrip())
+        series = str_or_none(additional_content_info.get('seriesTitle'))
+        title = (
+            ' '.join(filter(None, [series, episode])).rstrip()
             or str_or_none(video_info.get('title')))
-        content_provider = str_or_none(additional_content_info.get('productionProviderName'))
-        content_onair_label = str_or_none(additional_content_info.get('broadcastDateLabel'))
+        provider = str_or_none(additional_content_info.get('productionProviderName'))
+        onair_label = str_or_none(additional_content_info.get('broadcastDateLabel'))
 
         return {
             '_type': 'url_transparent',
             # standard title: series + episode
-            'title': content_title,
-            'series': content_series,
-            'episode': content_episode,
-            'alt_title': content_episode,
-            'channel': content_provider,
-            # broadcast date or year
-            'onair_label': content_onair_label,
+            'title': title,
+            'series': series,
+            'episode': episode,
             # an another title which is considered "full title" for some viewers
-            'ext_title': ' '.join([content_title, content_provider, content_onair_label]),
+            'alt_title': ' '.join([title, provider, onair_label]),
+            'channel': provider,
+            # broadcast date or year (non-standard field)
+            'onair_label': onair_label,
             'description': str_or_none(video_info.get('description')),
             'url': smuggle_url(
                 self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id), {'geo_countries': ['JP']}),
