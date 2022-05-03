@@ -382,6 +382,7 @@
  - **fc2:embed**
  - **fc2:live**
  - **Fczenit**
+ - **Fifa**
  - **Filmmodu**
  - **filmon**
  - **filmon:channel**
@@ -640,6 +641,7 @@
  - **MarkizaPage**
  - **marshmallow-qa**
  - **massengeschmack.tv**
+ - **Masters**
  - **mastodon**
  - **mastodon:user**
  - **mastodon:user:numeric_id**
