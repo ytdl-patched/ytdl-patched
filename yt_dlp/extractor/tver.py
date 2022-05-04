@@ -1,10 +1,11 @@
 from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
+    join_nonempty,
     smuggle_url,
     str_or_none,
+    strip_or_none,
     traverse_obj,
-    try_get,
 )
 
 
@@ -77,12 +78,11 @@ class TVerIE(InfoExtractor):
             })
 
         additional_content_info = traverse_obj(
-            additional_info, ('result', 'episode', 'content'),
-            get_all=False) or {}
-        episode = try_get(additional_content_info, lambda x: str_or_none(x.get('title')).rstrip())
+            additional_info, ('result', 'episode', 'content'), get_all=False) or {}
+        episode = strip_or_none(additional_content_info.get('title'))
         series = str_or_none(additional_content_info.get('seriesTitle'))
         title = (
-            ' '.join(filter(None, [series, episode])).rstrip()
+            join_nonempty(series, episode, delim=' ')
             or str_or_none(video_info.get('title')))
         provider = str_or_none(additional_content_info.get('productionProviderName'))
         onair_label = str_or_none(additional_content_info.get('broadcastDateLabel'))
@@ -93,10 +93,8 @@ class TVerIE(InfoExtractor):
             'series': series,
             'episode': episode,
             # an another title which is considered "full title" for some viewers
-            'alt_title': ' '.join([title, provider, onair_label]),
+            'alt_title': join_nonempty(title, provider, onair_label, delim=' '),
             'channel': provider,
-            # broadcast date or year (non-standard field)
-            'onair_label': onair_label,
             'description': str_or_none(video_info.get('description')),
             'url': smuggle_url(
                 self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id), {'geo_countries': ['JP']}),
