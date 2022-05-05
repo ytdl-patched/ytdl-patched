@@ -338,6 +338,9 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
                 make_args(path, list(opts), arg_type, i + 1)
                 for i, (path, opts) in enumerate(path_opts) if path)
 
+        for fn, _ in output_path_opts:
+            self._ydl.ensure_directory(fn)
+
         self.write_debug('ffmpeg command line: %s' % shell_quote(cmd))
         if use_native_progress:
             # this is required because read_ffmpeg_status doesn't care about stderr,
