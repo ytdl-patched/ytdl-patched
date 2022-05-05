@@ -714,9 +714,8 @@ from .ivi import (
 from .ivideon import IvideonIE
 from .iwara import (
     IwaraIE,
-    IwaraUserIE,
-    IwaraUser2IE,
     IwaraPlaylistIE,
+    IwaraUserIE,
 )
 from .izlesene import IzleseneIE
 from .jable import (

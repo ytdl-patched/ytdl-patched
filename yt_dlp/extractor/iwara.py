@@ -1,10 +1,8 @@
-import re
 import itertools
+import re
+import urllib.parse
 
 from .common import InfoExtractor
-from ..compat import (
-    compat_urllib_parse_urlparse,
-)
 from ..utils import (
     int_or_none,
     mimetype2ext,
@@ -63,7 +61,7 @@ class IwaraIE(InfoExtractor):
 
         webpage, urlh = self._download_webpage_handle(url, video_id)
 
-        hostname = compat_urllib_parse_urlparse(urlh.geturl()).hostname
+        hostname = urllib.parse.urlparse(urlh.geturl()).hostname
         # ecchi is 'sexy' in Japanese
         age_limit = 18 if hostname.split('.')[0] == 'ecchi' else 0
 
