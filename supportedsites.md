@@ -600,6 +600,8 @@
  - **Libsyn**
  - **life**: Life.ru
  - **life:embed**
+ - **likee**
+ - **likee:user**
  - **limelight**
  - **limelight:channel**
  - **limelight:channel_list**
