@@ -98,7 +98,10 @@ def print_extractor_information(opts, urls):
         table = [[mso_id, mso_info['name']] for mso_id, mso_info in MSO_INFO.items()]
         write_string('Supported TV Providers:\n' + render_table(['mso', 'mso name'], table) + '\n', out=sys.stdout)
     elif opts.rm_longnamedir:
-        for dirpath, _, _ in os.walk(os.getcwd(), topdown=False):
+        if not urls:
+            urls = [os.getcwd()]
+        walker = (x for y in urls for x in os.walk(y, topdown=False))
+        for dirpath, _, _ in walker:
             if not dirpath.endswith(DEFAULT_DELIMITER):
                 continue
             if os.listdir(dirpath):
