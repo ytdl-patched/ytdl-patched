@@ -1407,8 +1407,6 @@
  - **video.google:search**: Google Video search; "gvsearch:" prefix
  - **video.sky.it**
  - **video.sky.it:live**
- - **VideocampusSachsen**
- - **VideocampusSachsenEmbed**
  - **VideoDetective**
  - **videofy.me**
  - **videomore**
@@ -1437,6 +1435,7 @@
  - **vimeo:watchlater**: Vimeo watch later list, "vimeowatchlater" keyword (requires authentication)
  - **Vimm:recording**
  - **Vimm:stream**
+ - **Vimp**
  - **Vimple**: Vimple - one-click video hosting
  - **Vine**
  - **vine:user**
