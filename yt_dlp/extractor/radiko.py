@@ -1,25 +1,22 @@
-import re
 import base64
+import re
+import urllib.parse
 
 from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
-    update_url_query,
     clean_html,
-    unified_timestamp,
     time_seconds,
+    try_call,
+    unified_timestamp,
+    update_url_query,
 )
-from ..compat import compat_urllib_parse
 
 
 class RadikoBaseIE(InfoExtractor):
     _FULL_KEY = None
 
     def _auth_client(self):
-        auth_cache = self._downloader.cache.load('radiko', 'auth_data')
-        if auth_cache:
-            return auth_cache
-
         _, auth1_handle = self._download_webpage_handle(
             'https://radiko.jp/v2/api/auth1', None, 'Downloading authentication page',
             headers={
@@ -101,7 +98,7 @@ class RadikoBaseIE(InfoExtractor):
                 'station_id': station,
                 **query,
                 'l': '15',
-                'lsid': '77d0678df93a1034659c14d6fc89f018',
+                'lsid': '88ecea37e968c1f17d5413312d9f8003',
                 'type': 'b',
             })
             if playlist_url in found:
@@ -111,7 +108,7 @@ class RadikoBaseIE(InfoExtractor):
 
             time_to_skip = None if is_onair else cursor - ft
 
-            domain = compat_urllib_parse.urlparse(playlist_url).netloc
+            domain = urllib.parse.urlparse(playlist_url).netloc
             subformats = self._extract_m3u8_formats(
                 playlist_url, video_id, ext='m4a',
                 live=True, fatal=False, m3u8_id=domain,
@@ -121,7 +118,7 @@ class RadikoBaseIE(InfoExtractor):
                     'X-Radiko-AuthToken': auth_token,
                 })
             for sf in subformats:
-                if re.match(r'^[cf]-radiko\.smartstream\.ne\.jp$', domain):
+                if re.fullmatch(r'[cf]-radiko\.smartstream\.ne\.jp', domain):
                     # Prioritize live radio vs playback based on extractor
                     sf['preference'] = 100 if is_onair else -100
                 if not is_onair and url_attrib['timefree'] == '1' and time_to_skip:
@@ -151,31 +148,29 @@ class RadikoIE(RadikoBaseIE):
     def _real_extract(self, url):
         station, video_id = self._match_valid_url(url).groups()
         vid_int = unified_timestamp(video_id, False)
-
-        auth_token, area_id = self._auth_client()
-
         prog, station_program, ft, radio_begin, radio_end = self._find_program(video_id, station, vid_int)
 
-        title = prog.find('title').text
-        description = clean_html(prog.find('info').text)
-        station_name = station_program.find('.//name').text
-
-        formats = self._extract_formats(
-            video_id=video_id, station=station, is_onair=False,
-            ft=ft, cursor=vid_int, auth_token=auth_token, area_id=area_id,
-            query={
-                'start_at': radio_begin,
-                'ft': radio_begin,
-                'end_at': radio_end,
-                'to': radio_end,
-                'seek': video_id,
-            })
+        auth_cache = self._downloader.cache.load('radiko', 'auth_data')
+        for attempt in range(2):
+            auth_token, area_id = (not attempt and auth_cache) or self._auth_client()
+            formats = self._extract_formats(
+                video_id=video_id, station=station, is_onair=False,
+                ft=ft, cursor=vid_int, auth_token=auth_token, area_id=area_id,
+                query={
+                    'start_at': radio_begin,
+                    'ft': radio_begin,
+                    'end_at': radio_end,
+                    'to': radio_end,
+                    'seek': video_id,
+                })
+            if formats:
+                break
 
         return {
             'id': video_id,
-            'title': title,
-            'description': description,
-            'uploader': station_name,
+            'title': try_call(lambda: prog.find('title').text),
+            'description': clean_html(try_call(lambda: prog.find('info').text)),
+            'uploader': try_call(lambda: station_program.find('.//name').text),
             'uploader_id': station,
             'timestamp': vid_int,
             'formats': formats,
