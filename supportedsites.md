@@ -464,6 +464,8 @@
  - **GoToStage**
  - **GPUTechConf**
  - **Gronkh**
+ - **gronkh:feed**
+ - **gronkh:vods**
  - **Groupon**
  - **hbo**
  - **HearThisAt**
@@ -1591,5 +1593,9 @@
  - **Zhihu**
  - **zingmp3**: zingmp3.vn
  - **zingmp3:album**
+ - **zingmp3:chart-home**
+ - **zingmp3:chart-music-video**
+ - **zingmp3:user**
+ - **zingmp3:week-chart**
  - **zoom**
  - **Zype**
