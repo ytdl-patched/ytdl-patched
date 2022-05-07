@@ -611,7 +611,11 @@ from .gorin import (
 from .goshgay import GoshgayIE
 from .gotostage import GoToStageIE
 from .gputechconf import GPUTechConfIE
-from .gronkh import GronkhIE
+from .gronkh import (
+    GronkhIE,
+    GronkhFeedIE,
+    GronkhVodsIE
+)
 from .groupon import GrouponIE
 from .hbo import HBOIE
 from .hearthisat import HearThisAtIE
@@ -2200,6 +2204,10 @@ from .zhihu import ZhihuIE
 from .zingmp3 import (
     ZingMp3IE,
     ZingMp3AlbumIE,
+    ZingMp3ChartHomeIE,
+    ZingMp3WeekChartIE,
+    ZingMp3ChartMusicVideoIE,
+    ZingMp3UserIE,
 )
 from .zoom import ZoomIE
 from .zype import ZypeIE
