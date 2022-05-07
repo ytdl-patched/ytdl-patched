@@ -3259,7 +3259,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                               ' (default)' if language_preference > 0 else ''),
                     fmt.get('qualityLabel') or quality.replace('audio_quality_', ''),
                     throttled and 'THROTTLED', client_name, is_damaged and 'DAMAGED', delim=', '),
-                'source_preference': -10 if throttled else -1,
+                # Format 22 is likely to be damaged. See https://github.com/yt-dlp/yt-dlp/issues/3372
+                'source_preference': -10 if throttled else -5 if itag == '22' else -1,
                 'fps': int_or_none(fmt.get('fps')) or None,
                 'height': height,
                 'quality': q(quality),

@@ -1940,10 +1940,7 @@ from .vidbit import VidbitIE
 from .viddler import ViddlerIE
 from .videa import VideaIE
 from .videobin import VideobinIE
-from .videocampus_sachsen import (
-    VideocampusSachsenIE,
-    VideocampusSachsenEmbedIE,
-)
+from .videocampus_sachsen import VideocampusSachsenIE
 from .videodetective import VideoDetectiveIE
 from .videofyme import VideofyMeIE
 from .videomore import (
