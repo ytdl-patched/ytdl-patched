@@ -62,7 +62,7 @@ def is_non_updateable():
 
 def get_version_info(ydl):
     JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
-    version_info = ydl._opener.open(JSON_URL).read().decode('utf-8')
+    version_info = ydl._opener.open(JSON_URL).read().decode()
     return json.loads(version_info)
 
 # def get_version_info(ydl):
@@ -154,8 +154,7 @@ def run_update(ydl):
             {}).get('browser_download_url')
         if not urlh:
             return None
-        hash_data = ydl._opener.open(urlh).read().decode('utf-8')
-
+        hash_data = ydl._opener.open(urlh).read().decode()
         return dict(ln.split()[::-1] for ln in hash_data.splitlines()).get(filename)
 
     if not os.access(filename, os.W_OK):

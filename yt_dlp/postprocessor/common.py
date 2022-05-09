@@ -1,6 +1,7 @@
 import functools
 import itertools
 import json
+import os
 import time
 import urllib.error
 
@@ -97,12 +98,10 @@ class PostProcessor(metaclass=PostProcessorMetaClass):
             return self._downloader.write_debug(text, *args, **kwargs)
 
     def _delete_downloaded_files(self, *files_to_delete, **kwargs):
-        if not self._downloader:
-            import os
-            for filename in set(filter(None, files_to_delete)):
-                os.remove(filename)
-            return
-        return self._downloader._delete_downloaded_files(*files_to_delete, **kwargs)
+        if self._downloader:
+            return self._downloader._delete_downloaded_files(*files_to_delete, **kwargs)
+        for filename in set(filter(None, files_to_delete)):
+            os.remove(filename)
 
     def get_param(self, name, default=None, *args, **kwargs):
         if self._downloader:

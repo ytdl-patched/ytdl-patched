@@ -824,9 +824,9 @@ class YoutubeDL:
         assert hasattr(self, '_output_process')
         assert isinstance(message, compat_str)
         line_count = message.count('\n') + 1
-        self._output_process.stdin.write((message + '\n').encode('utf-8'))
+        self._output_process.stdin.write((message + '\n').encode())
         self._output_process.stdin.flush()
-        res = ''.join(self._output_channel.readline().decode('utf-8')
+        res = ''.join(self._output_channel.readline().decode()
                       for _ in range(line_count))
         return res[:-len('\n')]
 
@@ -1235,7 +1235,7 @@ class YoutubeDL:
             elif fmt[-1] == 'q':  # quoted
                 value, fmt = ' '.join(map(compat_shlex_quote, map(str, variadic(value)))), str_fmt
             elif fmt[-1] == 'B':  # bytes
-                value = f'%{str_fmt}'.encode() % str(value).encode('utf-8')
+                value = f'%{str_fmt}'.encode() % str(value).encode()
                 value, fmt = value.decode('utf-8', 'ignore'), 's'
             elif fmt[-1] == 'U':  # unicode normalized
                 value, fmt = unicodedata.normalize(
@@ -2345,7 +2345,7 @@ class YoutubeDL:
             elif selector.type == SINGLE:  # atom
                 yield selector
 
-        stream = io.BytesIO(format_spec.encode('utf-8'))
+        stream = io.BytesIO(format_spec.encode())
         try:
             tokens = list(_remove_unused_ops(tokenize.tokenize(stream.readline)))
         except tokenize.TokenError:
@@ -3341,8 +3341,8 @@ class YoutubeDL:
                     downloader = downloader.__name__ if downloader else None
 
                     if info_dict.get('requested_formats') is None:  # Not necessary if doing merger
-                        live_fixup = info_dict.get('is_live') and not self.params.get('hls_use_mpegts')
-                        ffmpeg_fixup(downloader == 'HlsFD' or live_fixup,
+                        fixup_live = info_dict.get('is_live') and self.params.get('hls_use_mpegts') is None
+                        ffmpeg_fixup(downloader == 'HlsFD' or fixup_live,
                                      'Possible MPEG-TS in MP4 container or malformed AAC timestamps',
                                      FFmpegFixupM3u8PP)
                         ffmpeg_fixup(info_dict.get('is_live') and downloader == 'DashSegmentsFD',
@@ -3958,10 +3958,10 @@ class YoutubeDL:
 
         # Not implemented
         if False and self.params.get('call_home'):
-            ipaddr = self.urlopen('https://yt-dl.org/ip').read().decode('utf-8')
+            ipaddr = self.urlopen('https://yt-dl.org/ip').read().decode()
             write_debug('Public IP address: %s' % ipaddr)
             latest_version = self.urlopen(
-                'https://yt-dl.org/latest/version').read().decode('utf-8')
+                'https://yt-dl.org/latest/version').read().decode()
             if version_tuple(latest_version) > version_tuple(__version__):
                 self.report_warning(
                     'You are using an outdated version (newest version: %s)! '
