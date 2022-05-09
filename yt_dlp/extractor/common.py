@@ -3036,7 +3036,7 @@ class InfoExtractor:
                                     'duration': float_or_none(segment_d, representation_ms_info['timescale']),
                                 })
 
-                            for num, s in enumerate(representation_ms_info['s']):
+                            for s in representation_ms_info.get('s') or []:
                                 segment_time = s.get('t') or segment_time
                                 segment_d = s['d']
                                 add_segment_url()
