@@ -95,6 +95,7 @@ class TVerIE(InfoExtractor):
             # an another title which is considered "full title" for some viewers
             'alt_title': join_nonempty(title, provider, onair_label, delim=' '),
             'channel': provider,
+            'onair_label': onair_label,
             'description': str_or_none(video_info.get('description')),
             'url': smuggle_url(
                 self.BRIGHTCOVE_URL_TEMPLATE % (p_id, r_id), {'geo_countries': ['JP']}),
