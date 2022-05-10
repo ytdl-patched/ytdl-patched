@@ -618,9 +618,9 @@ def get_postprocessors(opts):
         }
 
 
-def parse_options(argv=None):
+def parse_options(argv=None, ignore_config_files='if_override'):
     """ @returns (parser, opts, urls, ydl_opts) """
-    parser, opts, urls = parseOpts(argv)
+    parser, opts, urls = parseOpts(argv, ignore_config_files)
     urls = get_urls(urls, opts.batchfile, opts.verbose)
 
     set_compat_opts(opts)

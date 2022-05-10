@@ -1875,6 +1875,14 @@ class DateRange:
     def __str__(self):
         return f'{self.start.isoformat()} - {self.end.isoformat()}'
 
+    def __repr__(self) -> str:
+        return 'DateRange({!r}, {!r})'.format(self.start, self.end)
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, DateRange):
+            return False
+        return __o.start == self.start and __o.end == self.end
+
 
 def platform_name():
     """ Returns the platform name as a compat_str """
