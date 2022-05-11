@@ -1806,7 +1806,7 @@ def date_from_str(date_str, format='%Y%m%d', strict=False):
 
     format: string date format used to return datetime object from
     """
-    if strict and not re.fullmatch(r'\d{8}|(now|today)[+-]\d+(day|week|month|year)(s)?', date_str):
+    if strict and not re.fullmatch(r'\d{8}|(now|today)([+-]\d+(day|week|month|year)s?)?', date_str):
         raise ValueError(f'Invalid date format {date_str}')
     return datetime_from_str(date_str, precision='microsecond', format=format).date()
 
