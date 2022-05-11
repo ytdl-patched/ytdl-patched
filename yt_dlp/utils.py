@@ -1446,6 +1446,26 @@ class YoutubeDLCookieJar(compat_cookiejar.MozillaCookieJar):
         'CookieFileEntry',
         ('domain_name', 'include_subdomains', 'path', 'https_only', 'expires_at', 'name', 'value'))
 
+    def __init__(self, filename=None, *args, **kwargs):
+        super().__init__(None, *args, **kwargs)
+        if self.is_path(filename):
+            filename = os.fspath(filename)
+        self.filename = filename
+
+    @staticmethod
+    def is_path(file):
+        return isinstance(file, (str, bytes, os.PathLike))
+
+    @contextlib.contextmanager
+    def open(self, file, *, write=False):
+        if self.is_path(file):
+            with open(file, 'w' if write else 'r', encoding='utf-8') as f:
+                yield f
+        else:
+            if write:
+                file.truncate(0)
+            yield file
+
     def save(self, filename=None, ignore_discard=False, ignore_expires=False):
         """
         Save cookies to a file.
@@ -1465,7 +1485,7 @@ class YoutubeDLCookieJar(compat_cookiejar.MozillaCookieJar):
             if cookie.expires is None:
                 cookie.expires = 0
 
-        with open(filename, 'w', encoding='utf-8') as f:
+        with self.open(filename, write=True) as f:
             f.write(self._HEADER)
             now = time.time()
             for cookie in self:
@@ -1521,7 +1541,7 @@ class YoutubeDLCookieJar(compat_cookiejar.MozillaCookieJar):
             return line
 
         cf = io.StringIO()
-        with open(filename, encoding='utf-8') as f:
+        with self.open(filename) as f:
             for line in f:
                 try:
                     cf.write(prepare_line(line))
@@ -1803,7 +1823,7 @@ def date_from_str(date_str, format='%Y%m%d', strict=False):
 
     format: string date format used to return datetime object from
     """
-    if strict and not re.fullmatch(r'\d{8}|(now|today)[+-]\d+(day|week|month|year)(s)?', date_str):
+    if strict and not re.fullmatch(r'\d{8}|(now|today)([+-]\d+(day|week|month|year)s?)?', date_str):
         raise ValueError(f'Invalid date format {date_str}')
     return datetime_from_str(date_str, precision='microsecond', format=format).date()
 
