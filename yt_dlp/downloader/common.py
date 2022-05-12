@@ -1,6 +1,7 @@
 import contextlib
 import errno
 import random
+import re
 import time
 
 from ..utils import (
@@ -94,6 +95,10 @@ class FileDownloader(ShowsProgress):
 
     def to_screen(self, *args, **kargs):
         self.ydl.to_screen(*args, quiet=self.params.get('quiet'), **kargs)
+
+    @property
+    def FD_NAME(self):
+        return re.sub(r'(?<!^)(?=[A-Z])', '_', type(self).__name__[:-2]).lower()
 
     def slow_down(self, start_time, now, byte_counter):
         """Sleep if the download speed is over the rate limit."""
