@@ -125,20 +125,18 @@ class ExternalFD(FragmentFD):
         self._debug_cmd(cmd)
 
         if 'fragments' not in info_dict:
-            p = Popen(cmd, stderr=subprocess.PIPE)
-            _, stderr = p.communicate_or_kill()
-            if p.returncode != 0:
+            _, stderr, retcode = self._call_process(cmd, info_dict)
+            if retcode == 0:
                 self.to_stderr(stderr.decode('utf-8', 'replace'))
-            return p.returncode
+            return retcode
 
         fragment_retries = self.params.get('fragment_retries', 0)
         skip_unavailable_fragments = self.params.get('skip_unavailable_fragments', True)
 
         count = 0
         while count <= fragment_retries:
-            p = Popen(cmd, stderr=subprocess.PIPE)
-            _, stderr = p.communicate_or_kill()
-            if p.returncode == 0:
+            _, stderr, retcode = self._call_process(cmd, info_dict)
+            if retcode == 0:
                 break
             # TODO: Decide whether to retry based on error code
             # https://aria2.github.io/manual/en/html/aria2c.html#exit-status
@@ -172,6 +170,11 @@ class ExternalFD(FragmentFD):
         dest.close()
         self.try_remove(encodeFilename('%s.frag.urls' % tmpfilename))
         return 0
+
+    def _call_process(cmd, info_dict):
+        p = Popen(cmd, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate_or_kill()
+        return stdout, stderr, p.returncode
 
 
 class CurlFD(ExternalFD):
@@ -314,10 +317,36 @@ class Aria2cFD(ExternalFD):
         return cmd
 
     def _call_downloader(self, tmpfilename, info_dict):
-        if not self._ENABLE_PROGRESS:
-            return super()._call_downloader(tmpfilename, info_dict)
-        info_dict = info_dict.copy()
-        info_dict['__rpc_port'] = find_available_port() or 19190
+        if self._ENABLE_PROGRESS:
+            info_dict = info_dict.copy()
+            info_dict['__rpc_port'] = find_available_port() or 19190
+        return super()._call_downloader(tmpfilename, info_dict)
+
+    def _call_process(cmd, info_dict):
+        if '__rpc_port' not in info_dict:
+            return super()._call_process(info_dict)
+
+        from tempfile import TemporaryFile
+
+        rpc_port = info_dict['__rpc_port']
+
+        with TemporaryFile('w') as so, TemporaryFile('w') as se:
+            p = Popen(cmd, stdout=so.fileno(), stderr=se.fileno())
+            retval = p.poll()
+            while retval is None:
+                try:
+                    # WIP
+                    so.write(rpc_port)
+                finally:
+                    time.sleep(0.1)
+                    retval = p.poll()
+
+            so.seek(0)
+            se.seek(0)
+            # it's expected to be bytes here!
+            stdout, stderr = so.read(), se.read()
+
+            return stdout, stderr, retval
 
 
 class HttpieFD(ExternalFD):
