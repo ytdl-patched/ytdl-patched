@@ -91,7 +91,6 @@
  - **ask.fm**
  - **askmona**
  - **askmona3**
- - **AtresPlayer**
  - **AtresPlayer**: [<abbr title="netrc machine"><em>atresplayer</em></abbr>]
  - **ATTTechChannel**
  - **ATVAt**
@@ -146,8 +145,6 @@
  - **BilibiliChannel**
  - **BiliBiliPlayer**
  - **BiliBiliSearch**: Bilibili video search; "bilisearch:" prefix
- - **BiliIntl**
- - **BiliIntlSeries**
  - **BiliIntl**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliIntlSeries**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliLive**
@@ -627,9 +624,6 @@
  - **LoveHomePorn**
  - **LRTStream**
  - **LRTVOD**
- - **lynda**: lynda.com videos
- - **lynda:course**: lynda.com online courses
- - **lrt.lt**
  - **lynda**: [<abbr title="netrc machine"><em>lynda</em></abbr>] lynda.com videos
  - **lynda:course**: [<abbr title="netrc machine"><em>lynda</em></abbr>] lynda.com online courses
  - **m6**
@@ -652,9 +646,9 @@
  - **marshmallow-qa**
  - **massengeschmack.tv**
  - **Masters**
- - **mastodon**
- - **mastodon:user**
- - **mastodon:user:numeric_id**
+ - **mastodon**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
+ - **mastodon:user**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
+ - **mastodon:user:numeric_id**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
  - **MatchTV**
  - **MDR**: MDR.DE and KiKA
  - **MedalTV**
@@ -924,13 +918,11 @@
  - **PearVideo**
  - **PeekVids**
  - **peer.tv**
- - **PeerTube**
- - **PeerTubeAccount**
- - **PeerTubeChannel**
- - **PeerTubePlaylist**
+ - **PeerTube**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
+ - **PeerTubeAccount**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
+ - **PeerTubeChannel**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
+ - **PeerTubePlaylist**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
  - **peing**
- - **peloton**
- - **PeerTube:Playlist**
  - **peloton**: [<abbr title="netrc machine"><em>peloton</em></abbr>]
  - **peloton:live**: Peloton Live
  - **People**
