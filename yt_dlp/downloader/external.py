@@ -21,6 +21,7 @@ from ..utils import (
     determine_ext,
     encodeArgument,
     encodeFilename,
+    find_available_port,
     handle_youtubedl_headers,
     remove_end,
     variadic,
@@ -251,6 +252,7 @@ class WgetFD(ExternalFD):
 class Aria2cFD(ExternalFD):
     AVAILABLE_OPT = '-v'
     SUPPORTED_PROTOCOLS = ('http', 'https', 'ftp', 'ftps', 'dash_frag_urls', 'm3u8_frag_urls')
+    _ENABLE_PROGRESS = False
 
     @staticmethod
     def supports_manifest(manifest):
@@ -310,6 +312,12 @@ class Aria2cFD(ExternalFD):
         else:
             cmd += ['--', info_dict['url']]
         return cmd
+
+    def _call_downloader(self, tmpfilename, info_dict):
+        if not self._ENABLE_PROGRESS:
+            return super()._call_downloader(tmpfilename, info_dict)
+        info_dict = info_dict.copy()
+        info_dict['__rpc_port'] = find_available_port() or 19190
 
 
 class HttpieFD(ExternalFD):
