@@ -1252,7 +1252,7 @@ class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
 
         if urllib.parse.urlparse(req.get_full_url()).hostname in ('localhost', '127.0.0.1', 'fe00::0'):
             # exclude localhost from proxies
-            del req.headers['Ytdl-socks-proxy']
+            req.headers.pop('Ytdl-socks-proxy')
         else:
             socks_proxy = req.headers.get('Ytdl-socks-proxy')
             if socks_proxy:
