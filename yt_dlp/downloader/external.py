@@ -173,7 +173,7 @@ class ExternalFD(FragmentFD):
         self.try_remove(encodeFilename('%s.frag.urls' % tmpfilename))
         return 0
 
-    def _call_process(cmd, info_dict):
+    def _call_process(self, cmd, info_dict):
         p = Popen(cmd, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate_or_kill()
         return stdout, stderr, p.returncode
@@ -257,7 +257,7 @@ class WgetFD(ExternalFD):
 class Aria2cFD(ExternalFD):
     AVAILABLE_OPT = '-v'
     SUPPORTED_PROTOCOLS = ('http', 'https', 'ftp', 'ftps', 'dash_frag_urls', 'm3u8_frag_urls')
-    _ENABLE_PROGRESS = False
+    _ENABLE_PROGRESS = True
 
     @staticmethod
     def supports_manifest(manifest):
@@ -282,11 +282,14 @@ class Aria2cFD(ExternalFD):
                 cmd += ['--header', f'{key}: {val}']
         cmd += self._option('--max-overall-download-limit', 'ratelimit')
         cmd += self._option('--interface', 'source_address')
-        cmd += self._option('--all-proxy', 'proxy')
+        # cmd += self._option('--all-proxy', 'proxy')
         cmd += self._bool_option('--check-certificate', 'nocheckcertificate', 'false', 'true', '=')
         cmd += self._bool_option('--remote-time', 'updatetime', 'true', 'false', '=')
         cmd += self._bool_option('--show-console-readout', 'noprogress', 'false', 'true', '=')
         cmd += self._configuration_args()
+
+        if info_dict.get('__rpc_port'):
+            cmd += ['--enable-rpc', f'--rpc-listen-port={info_dict["__rpc_port"]}']
 
         # aria2c strips out spaces from the beginning/end of filenames and paths.
         # We work around this issue by adding a "./" to the beginning of the
@@ -326,12 +329,11 @@ class Aria2cFD(ExternalFD):
 
     def _call_process(self, cmd, info_dict):
         if '__rpc_port' not in info_dict:
-            return super()._call_process(info_dict)
+            return super()._call_process(cmd, info_dict)
 
         from tempfile import TemporaryFile
         import json
         import uuid
-        import urllib.error
 
         rpc_port = info_dict['__rpc_port']
         nr_frags = len(info_dict['fragments']) if 'fragments' in info_dict else -1
@@ -339,19 +341,24 @@ class Aria2cFD(ExternalFD):
         def aria2c_rpc(method, params):
             # note: there's no need to be UUID, but that's easier
             sanitycheck = str(uuid.uuid4())
+            d = json.dumps({
+                'jsonrpc': '2.0',
+                'id': sanitycheck,
+                'method': method,
+                'params': params,
+            })
             request = sanitized_Request(
                 f'http://localhost:{rpc_port}/jsonrpc',
-                data=json.dumps({
-                    'jsonrpc': '2.0',
-                    'id': sanitycheck,
-                    'method': method,
-                    'params': params,
-                }))
-            try:
-                handler = self.ydl.urlopen(request)
-            except urllib.error.HTTPError as er:
-                handler = er.fp
-            resp = json.load(handler)
+                headers={
+                    'User-Agent': 'ABCDEFG',
+                    'Content-Type': 'application/json',
+                    'Content-Length': f'{len(d)}',
+                },
+                data=d)
+            print(f'http://localhost:{rpc_port}/jsonrpc')
+            with self.ydl.urlopen(request) as r:
+                print(r)
+                resp = json.load(r)
             # failing at this assertion means that the RPC server went wrong
             # (KeyEror includes)
             assert resp['id'] == sanitycheck
@@ -359,15 +366,17 @@ class Aria2cFD(ExternalFD):
 
         started = time.time()
         status = {
-            '__from_ffmpeg_native_status': True,
             'filename': info_dict.get('_filename'),
             'status': 'downloading',
             'elapsed': 0,
+            'downloaded_bytes': 0,
         }
         self._hook_progress(status, info_dict)
 
-        with TemporaryFile('w') as so, TemporaryFile('w') as se:
-            p = Popen(cmd, stdout=so.fileno(), stderr=se.fileno())
+        with TemporaryFile() as so, TemporaryFile() as se, \
+             Popen(cmd, stdout=so.fileno(), stderr=se.fileno()) as p:
+            # p = Popen(cmd, stdout=so.fileno(), stderr=se.fileno())
+            # p = Popen(cmd)
             retval = p.poll()
             while retval is None:
                 try:
@@ -376,13 +385,14 @@ class Aria2cFD(ExternalFD):
                     if nr_frags < 0:
                         # single file
                         # using tellActive as we won't know the GID without reading stdout
-                        # and I/O against pipes in Python is usually a mess
+                        # that is usually a mess in Python
                         active = aria2c_rpc('aria2.tellActive', [])[0]
+                        cl, ds, tl = int(active['completedLength']), int(active['downloadSpeed']), int(active['totalLength'])
                         status.update({
-                            'downloaded_bytes': active['completedLength'],
-                            'speed': active['downloadSpeed'],
-                            'eta': try_get(active, lambda x: (x['totalLength'] - active['completedLength']) / active['downloadSpeed']),
-                            'total_bytes': active['totalLength'],
+                            'downloaded_bytes': cl,
+                            'speed': ds,
+                            'eta': try_get(0, lambda x: (tl - cl) / ds),
+                            'total_bytes': tl,
                         })
                         continue
                     # fragmented
@@ -391,6 +401,12 @@ class Aria2cFD(ExternalFD):
                     self._hook_progress(status, info_dict)
                     time.sleep(0.1)
                     retval = p.poll()
+
+            status.update({
+                'status': 'finished',
+                'downloaded_bytes': status.get('total_bytes'),
+            })
+            self._hook_progress(status, info_dict)
 
             so.seek(0)
             se.seek(0)
