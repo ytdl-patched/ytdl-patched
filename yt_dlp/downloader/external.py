@@ -24,6 +24,8 @@ from ..utils import (
     find_available_port,
     handle_youtubedl_headers,
     remove_end,
+    sanitized_Request,
+    try_get,
     variadic,
     traverse_obj,
 )
@@ -322,22 +324,71 @@ class Aria2cFD(ExternalFD):
             info_dict['__rpc_port'] = find_available_port() or 19190
         return super()._call_downloader(tmpfilename, info_dict)
 
-    def _call_process(cmd, info_dict):
+    def _call_process(self, cmd, info_dict):
         if '__rpc_port' not in info_dict:
             return super()._call_process(info_dict)
 
         from tempfile import TemporaryFile
+        import json
+        import uuid
+        import urllib.error
 
         rpc_port = info_dict['__rpc_port']
+        nr_frags = len(info_dict['fragments']) if 'fragments' in info_dict else -1
+
+        def aria2c_rpc(method, params):
+            # note: there's no need to be UUID, but that's easier
+            sanitycheck = str(uuid.uuid4())
+            request = sanitized_Request(
+                f'http://localhost:{rpc_port}/jsonrpc',
+                data=json.dumps({
+                    'jsonrpc': '2.0',
+                    'id': sanitycheck,
+                    'method': method,
+                    'params': params,
+                }))
+            try:
+                handler = self.ydl.urlopen(request)
+            except urllib.error.HTTPError as er:
+                handler = er.fp
+            resp = json.load(handler)
+            # failing at this assertion means that the RPC server went wrong
+            # (KeyEror includes)
+            assert resp['id'] == sanitycheck
+            return resp['result']
+
+        started = time.time()
+        status = {
+            '__from_ffmpeg_native_status': True,
+            'filename': info_dict.get('_filename'),
+            'status': 'downloading',
+            'elapsed': 0,
+        }
+        self._hook_progress(status, info_dict)
 
         with TemporaryFile('w') as so, TemporaryFile('w') as se:
             p = Popen(cmd, stdout=so.fileno(), stderr=se.fileno())
             retval = p.poll()
             while retval is None:
                 try:
-                    # WIP
-                    so.write(rpc_port)
+                    # https://aria2.github.io/manual/en/html/libaria2.html#c.DOWNLOAD_WAITING
+                    # https://aria2.github.io/manual/en/html/aria2c.html#aria2.tellActive
+                    if nr_frags < 0:
+                        # single file
+                        # using tellActive as we won't know the GID without reading stdout
+                        # and I/O against pipes in Python is usually a mess
+                        active = aria2c_rpc('aria2.tellActive', [])[0]
+                        status.update({
+                            'downloaded_bytes': active['completedLength'],
+                            'speed': active['downloadSpeed'],
+                            'eta': try_get(active, lambda x: (x['totalLength'] - active['completedLength']) / active['downloadSpeed']),
+                            'total_bytes': active['totalLength'],
+                        })
+                        continue
+                    # fragmented
                 finally:
+                    status.update({'elapsed': time.time() - started})
+                    self._hook_progress(status, info_dict)
                     time.sleep(0.1)
                     retval = p.poll()
 
