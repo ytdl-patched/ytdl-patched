@@ -1250,10 +1250,14 @@ class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
     def http_open(self, req):
         conn_class = compat_http_client.HTTPConnection
 
-        socks_proxy = req.headers.get('Ytdl-socks-proxy')
-        if socks_proxy:
-            conn_class = make_socks_conn_class(conn_class, socks_proxy)
+        if urllib.parse.urlparse(req.get_full_url()).hostname in ('localhost', '127.0.0.1', 'fe00::0'):
+            # exclude localhost from proxies
             del req.headers['Ytdl-socks-proxy']
+        else:
+            socks_proxy = req.headers.get('Ytdl-socks-proxy')
+            if socks_proxy:
+                conn_class = make_socks_conn_class(conn_class, socks_proxy)
+                del req.headers['Ytdl-socks-proxy']
 
         return self.do_open(functools.partial(
             _create_http_connection, self, conn_class, False),
@@ -4812,6 +4816,7 @@ def random_birthday(year_field, month_field, day_field):
         month_field: str(random_date.month),
         day_field: str(random_date.day),
     }
+
 
 def find_available_port(iface='') -> int:
     try:

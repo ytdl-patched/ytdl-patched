@@ -322,6 +322,7 @@ class Aria2cFD(ExternalFD):
         return cmd
 
     def _call_downloader(self, tmpfilename, info_dict):
+        info_dict.pop('__rpc_port', None)
         if self._ENABLE_PROGRESS:
             info_dict = info_dict.copy()
             info_dict['__rpc_port'] = find_available_port() or 19190
@@ -339,25 +340,22 @@ class Aria2cFD(ExternalFD):
         nr_frags = len(info_dict['fragments']) if 'fragments' in info_dict else -1
 
         def aria2c_rpc(method, params):
-            # note: there's no need to be UUID, but that's easier
+            # note: there's no need to be UUID (it can even a numeric value), but that's easier
             sanitycheck = str(uuid.uuid4())
             d = json.dumps({
                 'jsonrpc': '2.0',
                 'id': sanitycheck,
                 'method': method,
                 'params': params,
-            })
+            }).encode('utf-8')
             request = sanitized_Request(
                 f'http://localhost:{rpc_port}/jsonrpc',
                 headers={
-                    'User-Agent': 'ABCDEFG',
                     'Content-Type': 'application/json',
                     'Content-Length': f'{len(d)}',
                 },
                 data=d)
-            print(f'http://localhost:{rpc_port}/jsonrpc')
             with self.ydl.urlopen(request) as r:
-                print(r)
                 resp = json.load(r)
             # failing at this assertion means that the RPC server went wrong
             # (KeyEror includes)
@@ -375,8 +373,9 @@ class Aria2cFD(ExternalFD):
 
         with TemporaryFile() as so, TemporaryFile() as se, \
              Popen(cmd, stdout=so.fileno(), stderr=se.fileno()) as p:
-            # p = Popen(cmd, stdout=so.fileno(), stderr=se.fileno())
-            # p = Popen(cmd)
+            # make a small wait so that RPC client can receive response,
+            # or the connection stalls infinitely
+            time.sleep(0.2)
             retval = p.poll()
             while retval is None:
                 try:
@@ -386,7 +385,13 @@ class Aria2cFD(ExternalFD):
                         # single file
                         # using tellActive as we won't know the GID without reading stdout
                         # that is usually a mess in Python
-                        active = aria2c_rpc('aria2.tellActive', [])[0]
+                        resp = aria2c_rpc('aria2.tellActive', [])
+                        if not resp:
+                            # no active downloads, we'll exit the loop after shutdown
+                            aria2c_rpc('aria2.shutdown', [])
+                            retval = p.wait()
+                            break
+                        active = resp[0]
                         cl, ds, tl = int(active['completedLength']), int(active['downloadSpeed']), int(active['totalLength'])
                         status.update({
                             'downloaded_bytes': cl,

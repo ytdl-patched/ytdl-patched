@@ -1,0 +1,3 @@
+#!/bin/bash
+./cl &
+exec ./b --proxy socks5://localhost:8090/ https://www.youtube.com/watch?v=JpqTrtd-OH4 -v --downloader aria2c -f 137 "$@"
