@@ -386,16 +386,19 @@ class Aria2cFD(ExternalFD):
                 try:
                     # https://aria2.github.io/manual/en/html/libaria2.html#c.DOWNLOAD_WAITING
                     # https://aria2.github.io/manual/en/html/aria2c.html#aria2.tellActive
+
+                    # use tellActive as we won't know the GID without reading stdout
+                    # that is a mess in Python
+                    aktiva = aria2c_rpc('aria2.tellActive', [])
+                    completed = aria2c_rpc('aria2.tellStopped', [0, abs(nr_frags)])
+                    if not aktiva and len(completed) == abs(nr_frags):
+                        # no active downloads, we'll exit the loop after shutdown
+                        aria2c_rpc('aria2.shutdown', [])
+                        retval = p.wait()
+                        break
+
                     if nr_frags < 0:
                         # single file
-                        # using tellActive as we won't know the GID without reading stdout
-                        # that is usually a mess in Python
-                        aktiva = aria2c_rpc('aria2.tellActive', [])
-                        if not aktiva:
-                            # no active downloads, we'll exit the loop after shutdown
-                            aria2c_rpc('aria2.shutdown', [])
-                            retval = p.wait()
-                            break
                         active = aktiva[0]
                         cl, ds, tl = int(active['completedLength']), int(active['downloadSpeed']), int(active['totalLength'])
                         status.update({
@@ -407,14 +410,6 @@ class Aria2cFD(ExternalFD):
                         continue
 
                     # fragmented
-                    completed = aria2c_rpc('aria2.tellStopped', [0, nr_frags])
-                    aktiva = aria2c_rpc('aria2.tellActive', [])
-                    if not aktiva and len(completed) == nr_frags:
-                        # no active downloads, we'll exit the loop after shutdown
-                        aria2c_rpc('aria2.shutdown', [])
-                        retval = p.wait()
-                        break
-
                     total_bytes = sum(map(int, traverse_obj([aktiva, completed], (..., ..., 'totalLength'), default=[])))
                     if completed or aktiva:
                         total_bytes = total_bytes * nr_frags / (len(completed) + len(aktiva))
