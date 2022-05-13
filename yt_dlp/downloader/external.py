@@ -369,6 +369,11 @@ class Aria2cFD(ExternalFD):
             'elapsed': 0,
             'downloaded_bytes': 0,
         }
+        if nr_frags >= 0:
+            status.update({
+                'fragment_count': nr_frags,
+                'fragment_index': 0,
+            })
         self._hook_progress(status, info_dict)
 
         with TemporaryFile() as so, TemporaryFile() as se, \
@@ -385,13 +390,13 @@ class Aria2cFD(ExternalFD):
                         # single file
                         # using tellActive as we won't know the GID without reading stdout
                         # that is usually a mess in Python
-                        resp = aria2c_rpc('aria2.tellActive', [])
-                        if resp:
+                        aktiva = aria2c_rpc('aria2.tellActive', [])
+                        if not aktiva:
                             # no active downloads, we'll exit the loop after shutdown
                             aria2c_rpc('aria2.shutdown', [])
                             retval = p.wait()
                             break
-                        active = resp[0]
+                        active = aktiva[0]
                         cl, ds, tl = int(active['completedLength']), int(active['downloadSpeed']), int(active['totalLength'])
                         status.update({
                             'downloaded_bytes': cl,
@@ -400,7 +405,31 @@ class Aria2cFD(ExternalFD):
                             'total_bytes': tl,
                         })
                         continue
+
                     # fragmented
+                    completed = aria2c_rpc('aria2.tellStopped', [0, nr_frags])
+                    aktiva = aria2c_rpc('aria2.tellActive', [])
+                    if not aktiva and len(completed) == nr_frags:
+                        # no active downloads, we'll exit the loop after shutdown
+                        aria2c_rpc('aria2.shutdown', [])
+                        retval = p.wait()
+                        break
+
+                    total_bytes = sum(map(int, traverse_obj([aktiva, completed], (..., ..., 'totalLength'), default=[])))
+                    if completed or aktiva:
+                        total_bytes = total_bytes * nr_frags / (len(completed) + len(aktiva))
+                    total_completed = sum(map(int, traverse_obj(completed, (..., 'totalLength'), default=[])))
+                    dled_aktiva = sum(map(int, traverse_obj(aktiva, (..., 'completedLength'), default=[])))
+                    total_speed = sum(map(float, traverse_obj(aktiva, (..., 'downloadSpeed'), default=[])))
+                    dl_all = dled_aktiva + total_completed
+
+                    status.update({
+                        'downloaded_bytes': dl_all,
+                        'speed': total_speed,
+                        'eta': try_get(0, lambda x: (total_bytes - dl_all) / total_speed),
+                        'total_bytes': total_bytes,
+                        'fragment_index': len(completed) + len(aktiva) // 2,
+                    })
                 finally:
                     status.update({'elapsed': time.time() - started})
                     self._hook_progress(status, info_dict)
