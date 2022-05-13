@@ -378,7 +378,7 @@ class Aria2cFD(ExternalFD):
 
         with TemporaryFile() as so, TemporaryFile() as se, \
              Popen(cmd, stdout=so.fileno(), stderr=se.fileno()) as p:
-            # make a small wait so that RPC client can receive response,
+            # make a short wait so that RPC client can receive response,
             # or the connection stalls infinitely
             time.sleep(0.2)
             retval = p.poll()
