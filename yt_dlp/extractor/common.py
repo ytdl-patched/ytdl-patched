@@ -839,7 +839,7 @@ class InfoExtractor:
         if json_body is not None or form_params:
             # both "data" and, "json_body" or "form_params" are specified
             if data:
-                raise ExtractorError('Both "data" parameter and either "json_body" or "form_params" are specified')
+                raise ExtractorError('Both "data" parameter and one or more of "json_body" or "form_params" are specified')
             if json_body is not None:
                 data = json.dumps(json_body).encode(body_encoding or encoding or 'utf-8')
             elif form_params:
