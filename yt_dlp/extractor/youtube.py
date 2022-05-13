@@ -31,6 +31,7 @@ from ..utils import (
     NO_DEFAULT,
     ExtractorError,
     bug_reports_message,
+    classproperty,
     clean_html,
     datetime_from_str,
     dict_get,
@@ -348,6 +349,16 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         r'(?:www\.)?kbjggqkzv65ivcqj6bumvp337z6264huv5kpkwuv6gu5yjiskvan7fad\.onion',
         r'(?:www\.)?grwp24hodrefzvjjuccrkw3mjq4tzhaaq32amf33dzpmuxe7ilepcmad\.onion',
         r'(?:www\.)?hpniueoejy4opn7bc4ftgazyqjoeqwlvh2uiku2xqku6zpoa4bf5ruid\.onion',
+        # piped instances from https://github.com/TeamPiped/Piped/wiki/Instances
+        r'(?:www\.)?piped\.kavin\.rocks',
+        r'(?:www\.)?piped\.silkky\.cloud',
+        r'(?:www\.)?piped\.tokhmi\.xyz',
+        r'(?:www\.)?piped\.moomoo\.me',
+        r'(?:www\.)?il\.ax',
+        r'(?:www\.)?piped\.syncpundit\.com',
+        r'(?:www\.)?piped\.mha\.fi',
+        r'(?:www\.)?piped\.mint\.lgbt',
+        r'(?:www\.)?piped\.privacy\.com\.de',
     )
 
     def _initialize_consent(self):
@@ -5873,16 +5884,17 @@ class YoutubeMusicSearchURLIE(YoutubeTabBaseInfoExtractor):
 class YoutubeFeedsInfoExtractor(InfoExtractor):
     """
     Base class for feed extractors
-    Subclasses must define the _FEED_NAME property.
+    Subclasses must re-define the _FEED_NAME property.
     """
     _LOGIN_REQUIRED = True
+    _FEED_NAME = 'feeds'
 
     def _real_initialize(self):
         YoutubeBaseInfoExtractor._check_login_required(self)
 
-    @property
+    @classproperty
     def IE_NAME(self):
-        return 'youtube:%s' % self._FEED_NAME
+        return f'youtube:{self._FEED_NAME}'
 
     def _real_extract(self, url):
         return self.url_result(

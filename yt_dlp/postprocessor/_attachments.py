@@ -463,7 +463,7 @@ class ShowsProgress(object):
                 if s.get('fragment_count') is not None:
                     msg_template += ' (%(fragment_count)s fragments)'
             else:
-                msg_template = '%(_percent_str)s % at %(_speed_str)s ETA %(_eta_str)s'
+                msg_template = '%(_percent_str)s at %(_speed_str)s ETA %(_eta_str)s'
 
         if s.get('fragment_count') is not None and s.get('fragment_index') is not None:
             msg_template += ' (%(fragment_index)d fragments of %(fragment_count)d)'
