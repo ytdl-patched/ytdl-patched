@@ -1,4 +1,0 @@
-#!/bin/bash
-./cl &
-# exec ./b --proxy socks5://localhost:8090/ JpqTrtd-OH4 -v --downloader aria2c -f 137 "$@"
-exec ./b --proxy socks5://localhost:8090/ LFBnbMfLfeE -v --downloader aria2c -f 248 "$@"
