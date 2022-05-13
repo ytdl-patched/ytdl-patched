@@ -437,7 +437,6 @@
  - **gem.cbc.ca**: [<abbr title="netrc machine"><em>cbcgem</em></abbr>]
  - **gem.cbc.ca:live**
  - **gem.cbc.ca:playlist**
- - **generic**: Generic downloader that works on some sites
  - **Gettr**
  - **GettrStreaming**
  - **Gfycat**
@@ -1599,3 +1598,4 @@
  - **zingmp3:week-chart**
  - **zoom**
  - **Zype**
+ - **generic**: Generic downloader that works on some sites

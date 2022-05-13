@@ -5375,6 +5375,7 @@ def merge_headers(*dicts):
 
 class classproperty:
     def __init__(self, f):
+        functools.update_wrapper(self, f)
         self.f = f
 
     def __get__(self, _, cls):
