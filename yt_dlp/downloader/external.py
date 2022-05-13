@@ -257,7 +257,6 @@ class WgetFD(ExternalFD):
 class Aria2cFD(ExternalFD):
     AVAILABLE_OPT = '-v'
     SUPPORTED_PROTOCOLS = ('http', 'https', 'ftp', 'ftps', 'dash_frag_urls', 'm3u8_frag_urls')
-    _ENABLE_PROGRESS = True
 
     @staticmethod
     def supports_manifest(manifest):
@@ -323,7 +322,14 @@ class Aria2cFD(ExternalFD):
 
     def _call_downloader(self, tmpfilename, info_dict):
         info_dict.pop('__rpc_port', None)
-        if self._ENABLE_PROGRESS:
+
+        # aria2c does not support livestreams and stdout redirection,
+        # so that's okay
+        use_native_progress = (
+            self.params.get('enable_native_progress', False)
+            and not self.params.get('verbose', False))
+
+        if use_native_progress:
             info_dict = info_dict.copy()
             info_dict['__rpc_port'] = find_available_port() or 19190
         return super()._call_downloader(tmpfilename, info_dict)
@@ -650,7 +656,7 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
         args += get_infodict_list((f'output_params_{i + 1}', 'output_params')) + self._configuration_args(('_o1', '_o', ''))
 
         use_native_progress = (
-            self.params.get('enable_ffmpeg_native_progress')
+            self.params.get('enable_native_progress')
             and not verbose
             and not live
             and url not in ('-', 'pipe:'))

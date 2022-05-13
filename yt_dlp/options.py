@@ -387,16 +387,16 @@ def create_parser():
         help='Do not lock downloading exclusively. '
              'Download will start even if other process is working on it.')
     general.add_option(
-        '--ffmpeg-native-progress', '--use-ffmpeg-native-progress', '--enable-ffmpeg-native-progress',
-        action='store_true', dest='enable_ffmpeg_native_progress',
+        '--native-progress', '--use-native-progress', '--enable-native-progress',
+        action='store_true', dest='enable_native_progress',
         default=False,
-        help=('Show FFmpeg download and some postprocessing progress with built-in progress. '
+        help=('Show some download from external process and some postprocessing progress with built-in progress. '
               'This is an experimental feature, and disabled on live streams. (see yt-dlp/yt-dlp#1947)'))
     general.add_option(
-        '--no-ffmpeg-native-progress', '--disable-ffmpeg-native-progress',
-        action='store_false', dest='enable_ffmpeg_native_progress',
+        '--no-native-progress', '--disable-native-progress',
+        action='store_false', dest='enable_native_progress',
         default=False,
-        help='Show direct output from FFmpeg for download')
+        help='Show direct output for all downloads from external download')
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(
