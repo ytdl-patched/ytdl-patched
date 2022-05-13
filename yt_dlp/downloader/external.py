@@ -386,7 +386,7 @@ class Aria2cFD(ExternalFD):
                         # using tellActive as we won't know the GID without reading stdout
                         # that is usually a mess in Python
                         resp = aria2c_rpc('aria2.tellActive', [])
-                        if not resp:
+                        if resp:
                             # no active downloads, we'll exit the loop after shutdown
                             aria2c_rpc('aria2.shutdown', [])
                             retval = p.wait()
@@ -407,11 +407,12 @@ class Aria2cFD(ExternalFD):
                     time.sleep(0.1)
                     retval = p.poll()
 
-            status.update({
-                'status': 'finished',
-                'downloaded_bytes': status.get('total_bytes'),
-            })
-            self._hook_progress(status, info_dict)
+            if retval == 0:
+                status.update({
+                    'status': 'finished',
+                    'downloaded_bytes': status.get('total_bytes'),
+                })
+                self._hook_progress(status, info_dict)
 
             so.seek(0)
             se.seek(0)
