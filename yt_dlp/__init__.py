@@ -822,7 +822,7 @@ def parse_options(argv=None, ignore_config_files='if_override'):
         'live_download_mkv': opts.live_download_mkv,
         'lock_exclusive': opts.lock_exclusive,
         'use_modern_tls_cipher': opts.use_modern_tls_cipher,
-        'enable_ffmpeg_native_progress': opts.enable_ffmpeg_native_progress,
+        'enable_native_progress': opts.enable_native_progress,
     }
 
 
