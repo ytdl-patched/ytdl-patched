@@ -453,6 +453,7 @@
  - **GodTube**
  - **Gofile**
  - **Golem**
+ - **goodgame:stream**
  - **google:podcasts**
  - **google:podcasts:feed**
  - **GoogleDrive**
@@ -957,6 +958,7 @@
  - **pluralsight**: [<abbr title="netrc machine"><em>pluralsight</em></abbr>]
  - **pluralsight:course**
  - **PlutoTV**
+ - **Podchaser**
  - **podomatic**
  - **Pokemon**
  - **PokemonSoundLibrary**
@@ -1056,9 +1058,10 @@
  - **RICE**
  - **RMCDecouverte**
  - **RockstarGames**
- - **Rokfin**
- - **rokfin:channel**
- - **rokfin:stack**
+ - **Rokfin**: [<abbr title="netrc machine"><em>rokfin</em></abbr>]
+ - **rokfin:channel**: Rokfin Channels
+ - **rokfin:search**: Rokfin Search; "rkfnsearch:" prefix
+ - **rokfin:stack**: Rokfin Stacks
  - **RoosterTeeth**: [<abbr title="netrc machine"><em>roosterteeth</em></abbr>]
  - **RoosterTeethSeries**: [<abbr title="netrc machine"><em>roosterteeth</em></abbr>]
  - **RottenTomatoes**
