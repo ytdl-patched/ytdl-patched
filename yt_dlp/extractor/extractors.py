@@ -1035,7 +1035,8 @@ from .ndr import (
 from .ndtv import NDTVIE
 from .nebula import (
     NebulaIE,
-    NebulaCollectionIE,
+    NebulaSubscriptionsIE,
+    NebulaChannelIE,
 )
 from .nerdcubed import NerdCubedFeedIE
 from .netzkino import NetzkinoIE
