@@ -928,7 +928,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = self._entries(functools.partial(self._fetch_page, list_id))
+        entries = self._entries(list_id)
         result = self.playlist_result(
             entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
         result.update(self._parse_owner(mylist))
