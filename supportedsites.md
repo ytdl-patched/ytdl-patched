@@ -772,7 +772,8 @@
  - **ndr:embed:base**
  - **NDTV**
  - **Nebula**: [<abbr title="netrc machine"><em>watchnebula</em></abbr>]
- - **nebula:collection**: [<abbr title="netrc machine"><em>watchnebula</em></abbr>]
+ - **nebula:channel**: [<abbr title="netrc machine"><em>watchnebula</em></abbr>]
+ - **nebula:subscriptions**: [<abbr title="netrc machine"><em>watchnebula</em></abbr>]
  - **NerdCubedFeed**
  - **netease:album**: 网易云音乐 - 专辑
  - **netease:djradio**: 网易云音乐 - 电台
