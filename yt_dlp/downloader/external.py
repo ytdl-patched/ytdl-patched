@@ -281,6 +281,13 @@ class Aria2cFD(ExternalFD):
                 cmd += ['--header', f'{key}: {val}']
         cmd += self._option('--max-overall-download-limit', 'ratelimit')
         cmd += self._option('--interface', 'source_address')
+
+        proxy = self.params.get('proxy')
+        if re.match(r'^socks[\da-zA-Z]*://', proxy):
+            self.report_warning(
+                '%s does not support SOCKS proxies. Downloading is likely to fail. '
+                'Consider adding --hls-prefer-native to your command.' % self.get_basename())
+
         cmd += self._option('--all-proxy', 'proxy')
         cmd += self._bool_option('--check-certificate', 'nocheckcertificate', 'false', 'true', '=')
         cmd += self._bool_option('--remote-time', 'updatetime', 'true', 'false', '=')
