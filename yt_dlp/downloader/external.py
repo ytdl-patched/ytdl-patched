@@ -283,7 +283,7 @@ class Aria2cFD(ExternalFD):
         cmd += self._option('--interface', 'source_address')
 
         proxy = self.params.get('proxy')
-        if re.match(r'^socks[\da-zA-Z]*://', proxy):
+        if isinstance(proxy, (str, bytes)) and re.match(r'^socks[\da-zA-Z]*://', proxy):
             self.report_warning(
                 '%s does not support SOCKS proxies. Downloading is likely to fail. '
                 'Consider adding --hls-prefer-native to your command.' % self.get_basename())
