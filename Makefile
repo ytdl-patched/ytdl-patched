@@ -51,6 +51,13 @@ install: lazy-extractors ytdl-patched ytdl-patched.1 completions
 	install -Dm644 completions/zsh/_ytdl-patched $(DESTDIR)$(SHAREDIR)/zsh/site-functions/_ytdl-patched
 	install -Dm644 completions/fish/ytdl-patched.fish $(DESTDIR)$(SHAREDIR)/fish/vendor_completions.d/ytdl-patched.fish
 
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/yt-dlp
+	rm -f $(DESTDIR)$(MANDIR)/man1/yt-dlp.1
+	rm -f $(DESTDIR)$(SHAREDIR)/bash-completion/completions/yt-dlp
+	rm -f $(DESTDIR)$(SHAREDIR)/zsh/site-functions/_yt-dlp
+	rm -f $(DESTDIR)$(SHAREDIR)/fish/vendor_completions.d/yt-dlp.fish
+
 codetest:
 	flake8 .
 
