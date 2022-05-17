@@ -5389,8 +5389,20 @@ def get_argcount(func):
     return try_get(func, lambda x: x.__code__.co_argcount, int)
 
 
-def Namespace(**kwargs):
-    return collections.namedtuple('Namespace', kwargs)(**kwargs)
+class Namespace:
+    """Immutable namespace"""
+    @property
+    def items_(self):
+        return self._dict.items()
+
+    def __init__(self, **kwargs):
+        self._dict = kwargs
+
+    def __getattr__(self, attr):
+        return self._dict[attr]
+
+    def __repr__(self):
+        return f'{type(self).__name__}({", ".join(f"{k}={v}" for k, v in self.items_)})'
 
 
 # Deprecated
