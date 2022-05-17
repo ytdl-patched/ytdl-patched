@@ -1377,7 +1377,6 @@ class YoutubeDL:
                             return None
                         elif reply == 'n':
                             return f'Skipping {video_title}'
-                    return True
                 elif ret is not None:
                     return ret
             return None
@@ -3353,18 +3352,18 @@ class YoutubeDL:
                         FFmpegFixupM4aPP)
 
                     downloader = get_suitable_downloader(info_dict, self.params) if 'protocol' in info_dict else None
-                    downloader = downloader.__name__ if downloader else None
+                    downloader = downloader.FD_NAME if downloader else None
 
                     if info_dict.get('requested_formats') is None and not will_be_converted(info_dict.get('ext')):  # Not necessary if doing merger
-                        ffmpeg_fixup(downloader == 'HlsFD' and not self.params.get('hls_use_mpegts')
+                        ffmpeg_fixup(downloader == 'hlsnative' and not self.params.get('hls_use_mpegts')
                                      or info_dict.get('is_live') and self.params.get('hls_use_mpegts') is None,
                                      'Possible MPEG-TS in MP4 container or malformed AAC timestamps',
                                      FFmpegFixupM3u8PP)
                         ffmpeg_fixup(info_dict.get('is_live') and downloader == 'DashSegmentsFD',
                                      'Possible duplicate MOOV atoms', FFmpegFixupDuplicateMoovPP)
 
-                    ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'Malformed timestamps detected', FFmpegFixupTimestampPP)
-                    ffmpeg_fixup(downloader == 'WebSocketFragmentFD', 'Malformed duration detected', FFmpegFixupDurationPP)
+                    ffmpeg_fixup(downloader == 'web_socket_fragment', 'Malformed timestamps detected', FFmpegFixupTimestampPP)
+                    ffmpeg_fixup(downloader == 'web_socket_fragment', 'Malformed duration detected', FFmpegFixupDurationPP)
 
                 fixup()
                 try:
@@ -3397,9 +3396,6 @@ class YoutubeDL:
                 res = func(*args, **kwargs)
             except UnavailableVideoError as e:
                 self.report_error(e)
-            except MaxDownloadsReached as e:
-                self.to_screen(f'[info] {e}')
-                raise
             except DownloadCancelled as e:
                 self.to_screen(f'[info] {e}')
                 if not self.params.get('break_per_url'):
