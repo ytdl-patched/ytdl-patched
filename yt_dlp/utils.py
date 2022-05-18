@@ -714,7 +714,9 @@ def sanitize_path(s, force=False):
 def sanitize_url(url):
     # Prepend protocol-less URLs with `http:` scheme in order to mitigate
     # the number of unwanted failures due to missing protocol
-    if url.startswith('//'):
+    if url is None:
+        return
+    elif url.startswith('//'):
         return 'http:%s' % url
     # Fix some common typos seen so far
     COMMON_TYPOS = (
@@ -3290,14 +3292,13 @@ def is_html(first_bytes):
         (b'\xff\xfe', 'utf-16-le'),
         (b'\xfe\xff', 'utf-16-be'),
     ]
-    for bom, enc in BOMS:
-        if first_bytes.startswith(bom):
-            s = first_bytes[len(bom):].decode(enc, 'replace')
-            break
-    else:
-        s = first_bytes.decode('utf-8', 'replace')
 
-    return re.match(r'^\s*<', s)
+    encoding = 'utf-8'
+    for bom, enc in BOMS:
+        while first_bytes.startswith(bom):
+            encoding, first_bytes = enc, first_bytes[len(bom):]
+
+    return re.match(r'^\s*<', first_bytes.decode(encoding, 'replace'))
 
 
 def determine_protocol(info_dict):
