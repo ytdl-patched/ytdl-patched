@@ -9,7 +9,6 @@ from ..utils import (
     ExtractorError,
     js_to_json,
     sanitized_Request,
-    std_headers,
     traverse_obj,
     update_url_query,
     urlencode_postdata,
@@ -207,7 +206,7 @@ class FC2LiveIE(InfoExtractor):
             'Cookie': self._get_cookie_header('https://live.fc2.com/'),
             'Origin': 'https://live.fc2.com',
             'Accept': '*/*',
-            'User-Agent': std_headers['User-Agent'],
+            'User-Agent': self.get_param('http_headers')['User-Agent'],
         })
 
         self.write_debug('[debug] Sending HLS server request')

@@ -2007,7 +2007,7 @@ class YoutubeDL:
             and download
             and (
                 not can_merge()
-                or info_dict.get('is_live', False)
+                or info_dict.get('is_live') and not self.params.get('live_from_start')
                 or self.outtmpl_dict['default'] == '-'))
         compat = (
             prefer_best

@@ -539,7 +539,7 @@
  - **ivi**: ivi.ru
  - **ivi:compilation**: ivi.ru compilations
  - **ivideon**: Ivideon TV
- - **iwara**
+ - **Iwara**
  - **iwara:playlist**
  - **iwara:user**
  - **Izlesene**

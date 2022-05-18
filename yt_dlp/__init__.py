@@ -894,6 +894,7 @@ def main(argv=None):
 
 
 from .extractor import gen_extractors, list_extractors
+
 __all__ = [
     'main',
     'YoutubeDL',
