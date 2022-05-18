@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 from ..utils import (
     NUMBER_RE,
+    Namespace,
     float_or_none,
     int_or_none,
     timetuple_from_msec,
@@ -368,18 +369,18 @@ class ShowsProgress(object):
             return
         self._multiline.end()
 
-    _progress_styles = {
-        'downloaded_bytes': 'light blue',
-        'percent': 'light blue',
-        'eta': 'yellow',
-        'speed': 'green',
-        'elapsed': 'bold white',
-        'total_bytes': '',
-        'total_bytes_estimate': '',
-    }
+    ProgressStyles = Namespace(
+        downloaded_bytes='light blue',
+        percent='light blue',
+        eta='yellow',
+        speed='green',
+        elapsed='bold white',
+        total_bytes='',
+        total_bytes_estimate='',
+    )
 
     def _report_progress_status(self, s, default_template):
-        for name, style in self._progress_styles.items():
+        for name, style in self.ProgressStyles:
             name = f'_{name}_str'
             if name not in s:
                 continue
