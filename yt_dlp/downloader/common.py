@@ -12,6 +12,7 @@ from ..utils import (
     get_argcount,
     match_filter_func,
     merge_dicts,
+    int_or_none,
     shell_quote,
     timeconvert,
 )
@@ -61,6 +62,7 @@ class FileDownloader(ShowsProgress):
                         useful for bypassing bandwidth throttling imposed by
                         a webserver (experimental)
     progress_template:  See YoutubeDL.py
+    retry_sleep_functions: See YoutubeDL.py
 
     Subclasses of this one must re-define the real_download method.
     """
@@ -95,6 +97,8 @@ class FileDownloader(ShowsProgress):
 
     def to_screen(self, *args, **kargs):
         self.ydl.to_screen(*args, quiet=self.params.get('quiet'), **kargs)
+
+    __to_screen = to_screen
 
     @property
     def FD_NAME(self):
@@ -149,7 +153,8 @@ class FileDownloader(ShowsProgress):
                         self.to_screen(
                             f'[download] Unable to {action} file due to file access error. '
                             f'Retrying (attempt {retry} of {self.format_retries(file_access_retries)}) ...')
-                        time.sleep(0.01)
+                        if not self.sleep_retry('file_access', retry):
+                            time.sleep(0.01)
             return inner
         return outer
 
@@ -199,13 +204,22 @@ class FileDownloader(ShowsProgress):
 
     def report_retry(self, err, count, retries):
         """Report retry in case of HTTP error 5xx"""
-        self.to_screen(
+        self.__to_screen(
             '[download] Got server HTTP error: %s. Retrying (attempt %d of %s) ...'
             % (error_to_compat_str(err), count, self.format_retries(retries)))
+        self.sleep_retry('http', count)
 
     def report_unable_to_resume(self):
         """Report it was impossible to resume download."""
         self.to_screen('[download] Unable to resume')
+
+    def sleep_retry(self, retry_type, count):
+        sleep_func = self.params.get('retry_sleep_functions', {}).get(retry_type)
+        delay = int_or_none(sleep_func(n=count - 1)) if sleep_func else None
+        if delay:
+            self.__to_screen(f'Sleeping {delay} seconds ...')
+            time.sleep(delay)
+        return sleep_func is not None
 
     @staticmethod
     def supports_manifest(manifest):

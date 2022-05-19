@@ -7,9 +7,8 @@ import traceback
 import platform
 from zipimport import zipimporter
 
-from .compat import compat_realpath
-from .utils import encode_compat_str, Popen, write_string
-
+from .compat import compat_realpath, functools
+from .utils import Popen, encode_compat_str, write_string
 from .version import __version__
 try:
     from .build_config import variant
@@ -22,6 +21,7 @@ except ImportError:
     is_brew = False
 
 
+@functools.cache
 def detect_variant():
     if hasattr(sys, 'frozen'):
         prefix = 'mac' if sys.platform == 'darwin' else 'win'
