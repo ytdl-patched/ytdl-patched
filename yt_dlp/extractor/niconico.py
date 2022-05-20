@@ -443,7 +443,7 @@ class NiconicoIE(NiconicoBaseIE):
             if fmt:
                 formats.append(fmt)
 
-        self._sort_formats(formats)
+        self._sort_formats(formats, ['tbr', 'res', 'proto:m3u8'])
 
         # Start extracting information
         tags = None
