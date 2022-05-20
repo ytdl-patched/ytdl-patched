@@ -178,7 +178,7 @@ class IwaraUserIE(InfoExtractor):
     def _real_extract(self, url):
         video_id = self._match_id(url)
         webpage = self._download_webpage(url, video_id)
-        videos_url = self._search_regex(r'<a href="(/users/[^/]+/videos)">', webpage, 'all videos url', default=None)
+        videos_url = self._search_regex(r'<a href="(/users/[^/]+/videos)(?:\?[^"]*)?">', webpage, 'all videos url', default=None)
 
         uploader = self._search_regex(r'<h2>([^<]+?)</h2>', webpage, 'uploader name', default=video_id)
         title = 'Uploaded videos from %s' % uploader
