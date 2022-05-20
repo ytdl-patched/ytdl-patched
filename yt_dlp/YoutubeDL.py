@@ -33,7 +33,6 @@ from .compat import (
     compat_str,
     compat_urllib_error,
     compat_urllib_request,
-    windows_enable_vt_mode,
 )
 from .cookies import load_cookies
 from .downloader import LDM_EXCEPTIONS, FFmpegFD, get_suitable_downloader, shorten_protocol_name
@@ -146,6 +145,7 @@ from .utils import (
     url_basename,
     variadic,
     version_tuple,
+    windows_enable_vt_mode,
     write_json_file,
     write_string,
 )
@@ -3875,7 +3875,7 @@ class YoutubeDL:
         def get_encoding(stream):
             ret = str(getattr(stream, 'encoding', 'missing (%s)' % type(stream).__name__))
             if not supports_terminal_sequences(stream):
-                from .compat import WINDOWS_VT_MODE  # Must be imported locally
+                from .utils import WINDOWS_VT_MODE  # Must be imported locally
                 ret += ' (No VT)' if WINDOWS_VT_MODE is False else ' (No ANSI)'
             return ret
 
