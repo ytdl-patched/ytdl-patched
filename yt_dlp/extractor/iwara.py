@@ -204,7 +204,7 @@ class IwaraUserIE(InfoExtractor):
         results = (
             self.url_result(urljoin(url, x.group(1)))
             for page in webpages
-            for x in re.finditer(r'<a href="(/videos/[^"]+)">', page))
+            for x in re.finditer(r'<a href="(/videos/[^"]+)">(?!<)', page))
 
         return {
             '_type': 'playlist',
