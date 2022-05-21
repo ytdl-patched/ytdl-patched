@@ -2711,7 +2711,7 @@ class YoutubeDL:
         if list_only:
             # Without this printing, -F --print-json will not work
             self.__forced_printings(info_dict, self.prepare_filename(info_dict), incomplete=True)
-            return
+            return info_dict
 
         while True:
             if interactive_format_selection:
