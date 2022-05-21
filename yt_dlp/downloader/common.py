@@ -6,13 +6,14 @@ import time
 
 from ..utils import (
     LockingUnsupportedError,
+    classproperty,
     decodeArgument,
     encodeFilename,
     error_to_compat_str,
+    float_or_none,
     get_argcount,
     match_filter_func,
     merge_dicts,
-    int_or_none,
     shell_quote,
     timeconvert,
 )
@@ -100,9 +101,9 @@ class FileDownloader(ShowsProgress):
 
     __to_screen = to_screen
 
-    @property
-    def FD_NAME(self):
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', type(self).__name__[:-2]).lower()
+    @classproperty
+    def FD_NAME(cls):
+        return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__[:-2]).lower()
 
     def slow_down(self, start_time, now, byte_counter):
         """Sleep if the download speed is over the rate limit."""
@@ -215,9 +216,9 @@ class FileDownloader(ShowsProgress):
 
     def sleep_retry(self, retry_type, count):
         sleep_func = self.params.get('retry_sleep_functions', {}).get(retry_type)
-        delay = int_or_none(sleep_func(n=count - 1)) if sleep_func else None
+        delay = float_or_none(sleep_func(n=count - 1)) if sleep_func else None
         if delay:
-            self.__to_screen(f'Sleeping {delay} seconds ...')
+            self.__to_screen(f'Sleeping {delay:.2f} seconds ...')
             time.sleep(delay)
         return sleep_func is not None
 

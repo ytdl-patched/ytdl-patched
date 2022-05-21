@@ -7,6 +7,7 @@ import time
 import signal
 
 from .fragment import FragmentFD
+from ..compat import functools
 from ..compat import compat_setenv, compat_str
 from ..postprocessor.ffmpeg import EXT_TO_OUT_FORMATS, FFmpegPostProcessor
 from ..postprocessor._attachments import RunsFFmpeg
@@ -82,7 +83,7 @@ class ExternalFD(FragmentFD):
     def EXE_NAME(cls):
         return cls.get_basename()
 
-    @property
+    @functools.cached_property
     def exe(self):
         return self.EXE_NAME
 

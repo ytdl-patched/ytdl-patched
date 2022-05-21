@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..YoutubeDL import YoutubeDL
 
+from ..compat import functools, re
 from ..compat import (
     compat_cookiejar_Cookie,
     compat_cookies_SimpleCookie,
@@ -29,7 +30,6 @@ from ..compat import (
     compat_urllib_parse_urlencode,
     compat_urllib_request,
     compat_urlparse,
-    re,
 )
 from ..dependencies import WebSocket
 from ..downloader import FileDownloader
@@ -3827,7 +3827,7 @@ class InfoExtractor:
     def _get_automatic_captions(self, *args, **kwargs):
         raise NotImplementedError('This method must be implemented by subclasses')
 
-    @property
+    @functools.cached_property
     def _cookies_passed(self):
         """Whether cookies have been passed to YoutubeDL"""
         return self.get_param('cookiefile') is not None or self.get_param('cookiesfrombrowser') is not None
