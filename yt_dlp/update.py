@@ -22,23 +22,29 @@ except ImportError:
 
 
 @functools.cache
-def detect_variant():
+def _get_variant_and_executable_path():
+    """@returns (variant, executable_path)"""
     if hasattr(sys, 'frozen'):
-        prefix = 'mac' if sys.platform == 'darwin' else 'win'
-        if getattr(sys, '_MEIPASS', None):
-            if sys._MEIPASS == os.path.dirname(sys.executable):
-                return f'{prefix}_dir'
-            if prefix == 'win' and variant:
-                return f'exe_{variant}'
-            return f'{prefix}_exe'
-        return 'py2exe'
-    elif isinstance(__loader__, zipimporter):
-        return 'zip'
+        path = sys.executable
+        if not hasattr(sys, '_MEIPASS'):
+            return 'py2exe', path
+        if sys._MEIPASS == os.path.dirname(path):
+            return f'{sys.platform}_dir', path
+        return f'{sys.platform}_exe', path
+
+    path = os.path.dirname(__file__)
+    if isinstance(__loader__, zipimporter):
+        return 'zip', os.path.join(path, '..')
     elif os.path.basename(sys.argv[0]) == '__main__.py':
-        return 'source'
+        return 'source', path
     elif is_brew:
-        return 'homebrew'
-    return 'unknown'
+        return 'homebrew', path
+    return 'unknown', path
+
+
+@functools.cache
+def detect_variant():
+    return _get_variant_and_executable_path()[0]
 
 
 _NON_UPDATEABLE_REASONS = {
