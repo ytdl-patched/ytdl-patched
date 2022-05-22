@@ -2384,7 +2384,7 @@ class YoutubeDL:
     def _calc_headers(self, info_dict):
         res = merge_headers(self.params['http_headers'], info_dict.get('http_headers') or {})
 
-        cookies = self._calc_cookies(info_dict)
+        cookies = self._calc_cookies(info_dict['url'])
         if cookies:
             res['Cookie'] = cookies
 
@@ -2395,8 +2395,8 @@ class YoutubeDL:
 
         return res
 
-    def _calc_cookies(self, info_dict):
-        pr = sanitized_Request(info_dict['url'])
+    def _calc_cookies(self, url):
+        pr = sanitized_Request(url)
         self.cookiejar.add_cookie_header(pr)
         return pr.get_header('Cookie')
 
@@ -2686,15 +2686,25 @@ class YoutubeDL:
         self.post_extract(info_dict)
         info_dict, _ = self.pre_process(info_dict, 'after_filter')
 
-        # NOTE: be careful at list_formats
-        format_selector = self.format_selector
-        if format_selector is None:
-            req_format = self._default_format_spec(info_dict, download=download)
-            self.write_debug('Default format spec: %s' % req_format)
-            format_selector = self.build_format_selector(req_format)
-
         # The pre-processors may have modified the formats
         formats = info_dict.get('formats', [info_dict])
+        format_selector = None
+
+        def fms():
+            nonlocal format_selector
+            if format_selector:
+                return format_selector
+            # NOTE: be careful at list_formats
+            format_selector = self.format_selector
+            if format_selector == '-':
+                # cancel format selector compilation and wipe cache
+                format_selector = None
+                return None
+            if format_selector is None:
+                req_format = self._default_format_spec(info_dict, download=download)
+                self.write_debug('Default format spec: %s' % req_format)
+                format_selector = self.build_format_selector(req_format)
+            return format_selector
 
         list_only = self.params.get('simulate') is None and (
             self.params.get('list_thumbnails') or self.params.get('listformats') or self.params.get('listsubtitles'))
@@ -2707,7 +2717,7 @@ class YoutubeDL:
                     info_dict['id'], automatic_captions, 'automatic captions')
             self.list_subtitles(info_dict['id'], subtitles, 'subtitles')
         if self.params.get('listformats') or interactive_format_selection:
-            self.list_formats(info_dict, format_selector)
+            self.list_formats(info_dict, fms())
         if list_only:
             # Without this printing, -F --print-json will not work
             self.__forced_printings(info_dict, self.prepare_filename(info_dict), incomplete=True)
@@ -2723,7 +2733,7 @@ class YoutubeDL:
                     self.report_error(err, tb=False, is_error=False)
                     continue
 
-            formats_to_download = list(format_selector({
+            formats_to_download = list(fms()({
                 'formats': formats,
                 'has_merged_format': any('none' not in (f.get('acodec'), f.get('vcodec')) for f in formats),
                 'incomplete_formats': (
@@ -3389,11 +3399,9 @@ class YoutubeDL:
                     return
                 info_dict['__write_download_archive'] = True
 
+        assert info_dict is original_infodict  # Make sure the info_dict was modified in-place
         if self.params.get('force_write_download_archive'):
             info_dict['__write_download_archive'] = True
-
-        # Make sure the info_dict was modified in-place
-        assert info_dict is original_infodict
         check_max_downloads()
 
     def __download_wrapper(self, func):

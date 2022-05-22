@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..YoutubeDL import YoutubeDL
 
-from ..compat import functools, re
+from ..compat import functools, re  # isort: split
 from ..compat import (
     compat_cookiejar_Cookie,
     compat_cookies_SimpleCookie,
@@ -3677,13 +3677,11 @@ class InfoExtractor:
 
     def _get_cookies(self, url):
         """ Return a compat_cookies_SimpleCookie with the cookies for the url """
-        return compat_cookies_SimpleCookie(self._get_cookie_header(url))
+        return compat_cookies_SimpleCookie(self._downloader._calc_cookies(url))
 
     def _get_cookie_header(self, url):
-        """ Return the cookies for the url """
-        req = sanitized_Request(url)
-        self._downloader.cookiejar.add_cookie_header(req)
-        return req.get_header('Cookie')
+        """ Return the cookies for the url. Deprecated. """
+        return self._downloader._calc_cookies(url)
 
     def _apply_first_set_cookie_header(self, url_handle, cookie):
         """

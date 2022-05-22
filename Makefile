@@ -9,7 +9,8 @@ tar: ytdl-patched.tar.gz
 # Keep this list in sync with MANIFEST.in
 # intended use: when building a source distribution,
 # make pypi-files && python setup.py sdist
-pypi-files: AUTHORS Changelog.md LICENSE README.md README.txt supportedsites completions ytdl-patched.1 devscripts/* test/*
+pypi-files: AUTHORS Changelog.md LICENSE README.md README.txt supportedsites \
+	        completions ytdl-patched.1 requirements.txt setup.cfg devscripts/* test/*
 
 .PHONY: all clean install test tar pypi-files completions ot offlinetest codetest supportedsites
 
@@ -20,7 +21,7 @@ clean-test:
 	*.mp4 *.ogg *.opus *.png *.sbv *.srt *.swf *.swp *.ttml *.url *.vtt *.wav *.webloc *.webm *.webp \
 	*.images *.lock *.aac
 clean-dist:
-	rm -rf yt-dlp.1.temp.md yt-dlp.1 README.txt MANIFEST build/ dist/ .coverage cover/ yt-dlp.tar.gz completions/ \
+	rm -rf ytdl-patched.1.temp.md ytdl-patched.1 README.txt MANIFEST build/ dist/ .coverage cover/ yt-dlp.tar.gz completions/ \
 	yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp ytdl-patched ytdl-patched*.exe yt_dlp.egg-info/ AUTHORS .mailmap
 clean-cache:
 	find . \( \
@@ -75,10 +76,10 @@ tar: ytdl-patched.tar.gz
 ytdl-patched: yt_dlp/*.py yt_dlp/*/*.py yt_dlp/*/*/*.py devscripts/make_zipfile.py
 	$(PYTHON) devscripts/make_zipfile.py "$(PYTHON)"
 
-README.md: yt_dlp/*.py yt_dlp/*/*.py
+README.md: yt_dlp/*.py yt_dlp/*/*.py devscripts/make_readme.py
 	COLUMNS=80 $(PYTHON) yt_dlp/__main__.py --ignore-config --help | $(PYTHON) devscripts/make_readme.py
 
-CONTRIBUTING.md: README.md
+CONTRIBUTING.md: README.md devscripts/make_contributing.py
 	$(PYTHON) devscripts/make_contributing.py README.md CONTRIBUTING.md
 
 issuetemplates: devscripts/make_issue_template.py .github/ISSUE_TEMPLATE_tmpl/1_broken_site.yml .github/ISSUE_TEMPLATE_tmpl/2_site_support_request.yml .github/ISSUE_TEMPLATE_tmpl/3_site_feature_request.yml .github/ISSUE_TEMPLATE_tmpl/4_bug_report.yml .github/ISSUE_TEMPLATE_tmpl/5_feature_request.yml yt_dlp/version.py
@@ -95,7 +96,7 @@ supportedsites:
 README.txt: README.md
 	pandoc -f $(MARKDOWN) -t plain README.md -o README.txt
 
-ytdl-patched.1: README.md
+ytdl-patched.1: README.md devscripts/prepare_manpage.py
 	$(PYTHON) devscripts/prepare_manpage.py ytdl-patched.1.temp.md
 	pandoc -s -f $(MARKDOWN) -t man ytdl-patched.1.temp.md -o ytdl-patched.1
 	rm -f ytdl-patched.1.temp.md
@@ -132,7 +133,7 @@ ytdl-patched.tar.gz: all
 		CONTRIBUTING.md Collaborators.md CONTRIBUTORS AUTHORS \
 		Makefile MANIFEST.in ytdl-patched.1 README.txt completions \
 		setup.py setup.cfg ytdl-patched yt_dlp requirements.txt \
-		devscripts test tox.ini pytest.ini
+		devscripts test
 	advdef -z -4 -i 30 ytdl-patched.tar.gz
 
 AUTHORS: .mailmap
