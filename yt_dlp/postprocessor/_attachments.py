@@ -12,10 +12,12 @@ from ..utils import (
     NUMBER_RE,
     Namespace,
     float_or_none,
+    join_nonempty,
     int_or_none,
     timetuple_from_msec,
     format_bytes,
     to_str,
+    try_call,
 )
 from ..minicurses import (
     MultilinePrinterBase,
@@ -264,12 +266,16 @@ class ShowsProgress(object):
 
     @staticmethod
     def format_seconds(seconds):
+        if seconds is None:
+            return ' Unknown'
         time = timetuple_from_msec(seconds * 1000)
         if time.hours > 99:
             return '--:--:--'
         if not time.hours:
             return '%02d:%02d' % time[1:-1]
         return '%02d:%02d:%02d' % time[:-1]
+
+    format_eta = format_seconds
 
     @staticmethod
     def calc_percent(byte_counter, data_len):
@@ -279,11 +285,7 @@ class ShowsProgress(object):
 
     @staticmethod
     def format_percent(percent):
-        if percent is None:
-            return '---.-%'
-        elif percent == 100:
-            return '100%'
-        return '%6s' % ('%3.1f%%' % percent)
+        return '  N/A%' if percent is None else f'{percent:>5.1f}%'
 
     @staticmethod
     def calc_eta(start, now, total, current):
@@ -296,12 +298,6 @@ class ShowsProgress(object):
             return None
         rate = float(current) / dif
         return int((float(total) - float(current)) / rate)
-
-    @staticmethod
-    def format_eta(eta):
-        if eta is None:
-            return '--:--'
-        return ShowsProgress.format_seconds(eta)
 
     @staticmethod
     def calc_speed(start, now, bytes):
@@ -320,11 +316,11 @@ class ShowsProgress(object):
     def format_speed_rate(rate):
         if rate is None:
             return '---x'
-        return '%.1dx' % rate
+        return '%6s' % ('%.1dx' % rate)
 
     @staticmethod
     def format_retries(retries):
-        return 'inf' if retries == float('inf') else '%.0f' % retries
+        return 'inf' if retries == float('inf') else int(retries)
 
     @staticmethod
     def best_block_size(elapsed_time, bytes):
@@ -404,71 +400,53 @@ class ShowsProgress(object):
             self._multiline.stream, self._multiline.allow_colors, *args, **kwargs)
 
     def report_progress(self, s):
+        def with_fields(*tups, default=''):
+            for *fields, tmpl in tups:
+                if all(s.get(f) is not None for f in fields):
+                    return tmpl
+            return default
+
         if s['status'] == 'finished':
             if self._params.get('noprogress'):
                 self.to_screen(f'[{self._PROGRESS_LABEL}] Download completed')
-            msg_template = '100%%'
-            if s.get('total_bytes') is not None:
-                s['_total_bytes_str'] = format_bytes(s['total_bytes'])
-                msg_template += ' of %(_total_bytes_str)s'
-            if s.get('elapsed') is not None:
-                s['_elapsed_str'] = self.format_seconds(s['elapsed'])
-                msg_template += ' in %(_elapsed_str)s'
-            if s.get('fragment_count') is not None:
-                msg_template += ' (%(fragment_count)d fragments total)'
-            s['_percent_str'] = self.format_percent(100)
-            self._report_progress_status(s, msg_template)
-            return
+            s.update({
+                '_total_bytes_str': format_bytes(s.get('total_bytes')),
+                '_elapsed_str': self.format_seconds(s.get('elapsed')),
+                '_percent_str': self.format_percent(100),
+            })
+            self._report_progress_status(s, join_nonempty(
+                '100%%',
+                with_fields(('total_bytes', 'of %(_total_bytes_str)s')),
+                with_fields(('elapsed', 'in %(_elapsed_str)s')),
+                delim=' '))
 
         if s['status'] not in ('downloading', 'processing'):
             return
 
         downloaded_bytes = s.get('downloaded_bytes') or s.get('processed_bytes')
 
-        if s.get('eta') is not None:
-            s['_eta_str'] = self.format_eta(s['eta'])
-        else:
-            s['_eta_str'] = 'Unknown'
+        s.update({
+            '_eta_str': self.format_eta(s.get('eta')),
+            '_speed_str': self.format_speed(s.get('speed')) if s.get('speed_rate') is None else self.format_speed_rate(s['speed_rate']),
+            '_percent_str': self.format_percent(try_call(
+                lambda: 100 * s['downloaded_bytes'] / s['total_bytes'],
+                lambda: 100 * s['downloaded_bytes'] / s['total_bytes_estimate'],
+                lambda: s['downloaded_bytes'] == 0 and 0)),
+            '_total_bytes_str': format_bytes(s.get('total_bytes')),
+            '_total_bytes_estimate_str': format_bytes(s.get('total_bytes_estimate')),
+            '_downloaded_bytes_str': format_bytes(downloaded_bytes),
+            '_elapsed_str': self.format_seconds(s.get('elapsed')),
+        })
 
-        if s.get('total_bytes') and downloaded_bytes is not None:
-            s['_percent_str'] = self.format_percent(100 * downloaded_bytes / s['total_bytes'])
-        elif s.get('total_bytes_estimate') and downloaded_bytes is not None:
-            s['_percent_str'] = self.format_percent(100 * downloaded_bytes / s['total_bytes_estimate'])
-        else:
-            if downloaded_bytes == 0:
-                s['_percent_str'] = self.format_percent(0)
-            else:
-                s['_percent_str'] = 'Unknown %'
+        msg_template = with_fields(
+            ('total_bytes', '%(_percent_str)s of %(_total_bytes_str)s at %(_speed_str)s ETA %(_eta_str)s'),
+            ('total_bytes_estimate', '%(_percent_str)s of ~%(_total_bytes_estimate_str)s at %(_speed_str)s ETA %(_eta_str)s'),
+            ('downloaded_bytes', 'elapsed', '%(_downloaded_bytes_str)s at %(_speed_str)s (%(_elapsed_str)s)'),
+            ('downloaded_bytes', '%(_downloaded_bytes_str)s at %(_speed_str)s'),
+            default='%(_percent_str)s at %(_speed_str)s ETA %(_eta_str)s')
 
-        if s.get('speed_rate') is not None:
-            s['_speed_str'] = self.format_speed_rate(s['speed_rate'])
-        elif s.get('speed') is not None:
-            s['_speed_str'] = self.format_speed(s['speed'])
-        else:
-            s['_speed_str'] = 'Unknown speed'
-
-        if s.get('total_bytes') is not None:
-            s['_total_bytes_str'] = format_bytes(s['total_bytes'])
-            msg_template = '%(_percent_str)s of %(_total_bytes_str)s at %(_speed_str)s ETA %(_eta_str)s'
-        elif s.get('total_bytes_estimate') is not None:
-            s['_total_bytes_estimate_str'] = format_bytes(s['total_bytes_estimate'])
-            msg_template = '%(_percent_str)s of ~%(_total_bytes_estimate_str)s at %(_speed_str)s ETA %(_eta_str)s'
-        else:
-            if downloaded_bytes is not None:
-                s['_downloaded_bytes_str'] = format_bytes(downloaded_bytes)
-                if s.get('elapsed'):
-                    s['_elapsed_str'] = self.format_seconds(s['elapsed'])
-                    msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s (%(_elapsed_str)s)'
-                else:
-                    msg_template = '%(_downloaded_bytes_str)s at %(_speed_str)s'
-                if s.get('fragment_count') is not None:
-                    msg_template += ' (%(fragment_count)s fragments)'
-            else:
-                msg_template = '%(_percent_str)s at %(_speed_str)s ETA %(_eta_str)s'
-
-        if s.get('fragment_count') is not None and s.get('fragment_index') is not None:
-            msg_template += ' (%(fragment_index)d fragments of %(fragment_count)d)'
-        elif s.get('fragment_index') is not None:
-            msg_template += ' (%(fragment_index)d fragments downloaded)'
+        msg_template += with_fields(
+            ('fragment_index', 'fragment_count', ' (%(fragment_index)d fragments of %(fragment_count)d)'),
+            ('fragment_index', ' (%(fragment_index)d fragments downloaded)'))
 
         self._report_progress_status(s, msg_template)
