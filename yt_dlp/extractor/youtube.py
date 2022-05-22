@@ -3522,10 +3522,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if reason:
                 self.raise_no_formats(reason, expected=True)
 
-        for fmt in formats:
-            # retry when 401 is returned; no more fragments can be downloaded anymore
-            fmt['unrecoverable_http_error'] = (401, )
-
         keywords = get_first(video_details, 'keywords', expected_type=list) or []
         if not keywords and webpage:
             keywords = [
@@ -3635,6 +3631,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                          else live_content),
             'live_status': 'is_upcoming' if is_upcoming else None,  # rest will be set by YoutubeDL
             'release_timestamp': live_start_time,
+
+            # retry when any of the following codes is returned;
+            # no more fragments or data can be downloaded anymore
+            'unrecoverable_http_error': (401, 503),
         }
 
         pctr = traverse_obj(player_responses, (..., 'captions', 'playerCaptionsTracklistRenderer'), expected_type=dict)
