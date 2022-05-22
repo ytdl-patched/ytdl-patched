@@ -1,4 +1,3 @@
-import itertools
 import re
 import urllib.parse
 
@@ -12,6 +11,14 @@ from ..utils import (
     url_or_none,
     urljoin,
 )
+
+
+class IwaraBaseIE(InfoExtractor):
+    _BASE_REGEX = r'(?P<base_url>https?://(?:www\.|ecchi\.)?iwara\.tv)'
+
+    def _extract_playlist(self, base_url, webpage):
+        for path in re.findall(r'class="title">\s*<a[^<]+href="([^"]+)', webpage):
+            yield self.url_result(urljoin(base_url, path))
 
 
 class IwaraIE(InfoExtractor):
@@ -122,7 +129,7 @@ class IwaraIE(InfoExtractor):
         }
 
 
-class IwaraUserIE(InfoExtractor):
+class IwaraUserIE(IwaraBaseIE):
     IE_NAME = 'iwara:user'
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/?&#]+)'
     _TESTS = [{
@@ -175,45 +182,26 @@ class IwaraUserIE(InfoExtractor):
     def suitable(cls, url):
         return super(IwaraUserIE, cls).suitable(url) and not IwaraUser2IE.suitable(url)
 
+    def _entries(self, playlist_id, base_url, webpage):
+        yield from self._extract_playlist(base_url, webpage)
+
+        page_urls = re.findall(
+            r'class="pager-item"[^>]*>\s*<a[^<]+href="([^"]+)', webpage)
+
+        for n, path in enumerate(page_urls, 2):
+            yield from self._extract_playlist(
+                base_url, self._download_webpage(
+                    urljoin(base_url, path), playlist_id, note=f'Downloading playlist page {n}'))
+
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        webpage = self._download_webpage(url, video_id)
-        videos_url = self._search_regex(r'<a href="(/users/[^/]+/videos)(?:\?[^"]*)?">', webpage, 'all videos url', default=None)
+        playlist_id, base_url = self._match_valid_url(url).group('id', 'base_url')
+        playlist_id = urllib.parse.unquote(playlist_id)
 
-        uploader = self._search_regex(r'<h2>([^<]+?)</h2>', webpage, 'uploader name', default=video_id)
-        title = 'Uploaded videos from %s' % uploader
+        webpage = self._download_webpage(
+            f'{base_url}/users/{playlist_id}/videos', playlist_id)
 
-        if not videos_url:
-            webpages = [webpage]
-        else:
-            videos_base_url = urljoin(url, videos_url)
-
-            def do_paging():
-                for i in itertools.count():
-                    if i == 0:
-                        videos_page_url = videos_base_url
-                    else:
-                        videos_page_url = urljoin(videos_base_url, '?page=%d' % i)
-                    videos_webpage = self._download_webpage(videos_page_url, video_id, note='Downloading video list %d' % (i + 1))
-                    yield videos_webpage
-                    if not '?page=%d' % (i + 1) in videos_webpage:
-                        break
-
-            webpages = do_paging()
-
-        results = (
-            self.url_result(urljoin(url, x.group(1)))
-            for page in webpages
-            for x in re.finditer(r'<a href="(/videos/[^"]+)">(?!<)', page))
-
-        return {
-            '_type': 'playlist',
-            'entries': results,
-            'id': video_id,
-            'title': title,
-            'uploader': uploader,
-            'uploader_id': video_id,
-        }
+        return self.playlist_result(
+            self._entries(playlist_id, base_url, webpage), playlist_id)
 
 
 class IwaraUser2IE(InfoExtractor):
