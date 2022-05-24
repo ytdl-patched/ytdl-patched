@@ -131,7 +131,7 @@ class IwaraIE(InfoExtractor):
 
 class IwaraUserIE(IwaraBaseIE):
     IE_NAME = 'iwara:user'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/?&#]+)'
+    _VALID_URL = fr'{IwaraBaseIE._BASE_REGEX}/users/(?P<id>[^/?#&]+)'
     _TESTS = [{
         # cond: videos < 40
         'note': 'number of all videos page is just 1 page',
