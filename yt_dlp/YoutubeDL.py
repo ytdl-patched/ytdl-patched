@@ -1333,6 +1333,10 @@ class YoutubeDL:
 
         video_title = info_dict.get('title', info_dict.get('id', 'video'))
 
+        video_id = info_dict.get('id')
+        if video_id and video_title != video_id:
+            video_title = f'{video_title} [{video_id}]'
+
         def check_filter():
             if 'title' in info_dict:
                 # This can happen when we're just evaluating the playlist
