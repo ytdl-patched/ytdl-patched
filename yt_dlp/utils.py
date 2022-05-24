@@ -1929,8 +1929,8 @@ def write_string(s, out=None, encoding=None):
     if 'b' in getattr(out, 'mode', ''):
         enc = encoding or preferredencoding()
     elif hasattr(out, 'buffer'):
-        out = out.buffer
         enc = encoding or getattr(out, 'encoding', None) or preferredencoding()
+        out = out.buffer
 
     out.write(s.encode(enc, 'ignore') if enc else s)
     out.flush()
