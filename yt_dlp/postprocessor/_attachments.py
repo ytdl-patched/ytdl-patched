@@ -429,9 +429,9 @@ class ShowsProgress(object):
             '_eta_str': self.format_eta(s.get('eta')),
             '_speed_str': self.format_speed(s.get('speed')) if s.get('speed_rate') is None else self.format_speed_rate(s['speed_rate']),
             '_percent_str': self.format_percent(try_call(
-                lambda: 100 * s[downloaded_bytes] / s['total_bytes'],
-                lambda: 100 * s[downloaded_bytes] / s['total_bytes_estimate'],
-                lambda: s[downloaded_bytes] == 0 and 0)),
+                lambda: 100 * downloaded_bytes / s['total_bytes'],
+                lambda: 100 * downloaded_bytes / s['total_bytes_estimate'],
+                lambda: downloaded_bytes == 0 and 0)),
             '_total_bytes_str': format_bytes(s.get('total_bytes')),
             '_total_bytes_estimate_str': format_bytes(s.get('total_bytes_estimate')),
             '_downloaded_bytes_str': format_bytes(downloaded_bytes),
