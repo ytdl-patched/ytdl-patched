@@ -94,6 +94,10 @@ for i in itertools.count(1):
 ie.to_screen(f'Adding Gab Social to the list, len(results)={len(results)}')
 results.add('gab.com')
 
+# Truth Social
+ie.to_screen(f'Adding Truth Social to the list, len(results)={len(results)}')
+results.add('truthsocial.com')
+
 # Pleroma
 if True:
     try:
