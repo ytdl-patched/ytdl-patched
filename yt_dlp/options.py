@@ -1083,6 +1083,12 @@ def create_parser():
             'Split filename longer than 255 bytes into few path segments. '
             'This may create dumb directories.'))
     workarounds.add_option(
+        '--no-escape-long-names',
+        action='store_false', dest='escape_long_names', default=False,
+        help=(
+            'Do not modify filename to fit into 255-byte limit. '
+            'Some websites may fail to download without -o option.'))
+    workarounds.add_option(
         '--use-modern-tls-ciphers', '--enable-modern-tls-ciphers',
         action='store_true', dest='use_modern_tls_cipher', default=False,
         help=(
