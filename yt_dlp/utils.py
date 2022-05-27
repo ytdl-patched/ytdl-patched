@@ -816,7 +816,7 @@ class Popen(subprocess.Popen):
             if isinstance(args, tuple):
                 args = list(args)
             args[0] = args[0].decode()
-        return self.communicate(self, *args, **kwargs)
+        return self.communicate(*args, **kwargs)
 
 
 def get_subprocess_encoding():
