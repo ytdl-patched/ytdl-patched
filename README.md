@@ -197,7 +197,7 @@ You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens
 
 * **Output template improvements**: Output templates can now have date-time formatting, numeric offsets, object traversal etc. See [output template](#output-template) for details. Even more advanced operations can also be done with the help of `--parse-metadata` and `--replace-in-metadata`
 
-* **Other new options**: Many new options have been added such as `--concat-playlist`, `--print`, `--wait-for-video`, `--sleep-requests`, `--convert-thumbnails`, `--write-link`, `--force-download-archive`, `--force-overwrites`, `--break-on-reject` etc
+* **Other new options**: Many new options have been added such as `--alias`, `--print`, `--concat-playlist`, `--wait-for-video`, `--retry-sleep`, `--sleep-requests`, `--convert-thumbnails`, `--force-download-archive`, `--force-overwrites`, `--break-on-reject` etc
 
 * **Improvements**: Regex and other operators in `--format`/`--match-filter`, multiple `--postprocessor-args` and `--downloader-args`, faster archive checking, more [format selection options](#format-selection), merge multi-video/audio, multiple `--config-locations`, `--exec` at different stages, etc
 
@@ -237,7 +237,7 @@ Some of yt-dlp's default options are different from that of youtube-dl and youtu
 
 For ease of use, a few more compat options are available:
 
-* `--compat-options all`: Use all compat options
+* `--compat-options all`: Use all compat options (Do NOT use)
 * `--compat-options youtube-dl`: Same as `--compat-options all,-multistreams`
 * `--compat-options youtube-dlc`: Same as `--compat-options all,-no-live-chat,-no-youtube-channel-redirect`
 
@@ -430,8 +430,9 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                     defined in the current file
     --config-locations PATH         Location of the main configuration file;
                                     either the path to the config or its
-                                    containing directory. Can be used multiple
-                                    times and inside other configuration files
+                                    containing directory ("-" for stdin). Can be
+                                    used multiple times and inside other
+                                    configuration files
     --flat-playlist                 Do not extract the videos of a playlist,
                                     only list them
     --no-flat-playlist              Extract the videos of a playlist
@@ -1074,9 +1075,9 @@ You can also fork the project on github and run your fork's [build workflow](.gi
     --no-remove-chapters            Do not remove any chapters from the file
                                     (default)
     --force-keyframes-at-cuts       Force keyframes around chapters when
-                                    removing/splitting them. The resulting video
-                                    may have fewer artifacts around the cuts,
-                                    but is very slow due to needing a re-encode
+                                    removing/splitting them. This is slow due to
+                                    needing a re-encode, but the resulting video
+                                    may have fewer artifacts around the cuts
     --no-force-keyframes-at-cuts    Do not force keyframes around the chapters
                                     when cutting/splitting (default)
     --use-postprocessor NAME[:ARGS]

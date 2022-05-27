@@ -27,6 +27,7 @@ from string import ascii_letters
 
 from .cache import Cache
 from .compat import (
+    HAS_LEGACY as compat_has_legacy,
     compat_get_terminal_size,
     compat_os_name,
     compat_shlex_quote,
@@ -643,7 +644,10 @@ class YoutubeDL:
         for msg in self.params.get('_deprecation_warnings', []):
             self.deprecation_warning(msg)
 
-        if 'list-formats' in self.params.get('compat_opts', []):
+        self.params['compat_opts'] = set(self.params.get('compat_opts', ()))
+        if not compat_has_legacy:
+            self.params['compat_opts'].add('no-compat-legacy')
+        if 'list-formats' in self.params['compat_opts']:
             self.params['listformats_table'] = False
 
         if 'overwrites' not in self.params and self.params.get('nooverwrites') is not None:
@@ -840,9 +844,9 @@ class YoutubeDL:
         """Print message to stdout"""
         if quiet is not None:
             self.deprecation_warning('"YoutubeDL.to_stdout" no longer accepts the argument quiet. Use "YoutubeDL.to_screen" instead')
-        self._write_string(
-            '%s%s' % (self._bidi_workaround(message), ('' if skip_eol else '\n')),
-            self._out_files.out)
+        if skip_eol is not False:
+            self.deprecation_warning('"YoutubeDL.to_stdout" no longer accepts the argument skip_eol. Use "YoutubeDL.to_screen" instead')
+        self._write_string(self._bidi_workaround(message), self._out_files.out)
 
     def to_screen(self, message, skip_eol=False, quiet=None):
         """Print message to screen if not in quiet mode"""
@@ -997,7 +1001,7 @@ class YoutubeDL:
         '''Log debug message or Print message to stderr'''
         if not self.params.get('verbose', False):
             return
-        message = '[debug] %s' % message
+        message = f'[debug] {message}'
         if self.params.get('logger'):
             self.params['logger'].debug(message)
         else:
@@ -1192,7 +1196,7 @@ class YoutubeDL:
         def filename_sanitizer(key, value, restricted=self.params.get('restrictfilenames')):
             return sanitize_filename(str(value), restricted=restricted, is_id=(
                 bool(re.search(r'(^|[_.])id(\.|$)', key))
-                if 'filename-sanitization' in self.params.get('compat_opts', [])
+                if 'filename-sanitization' in self.params['compat_opts']
                 else NO_DEFAULT))
 
         sanitizer = sanitize if callable(sanitize) else filename_sanitizer
@@ -1862,7 +1866,7 @@ class YoutubeDL:
         max_failures = self.params.get('skip_playlist_after_errors') or float('inf')
         for i, entry_tuple in enumerate(entries, 1):
             playlist_index, entry = entry_tuple
-            if 'playlist-index' in self.params.get('compat_opts', []):
+            if 'playlist-index' in self.params['compat_opts']:
                 playlist_index = playlistitems[i - 1] if playlistitems else i + playliststart - 1
             self.to_screen('[download] Downloading video %s of %s' % (
                 self._format_screen(i, self.Styles.ID), self._format_screen(n_entries, self.Styles.EMPHASIS)))
@@ -1993,7 +1997,7 @@ class YoutubeDL:
             temp_file.close()
             try:
                 success, _ = self.dl(temp_file.name, f, test=True)
-            except (DownloadError, IOError, OSError, ValueError) + network_exceptions:
+            except (DownloadError, OSError, ValueError) + network_exceptions:
                 success = False
             finally:
                 if os.path.exists(temp_file.name):
@@ -2022,7 +2026,7 @@ class YoutubeDL:
         compat = (
             prefer_best
             or self.params.get('allow_multiple_audio_streams', False)
-            or 'format-spec' in self.params.get('compat_opts', []))
+            or 'format-spec' in self.params['compat_opts'])
 
         return (
             'best/bestvideo+bestaudio' if prefer_best
@@ -3939,8 +3943,8 @@ class YoutubeDL:
             write_debug('Plugins: %s' % [
                 '%s%s' % (klass.__name__, '' if klass.__name__ == name else f' as {name}')
                 for name, klass in itertools.chain(plugin_extractors.items(), plugin_postprocessors.items())])
-        if self.params.get('compat_opts'):
-            write_debug('Compatibility options: %s' % ', '.join(self.params.get('compat_opts')))
+        if self.params['compat_opts']:
+            write_debug('Compatibility options: %s' % ', '.join(self.params['compat_opts']))
 
         if source == 'source':
             try:

@@ -112,9 +112,7 @@ completion-fish: yt_dlp/*.py yt_dlp/*/*.py devscripts/fish-completion.in
 	mkdir -p completions/fish/
 	$(PYTHON) devscripts/fish-completion.py
 
-lazy-extractors: yt_dlp/extractor/lazy_extractors.py
-
-_EXTRACTOR_FILES = $(shell find yt_dlp/extractor -iname '*.py' -and -not -iname 'lazy_extractors.py')
+_EXTRACTOR_FILES = $(shell find yt_dlp/extractor -name '*.py' -and -not -name 'lazy_extractors.py')
 yt_dlp/extractor/lazy_extractors.py: devscripts/make_lazy_extractors.py devscripts/lazy_load_template.py $(_EXTRACTOR_FILES)
 	$(PYTHON) devscripts/make_lazy_extractors.py $@
 

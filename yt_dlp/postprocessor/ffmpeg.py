@@ -89,15 +89,6 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
         if self.use_native_progress:
             self._enable_progress(False)
 
-    def check_version(self):
-        if not self.available:
-            raise FFmpegPostProcessorError('ffmpeg not found. Please install or provide the path using --ffmpeg-location')
-
-        required_version = '10-0' if self.basename == 'avconv' else '1.0'
-        if is_outdated_version(self._version, required_version):
-            self.report_warning(f'Your copy of {self.basename} is outdated, update {self.basename} '
-                                f'to version {required_version} or newer if you encounter any errors')
-
     @staticmethod
     def get_versions_and_features(downloader=None):
         pp = FFmpegPostProcessor(downloader)
@@ -227,6 +218,15 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
             yield from ('-c', 'copy')
         if ext in ('mp4', 'mov', 'm4a'):
             yield from ('-c:s', 'mov_text')
+
+    def check_version(self):
+        if not self.available:
+            raise FFmpegPostProcessorError('ffmpeg not found. Please install or provide the path using --ffmpeg-location')
+
+        required_version = '10-0' if self.basename == 'avconv' else '1.0'
+        if is_outdated_version(self._version, required_version):
+            self.report_warning(f'Your copy of {self.basename} is outdated, update {self.basename} '
+                                f'to version {required_version} or newer if you encounter any errors')
 
     def get_audio_codec(self, path):
         if not self.probe_available and not self.available:
