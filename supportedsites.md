@@ -328,8 +328,8 @@
  - **drtv**
  - **drtv:live**
  - **DTube**
- - **duboku**: www.duboku.co
- - **duboku:list**: www.duboku.co entire series
+ - **duboku**: www.duboku.io
+ - **duboku:list**: www.duboku.io entire series
  - **Dumpert**
  - **dvtv**: http://video.aktualne.cz/
  - **dw**
