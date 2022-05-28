@@ -1,8 +1,12 @@
 import re
 
 from .common import InfoExtractor
-from ..utils import ExtractorError, clean_html, int_or_none, try_get, unified_strdate
-from ..compat import compat_str
+from ..utils import (
+    ExtractorError,
+    clean_html,
+    int_or_none,
+    try_get,
+    unified_strdate)
 
 
 class DamtomoBaseIE(InfoExtractor):
@@ -33,7 +37,7 @@ class DamtomoBaseIE(InfoExtractor):
             transform_source=lambda x: re.sub(r'\s*encoding="[^"]+?"', '', x))
 
         m3u8_url = try_get(stream_tree, lambda x: x.find(
-            './/d:streamingUrl', {'d': self._DKML_XML_NS}).text.strip(), compat_str)
+            './/d:streamingUrl', {'d': self._DKML_XML_NS}).text.strip(), str)
         if not m3u8_url:
             raise ExtractorError('Failed to obtain m3u8 URL')
 
