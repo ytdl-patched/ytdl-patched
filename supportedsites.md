@@ -951,6 +951,7 @@
  - **PlayPlusTV**: [<abbr title="netrc machine"><em>playplustv</em></abbr>]
  - **PlayStuff**
  - **PlaysTV**
+ - **PlaySuisse**
  - **Playtvak**: Playtvak.cz, iDNES.cz and Lidovky.cz
  - **Playvid**
  - **PlayVids**
