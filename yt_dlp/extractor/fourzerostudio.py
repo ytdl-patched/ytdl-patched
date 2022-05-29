@@ -1,3 +1,4 @@
+from tarfile import ExtractError
 from .common import InfoExtractor
 from ..utils import traverse_obj, unified_timestamp
 
@@ -40,9 +41,10 @@ class FourZeroStudioArchiveIE(InfoExtractor):
         webpage = self._download_webpage(url, video_id)
         nuxt_data = self._search_nuxt_data(webpage, video_id, full_data=True)
 
-        pcb = traverse_obj(nuxt_data, ('ssrRefs', lambda k, v: v['__typename'] == 'PublicCreatorBroadcast'), get_all=False)
-        uploader_info = traverse_obj(nuxt_data, ('ssrRefs', lambda k, v: v['__typename'] == 'PublicUser'), get_all=False)
-        comments = traverse_obj(nuxt_data, ('ssrRefs', ..., lambda k, v: v['__typename'] == 'PublicCreatorBroadcastComment'))
+        pcb = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicCreatorBroadcast'), get_all=False)
+        # TODO: move to common class
+        uploader_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicUser'), get_all=False)
+        comments = traverse_obj(nuxt_data, ('ssrRefs', ..., lambda _, v: v['__typename'] == 'PublicCreatorBroadcastComment'))
 
         formats = self._extract_m3u8_formats(
             pcb.get('archiveUrl'), video_id, ext='mp4')
@@ -72,7 +74,48 @@ class FourZeroStudioClipIE(InfoExtractor):
     _VALID_URL = r'https?://0000\.studio/(?P<uploader_id>[^/]+)/archive-clip/(?P<id>[^/]+)'
     IE_NAME = '0000studio:clip'
     _WORKING = False  # WIP
-    _TESTS = []
+    _TESTS = [{
+        'url': 'https://0000.studio/soeji/archive-clip/e46b0278-24cd-40a8-92e1-b8fc2b21f34f',
+        'info_dict': {
+            'id': 'e46b0278-24cd-40a8-92e1-b8fc2b21f34f',
+            'title': 'わたベーさんからイラスト差し入れいただきました。ありがとうございました！',
+            'timestamp': 1652109105,
+            'like_count': 1,
+            'uploader': 'ソエジマケイタ',
+            'uploader_id': 'soeji',
+        }
+    }]
 
     def _real_extract(self, url):
         video_id, uploader_id = self._match_valid_url(url).group('id', 'uploader_id')
+        webpage = self._download_webpage(url, video_id)
+        nuxt_data = self._search_nuxt_data(webpage, video_id, full_data=True)
+
+        # TODO: move to common class
+        uploader_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicUser'), get_all=False)
+        clip_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicCreatorArchivedClip'), get_all=False)
+
+        medias = self._parse_html5_media_entries(url, webpage, video_id)
+        if not medias:
+            raise ExtractError('Cannot find media elements.')
+        for m in medias:
+            if 'mp4' in traverse_obj(m, ('formats', ..., 'ext')):
+                info = m
+                break
+        else:
+            self.report_warning('Failed to find a desired media element. Falling back to using NUXT data.')
+            info = {
+                'formats': [{
+                    'ext': 'mp4',
+                    'url': url,
+                } for url in clip_info.get('mediaFiles') if url],
+            }
+        info.update({
+            'id': video_id,
+            'title': clip_info.get('clipComment'),
+            'timestamp': unified_timestamp(clip_info.get('createdAt')),
+            'like_count': clip_info.get('likeCount'),
+            'uploader': uploader_info.get('username'),
+            'uploader_id': uploader_id,
+        })
+        return info
