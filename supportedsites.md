@@ -1,4 +1,7 @@
 # Supported sites
+ - **0000studio**: (**Currently broken**)
+ - **0000studio:archive**
+ - **0000studio:clip**
  - **17live**
  - **17live:clip**
  - **1tv**: Первый канал
