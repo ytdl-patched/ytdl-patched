@@ -1,6 +1,8 @@
-from tarfile import ExtractError
 from .common import InfoExtractor
-from ..utils import traverse_obj, unified_timestamp
+from ..utils import (
+    traverse_obj,
+    unified_timestamp,
+)
 
 
 class FourZeroStudioIE(InfoExtractor):
@@ -94,10 +96,7 @@ class FourZeroStudioClipIE(InfoExtractor):
         uploader_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicUser'), get_all=False)
         clip_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicCreatorArchivedClip'), get_all=False)
 
-        medias = self._parse_html5_media_entries(url, webpage, video_id)
-        if not medias:
-            raise ExtractError('Cannot find media elements.')
-        for m in medias:
+        for m in self._parse_html5_media_entries(url, webpage, video_id):
             if 'mp4' in traverse_obj(m, ('formats', ..., 'ext')):
                 info = m
                 break
