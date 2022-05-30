@@ -26,7 +26,7 @@ jobs:
           { name: 'pypy-3.7', may_fail: false, major: 3, special: '' },
         ]
         ytdl_test_set: [
-          { name: 'download', may_fail: true },
+          # { name: 'download', may_fail: true },
           { name: 'core', may_fail: false },
         ]
     env:
