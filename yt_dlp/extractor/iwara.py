@@ -138,40 +138,28 @@ class IwaraUserIE(IwaraBaseIE):
         'note': 'number of all videos page is just 1 page. less than 40 videos',
         'url': 'https://ecchi.iwara.tv/users/infinityyukarip',
         'info_dict': {
-            'title': 'Uploaded videos from Infinity_YukariP',
             'id': 'infinityyukarip',
-            'uploader': 'Infinity_YukariP',
-            'uploader_id': 'infinityyukarip',
         },
         'playlist_mincount': 39,
     }, {
         'note': 'no even all videos page. probably less than 10 videos',
         'url': 'https://ecchi.iwara.tv/users/mmd-quintet',
         'info_dict': {
-            'title': 'Uploaded videos from mmd quintet',
             'id': 'mmd-quintet',
-            'uploader': 'mmd quintet',
-            'uploader_id': 'mmd-quintet',
         },
         'playlist_mincount': 6,
     }, {
         'note': 'has paging. more than 40 videos',
         'url': 'https://ecchi.iwara.tv/users/theblackbirdcalls',
         'info_dict': {
-            'title': 'Uploaded videos from TheBlackbirdCalls',
             'id': 'theblackbirdcalls',
-            'uploader': 'TheBlackbirdCalls',
-            'uploader_id': 'theblackbirdcalls',
         },
         'playlist_mincount': 420,
     }, {
         'note': 'foreign chars in URL. there must be foreign characters in URL',
         'url': 'https://ecchi.iwara.tv/users/ぶた丼',
         'info_dict': {
-            'title': 'Uploaded videos from ぶた丼',
             'id': 'ぶた丼',
-            'uploader': 'ぶた丼',
-            'uploader_id': 'ぶた丼',
         },
         'playlist_mincount': 170,
     }]
