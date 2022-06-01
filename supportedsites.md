@@ -63,8 +63,6 @@
  - **AmHistoryChannel**
  - **anderetijden**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
  - **AnimalPlanet**
- - **AnimeLab**: [<abbr title="netrc machine"><em>animelab</em></abbr>]
- - **AnimeLabShows**: [<abbr title="netrc machine"><em>animelab</em></abbr>]
  - **AnimeOnDemand**: [<abbr title="netrc machine"><em>animeondemand</em></abbr>]
  - **ant1newsgr:article**: ant1news.gr articles
  - **ant1newsgr:embed**: ant1news.gr embedded videos
@@ -965,7 +963,6 @@
  - **Podchaser**
  - **podomatic**
  - **Pokemon**
- - **PokemonSoundLibrary**
  - **PokemonWatch**
  - **PokerGo**: [<abbr title="netrc machine"><em>pokergo</em></abbr>]
  - **PokerGoCollection**: [<abbr title="netrc machine"><em>pokergo</em></abbr>]
