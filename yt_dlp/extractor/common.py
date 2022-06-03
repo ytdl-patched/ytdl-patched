@@ -84,6 +84,7 @@ from ..utils import (
     unified_strdate,
     unified_timestamp,
     update_Request,
+    update_url_query,
     url_basename,
     url_or_none,
     urlencode_postdata,
@@ -755,9 +756,11 @@ class InfoExtractor:
             return err.code in variadic(expected_status)
 
     def _create_request(self, url_or_request, data=None, headers={}, query={}):
-        if not isinstance(url_or_request, compat_urllib_request.Request):
-            url_or_request = sanitized_Request(url_or_request)
-        return update_Request(url_or_request, data=data, headers=headers, query=query)
+        if isinstance(url_or_request, compat_urllib_request.Request):
+            return update_Request(url_or_request, data=data, headers=headers, query=query)
+        if query:
+            url_or_request = update_url_query(url_or_request, query)
+        return sanitized_Request(url_or_request, data, headers)
 
     def _request_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True, data=None, headers={}, query={}, expected_status=None):
         """
@@ -1512,7 +1515,7 @@ class InfoExtractor:
             assert e['@type'] == 'VideoObject'
             author = e.get('author')
             info.update({
-                'url': url_or_none(e.get('contentUrl')),
+                'url': traverse_obj(e, 'contentUrl', 'embedUrl', expected_type=url_or_none),
                 'title': unescapeHTML(e.get('name')),
                 'description': unescapeHTML(e.get('description')),
                 'thumbnails': [{'url': url}
@@ -1580,6 +1583,8 @@ class InfoExtractor:
                     })
                     if traverse_obj(e, ('video', 0, '@type')) == 'VideoObject':
                         extract_video_object(e['video'][0])
+                    elif traverse_obj(e, ('subjectOf', 0, '@type')) == 'VideoObject':
+                        extract_video_object(e['subjectOf'][0])
                 elif item_type == 'VideoObject':
                     extract_video_object(e)
                     if expected_type is None:
