@@ -473,6 +473,7 @@ from .ertgr import (
 from .escapist import EscapistIE
 from .espn import (
     ESPNIE,
+    WatchESPNIE,
     ESPNArticleIE,
     FiveThirtyEightIE,
     ESPNCricInfoIE,

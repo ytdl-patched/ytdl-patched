@@ -825,7 +825,6 @@ class InfoExtractor:
             self, url_or_request, video_id, note=None, errnote=None, fatal=True,
             encoding=None, data=None, headers={}, query={}, expected_status=None,
             json_body=None, form_params=None, body_encoding=None):
-
         """
         Return a tuple (page content as string, URL handle).
 
@@ -995,7 +994,7 @@ class InfoExtractor:
                 except ValueError:
                     raise e
         except ValueError as ve:
-            errmsg = '%s: Failed to parse JSON ' % video_id
+            errmsg = f'{video_id}: Failed to parse JSON'
             if fatal:
                 raise ExtractorError(errmsg, cause=ve)
             else:
