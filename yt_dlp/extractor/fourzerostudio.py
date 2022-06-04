@@ -5,6 +5,16 @@ from ..utils import (
 )
 
 
+class FourZeroStudioBaseIE(InfoExtractor):
+
+    @staticmethod
+    def _extract_uploader_info(nuxt_data):
+        uploader_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicUser'), get_all=False)
+        return {
+            'uploader': uploader_info.get('username'),
+        }
+
+
 R'''
 # Cannot be implemented as this service uses WebRTC for livestreams
 class FourZeroStudioIE(InfoExtractor):
@@ -23,7 +33,7 @@ class FourZeroStudioIE(InfoExtractor):
 '''
 
 
-class FourZeroStudioArchiveIE(InfoExtractor):
+class FourZeroStudioArchiveIE(FourZeroStudioBaseIE):
     _VALID_URL = r'https?://0000\.studio/(?P<uploader_id>[^/]+)/broadcasts/(?P<id>[^/]+)/archive'
     IE_NAME = '0000studio:archive'
     _TESTS = [{
@@ -46,8 +56,6 @@ class FourZeroStudioArchiveIE(InfoExtractor):
         nuxt_data = self._search_nuxt_data(webpage, video_id, full_data=True)
 
         pcb = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicCreatorBroadcast'), get_all=False)
-        # TODO: move to common class
-        uploader_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicUser'), get_all=False)
         comments = traverse_obj(nuxt_data, ('ssrRefs', ..., lambda _, v: v['__typename'] == 'PublicCreatorBroadcastComment'))
 
         formats = self._extract_m3u8_formats(
@@ -68,13 +76,12 @@ class FourZeroStudioArchiveIE(InfoExtractor):
             'formats': formats,
             'comments': comments,
             'comment_count': len(comments),
-            'uploader': uploader_info.get('username'),
             'uploader_id': uploader_id,
+            **self._extract_uploader_info(nuxt_data),
         }
 
 
-class FourZeroStudioClipIE(InfoExtractor):
-    # e.g. https://0000.studio/soeji/archive-clip/e46b0278-24cd-40a8-92e1-b8fc2b21f34f
+class FourZeroStudioClipIE(FourZeroStudioBaseIE):
     _VALID_URL = r'https?://0000\.studio/(?P<uploader_id>[^/]+)/archive-clip/(?P<id>[^/]+)'
     IE_NAME = '0000studio:clip'
     _TESTS = [{
@@ -94,8 +101,6 @@ class FourZeroStudioClipIE(InfoExtractor):
         webpage = self._download_webpage(url, video_id)
         nuxt_data = self._search_nuxt_data(webpage, video_id, full_data=True)
 
-        # TODO: move to common class
-        uploader_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicUser'), get_all=False)
         clip_info = traverse_obj(nuxt_data, ('ssrRefs', lambda _, v: v['__typename'] == 'PublicCreatorArchivedClip'), get_all=False)
 
         for m in self._parse_html5_media_entries(url, webpage, video_id):
@@ -115,7 +120,7 @@ class FourZeroStudioClipIE(InfoExtractor):
             'title': clip_info.get('clipComment'),
             'timestamp': unified_timestamp(clip_info.get('createdAt')),
             'like_count': clip_info.get('likeCount'),
-            'uploader': uploader_info.get('username'),
             'uploader_id': uploader_id,
+            **self._extract_uploader_info(nuxt_data),
         })
         return info
