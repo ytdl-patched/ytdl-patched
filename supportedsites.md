@@ -1492,6 +1492,7 @@
  - **washingtonpost:article**
  - **wat.tv**
  - **WatchBox**
+ - **WatchESPN**
  - **WatchIndianPorn**: Watch Indian Porn
  - **WDR**
  - **wdr:mobile**: (**Currently broken**)
