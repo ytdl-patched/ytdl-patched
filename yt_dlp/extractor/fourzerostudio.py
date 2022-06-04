@@ -5,6 +5,9 @@ from ..utils import (
 )
 
 
+# Livestreams support cannot be implemented as this service uses WebRTC for it
+# Support request may still qualify
+
 class FourZeroStudioBaseIE(InfoExtractor):
 
     @staticmethod
@@ -13,24 +16,6 @@ class FourZeroStudioBaseIE(InfoExtractor):
         return {
             'uploader': uploader_info.get('username'),
         }
-
-
-R'''
-# Cannot be implemented as this service uses WebRTC for livestreams
-class FourZeroStudioIE(InfoExtractor):
-    # e.g. https://0000.studio/toriatama/broadcasts/4129b284-2758-4e13-af95-1cb4684c41af/
-    _VALID_URL = r'https?://0000\.studio/(?P<uploader_id>[^/]+)/broadcasts/(?P<id>[^/&?#]+)'
-    IE_NAME = '0000studio'
-    _WORKING = False  # WIP
-    _TESTS = []
-
-    @classmethod
-    def suitable(cls, url):
-        return super(FourZeroStudioIE, cls).suitable(url) and not FourZeroStudioArchiveIE.suitable(url)
-
-    def _real_extract(self, url):
-        video_id, uploader_id = self._match_valid_url(url).group('id', 'uploader_id')
-'''
 
 
 class FourZeroStudioArchiveIE(FourZeroStudioBaseIE):
