@@ -525,7 +525,6 @@ from .fourtube import (
     FuxIE,
 )
 from .fourzerostudio import (
-    FourZeroStudioIE,
     FourZeroStudioArchiveIE,
     FourZeroStudioClipIE,
 )

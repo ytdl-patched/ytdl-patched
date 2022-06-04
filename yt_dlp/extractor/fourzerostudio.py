@@ -5,6 +5,8 @@ from ..utils import (
 )
 
 
+R'''
+# Cannot be implemented as this service uses WebRTC for livestreams
 class FourZeroStudioIE(InfoExtractor):
     # e.g. https://0000.studio/toriatama/broadcasts/4129b284-2758-4e13-af95-1cb4684c41af/
     _VALID_URL = r'https?://0000\.studio/(?P<uploader_id>[^/]+)/broadcasts/(?P<id>[^/&?#]+)'
@@ -18,10 +20,10 @@ class FourZeroStudioIE(InfoExtractor):
 
     def _real_extract(self, url):
         video_id, uploader_id = self._match_valid_url(url).group('id', 'uploader_id')
+'''
 
 
 class FourZeroStudioArchiveIE(InfoExtractor):
-    # e.g. https://0000.studio/mumeijiten/broadcasts/1290f433-fce0-4909-a24a-5f7df09665dc/archive
     _VALID_URL = r'https?://0000\.studio/(?P<uploader_id>[^/]+)/broadcasts/(?P<id>[^/]+)/archive'
     IE_NAME = '0000studio:archive'
     _TESTS = [{
