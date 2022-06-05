@@ -27,6 +27,16 @@ class FFmpegSinkFD(FileDownloader):
                     stdin.close()
                 os.kill(os.getpid(), signal.SIGINT)
 
+        if True:
+            try:
+                self.to_screen('Dumping raw data as output. Ctrl+C to stop.')
+                asyncio.run(call_conn(None, open(filename, 'wb')))
+            except KeyboardInterrupt:
+                pass
+            except OSError as e:
+                self.report_warning(e)
+            return False
+
         class FFmpegStdinFD(FFmpegFD):
             @classmethod
             def get_basename(cls):
