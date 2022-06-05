@@ -1,5 +1,6 @@
 import functools
 import itertools
+import os
 
 from typing import Union
 from io import RawIOBase
@@ -66,3 +67,20 @@ class PipedIO(RawIOBase):
             b = bytes(b)
         self.buffers.append(b)
         return len(b)
+
+
+# system's pipe
+class SystemPipeIO(RawIOBase):
+    def __init__(self) -> None:
+        super().__init__()
+        r, w = os.pipe()
+        self._r = open(r, 'rb', 0)
+        self._w = open(w, 'wb', 0)
+        self.read = self._r.read
+        self.readall = self._r.readall
+        self.readinto = self._r.readinto
+        self.write = self._w.write
+
+    def close(self) -> None:
+        self._r.close()
+        self._w.close()
