@@ -66,3 +66,7 @@ class PipedIO(RawIOBase):
             b = bytes(b)
         self.buffers.append(b)
         return len(b)
+
+
+class TSStreamParser():
+    pass
