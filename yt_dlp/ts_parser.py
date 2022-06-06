@@ -3,7 +3,7 @@ import itertools
 import struct
 
 from typing import Union
-from io import RawIOBase
+from io import BytesIO, RawIOBase
 from threading import Lock
 
 
@@ -108,11 +108,15 @@ def read_harder(r, size):
     return buf
 
 
+def pack_be32(value: int) -> bytes:
+    return struct.pack('>I', value)
+
+
 class MP4StreamParser():
     # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/box.js#L13-L40
     _CONTAINER_BOXES = ('moov', 'trak', 'edts', 'mdia', 'minf', 'dinf', 'stbl', 'mvex', 'moof', 'traf', 'vttc', 'tref', 'iref', 'mfra', 'meco', 'hnti', 'hinf', 'strk', 'strd', 'sinf', 'rinf', 'schi', 'trgr', 'udta', 'iprp', 'ipco')
 
-    def parse_boxes(self, r: RawIOBase, recurse: bool = False):
+    def parse_boxes(self, r: RawIOBase):
         while True:
             size_b = read_harder(r, 4)
             if not size_b:
@@ -122,16 +126,30 @@ class MP4StreamParser():
             box_size = struct.unpack('>I', size_b)[0]
             type_s = type_b.decode()
             if type_s in self._CONTAINER_BOXES:
-                immbox = self.parse_boxes(LengthLimiter(r, box_size - 8), recurse)
-                if recurse:
-                    yield (type_s, b'')
-                    yield from immbox
-                else:
-                    yield (type_s, list(immbox))
+                immbox = self.parse_boxes(LengthLimiter(r, box_size - 8))
+                yield (type_s, b'')
+                yield from immbox
+                yield (None, type_s)
                 continue
             # subtract by 8
             full_body = read_harder(r, box_size - 8)
             yield (type_s, full_body)
 
     def write_boxes(self, w: RawIOBase, box_iter):
-        pass
+        stack = [
+            (None, w),  # parent box, IO
+        ]
+        for btype, content in box_iter:
+            if btype in self._CONTAINER_BOXES:
+                bio = BytesIO()
+                stack.append((btype, bio))
+                continue
+            elif btype is None:
+                assert stack[-1][0] == content
+                btype, bio = stack.pop()
+                content = bio.getvalue()
+
+            wt = stack[-1][1]
+            wt.write(pack_be32(len(content) + 8))
+            wt.write(btype.encode()[:4])
+            wt.write(content)
