@@ -35,6 +35,7 @@ class FFmpegSinkFD(FileDownloader):
                 pass
             except OSError as e:
                 self.report_warning(e)
+            # prevent subsequent PPs to run; it's just a debug code!
             return False
 
         class FFmpegStdinFD(FFmpegFD):

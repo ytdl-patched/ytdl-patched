@@ -1,5 +1,6 @@
 import functools
 import itertools
+import struct
 
 from typing import Union
 from io import RawIOBase
@@ -68,5 +69,69 @@ class PipedIO(RawIOBase):
         return len(b)
 
 
-class TSStreamParser():
-    pass
+class LengthLimiter(RawIOBase):
+    def __init__(self, r: RawIOBase, size: int) -> None:
+        super().__init__()
+        self.r = r
+        self.remaining = size
+
+    def read(self, sz: int = None) -> bytes | None:
+        if sz in (-1, None):
+            sz = self.remaining
+        sz = min(sz, self.remaining)
+        ret = super().read(sz)
+        if ret:
+            self.remaining -= len(ret)
+        return ret
+
+    def readall(self) -> bytes:
+        ret = super().read(self.remaining)
+        if ret:
+            self.remaining -= len(ret)
+        return ret
+
+    def readable(self) -> bool:
+        return bool(self.remaining)
+
+
+def read_harder(r, size):
+    retry = 0
+    buf = b''
+    while len(buf) < size and retry < 3:
+        ret = r.read(size - len(buf))
+        if not ret:
+            retry += 1
+            continue
+        retry = 0
+        buf += ret
+
+    return buf
+
+
+class MP4StreamParser():
+    # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/box.js#L13-L40
+    _CONTAINER_BOXES = ('moov', 'trak', 'edts', 'mdia', 'minf', 'dinf', 'stbl', 'mvex', 'moof', 'traf', 'vttc', 'tref', 'iref', 'mfra', 'meco', 'hnti', 'hinf', 'strk', 'strd', 'sinf', 'rinf', 'schi', 'trgr', 'udta', 'iprp', 'ipco')
+
+    def parse_boxes(self, r: RawIOBase, recurse: bool = False):
+        while True:
+            size_b = read_harder(r, 4)
+            if not size_b:
+                break
+            type_b = r.read(4)
+            # 00 00 00 20 is big-endian
+            box_size = struct.unpack('>I', size_b)
+            type_s = type_b.decode()
+            if type_s in self._CONTAINER_BOXES:
+                immbox = self.parse_boxes(LengthLimiter(r, box_size - 4), recurse)
+                if recurse:
+                    yield (type_s, b'')
+                    yield from immbox
+                else:
+                    yield (type_s, list(immbox))
+                continue
+            # subtract by the length of box type (4)
+            full_body = read_harder(r, box_size - 4)
+            yield (type_s, full_body)
+
+    def write_boxes(self, w: RawIOBase, box_iter):
+        pass
