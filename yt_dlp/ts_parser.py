@@ -1,72 +1,59 @@
-import functools
-import itertools
 import struct
+import os
+import sys
 
-from typing import Union
 from io import BytesIO, RawIOBase
-from threading import Lock
 
 
-# writer is fast
+if sys.platform in ('linux', 'darwin', 'aix', 'aix5', 'aix7'):
+    def set_nonblocking(fd):
+        os.set_blocking(fd, False)
+elif sys.platform in ('win32', 'cygwin'):
+    # https://stackoverflow.com/questions/34504970/non-blocking-read-on-os-pipe-on-windows
+    import msvcrt
+    from ctypes import windll, byref, WinError
+    from ctypes.wintypes import HANDLE, DWORD, POINTER, BOOL
+
+    LPDWORD = POINTER(DWORD)
+    PIPE_NOWAIT = DWORD(0x00000001)
+
+    SetNamedPipeHandleState = windll.kernel32.SetNamedPipeHandleState
+    SetNamedPipeHandleState.argtypes = [HANDLE, LPDWORD, LPDWORD, LPDWORD]
+    SetNamedPipeHandleState.restype = BOOL
+
+    def set_nonblocking(fd):
+        """ pipefd is a integer as returned by os.pipe """
+
+        h = msvcrt.get_osfhandle(fd)
+
+        res = SetNamedPipeHandleState(h, byref(PIPE_NOWAIT), None, None)
+        if res == 0:
+            raise WinError()
+else:
+    def set_nonblocking(fd):
+        pass
+
+
+# system's pipe
 class PipedIO(RawIOBase):
-    def __init__(self) -> None:
-        super().__init__()
-        # assumption: self.offset < len(self.buffers[0])
-        self.buffers = []
-        self.offset = 0
-        self._lock = Lock()
+    def __init__(self):
+        r, w = os.pipe()
+        set_nonblocking(r)
+        set_nonblocking(w)
+        self._r = open(r, 'rb', 0)
+        self._w = open(w, 'wb', 0)
+        self.read = self._r.read
+        self.readinto = self._r.readinto
+        self.write = self._w.write
+        self.flush = self._w.flush
 
-    def lock(func):
-        @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
-            with self._lock:
-                if self.buffers is None:
-                    raise OSError('This pipe has already been closed')
-                return func(self, *args, **kwargs)
-        return wrapper
-
-    @lock
-    def close(self) -> None:
-        self.buffers[:] = []
-        self.buffers = None
-
-    @lock
-    def read(self, size: int = None) -> bytes:
-        if not self.buffers:
-            return b''
-        if size in (None, -1):
-            # read all from buffers
-            buf = b''.join(itertools.chain([self.buffers[0][self.offset:]], self.buffers[1:]))
-            # evict all of the buffer queue
-            self.buffers = []
-            self.offset = 0
-            return buf
-
-        buf = b''
-        while self.buffers and len(buf) < size:
-            current_piece = self.buffers[0]
-            piece_len = len(current_piece)
-            max_read = min(size - len(buf), piece_len - self.offset)
-            # advance the cursor by it can read at most
-            buf += current_piece[self.offset:self.offset + max_read]
-            self.offset += max_read
-            # evict the piece if it reached to the end
-            if self.offset == piece_len:
-                self.buffers = self.buffers[1:]
-                self.offset = 0
-
-        return buf
-
-    # locking here will deadlock
-    def readall(self) -> bytes:
-        return self.read()
-
-    @lock
-    def write(self, b: Union[bytes, bytearray]) -> int:
-        if not isinstance(b, bytes):
-            b = bytes(b)
-        self.buffers.append(b)
-        return len(b)
+    def close(self):
+        self._r.close()
+        try:
+            # to close BufferedWriter part, not the pipe itself
+            self._w.close()
+        except BaseException:
+            pass
 
 
 class LengthLimiter(RawIOBase):
