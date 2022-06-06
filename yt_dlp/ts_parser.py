@@ -70,22 +70,22 @@ class PipedIO(RawIOBase):
 
 
 class LengthLimiter(RawIOBase):
-    def __init__(self, r: RawIOBase, size: int) -> None:
+    def __init__(self, r: RawIOBase, size: int):
         super().__init__()
         self.r = r
         self.remaining = size
 
-    def read(self, sz: int = None) -> bytes | None:
+    def read(self, sz: int = None) -> bytes:
         if sz in (-1, None):
             sz = self.remaining
         sz = min(sz, self.remaining)
-        ret = super().read(sz)
+        ret = self.r.read(sz)
         if ret:
             self.remaining -= len(ret)
         return ret
 
     def readall(self) -> bytes:
-        ret = super().read(self.remaining)
+        ret = self.read(self.remaining)
         if ret:
             self.remaining -= len(ret)
         return ret
@@ -119,18 +119,18 @@ class MP4StreamParser():
                 break
             type_b = r.read(4)
             # 00 00 00 20 is big-endian
-            box_size = struct.unpack('>I', size_b)
+            box_size = struct.unpack('>I', size_b)[0]
             type_s = type_b.decode()
             if type_s in self._CONTAINER_BOXES:
-                immbox = self.parse_boxes(LengthLimiter(r, box_size - 4), recurse)
+                immbox = self.parse_boxes(LengthLimiter(r, box_size - 8), recurse)
                 if recurse:
                     yield (type_s, b'')
                     yield from immbox
                 else:
                     yield (type_s, list(immbox))
                 continue
-            # subtract by the length of box type (4)
-            full_body = read_harder(r, box_size - 4)
+            # subtract by 8
+            full_body = read_harder(r, box_size - 8)
             yield (type_s, full_body)
 
     def write_boxes(self, w: RawIOBase, box_iter):
