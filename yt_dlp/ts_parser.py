@@ -112,44 +112,45 @@ def pack_be32(value: int) -> bytes:
     return struct.pack('>I', value)
 
 
-class MP4StreamParser():
-    # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/box.js#L13-L40
-    _CONTAINER_BOXES = ('moov', 'trak', 'edts', 'mdia', 'minf', 'dinf', 'stbl', 'mvex', 'moof', 'traf', 'vttc', 'tref', 'iref', 'mfra', 'meco', 'hnti', 'hinf', 'strk', 'strd', 'sinf', 'rinf', 'schi', 'trgr', 'udta', 'iprp', 'ipco')
+# https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/box.js#L13-L40
+MP4_CONTAINER_BOXES = ('moov', 'trak', 'edts', 'mdia', 'minf', 'dinf', 'stbl', 'mvex', 'moof', 'traf', 'vttc', 'tref', 'iref', 'mfra', 'meco', 'hnti', 'hinf', 'strk', 'strd', 'sinf', 'rinf', 'schi', 'trgr', 'udta', 'iprp', 'ipco')
 
-    def parse_boxes(self, r: RawIOBase):
-        while True:
-            size_b = read_harder(r, 4)
-            if not size_b:
-                break
-            type_b = r.read(4)
-            # 00 00 00 20 is big-endian
-            box_size = struct.unpack('>I', size_b)[0]
-            type_s = type_b.decode()
-            if type_s in self._CONTAINER_BOXES:
-                immbox = self.parse_boxes(LengthLimiter(r, box_size - 8))
-                yield (type_s, b'')
-                yield from immbox
-                yield (None, type_s)
-                continue
-            # subtract by 8
-            full_body = read_harder(r, box_size - 8)
-            yield (type_s, full_body)
 
-    def write_boxes(self, w: RawIOBase, box_iter):
-        stack = [
-            (None, w),  # parent box, IO
-        ]
-        for btype, content in box_iter:
-            if btype in self._CONTAINER_BOXES:
-                bio = BytesIO()
-                stack.append((btype, bio))
-                continue
-            elif btype is None:
-                assert stack[-1][0] == content
-                btype, bio = stack.pop()
-                content = bio.getvalue()
+def parse_mp4_boxes(r: RawIOBase):
+    while True:
+        size_b = read_harder(r, 4)
+        if not size_b:
+            break
+        type_b = r.read(4)
+        # 00 00 00 20 is big-endian
+        box_size = struct.unpack('>I', size_b)[0]
+        type_s = type_b.decode()
+        if type_s in MP4_CONTAINER_BOXES:
+            immbox = parse_mp4_boxes(LengthLimiter(r, box_size - 8))
+            yield (type_s, b'')
+            yield from immbox
+            yield (None, type_s)
+            continue
+        # subtract by 8
+        full_body = read_harder(r, box_size - 8)
+        yield (type_s, full_body)
 
-            wt = stack[-1][1]
-            wt.write(pack_be32(len(content) + 8))
-            wt.write(btype.encode()[:4])
-            wt.write(content)
+
+def write_mp4_boxes(w: RawIOBase, box_iter):
+    stack = [
+        (None, w),  # parent box, IO
+    ]
+    for btype, content in box_iter:
+        if btype in MP4_CONTAINER_BOXES:
+            bio = BytesIO()
+            stack.append((btype, bio))
+            continue
+        elif btype is None:
+            assert stack[-1][0] == content
+            btype, bio = stack.pop()
+            content = bio.getvalue()
+
+        wt = stack[-1][1]
+        wt.write(pack_be32(len(content) + 8))
+        wt.write(btype.encode()[:4])
+        wt.write(content)
