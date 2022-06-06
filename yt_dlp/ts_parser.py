@@ -63,6 +63,8 @@ class LengthLimiter(RawIOBase):
         self.remaining = size
 
     def read(self, sz: int = None) -> bytes:
+        if self.remaining == 0:
+            return b''
         if sz in (-1, None):
             sz = self.remaining
         sz = min(sz, self.remaining)
@@ -72,6 +74,8 @@ class LengthLimiter(RawIOBase):
         return ret
 
     def readall(self) -> bytes:
+        if self.remaining == 0:
+            return b''
         ret = self.read(self.remaining)
         if ret:
             self.remaining -= len(ret)
