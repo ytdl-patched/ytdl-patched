@@ -103,6 +103,18 @@ def pack_be32(value: int) -> bytes:
     return struct.pack('>I', value)
 
 
+def pack_be64(value: int) -> bytes:
+    return struct.pack('>L', value)
+
+
+def unpack_be32(value: bytes) -> int:
+    return struct.unpack('>I', value)[0]
+
+
+def unpack_be64(value: bytes) -> int:
+    return struct.unpack('>L', value)[0]
+
+
 # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/box.js#L13-L40
 MP4_CONTAINER_BOXES = ('moov', 'trak', 'edts', 'mdia', 'minf', 'dinf', 'stbl', 'mvex', 'moof', 'traf', 'vttc', 'tref', 'iref', 'mfra', 'meco', 'hnti', 'hinf', 'strk', 'strd', 'sinf', 'rinf', 'schi', 'trgr', 'udta', 'iprp', 'ipco')
 
@@ -114,7 +126,7 @@ def parse_mp4_boxes(r: RawIOBase):
             break
         type_b = r.read(4)
         # 00 00 00 20 is big-endian
-        box_size = struct.unpack('>I', size_b)[0]
+        box_size = unpack_be32(size_b)
         type_s = type_b.decode()
         if type_s in MP4_CONTAINER_BOXES:
             immbox = parse_mp4_boxes(LengthLimiter(r, box_size - 8))
