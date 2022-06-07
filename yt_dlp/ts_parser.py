@@ -2,6 +2,7 @@ import struct
 import os
 import sys
 
+from typing import Tuple
 from io import BytesIO, RawIOBase
 
 
@@ -109,6 +110,11 @@ def pack_be64(value: int) -> bytes:
 
 def unpack_be32(value: bytes) -> int:
     return struct.unpack('>I', value)[0]
+
+
+def unpack_ver_flags(value: bytes) -> Tuple[int, int]:
+    ver, up_flag, down_flag = struct.unpack('>BBH', value)
+    return ver, (up_flag << 16 | down_flag)
 
 
 def unpack_be64(value: bytes) -> int:
