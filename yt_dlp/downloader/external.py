@@ -542,13 +542,6 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
             # http://trac.ffmpeg.org/ticket/6125#comment:10
             args += ['-seekable', '1' if seekable else '0']
 
-        start_time = info_dict.get('start_time') or 0
-        if start_time:
-            args += ['-ss', str(start_time)]
-        end_time = info_dict.get('end_time')
-        if end_time:
-            args += ['-t', str(end_time - start_time)]
-
         http_headers = None
         if info_dict.get('http_headers'):
             youtubedl_headers = handle_youtubedl_headers(info_dict['http_headers'])
@@ -623,15 +616,22 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
                 result.extend(variadic(o))
             return result
 
+        start_time, end_time = info_dict.get('section_start') or 0, info_dict.get('section_end')
+
         for i, url in enumerate(urls):
-            # We need to specify headers for each http input stream
-            # otherwise, it will only be applied to the first.
-            # https://github.com/yt-dlp/yt-dlp/issues/2696
             if http_headers is not None and re.match(r'^https?://', url):
                 args += http_headers
-            args += get_infodict_list((f'input_params_{i + 1}', 'input_params')) + self._configuration_args((f'_i{i + 1}', '_i')) + ['-i', url]
+            if start_time:
+                args += ['-ss', str(start_time)]
+            if end_time:
+                args += ['-t', str(end_time - start_time)]
 
-        args += ['-c', 'copy']
+            args += get_infodict_list((f'input_params_{i + 1}', 'input_params'))
+            args += self._configuration_args((f'_i{i + 1}', '_i')) + ['-i', url]
+
+        if not (start_time or end_time) or not self.params.get('force_keyframes_at_cuts'):
+            args += ['-c', 'copy']
+
         if info_dict.get('requested_formats') or protocol == 'http_dash_segments':
             for (i, fmt) in enumerate(info_dict.get('requested_formats') or [info_dict]):
                 stream_number = fmt.get('manifest_stream_number', 0)

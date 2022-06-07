@@ -453,23 +453,6 @@ class YoutubeDL:
     geo_bypass_ip_block:
                        IP range in CIDR notation that will be used similarly to
                        geo_bypass_country
-    escape_long_names: If True, it splits filename into 255-byte chunks in current locale,
-                       to avoid "File name too long" error. Most user don't need this.
-    live_download_mkv: If True, live will be recorded in MKV format instead of MP4.
-    printjsontypes:    DO NOT USE THIS. If True, it shows type of each elements in info_dict.
-    check_peertube_instance: If True, generic extractor tests if it's PeerTube instance for
-                             requested domain.
-    check_mastodon_instance: Same as above, but for Mastodon.
-    extractor_retries: Number of retries for known extractor errors. Defaults to 3. Can be "infinite".
-    test_filename:     Use this to filter video file using external executable or regex
-                        (compiled regex or string starting with "re:").
-                       For external executable, return code 0 lets YTDL to start downloading.
-                       For regex, download will begin if re.search matches.
-    lock_exclusive:    When True, downloading will be locked exclusively to
-                       this process by creating .lock file.
-                       It'll be removed after download.
-
-    The following options determine which downloader is picked:
     external_downloader: A dictionary of protocol keys and the executable of the
                        external downloader to use for it. The allowed protocols
                        are default|http|ftp|m3u8|dash|rtsp|rtmp|mms.
@@ -486,6 +469,30 @@ class YoutubeDL:
     retry_sleep_functions: Dictionary of functions that takes the number of attempts
                        as argument and returns the time to sleep in seconds.
                        Allowed keys are 'http', 'fragment', 'file_access'
+    download_ranges:   A function that gets called for every video with the signature
+                       (info_dict, *, ydl) -> Iterable[Section].
+                       Only the returned sections will be downloaded. Each Section contains:
+                       * start_time: Start time of the section in seconds
+                       * end_time: End time of the section in seconds
+                       * title: Section title (Optional)
+                       * index: Section number (Optional)
+
+
+    escape_long_names: If True, it splits filename into 255-byte chunks in current locale,
+                       to avoid "File name too long" error. Most user don't need this.
+    live_download_mkv: If True, live will be recorded in MKV format instead of MP4.
+    printjsontypes:    DO NOT USE THIS. If True, it shows type of each elements in info_dict.
+    check_peertube_instance: If True, generic extractor tests if it's PeerTube instance for
+                             requested domain.
+    check_mastodon_instance: Same as above, but for Mastodon.
+    extractor_retries: Number of retries for known extractor errors. Defaults to 3. Can be "infinite".
+    test_filename:     Use this to filter video file using external executable or regex
+                        (compiled regex or string starting with "re:").
+                       For external executable, return code 0 lets YTDL to start downloading.
+                       For regex, download will begin if re.search matches.
+    lock_exclusive:    When True, downloading will be locked exclusively to
+                       this process by creating .lock file.
+                       It'll be removed after download.
 
     The following parameters are not used by YoutubeDL itself, they are used by
     the downloader (see yt_dlp/downloader/common.py):
@@ -2776,16 +2783,34 @@ class YoutubeDL:
             # Process what we can, even without any available formats.
             formats_to_download = [{}]
 
-        best_format = formats_to_download[-1]
+        requested_ranges = self.params.get('download_ranges')
+        if requested_ranges:
+            requested_ranges = tuple(requested_ranges(info_dict, self))
+
+        best_format, downloaded_formats = formats_to_download[-1], []
         if download:
             if best_format:
-                self.to_screen(
-                    f'[info] {info_dict["id"]}: Downloading {len(formats_to_download)} format(s): '
-                    + ', '.join([f['format_id'] for f in formats_to_download]))
+                def to_screen(*msg):
+                    self.to_screen(f'[info] {info_dict["id"]}: {" ".join(", ".join(variadic(m)) for m in msg)}')
+
+                to_screen(f'Downloading {len(formats_to_download)} format(s):',
+                          (f['format_id'] for f in formats_to_download))
+                if requested_ranges:
+                    to_screen(f'Downloading {len(requested_ranges)} time ranges:',
+                              (f'{int(c["start_time"])}-{int(c["end_time"])}' for c in requested_ranges))
             max_downloads_reached = False
-            for i, fmt in enumerate(formats_to_download):
-                formats_to_download[i] = new_info = self._copy_infodict(info_dict)
+
+            for fmt, chapter in itertools.product(formats_to_download, requested_ranges or [{}]):
+                new_info = self._copy_infodict(info_dict)
                 new_info.update(fmt)
+                if chapter:
+                    new_info.update({
+                        'section_start': chapter.get('start_time'),
+                        'section_end': chapter.get('end_time', 0),
+                        'section_title': chapter.get('title'),
+                        'section_number': chapter.get('index'),
+                    })
+                downloaded_formats.append(new_info)
                 try:
                     self.process_info(new_info)
                 except MaxDownloadsReached:
@@ -2798,12 +2823,12 @@ class YoutubeDL:
                 if max_downloads_reached:
                     break
 
-            write_archive = {f.get('__write_download_archive', False) for f in formats_to_download}
+            write_archive = {f.get('__write_download_archive', False) for f in downloaded_formats}
             assert write_archive.issubset({True, False, 'ignore'})
             if True in write_archive and False not in write_archive:
                 self.record_download_archive(info_dict)
 
-            info_dict['requested_downloads'] = formats_to_download
+            info_dict['requested_downloads'] = downloaded_formats
             info_dict = self.run_all_pps('after_video', info_dict)
             if max_downloads_reached:
                 raise MaxDownloadsReached()
@@ -3226,6 +3251,17 @@ class YoutubeDL:
                     return file
 
                 success = True
+                merger = FFmpegMergerPP(self)
+                fd = get_suitable_downloader(info_dict, self.params, to_stdout=temp_filename == '-')
+                if fd is not FFmpegFD and (
+                        info_dict.get('section_start') or info_dict.get('section_end')):
+                    msg = ('This format cannot be partially downloaded' if merger.available
+                           else 'You have requested downloading the video partially, but ffmpeg is not installed')
+                    if not self.params.get('ignoreerrors'):
+                        self.report_error(f'{msg}. Aborting due to --abort-on-error')
+                        return
+                    self.report_warning(f'{msg}. The entire video will be downloaded')
+
                 if info_dict.get('requested_formats') is not None:
 
                     requested_formats = info_dict['requested_formats']
@@ -3253,9 +3289,6 @@ class YoutubeDL:
                     info_dict['__real_download'] = False
 
                     downloaded = []
-                    merger = FFmpegMergerPP(self)
-
-                    fd = get_suitable_downloader(info_dict, self.params, to_stdout=temp_filename == '-')
                     if dl_filename is not None:
                         self.report_file_already_downloaded(dl_filename)
                     elif fd:
