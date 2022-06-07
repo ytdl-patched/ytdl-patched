@@ -1138,6 +1138,9 @@ class YoutubeDL:
             info_dict['resolution'] = self.format_resolution(info_dict, default=None)
         info_dict['thumbnail_filepaths'] = list(filter(None, traverse_obj(info_dict, ('thumbnails', ..., 'filepath'), default=[])))
 
+        if self.params.get('env_in_outtmpl', False):
+            info_dict['env'] = dict(os.environ)
+
         # For fields playlist_index, playlist_autonumber and autonumber convert all occurrences
         # of %(field)s to %(field)0Nd for backward compatibility
         field_size_compat_map = {

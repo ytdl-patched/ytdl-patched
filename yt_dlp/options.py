@@ -1324,6 +1324,16 @@ def create_parser():
         dest='outtmpl_na_placeholder', metavar='TEXT', default='NA',
         help=('Placeholder for unavailable fields in "OUTPUT TEMPLATE" (default: "%default")'))
     filesystem.add_option(
+        '--env-in-outtmpl',
+        action='store_true', dest='env_in_outtmpl', default=False,
+        help=(
+            'Expose environent variable in output templates, via "env" key '
+            '(e.g. -o "%(env.USER|)s-data/%(title)s")'))
+    filesystem.add_option(
+        '--no-env-in-outtmpl',
+        action='store_false', dest='env_in_outtmpl', default=False,
+        help='Do not expose environent variable in output templates')
+    filesystem.add_option(
         '--autonumber-size',
         dest='autonumber_size', metavar='NUMBER', type=int,
         help=optparse.SUPPRESS_HELP)
