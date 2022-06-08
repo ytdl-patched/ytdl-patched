@@ -78,6 +78,8 @@ class RunsFFmpeg(object):
         start_time, end_time = 0, duration
         for i, arg in enumerate(args):
             arg_timestamp, timestamp_seconds = re.match(r'(?P<at>-(?:ss|sseof|to))', arg), None
+            if not arg_timestamp:
+                continue
             if '=' in arg:
                 # e.g. -ss=100
                 timestamp_seconds = self.parse_ffmpeg_time_string(arg.split('=', 1)[1])
