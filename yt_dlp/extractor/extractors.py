@@ -103,6 +103,7 @@ from .askmona import (
     AskMona3IE,
 )
 from .atresplayer import AtresPlayerIE
+from .atscaleconf import AtScaleConfEventIE
 from .atttechchannel import ATTTechChannelIE
 from .atvat import ATVAtIE
 from .audimedia import AudiMediaIE
@@ -1601,6 +1602,7 @@ from .southpark import (
     SouthParkDeIE,
     SouthParkDkIE,
     SouthParkEsIE,
+    SouthParkLatIE,
     SouthParkNlIE
 )
 from .sovietscloset import (
