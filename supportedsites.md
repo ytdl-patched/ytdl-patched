@@ -92,6 +92,7 @@
  - **askmona**
  - **askmona3**
  - **AtresPlayer**: [<abbr title="netrc machine"><em>atresplayer</em></abbr>]
+ - **AtScaleConfEvent**
  - **ATTTechChannel**
  - **ATVAt**
  - **AudiMedia**
@@ -1173,6 +1174,7 @@
  - **southpark.cc.com**
  - **southpark.cc.com:español**
  - **southpark.de**
+ - **southpark.lat**
  - **southpark.nl**
  - **southparkstudios.dk**
  - **SovietsCloset**
