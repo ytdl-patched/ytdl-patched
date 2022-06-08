@@ -1,6 +1,4 @@
 import contextlib
-import os
-import signal
 import threading
 import time
 
@@ -20,7 +18,6 @@ class AsyncSinkFD(FileDownloader):
             with contextlib.suppress(OSError):
                 stdin.flush()
                 stdin.close()
-            os.kill(os.getpid(), signal.SIGINT)
 
     async def real_connection(self, sink, info_dict):
         """ Override this in subclasses """
