@@ -59,9 +59,8 @@ class MP4TimestampFixupPP(PostProcessor):
     def modify_mp4(self, src, dst, bmdt_offset, sdur_cutoff):
         with open(src, 'rb') as r, open(dst, 'wb') as w:
             def converter():
-                for box in parse_mp4_boxes(r):
-                    content = box[1]
-                    if box[0] == 'tfdt':
+                for btype, content in parse_mp4_boxes(r):
+                    if btype == 'tfdt':
                         version, _ = unpack_ver_flags(content[0:4])
                         # baseMediaDecodeTime always comes to the first
                         if version == 0:
@@ -69,7 +68,7 @@ class MP4TimestampFixupPP(PostProcessor):
                         else:
                             bmdt = unpack_be64(content[4:12])
                         if bmdt == 0:
-                            yield box
+                            yield (btype, content)
                             continue
                         # calculate new baseMediaDecodeTime
                         bmdt = max(0, bmdt - bmdt_offset)
@@ -80,10 +79,10 @@ class MP4TimestampFixupPP(PostProcessor):
                             bmdt_b = pack_be64(bmdt)
                         yield ('tfdt', content[0:4] + bmdt_b + content[8 + version * 4:])
                         continue
-                    elif box[0] == 'tfhd':
+                    elif btype == 'tfhd':
                         version, flags = unpack_ver_flags(content[0:4])
                         if not flags & 0x08:
-                            yield box
+                            yield (btype, content)
                             continue
                         # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/box.js#L203-L209
                         # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/parsing/tfhd.js
@@ -99,7 +98,7 @@ class MP4TimestampFixupPP(PostProcessor):
                         sd_b = pack_be32(sample_dur)
                         yield ('tfhd', content[:sdur_start] + sd_b + content[sdur_start + 4:])
                         continue
-                    yield box
+                    yield (btype, content)
 
             write_mp4_boxes(w, converter())
 
