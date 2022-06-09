@@ -13,8 +13,6 @@ from ..ts_parser import (
 
 
 class MP4TimestampFixupPP(PostProcessor):
-    def __init__(self, downloader=None):
-        super().__init__(downloader)
 
     def analyze_mp4(filepath):
         """ returns (baseMediaDecodeTime offset, sample duration cutoff) """
@@ -112,6 +110,8 @@ class MP4TimestampFixupPP(PostProcessor):
         self.write_debug('Analyzing MP4')
         bmdt_offset, sdur_cutoff = self.analyze_mp4(filename)
         # if any of them are Infinity, there's something wrong
+        # baseMediaDecodeTime = to shift PTS
+        # sample duration = to define duration in each segment
         self.write_debug(f'baseMediaDecodeTime offset = {bmdt_offset}, sample duration cutoff = {sdur_cutoff}')
         self.modify_mp4(filename, temp_filename, bmdt_offset, sdur_cutoff)
 
