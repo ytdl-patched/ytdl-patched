@@ -548,7 +548,6 @@
  - **JablePlaylist**
  - **Jamendo**
  - **JamendoAlbum**
- - **javhub**
  - **JeuxVideo**
  - **Joj**
  - **Jove**
