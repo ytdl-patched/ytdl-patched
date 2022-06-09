@@ -733,7 +733,6 @@ from .jamendo import (
     JamendoIE,
     JamendoAlbumIE,
 )
-from .javhub import JavhubIE
 from .jeuxvideo import JeuxVideoIE
 from .jove import JoveIE
 from .joj import JojIE
