@@ -3400,7 +3400,7 @@ class YoutubeDL:
                         else:
                             self.report_warning(f'{vid}: {msg}. Install ffmpeg to fix this automatically')
 
-                    def will_be_converted(ext):
+                    def gets_converted(ext):
                         if not ext:
                             return False
                         pps = self._pps['post_process']
@@ -3408,7 +3408,7 @@ class YoutubeDL:
                             # Remux is covered here
                             if not isinstance(p, FFmpegVideoConvertorPP):
                                 continue
-                            nex = resolve_mapping(ext, p.mapping)
+                            nex, _ = resolve_mapping(ext, p.mapping)
                             if nex and nex != ext:
                                 return True
                         return False
@@ -3423,14 +3423,14 @@ class YoutubeDL:
                         (info_dict.get('requested_formats') is None
                          and info_dict.get('container') == 'm4a_dash'
                          and info_dict.get('ext') == 'm4a'
-                         and not will_be_converted('m4a')),
+                         and not gets_converted('m4a')),
                         'writing DASH m4a. Only some players support this container',
                         FFmpegFixupM4aPP)
 
                     downloader = get_suitable_downloader(info_dict, self.params) if 'protocol' in info_dict else None
                     downloader = downloader.FD_NAME if downloader else None
 
-                    if info_dict.get('requested_formats') is None and not will_be_converted(info_dict.get('ext')):  # Not necessary if doing merger
+                    if info_dict.get('requested_formats') is None and not gets_converted(info_dict.get('ext')):  # Not necessary if doing merger
                         ffmpeg_fixup(downloader == 'hlsnative' and not self.params.get('hls_use_mpegts')
                                      or info_dict.get('is_live') and self.params.get('hls_use_mpegts') is None,
                                      'Possible MPEG-TS in MP4 container or malformed AAC timestamps',
