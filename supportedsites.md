@@ -92,6 +92,7 @@
  - **askmona**
  - **askmona3**
  - **AtresPlayer**: [<abbr title="netrc machine"><em>atresplayer</em></abbr>]
+ - **AtScaleConfEvent**
  - **ATTTechChannel**
  - **ATVAt**
  - **AudiMedia**
@@ -409,6 +410,8 @@
  - **FranceTVSite**
  - **Freesound**
  - **freespeech.org**
+ - **freetv:series**
+ - **FreeTvMovies**
  - **FrontendMasters**: [<abbr title="netrc machine"><em>frontendmasters</em></abbr>]
  - **FrontendMastersCourse**: [<abbr title="netrc machine"><em>frontendmasters</em></abbr>]
  - **FrontendMastersLesson**: [<abbr title="netrc machine"><em>frontendmasters</em></abbr>]
@@ -547,7 +550,6 @@
  - **JablePlaylist**
  - **Jamendo**
  - **JamendoAlbum**
- - **javhub**
  - **JeuxVideo**
  - **Joj**
  - **Jove**
@@ -755,6 +757,7 @@
  - **NationalGeographicTV**
  - **Naver**
  - **Naver:live**
+ - **navernow**
  - **NBA**
  - **nba:watch**
  - **nba:watch:collection**
@@ -1173,6 +1176,7 @@
  - **southpark.cc.com**
  - **southpark.cc.com:español**
  - **southpark.de**
+ - **southpark.lat**
  - **southpark.nl**
  - **southparkstudios.dk**
  - **SovietsCloset**
