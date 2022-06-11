@@ -6,7 +6,6 @@ from io import BytesIO, RawIOBase
 
 class LengthLimiter(RawIOBase):
     def __init__(self, r: RawIOBase, size: int):
-        super().__init__()
         self.r = r
         self.remaining = size
 
