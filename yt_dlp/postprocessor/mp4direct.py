@@ -1,7 +1,7 @@
 from .common import PostProcessor
 from ..utils import prepend_extension
 
-from ..ts_parser import (
+from ..mp4_parser import (
     write_mp4_boxes,
     parse_mp4_boxes,
     pack_be32,
