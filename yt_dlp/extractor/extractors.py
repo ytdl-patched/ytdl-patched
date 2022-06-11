@@ -541,7 +541,6 @@ from .foxnews import (
 )
 from .foxsports import FoxSportsIE
 from .fptplay import FptplayIE
-from .franceculture import FranceCultureIE
 from .franceinter import FranceInterIE
 from .francetv import (
     FranceTVIE,
@@ -554,6 +553,10 @@ from .frontendmasters import (
     FrontendMastersIE,
     FrontendMastersLessonIE,
     FrontendMastersCourseIE
+)
+from .freetv import (
+    FreeTvIE,
+    FreeTvMoviesIE,
 )
 from .fujitv import FujiTVFODPlus7IE
 from .funimation import (
@@ -1009,6 +1012,7 @@ from .nationalgeographic import (
 from .naver import (
     NaverIE,
     NaverLiveIE,
+    NaverNowIE,
 )
 from .nba import (
     NBAWatchEmbedIE,
@@ -1368,7 +1372,7 @@ from .radiocanada import (
 from .radiode import RadioDeIE
 from .radiojavan import RadioJavanIE
 from .radiobremen import RadioBremenIE
-from .radiofrance import RadioFranceIE
+from .radiofrance import FranceCultureIE, RadioFranceIE
 from .radiozet import RadioZetPodcastIE
 from .radiokapital import (
     RadioKapitalIE,
