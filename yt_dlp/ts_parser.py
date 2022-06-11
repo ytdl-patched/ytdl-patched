@@ -1,60 +1,7 @@
 import struct
-import os
-import sys
 
 from typing import Tuple
 from io import BytesIO, RawIOBase
-
-
-if sys.platform in ('linux', 'darwin', 'aix', 'aix5', 'aix7'):
-    def set_nonblocking(fd):
-        os.set_blocking(fd, False)
-elif sys.platform in ('win32', 'cygwin'):
-    # https://stackoverflow.com/questions/34504970/non-blocking-read-on-os-pipe-on-windows
-    import msvcrt
-    from ctypes import windll, byref, WinError
-    from ctypes.wintypes import HANDLE, DWORD, POINTER, BOOL
-
-    LPDWORD = POINTER(DWORD)
-    PIPE_NOWAIT = DWORD(0x00000001)
-
-    SetNamedPipeHandleState = windll.kernel32.SetNamedPipeHandleState
-    SetNamedPipeHandleState.argtypes = [HANDLE, LPDWORD, LPDWORD, LPDWORD]
-    SetNamedPipeHandleState.restype = BOOL
-
-    def set_nonblocking(fd):
-        """ pipefd is a integer as returned by os.pipe """
-
-        h = msvcrt.get_osfhandle(fd)
-
-        res = SetNamedPipeHandleState(h, byref(PIPE_NOWAIT), None, None)
-        if res == 0:
-            raise WinError()
-else:
-    def set_nonblocking(fd):
-        pass
-
-
-# system's pipe
-class PipedIO(RawIOBase):
-    def __init__(self):
-        r, w = os.pipe()
-        set_nonblocking(r)
-        set_nonblocking(w)
-        self._r = open(r, 'rb', 0)
-        self._w = open(w, 'wb', 0)
-        self.read = self._r.read
-        self.readinto = self._r.readinto
-        self.write = self._w.write
-        self.flush = self._w.flush
-
-    def close(self):
-        self._r.close()
-        try:
-            # to close BufferedWriter part, not the pipe itself
-            self._w.close()
-        except BaseException:
-            pass
 
 
 class LengthLimiter(RawIOBase):
