@@ -410,6 +410,8 @@
  - **FranceTVSite**
  - **Freesound**
  - **freespeech.org**
+ - **freetv:series**
+ - **FreeTvMovies**
  - **FrontendMasters**: [<abbr title="netrc machine"><em>frontendmasters</em></abbr>]
  - **FrontendMastersCourse**: [<abbr title="netrc machine"><em>frontendmasters</em></abbr>]
  - **FrontendMastersLesson**: [<abbr title="netrc machine"><em>frontendmasters</em></abbr>]
@@ -755,6 +757,7 @@
  - **NationalGeographicTV**
  - **Naver**
  - **Naver:live**
+ - **navernow**
  - **NBA**
  - **nba:watch**
  - **nba:watch:collection**
