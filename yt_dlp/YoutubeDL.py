@@ -58,6 +58,7 @@ from .postprocessor import (
     MP4TimestampFixupPP,
     get_postprocessor,
 )
+from .postprocessor.ffmpeg import resolve_mapping
 from .update import detect_variant
 from .utils import (
     DEFAULT_OUTTMPL,
@@ -3408,7 +3409,7 @@ class YoutubeDL:
                             # Remux is covered here
                             if not isinstance(p, FFmpegVideoConvertorPP):
                                 continue
-                            nex = p._target_ext(ext)
+                            nex = resolve_mapping(ext, p.mapping)
                             if nex and nex != ext:
                                 return True
                         return False
