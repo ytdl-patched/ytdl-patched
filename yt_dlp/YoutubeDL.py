@@ -55,6 +55,7 @@ from .postprocessor import (
     FFmpegPostProcessor,
     FFmpegVideoConvertorPP,
     MoveFilesAfterDownloadPP,
+    MP4TimestampFixupPP,
     get_postprocessor,
 )
 from .update import detect_variant
@@ -3402,8 +3403,10 @@ class YoutubeDL:
                         ffmpeg_fixup(info_dict.get('is_live') and downloader == 'DashSegmentsFD',
                                      'Possible duplicate MOOV atoms', FFmpegFixupDuplicateMoovPP)
 
+                    is_fmp4 = info_dict.get('protocol') == 'websocket_frag' and info_dict.get('container') == 'fmp4'
                     ffmpeg_fixup(downloader == 'web_socket_fragment', 'Malformed timestamps detected', FFmpegFixupTimestampPP)
                     ffmpeg_fixup(downloader == 'web_socket_fragment', 'Malformed duration detected', FFmpegFixupDurationPP)
+                    ffmpeg_fixup(downloader == 'web_socket_to_file' and is_fmp4, 'Malformed timestamps detected', MP4TimestampFixupPP)
 
                 fixup()
                 try:

@@ -81,6 +81,8 @@ class FileSinkFD(AsyncSinkFD):
                         'elapsed': curr - started,
                     })
                     self._hook_progress(status, info_dict)
+        except KeyboardInterrupt:
+            pass
         finally:
             self.ydl.replace(tempname, filename)
         return True

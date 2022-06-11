@@ -14,7 +14,11 @@ from ..ts_parser import (
 
 class MP4TimestampFixupPP(PostProcessor):
 
-    def analyze_mp4(filepath):
+    @property
+    def available(self):
+        return True
+
+    def analyze_mp4(self, filepath):
         """ returns (baseMediaDecodeTime offset, sample duration cutoff) """
         smallest_bmdt, known_sdur = float('inf'), set()
         with open(filepath, 'rb') as r:
@@ -61,7 +65,6 @@ class MP4TimestampFixupPP(PostProcessor):
                 for btype, content in parse_mp4_boxes(r):
                     if btype == 'tfdt':
                         version, _ = unpack_ver_flags(content[0:4])
-                        # baseMediaDecodeTime always comes to the first
                         if version == 0:
                             bmdt = unpack_be32(content[4:8])
                         else:
@@ -83,14 +86,11 @@ class MP4TimestampFixupPP(PostProcessor):
                         if not flags & 0x08:
                             yield (btype, content)
                             continue
-                        # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/box.js#L203-L209
-                        # https://github.com/gpac/mp4box.js/blob/4e1bc23724d2603754971abc00c2bd5aede7be60/src/parsing/tfhd.js
-                        sdur_start = 8  # header + track id
+                        sdur_start = 8
                         if flags & 0x01:
                             sdur_start += 8
                         if flags & 0x02:
                             sdur_start += 4
-                        # the next 4 bytes are "sample duration"
                         sample_dur = unpack_be32(content[sdur_start:sdur_start + 4])
                         if sample_dur > sdur_cutoff:
                             sample_dur = 0
@@ -115,6 +115,7 @@ class MP4TimestampFixupPP(PostProcessor):
             # safeguard
             bmdt_offset = 0
         self.modify_mp4(filename, temp_filename, bmdt_offset, sdur_cutoff)
+        self.to_screen('Duration of the file has been fixed')
 
         self._downloader.replace(temp_filename, filename)
 
