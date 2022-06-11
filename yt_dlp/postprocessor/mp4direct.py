@@ -52,7 +52,7 @@ class MP4TimestampFixupPP(PostProcessor):
         maximum_sdur = max(known_sdur)
         for multiplier in (0.7, 0.8, 0.9, 0.95):
             sdur_cutoff = maximum_sdur * multiplier
-            if len(set(x for x in known_sdur if x > sdur_cutoff)) < 4:
+            if len(set(x for x in known_sdur if x > sdur_cutoff)) < 3:
                 break
         else:
             sdur_cutoff = float('inf')
@@ -107,6 +107,7 @@ class MP4TimestampFixupPP(PostProcessor):
 
         self.write_debug('Analyzing MP4')
         bmdt_offset, sdur_cutoff = self.analyze_mp4(filename)
+        working = float('inf') not in (bmdt_offset, sdur_cutoff)
         # if any of them are Infinity, there's something wrong
         # baseMediaDecodeTime = to shift PTS
         # sample duration = to define duration in each segment
@@ -115,7 +116,10 @@ class MP4TimestampFixupPP(PostProcessor):
             # safeguard
             bmdt_offset = 0
         self.modify_mp4(filename, temp_filename, bmdt_offset, sdur_cutoff)
-        self.to_screen('Duration of the file has been fixed')
+        if working:
+            self.to_screen('Duration of the file has been fixed')
+        else:
+            self.report_warning(f'Failed to fix duration of the file. (baseMediaDecodeTime offset = {bmdt_offset}, sample duration cutoff = {sdur_cutoff})')
 
         self._downloader.replace(temp_filename, filename)
 
