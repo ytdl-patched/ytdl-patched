@@ -73,6 +73,27 @@ MP4_CONTAINER_BOXES = ('moov', 'trak', 'edts', 'mdia', 'minf', 'dinf', 'stbl', '
 
 
 def parse_mp4_boxes(r: RawIOBase):
+    """
+    Parses an ISO BMFF (which MP4 follows) and yields its boxes as a sequence.
+    This does not interpret content of these boxes.
+
+    Sequence details:
+    ('atom', b'blablabla'): A box, with content (not container boxes)
+    ('atom', b''):          Possibly container box (must check MP4_CONTAINER_BOXES) or really an empty box
+    (None, 'atom'):         End of a container box
+
+    Example:            Path:
+    ('test', b'123456') /test
+    ('box1', b'')       /box1           (start of container box)
+    ('helo', b'abcdef') /box1/helo
+    ('1984', b'1q84')   /box1/1984
+    ('http', b'')       /box1/http      (start of container box)
+    ('keys', b'2022')   /box1/http/keys
+    (None  , 'http')    /box1/http      (end of container box)
+    ('topp', b'1991')   /box1/topp
+    (None  , 'box1')    /box1           (end of container box)
+    """
+
     while True:
         size_b = read_harder(r, 4)
         if not size_b:
@@ -82,9 +103,8 @@ def parse_mp4_boxes(r: RawIOBase):
         box_size = unpack_be32(size_b)
         type_s = type_b.decode()
         if type_s in MP4_CONTAINER_BOXES:
-            immbox = parse_mp4_boxes(LengthLimiter(r, box_size - 8))
             yield (type_s, b'')
-            yield from immbox
+            yield from parse_mp4_boxes(LengthLimiter(r, box_size - 8))
             yield (None, type_s)
             continue
         # subtract by 8
@@ -93,6 +113,11 @@ def parse_mp4_boxes(r: RawIOBase):
 
 
 def write_mp4_boxes(w: RawIOBase, box_iter):
+    """
+    Writes an ISO BMFF file from a given sequence to a given writer.
+    The iterator to be passed must follow parse_mp4_boxes's protocol.
+    """
+
     stack = [
         (None, w),  # parent box, IO
     ]
