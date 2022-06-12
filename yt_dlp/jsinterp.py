@@ -24,6 +24,7 @@ _ASSIGN_OPERATORS.append(('=', (lambda cur, right: right)))
 _NAME_RE = r'[a-zA-Z_$][a-zA-Z_$0-9]*'
 
 _MATCHING_PARENS = dict(zip('({[', ')}]'))
+_QUOTES = '\'"'
 
 
 class JS_Break(ExtractorError):
@@ -68,24 +69,18 @@ class JSInterpreter:
         if not expr:
             return
         counters = {k: 0 for k in _MATCHING_PARENS.values()}
-        start, splits, pos, delim_len, in_quote, quote_escape = 0, 0, 0, len(delim) - 1, False, False
+        start, splits, pos, delim_len = 0, 0, 0, len(delim) - 1
+        in_quote, escaping = None, False
         for idx, char in enumerate(expr):
-            if quote_escape:
-                quote_escape = False
-                continue
-            elif char == '\\' and expr[start] in '"\'':
-                quote_escape = True
-                continue
-            elif char in '"\'':
-                in_quote = not in_quote
-                continue
-            elif in_quote:
-                continue
             if char in _MATCHING_PARENS:
                 counters[_MATCHING_PARENS[char]] += 1
             elif char in counters:
                 counters[char] -= 1
-            if char != delim[pos] or any(counters.values()):
+            elif not escaping and char in _QUOTES and in_quote in (char, None):
+                in_quote = None if in_quote else char
+            escaping = not escaping and in_quote and char == '\\'
+
+            if char != delim[pos] or any(counters.values()) or in_quote:
                 pos = 0
                 continue
             elif pos != delim_len:
