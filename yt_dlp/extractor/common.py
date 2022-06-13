@@ -1006,17 +1006,20 @@ class InfoExtractor:
             return getattr(ie, parser)(content, *args, **kwargs)
 
         def download_handle(self, url_or_request, video_id, note=note, errnote=errnote, transform_source=None,
-                            fatal=True, encoding=None, data=None, headers={}, query={}, expected_status=None):
+                            fatal=True, encoding=None, data=None, headers={}, query={}, expected_status=None,
+                            json_body=None, form_params=None, body_encoding=None):
             res = self._download_webpage_handle(
                 url_or_request, video_id, note=note, errnote=errnote, fatal=fatal, encoding=encoding,
-                data=data, headers=headers, query=query, expected_status=expected_status)
+                data=data, headers=headers, query=query, expected_status=expected_status,
+                json_body=json_body, form_params=form_params, body_encoding=body_encoding)
             if res is False:
                 return res
             content, urlh = res
             return parse(self, content, video_id, transform_source=transform_source, fatal=fatal), urlh
 
         def download_content(self, url_or_request, video_id, note=note, errnote=errnote, transform_source=None,
-                             fatal=True, encoding=None, data=None, headers={}, query={}, expected_status=None):
+                             fatal=True, encoding=None, data=None, headers={}, query={}, expected_status=None,
+                             json_body=None, form_params=None, body_encoding=None):
             if self.get_param('load_pages'):
                 url_or_request = self._create_request(url_or_request, data, headers, query)
                 filename = self._request_dump_filename(url_or_request.full_url, video_id)
@@ -1039,6 +1042,9 @@ class InfoExtractor:
                 'headers': headers,
                 'query': query,
                 'expected_status': expected_status,
+                'json_body': json_body,
+                'form_params': form_params,
+                'body_encoding': body_encoding,
             }
             if parser is None:
                 kwargs.pop('transform_source')
