@@ -460,6 +460,7 @@
  - **google:podcasts**
  - **google:podcasts:feed**
  - **GoogleDrive**
+ - **GoogleDrive:Folder**
  - **GoPro**
  - **GorinLive**
  - **GorinVideo**
