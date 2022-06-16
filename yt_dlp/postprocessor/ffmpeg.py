@@ -262,14 +262,12 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
                     encodeArgument('-i')]
             cmd.append(self._ffmpeg_fn_arg_split(path, True, True))
             self.write_debug(f'{self.basename} command line: {shell_quote(cmd)}')
-            handle = Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout_data, stderr_data = handle.communicate_or_kill()
-            expected_ret = 0 if self.probe_available else 1
-            if handle.wait() != expected_ret:
+            stdout, stderr, returncode = Popen.run(cmd, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if returncode != (0 if self.probe_available else 1):
                 return None
         except OSError:
             return None
-        output = (stdout_data if self.probe_available else stderr_data).decode('ascii', 'ignore')
+        output = stdout if self.probe_available else stderr
         if self.probe_available:
             audio_codec = None
             for line in output.split('\n'):
@@ -304,10 +302,9 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
 
         cmd += opts
         cmd.append(self._ffmpeg_fn_arg_split(path, True, True))
-        self.write_debug('ffprobe command line: %s' % shell_quote(cmd))
-        p = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        return json.loads(stdout.decode('utf-8', 'replace'))
+        self.write_debug(f'ffprobe command line: {shell_quote(cmd)}')
+        stdout, _, _ = Popen.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        return json.loads(stdout)
 
     def get_stream_number(self, path, keys, value):
         streams = self.get_metadata_object(path)['streams']
@@ -389,16 +386,12 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
                 ste.seek(0)
                 stderr = ste.read()
         else:
-            p = Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-            stderr = p.communicate_or_kill()[1]
-            retval = p.returncode
+            _, stderr, retval = Popen.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
         if isinstance(stderr, bytes):
             stderr = stderr.decode('utf-8', 'replace')
         if retval not in variadic(expected_retcodes):
-            stderr = stderr.strip()
-            self.write_debug(stderr)
-            raise FFmpegPostProcessorError(stderr.split('\n')[-1], retval)
+            raise FFmpegPostProcessorError(stderr.strip().splitlines()[-1])
 
         for out_path, _ in output_path_opts:
             if out_path:

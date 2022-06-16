@@ -42,6 +42,7 @@ class Features(enum.Enum):
 class ExternalFD(FragmentFD):
     SUPPORTED_PROTOCOLS = ('http', 'https', 'ftp', 'ftps')
     SUPPORTED_FEATURES = ()
+    _CAPTURE_STDERR = True
 
     def real_download(self, filename, info_dict):
         self.report_destination(filename)
@@ -136,7 +137,7 @@ class ExternalFD(FragmentFD):
         self._debug_cmd(cmd)
 
         if 'fragments' not in info_dict:
-            _, stderr, retcode = self._call_process(cmd, info_dict)
+            _, stderr, retcode = self._call_process(cmd, info_dict, self._CAPTURE_STDERR)
             if retcode == 0:
                 self.to_stderr(stderr.decode('utf-8', 'replace'))
             return retcode
@@ -146,12 +147,14 @@ class ExternalFD(FragmentFD):
 
         count = 0
         while count <= fragment_retries:
-            _, stderr, retcode = self._call_process(cmd, info_dict)
-            if retcode == 0:
+            _, stderr, retcode = self._call_process(cmd, info_dict, True)
+            if not retcode:
                 break
+
             # TODO: Decide whether to retry based on error code
             # https://aria2.github.io/manual/en/html/aria2c.html#exit-status
-            self.to_stderr(stderr.decode('utf-8', 'replace'))
+            if stderr:
+                self.to_stderr(stderr)
             count += 1
             if count <= fragment_retries:
                 self.to_screen(
@@ -183,14 +186,14 @@ class ExternalFD(FragmentFD):
         self.try_remove(encodeFilename('%s.frag.urls' % tmpfilename))
         return 0
 
-    def _call_process(self, cmd, info_dict):
-        p = Popen(cmd, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate_or_kill()
-        return stdout, stderr, p.returncode
+    def _call_process(self, cmd, info_dict, capture_stderr):
+        return Popen.run(
+            cmd, text=True, stderr=subprocess.PIPE if capture_stderr else None)
 
 
 class CurlFD(ExternalFD):
     AVAILABLE_OPT = '-V'
+    _CAPTURE_STDERR = False  # curl writes the progress to stderr
 
     def _make_cmd(self, tmpfilename, info_dict):
         cmd = [self.exe, '--location', '-o', tmpfilename, '--compressed']
@@ -214,16 +217,6 @@ class CurlFD(ExternalFD):
         cmd += self._configuration_args()
         cmd += ['--', info_dict['url']]
         return cmd
-
-    def _call_downloader(self, tmpfilename, info_dict):
-        cmd = [encodeArgument(a) for a in self._make_cmd(tmpfilename, info_dict)]
-
-        self._debug_cmd(cmd)
-
-        # curl writes the progress to stderr so don't capture it.
-        p = Popen(cmd)
-        p.communicate_or_kill()
-        return p.returncode
 
 
 class AxelFD(ExternalFD):
@@ -351,9 +344,9 @@ class Aria2cFD(ExternalFD):
             info_dict['__rpc_port'] = find_available_port() or 19190
         return super()._call_downloader(tmpfilename, info_dict)
 
-    def _call_process(self, cmd, info_dict):
+    def _call_process(self, cmd, info_dict, capture_stderr):
         if '__rpc_port' not in info_dict:
-            return super()._call_process(cmd, info_dict)
+            return super()._call_process(cmd, info_dict, capture_stderr)
 
         from tempfile import TemporaryFile
         import json
@@ -401,7 +394,7 @@ class Aria2cFD(ExternalFD):
         self._hook_progress(status, info_dict)
 
         with TemporaryFile() as so, TemporaryFile() as se, \
-             Popen(cmd, stdout=so.fileno(), stderr=se.fileno()) as p:
+             Popen(cmd, stdout=so.fileno(), stderr=se.fileno() if capture_stderr else None) as p:
             # make a short wait so that RPC client can receive response,
             # or the connection stalls infinitely
             time.sleep(0.2)
