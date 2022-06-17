@@ -10,14 +10,14 @@ A command-line program to download videos from YouTube and many other [video pla
 ## MIRRORS
 - ~~https://github.com/Lesmiscore/ytdl-patched (passed away)~~
 - https://github.com/ytdl-patched/ytdl-patched (primary)
-- https://bitbucket.org/nao20010128nao/ytdl-patched (secondary)
-- https://forge.tedomum.net/nao20010128nao/ytdl-patched (secondary)
+- https://bitbucket.org/Lesmiscore/ytdl-patched (secondary)
+- https://forge.tedomum.net/Lesmiscore/ytdl-patched (secondary)
 - https://gitlab.com/lesmi_the_goodness/ytdl-patched (secondary)
-- https://gitea.com/nao20010128nao/ytdl-patched (secondary)
+- https://gitea.com/Lesmiscore/ytdl-patched (secondary)
 - https://git.sr.ht/~nao20010128nao/ytdl-patched (secondary)
   - manually mirrored at every git push
-- https://codeberg.org/nao20010128nao/ytdl-patched (secondary)
-- https://gitgud.io/nao20010128nao/ytdl-patched (secondary)
+- https://codeberg.org/Lesmiscore/ytdl-patched (secondary)
+- https://gitgud.io/Lesmiscore/ytdl-patched (secondary)
 - [In my Keybase account](https://book.keybase.io/git) (secondary)
   - spoiler: you can clone it with `git clone keybase://public/nao20010128nao/ytdl-patched`
 - https://bookish-octo-barnacle.vercel.app/ (just for fun, no longer synced)
