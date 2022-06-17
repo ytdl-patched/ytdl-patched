@@ -617,7 +617,7 @@ class FFmpegVideoConvertorPP(FFmpegPostProcessor):
 
         outpath = replace_extension(filename, target_ext, source_ext)
         self.to_screen(f'{self._ACTION.title()} video from {source_ext} to {target_ext}; Destination: {outpath}')
-        self.run_ffmpeg(filename, outpath, self._options(target_ext))
+        self.run_ffmpeg(filename, outpath, self._options(target_ext), info_dict=info)
 
         info['filepath'] = outpath
         info['format'] = info['ext'] = target_ext
@@ -708,7 +708,7 @@ class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
 
         temp_filename = prepend_extension(filename, 'temp')
         self.to_screen('Embedding subtitles in "%s"' % filename)
-        self.run_ffmpeg_multiple_files(input_files, temp_filename, opts)
+        self.run_ffmpeg_multiple_files(input_files, temp_filename, opts, info_dict=info)
         self._downloader.replace(temp_filename, filename)
 
         files_to_delete = [] if self._already_have_subtitle else sub_filenames
@@ -759,7 +759,8 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
         self.to_screen('Adding metadata to "%s"' % filename)
         self.run_ffmpeg_multiple_files(
             (filename, metadata_filename), temp_filename,
-            itertools.chain(self._options(info['ext']), *options))
+            itertools.chain(self._options(info['ext']), *options),
+            info_dict=info)
         self._delete_downloaded_files(*files_to_delete)
         os.replace(temp_filename, filename)
         return [], info
@@ -908,11 +909,11 @@ class FFmpegMergerPP(FFmpegPostProcessor):
 class FFmpegFixupPostProcessor(FFmpegPostProcessor):
     _NATIVE_PROGRESS_ENABLED = True
 
-    def _fixup(self, msg, filename, options):
+    def _fixup(self, msg, filename, options, info_dict=None):
         temp_filename = prepend_extension(filename, 'temp')
 
         self.to_screen(f'{msg} of "{filename}"')
-        self.run_ffmpeg(filename, temp_filename, options)
+        self.run_ffmpeg(filename, temp_filename, options, info_dict=info_dict)
 
         self._downloader.replace(temp_filename, filename)
 
@@ -923,7 +924,8 @@ class FFmpegFixupStretchedPP(FFmpegFixupPostProcessor):
         stretched_ratio = info.get('stretched_ratio')
         if stretched_ratio not in (None, 1):
             self._fixup('Fixing aspect ratio', info['filepath'], [
-                *self.stream_copy_opts(), '-aspect', '%f' % stretched_ratio])
+                *self.stream_copy_opts(), '-aspect', '%f' % stretched_ratio],
+                info_dict=info)
         return [], info
 
 
@@ -931,7 +933,7 @@ class FFmpegFixupM4aPP(FFmpegFixupPostProcessor):
     @PostProcessor._restrict_to(images=False, video=False)
     def run(self, info):
         if info.get('container') == 'm4a_dash':
-            self._fixup('Correcting container', info['filepath'], [*self.stream_copy_opts(), '-f', 'mp4'])
+            self._fixup('Correcting container', info['filepath'], [*self.stream_copy_opts(), '-f', 'mp4'], info_dict=info)
         return [], info
 
 
@@ -951,7 +953,8 @@ class FFmpegFixupM3u8PP(FFmpegFixupPostProcessor):
     def run(self, info):
         if all(self._needs_fixup(info)):
             self._fixup('Fixing MPEG-TS in MP4 container', info['filepath'], [
-                *self.stream_copy_opts(), '-f', 'mp4', '-bsf:a', 'aac_adtstoasc'])
+                *self.stream_copy_opts(), '-f', 'mp4', '-bsf:a', 'aac_adtstoasc'],
+                info_dict=info)
         return [], info
 
 
@@ -972,7 +975,7 @@ class FFmpegFixupTimestampPP(FFmpegFixupPostProcessor):
             opts = ['-vf', 'setpts=PTS-STARTPTS']
         else:
             opts = ['-c', 'copy', '-bsf', 'setts=ts=TS-STARTPTS']
-        self._fixup('Fixing frame timestamp', info['filepath'], opts + [*self.stream_copy_opts(False), '-ss', self.trim])
+        self._fixup('Fixing frame timestamp', info['filepath'], opts + [*self.stream_copy_opts(False), '-ss', self.trim], info_dict=info)
         return [], info
 
 
@@ -981,7 +984,7 @@ class FFmpegCopyStreamPP(FFmpegFixupPostProcessor):
 
     @PostProcessor._restrict_to(images=False)
     def run(self, info):
-        self._fixup(self.MESSAGE, info['filepath'], self.stream_copy_opts())
+        self._fixup(self.MESSAGE, info['filepath'], self.stream_copy_opts(), info_dict=info)
         return [], info
 
 
