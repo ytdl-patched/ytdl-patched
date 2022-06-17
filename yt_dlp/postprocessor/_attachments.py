@@ -241,7 +241,6 @@ class RunsFFmpeg(object):
                 'eta': eta_seconds,
                 'total_bytes_estimate': guessed_size,
             })
-            print(status)
             self._hook_progress(status, info_dict)
 
         status.update({
