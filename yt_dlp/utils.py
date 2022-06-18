@@ -1026,10 +1026,10 @@ class ExtractorError(YoutubeDLError):
         self.exc_info = sys.exc_info()  # preserve original exception
 
         super().__init__(''.join((
-            format_field(ie, template='[%s] '),
-            format_field(video_id, template='%s: '),
+            format_field(ie, None, '[%s] '),
+            format_field(video_id, None, '%s: '),
             msg,
-            format_field(cause, template=' (caused by %r)'),
+            format_field(cause, None, ' (caused by %r)'),
             '' if expected else bug_reports_message())))
 
     def format_traceback(self):
@@ -5544,6 +5544,8 @@ class Config:
             # FIXME: https://github.com/ytdl-org/youtube-dl/commit/dfe5fa49aed02cf36ba9f743b11b0903554b5e56
             contents = optionf.read()
             res = shlex.split(contents, comments=True)
+        except Exception as err:
+            raise ValueError(f'Unable to parse "{filename}": {err}')
         finally:
             optionf.close()
         return res
