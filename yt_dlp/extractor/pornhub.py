@@ -502,6 +502,10 @@ class PornHubIE(PornHubBaseIE):
             'categories': extract_list('categories'),
             'cast': extract_list('pornstars'),
             'subtitles': subtitles,
+
+            # retry when any of the following codes is returned;
+            # no more fragments or data can be downloaded anymore
+            'unrecoverable_http_error': (401, 503, 472),
         }, info)
 
 
