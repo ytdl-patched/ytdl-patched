@@ -958,7 +958,7 @@ class InfoExtractor:
             dump = base64.b64encode(webpage_bytes).decode('ascii')
             self._downloader.to_screen(dump)
         if self.get_param('write_pages'):
-            filename = self._request_dump_filename(video_id, final_url)
+            filename = self._request_dump_filename(final_url, video_id)
             self.to_screen(f'Saving request to {filename}')
             with open(filename, 'wb') as outf:
                 outf.write(webpage_bytes)
@@ -990,7 +990,7 @@ class InfoExtractor:
             if fatal:
                 raise ExtractorError(errmsg, cause=ve)
             else:
-                self.report_warning(errmsg + str(ve))
+                self.report_warning(f'{errmsg}: {ve}')
 
     def _parse_socket_response_as_json(self, data, video_id, transform_source=None, fatal=True):
         return self._parse_json(

@@ -262,7 +262,8 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
                     encodeArgument('-i')]
             cmd.append(self._ffmpeg_fn_arg_split(path, True, True))
             self.write_debug(f'{self.basename} command line: {shell_quote(cmd)}')
-            stdout, stderr, returncode = Popen.run(cmd, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr, returncode = Popen.run(
+                cmd, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if returncode != (0 if self.probe_available else 1):
                 return None
         except OSError:
