@@ -546,6 +546,7 @@
  - **iwara**
  - **iwara:playlist**
  - **iwara:user**
+ - **Ixigua**
  - **Izlesene**
  - **Jable**
  - **JablePlaylist**
@@ -690,6 +691,7 @@
  - **miomio.tv**
  - **mirrativ**
  - **mirrativ:user**
+ - **MirrorCoUK**
  - **misskey**
  - **misskey:user**
  - **MiTele**: mitele.es
@@ -788,6 +790,8 @@
  - **netease:singer**: 网易云音乐 - 歌手
  - **netease:song**: 网易云音乐
  - **NetPlus**: [<abbr title="netrc machine"><em>netplus</em></abbr>]
+ - **Netverse**
+ - **NetversePlaylist**
  - **Netzkino**
  - **Newgrounds**
  - **Newgrounds:playlist**
@@ -1217,6 +1221,7 @@
  - **StretchInternet**
  - **Stripchat**
  - **stv:player**
+ - **Substack**
  - **SunPorno**
  - **sverigesradio:episode**
  - **sverigesradio:publication**
