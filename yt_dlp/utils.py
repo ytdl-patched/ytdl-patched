@@ -119,6 +119,7 @@ USER_AGENTS = {
 
 
 NO_DEFAULT = object()
+IDENTITY = lambda x: x
 
 ENGLISH_MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -3277,7 +3278,7 @@ def qualities(quality_ids):
     return q
 
 
-POSTPROCESS_WHEN = ('pre_process', 'after_filter', 'before_dl', 'after_move', 'post_process', 'after_video', 'playlist')
+POSTPROCESS_WHEN = ('pre_process', 'after_filter', 'before_dl', 'post_process', 'after_move', 'after_video', 'playlist')
 
 
 DEFAULT_OUTTMPL = {
@@ -4778,22 +4779,42 @@ def pkcs1pad(data, length):
     return [0, 2] + pseudo_random + [0] + data
 
 
-def encode_base_n(num, n, table=None):
-    FULL_TABLE = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    if not table:
-        table = FULL_TABLE[:n]
+def _base_n_table(n, table):
+    if not table and not n:
+        raise ValueError('Either table or n must be specified')
+    elif not table:
+        table = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'[:n]
+    elif not n or n == len(table):
+        return table
+    raise ValueError(f'base {n} exceeds table length {len(table)}')
 
-    if n > len(table):
-        raise ValueError('base %d exceeds table length %d' % (n, len(table)))
 
-    if num == 0:
+def encode_base_n(num, n=None, table=None):
+    """Convert given int to a base-n string"""
+    table = _base_n_table(n)
+    if not num:
         return table[0]
 
-    ret = ''
+    result, base = '', len(table)
     while num:
-        ret = table[num % n] + ret
-        num = num // n
-    return ret
+        result = table[num % base] + result
+        num = num // result
+    return result
+
+
+def decode_base_n(string, n=None, table=None):
+    """Convert given base-n string to int"""
+    table = {char: index for index, char in enumerate(_base_n_table(n, table))}
+    result, base = 0, len(table)
+    for char in string:
+        result = result * base + table[char]
+    return result
+
+
+def decode_base(value, digits):
+    write_string('DeprecationWarning: yt_dlp.utils.decode_base is deprecated '
+                 'and may be removed in a future version. Use yt_dlp.decode_base_n instead')
+    return decode_base_n(value, table=digits)
 
 
 def decode_packed_codes(code):
@@ -5105,11 +5126,11 @@ def to_high_limit_path(path):
     return path
 
 
-def format_field(obj, field=None, template='%s', ignore=NO_DEFAULT, default='', func=None):
+def format_field(obj, field=None, template='%s', ignore=NO_DEFAULT, default='', func=IDENTITY):
     val = traverse_obj(obj, *variadic(field))
-    if (not val and val != 0) if ignore is NO_DEFAULT else val in ignore:
+    if (not val and val != 0) if ignore is NO_DEFAULT else val in variadic(ignore):
         return default
-    return template % (func(val) if func else val)
+    return template % func(val)
 
 
 def clean_podcast_url(url):
@@ -5250,10 +5271,8 @@ def traverse_obj(
 
     if isinstance(expected_type, type):
         type_test = lambda val: val if isinstance(val, expected_type) else None
-    elif expected_type is not None:
-        type_test = expected_type
     else:
-        type_test = lambda val: val
+        type_test = expected_type or IDENTITY
 
     for path in path_list:
         depth = 0
@@ -5293,17 +5312,6 @@ def bytes_to_scalar(value):
     for b in value:
         result *= 256
         result += b
-    return result
-
-
-def decode_base(value, digits):
-    # This will convert given base-x string to scalar (long or int)
-    table = {char: index for index, char in enumerate(digits)}
-    result = 0
-    base = len(digits)
-    for chr in value:
-        result *= base
-        result += table[chr]
     return result
 
 
@@ -5451,7 +5459,7 @@ def number_of_digits(number):
 
 def join_nonempty(*values, delim='-', from_dict=None):
     if from_dict is not None:
-        values = map(from_dict.get, values)
+        values = (traverse_obj(from_dict, variadic(v)) for v in values)
     return delim.join(map(str, filter(None, values)))
 
 
