@@ -281,6 +281,8 @@
  - **dailymotion**: [<abbr title="netrc machine"><em>dailymotion</em></abbr>]
  - **dailymotion:playlist**: [<abbr title="netrc machine"><em>dailymotion</em></abbr>]
  - **dailymotion:user**: [<abbr title="netrc machine"><em>dailymotion</em></abbr>]
+ - **DailyWire**
+ - **DailyWirePodcast**
  - **damtomo:record**
  - **damtomo:video**
  - **daum.net**
