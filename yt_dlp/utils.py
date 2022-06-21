@@ -3710,6 +3710,9 @@ class download_range_func:
 
         yield from ({'start_time': start, 'end_time': end} for start, end in self.ranges)
 
+    def __repr__(self) -> str:
+        return f'download_range_func({repr(self.chapters)}, {repr(self.ranges)})'
+
     def __eq__(self, other):
         if not isinstance(other, download_range_func):
             return False
