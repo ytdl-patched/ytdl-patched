@@ -1,4 +1,8 @@
+#!/usr/bin/env python3
+
 # A script to parse options and return dict representation of it
+# usage: ./devscripts/parse-args.py <options>
+# non-option values such as URLs are ignored
 
 import sys
 import os
