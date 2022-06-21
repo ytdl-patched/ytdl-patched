@@ -3692,21 +3692,30 @@ def match_filter_func(filters):
     return _match_func
 
 
-def download_range_func(chapters, ranges):
-    def inner(info_dict, ydl):
+class download_range_func:
+    def __init__(self, chapters, ranges):
+        self.chapters = chapters or []
+        self.ranges = ranges or []
+
+    def inner(self, info_dict, ydl):
         warning = ('There are no chapters matching the regex' if info_dict.get('chapters')
                    else 'Cannot match chapters since chapter information is unavailable')
-        for regex in chapters or []:
+        for regex in self.chapters:
             for i, chapter in enumerate(info_dict.get('chapters') or []):
                 if re.search(regex, chapter['title']):
                     warning = None
                     yield {**chapter, 'index': i}
-        if chapters and warning:
+        if self.chapters and warning:
             ydl.to_screen(f'[info] {info_dict["id"]}: {warning}')
 
-        yield from ({'start_time': start, 'end_time': end} for start, end in ranges or [])
+        yield from ({'start_time': start, 'end_time': end} for start, end in self.ranges)
 
-    return inner
+    def __eq__(self, other):
+        if not isinstance(other, download_range_func):
+            return False
+        if self.chapters != other.chapters and self.ranges != other.ranges:
+            return False
+        return True
 
 
 def parse_dfxp_time_expr(time_expr):
