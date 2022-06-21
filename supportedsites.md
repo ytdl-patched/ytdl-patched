@@ -568,6 +568,7 @@
  - **Ketnet**
  - **khanacademy**
  - **khanacademy:unit**
+ - **Kicker**
  - **KickStarter**
  - **KinjaEmbed**
  - **KinoPoisk**
