@@ -14,10 +14,19 @@ else:
 
 _, _, _, parsed = parse_options(ignore_config_files=True)
 
+
+def erase_empty_values(dct):
+    for k in set(k for k, v in dct.items() if not v):
+        dct.pop(k, None)
+
+
 for k, nv in none_opts.items():
     if k not in parsed:
         continue
     pv = parsed[k]
+    if k == 'outtmpl':
+        erase_empty_values(nv)
+        erase_empty_values(pv)
     if pv == nv:
         parsed.pop(k, None)
 
