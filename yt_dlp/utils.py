@@ -3700,7 +3700,7 @@ class download_range_func:
         self.chapters = chapters or []
         self.ranges = ranges or []
 
-    def inner(self, info_dict, ydl):
+    def __call__(self, info_dict, ydl):
         warning = ('There are no chapters matching the regex' if info_dict.get('chapters')
                    else 'Cannot match chapters since chapter information is unavailable')
         for regex in self.chapters:
