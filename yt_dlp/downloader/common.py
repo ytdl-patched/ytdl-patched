@@ -104,7 +104,7 @@ class FileDownloader(ShowsProgress):
 
     @classproperty
     def FD_NAME(cls):
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__[:-2]).lower()
+        return re.sub(r'(?<=[a-z])(?=[A-Z])', '_', cls.__name__[:-2]).lower()
 
     def slow_down(self, start_time, now, byte_counter):
         """Sleep if the download speed is over the rate limit."""
