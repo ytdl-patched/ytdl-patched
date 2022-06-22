@@ -152,7 +152,7 @@ class Updater:
         label = _FILE_SUFFIXES[detect_variant()]
         if label and platform.architecture()[0][:2] == '32':
             label = f'_x86{label}'
-        return f'yt-dlp{label}'
+        return f'ytdl-patched{label}'
 
     @functools.cached_property
     def release_hash(self):
