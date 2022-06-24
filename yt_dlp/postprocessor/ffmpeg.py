@@ -392,6 +392,7 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
         if isinstance(stderr, bytes):
             stderr = stderr.decode('utf-8', 'replace')
         if retval not in variadic(expected_retcodes):
+            self.write_debug(stderr)
             raise FFmpegPostProcessorError(stderr.strip().splitlines()[-1])
 
         for out_path, _ in output_path_opts:

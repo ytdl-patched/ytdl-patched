@@ -726,6 +726,14 @@ class InfoExtractor:
         """Sets a YoutubeDL instance as the downloader for this IE."""
         self._downloader: 'YoutubeDL' = downloader
 
+    @property
+    def cache(self):
+        return self._downloader.cache
+
+    @property
+    def cookiejar(self):
+        return self._downloader.cookiejar
+
     def _initialize_pre_login(self):
         """ Intialization before login. Redefine in subclasses."""
         pass
@@ -3659,7 +3667,7 @@ class InfoExtractor:
             0, name, value, port, port is not None, domain, True,
             domain.startswith('.'), path, True, secure, expire_time,
             discard, None, None, rest)
-        self._downloader.cookiejar.set_cookie(cookie)
+        self.cookiejar.set_cookie(cookie)
 
     def _get_cookies(self, url):
         """ Return a compat_cookies_SimpleCookie with the cookies for the url """
