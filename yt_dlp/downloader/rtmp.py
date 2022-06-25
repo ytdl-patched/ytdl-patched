@@ -3,7 +3,6 @@ import subprocess
 import time
 
 from .common import FileDownloader
-from ..compat import compat_str
 from ..utils import (
     Popen,
     check_executable,
@@ -142,7 +141,7 @@ class RtmpFD(FileDownloader):
         if isinstance(conn, list):
             for entry in conn:
                 basic_args += ['--conn', entry]
-        elif isinstance(conn, compat_str):
+        elif isinstance(conn, str):
             basic_args += ['--conn', conn]
         if protocol is not None:
             basic_args += ['--protocol', protocol]
