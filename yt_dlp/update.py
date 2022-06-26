@@ -79,26 +79,6 @@ def is_non_updateable():
     return _NON_UPDATEABLE_REASONS.get(detect_variant(), _NON_UPDATEABLE_REASONS['unknown'])
 
 
-def get_version_info(ydl):
-    JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases/latest'
-    version_info = ydl._opener.open(JSON_URL).read().decode()
-    return json.loads(version_info)
-
-# def get_version_info(ydl):
-#     # this is for when it needs to look into pre-prelease versions
-#     for page_num in range(1, 4):
-#         try:
-#             JSON_URL = 'https://api.github.com/repos/nao20010128nao/ytdl-patched/releases?page=%d' % page_num
-#             releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
-#         except BaseException:
-#             JSON_URL = 'https://api.github.com/repos/ytdl-patched/ytdl-patched/releases?page=%d' % page_num
-#             releases = json.loads(ydl._opener.open(JSON_URL).read().decode('utf-8'))
-#         for release in releases:
-#             if release.get('prerelease'):
-#                 return release
-#     raise Exception('can\'t find pre-release.')
-
-
 def _sha256_file(path):
     h = hashlib.sha256()
     mv = memoryview(bytearray(128 * 1024))
@@ -125,7 +105,7 @@ class Updater:
     @property
     def new_version(self):
         """Version of the latest release"""
-        return self._new_version_info['tag_name']
+        return self._new_version_info['name']
 
     @property
     def has_update(self):
