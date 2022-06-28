@@ -1133,6 +1133,7 @@
  - **ScreencastOMatic**
  - **ScrippsNetworks**
  - **scrippsnetworks:watch**
+ - **Scrolller**
  - **SCTE**: [<abbr title="netrc machine"><em>scte</em></abbr>]
  - **SCTECourse**: [<abbr title="netrc machine"><em>scte</em></abbr>]
  - **Seeker**
