@@ -44,9 +44,7 @@ def _get_variant_and_executable_path():
             return f'{sys.platform}_dir', path
         if sys.platform == 'darwin' and version_tuple(platform.mac_ver()[0]) < (10, 15):
             return 'darwin_legacy_exe', path
-        if variant:
-            return f'exe_{variant}', path
-        return f'{sys.platform}_exe', path
+        return f'exe_{variant}', path
 
     path = os.path.dirname(__file__)
     if isinstance(__loader__, zipimporter):
@@ -59,7 +57,6 @@ def _get_variant_and_executable_path():
     return 'unknown', path
 
 
-@functools.cache
 def detect_variant():
     return _get_variant_and_executable_path()[0]
 
@@ -82,11 +79,12 @@ _NON_UPDATEABLE_REASONS = {
        for variant, name in {'win32_dir': 'Windows', 'darwin_dir': 'MacOS', 'linux_dir': 'Linux'}.items()},
     'source': 'You cannot update when running from source code; Use git to pull the latest changes',
     'unknown': 'It looks like you installed yt-dlp with a package manager, pip or setup.py; Use that to update',
+    'other': 'It looks like you are using an unofficial build of yt-dlp; Build the executable again',
 }
 
 
 def is_non_updateable():
-    return _NON_UPDATEABLE_REASONS.get(detect_variant(), _NON_UPDATEABLE_REASONS['unknown'])
+    return _NON_UPDATEABLE_REASONS.get(detect_variant(), _NON_UPDATEABLE_REASONS['other'])
 
 
 def _sha256_file(path):
@@ -110,7 +108,7 @@ class Updater:
                 continue
             _, tag, pattern = line.split(' ', 2)
             if re.match(pattern, identifier):
-                return f'tags/{tag.split(".")[-1]}'
+                return f'tags/{tag}'
         return 'latest'
 
     @cached_method
@@ -126,7 +124,7 @@ class Updater:
     @property
     def new_version(self):
         """Version of the latest release"""
-        return self._get_version_info(self._tag)['name']
+        return self._get_version_info(self._tag)['tag_name']
 
     @property
     def has_update(self):
@@ -302,7 +300,6 @@ def update_self(to_screen, verbose, opener):
     printfn = to_screen
 
     class FakeYDL():
-        _opener = opener
         to_screen = printfn
 
         def report_warning(self, msg, *args, **kwargs):
@@ -313,7 +310,7 @@ def update_self(to_screen, verbose, opener):
             if not verbose:
                 return
             if tb is None:
-                # Copied from YoutubeDl.trouble
+                # Copied from YoutubeDL.trouble
                 if sys.exc_info()[0]:
                     tb = ''
                     if hasattr(sys.exc_info()[1], 'exc_info') and sys.exc_info()[1].exc_info[0]:
