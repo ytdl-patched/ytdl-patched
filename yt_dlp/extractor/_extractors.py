@@ -847,6 +847,7 @@ from .livestream import (
     LivestreamOriginalIE,
     LivestreamShortenerIE,
 )
+from .livestreamfails import LivestreamfailsIE
 from .lnkgo import (
     LnkGoIE,
     LnkIE,
@@ -1664,7 +1665,10 @@ from .srgssr import (
 from .srmediathek import SRMediathekIE
 from .stanfordoc import StanfordOpenClassroomIE
 from .startv import StarTVIE
-from .steam import SteamIE
+from .steam import (
+    SteamIE,
+    SteamCommunityBroadcastIE,
+)
 from .storyfire import (
     StoryFireIE,
     StoryFireUserIE,
@@ -1971,7 +1975,10 @@ from .vidbit import VidbitIE
 from .viddler import ViddlerIE
 from .videa import VideaIE
 from .videobin import VideobinIE
-from .videocampus_sachsen import VideocampusSachsenIE
+from .videocampus_sachsen import (
+    VideocampusSachsenIE,
+    ViMPPlaylistIE,
+)
 from .videodetective import VideoDetectiveIE
 from .videofyme import VideofyMeIE
 from .videomore import (

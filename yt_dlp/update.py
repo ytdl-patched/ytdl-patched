@@ -30,14 +30,15 @@ def _get_variant_and_executable_path():
     """@returns (variant, executable_path)"""
     if hasattr(sys, 'frozen'):
         path = sys.executable
-        prefix = 'mac' if sys.platform == 'darwin' else 'win'
-        if getattr(sys, '_MEIPASS', None):
-            if sys._MEIPASS == os.path.dirname(sys.executable):
-                return f'{prefix}_dir', path
-            if prefix == 'win' and variant:
-                return f'exe_{variant}', path
-            return f'{prefix}_exe', path
-        return 'py2exe'
+        if not hasattr(sys, '_MEIPASS'):
+            return 'py2exe', path
+        if sys._MEIPASS == os.path.dirname(path):
+            return f'{sys.platform}_dir', path
+        if sys.platform == 'darwin' and version_tuple(platform.mac_ver()[0]) < (10, 15):
+            return 'darwin_legacy_exe', path
+        if variant:
+            return f'exe_{variant}', path
+        return f'{sys.platform}_exe', path
 
     path = os.path.dirname(__file__)
     if isinstance(__loader__, zipimporter):
@@ -61,9 +62,10 @@ _FILE_SUFFIXES = {
     'py2exe': '_min.exe',
     'win32_exe': '.exe',
     'darwin_exe': '_macos',
+    'darwin_legacy_exe': '_macos_legacy',
     'linux_exe': '_linux',
-    'exe_red_64': '-red.exe',
-    'exe_white_64': '-white.exe',
+    'exe_red': '-red.exe',
+    'exe_white': '-white.exe',
 }
 
 _NON_UPDATEABLE_REASONS = {
