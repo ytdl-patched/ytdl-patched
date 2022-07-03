@@ -3325,6 +3325,10 @@ class YoutubeDL:
                             self.report_warning(f'{vid}: {msg}. Install ffmpeg to fix this automatically')
 
                     def gets_converted(ext):
+                        """
+                        Returns True if the given ext is going to be converted to some other container than ext
+                        """
+
                         if not ext:
                             return False
                         pps = self._pps['post_process']
