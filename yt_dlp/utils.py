@@ -3672,21 +3672,22 @@ def match_str(filter_str, dct, incomplete=False):
         for filter_part in re.split(r'(?<!\\)&', filter_str))
 
 
-def match_filter_func(filters):
+def match_filter_func(filters, all_match=False):
     if not filters:
         return None
     filters = set(variadic(filters))
+    accumlator, mfstrj = (all, ') & (') if all_match else (any, ') | (')
 
     interactive = '-' in filters
     if interactive:
         filters.remove('-')
 
     def _match_func(info_dict, incomplete=False):
-        if not filters or any(match_str(f, info_dict, incomplete) for f in filters):
+        if not filters or accumlator(match_str(f, info_dict, incomplete) for f in filters):
             return NO_DEFAULT if interactive and not incomplete else None
         else:
             video_title = info_dict.get('title') or info_dict.get('id') or 'video'
-            filter_str = ') | ('.join(map(str.strip, filters))
+            filter_str = mfstrj.join(map(str.strip, filters))
             return f'{video_title} does not pass filter ({filter_str}), skipping ..'
     return _match_func
 

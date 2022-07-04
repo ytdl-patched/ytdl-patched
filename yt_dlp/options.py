@@ -649,6 +649,15 @@ def create_parser():
         metavar='FILTER', dest='match_filter', action='store_const', const=None,
         help='Do not use generic video filter (default)')
     selection.add_option(
+        '--any-match', dest='all_match', action='store_false',
+        help='Require one of --match-filters\' to match (default)')
+    selection.add_option(
+        '--all-match', dest='all_match', action='store_true',
+        help='Require all of --match-filters\' to match')
+    selection.add_option(
+        '--no-all-match', dest='all_match', action='store_false',
+        help=optparse.SUPPRESS_HELP)
+    selection.add_option(
         '--no-playlist',
         action='store_true', dest='noplaylist', default=False,
         help='Download only the video, if the URL refers to a video and a playlist')

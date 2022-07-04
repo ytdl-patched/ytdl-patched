@@ -400,7 +400,7 @@ def validate_options(opts):
         except Exception:
             raise ValueError('unsupported geo-bypass country or ip-block')
 
-    opts.match_filter = match_filter_func(opts.match_filter)
+    opts.match_filter = match_filter_func(opts.match_filter, opts.all_match)
 
     if opts.download_archive is not None:
         opts.download_archive = expand_path(opts.download_archive)
