@@ -580,7 +580,7 @@ def create_parser():
         dest='playlistend', metavar='NUMBER', default=None, type=int,
         help=optparse.SUPPRESS_HELP)
     selection.add_option(
-        '--playlist-items', '--playlist-index',
+        '-I', '--playlist-items',
         dest='playlist_items', metavar='ITEM_SPEC', default=None,
         help=(
             'Comma separated playlist_index of the videos to download. '
