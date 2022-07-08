@@ -2881,6 +2881,11 @@ class GenericIE(InfoExtractor):
             link = try_get(urllib.parse.parse_qs(parsed_url.query), lambda qs: qs['p'][0], str)
             if link:
                 return self.url_result(link)
+        # skima.jp redirect
+        if host == 'skima.jp' and path == '/jump':
+            link = try_get(urllib.parse.parse_qs(parsed_url.query), lambda qs: qs['u'][0], str)
+            if link:
+                return self.url_result(link)
         # Firebase Dynamic Link
         # https://firebase.google.com/docs/dynamic-links/create-manually
         if host.endswith('.page.link'):
