@@ -97,6 +97,8 @@
  - **ATVAt**
  - **AudiMedia**
  - **AudioBoom**
+ - **Audiodraft:custom**
+ - **Audiodraft:generic**
  - **audiomack**
  - **audiomack:album**
  - **Audius**: Audius.co
