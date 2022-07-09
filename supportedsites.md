@@ -622,6 +622,7 @@
  - **linkedin:learning**: [<abbr title="netrc machine"><em>linkedin</em></abbr>]
  - **linkedin:learning:course**: [<abbr title="netrc machine"><em>linkedin</em></abbr>]
  - **LinuxAcademy**: [<abbr title="netrc machine"><em>linuxacademy</em></abbr>]
+ - **Liputan6**
  - **LiTV**
  - **LiveJournal**
  - **livestream**
