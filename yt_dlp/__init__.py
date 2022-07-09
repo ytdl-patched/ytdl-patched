@@ -2,6 +2,7 @@ f'You are using an unsupported version of Python. Only Python versions 3.6 and a
 
 __license__ = 'Public Domain'
 
+import collections
 import getpass
 import itertools
 import optparse
@@ -528,7 +529,7 @@ def validate_options(opts):
         # Do not unnecessarily download audio
         opts.format = 'bestaudio/best'
 
-    if opts.getcomments and opts.writeinfojson is None:
+    if opts.getcomments and opts.writeinfojson is None and not opts.embed_infojson:
         # If JSON is not printed anywhere, but comments are requested, save it to file
         if not opts.dumpjson or opts.print_json or opts.dump_single_json:
             opts.writeinfojson = True
@@ -677,8 +678,11 @@ def get_postprocessors(opts):
         }
 
 
+ParsedOptions = collections.namedtuple('ParsedOptions', ('parser', 'options', 'urls', 'ydl_opts'))
+
+
 def parse_options(argv=None, ignore_config_files='if_override'):
-    """ @returns (parser, opts, urls, ydl_opts) """
+    """@returns ParsedOptions(parser, opts, urls, ydl_opts)"""
     parser, opts, urls = parseOpts(argv, ignore_config_files)
     urls = get_urls(urls, opts.batchfile, opts.verbose)
 
@@ -702,7 +706,7 @@ def parse_options(argv=None, ignore_config_files='if_override'):
         else opts.audioformat if (opts.extractaudio and opts.audioformat in FFmpegExtractAudioPP.SUPPORTED_EXTS)
         else None)
 
-    return parser, opts, urls, {
+    return ParsedOptions(parser, opts, urls, {
         'usenetrc': opts.usenetrc,
         'netrc_location': opts.netrc_location,
         'username': opts.username,
@@ -889,7 +893,7 @@ def parse_options(argv=None, ignore_config_files='if_override'):
         'use_modern_tls_cipher': opts.use_modern_tls_cipher,
         'enable_native_progress': opts.enable_native_progress,
         'env_in_outtmpl': opts.env_in_outtmpl,
-    }
+    })
 
 
 def _real_main(argv=None):

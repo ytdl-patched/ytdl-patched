@@ -1929,10 +1929,9 @@ class DateRange:
     def __repr__(self) -> str:
         return 'DateRange({!r}, {!r})'.format(self.start, self.end)
 
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, DateRange):
-            return False
-        return __o.start == self.start and __o.end == self.end
+    def __eq__(self, other):
+        return (isinstance(other, DateRange)
+                and self.start == other.start and self.end == other.end)
 
 
 def platform_name():
@@ -2690,7 +2689,7 @@ class LazyList(collections.abc.Sequence):
 
     @staticmethod
     def _reverse_index(x):
-        return None if x is None else -(x + 1)
+        return None if x is None else ~x
 
     def __getitem__(self, idx):
         if isinstance(idx, slice):
@@ -3695,13 +3694,12 @@ def match_filter_func(filters, all_match=False):
 
 class download_range_func:
     def __init__(self, chapters, ranges):
-        self.chapters = chapters or []
-        self.ranges = ranges or []
+        self.chapters, self.ranges = chapters, ranges
 
     def __call__(self, info_dict, ydl):
         warning = ('There are no chapters matching the regex' if info_dict.get('chapters')
                    else 'Cannot match chapters since chapter information is unavailable')
-        for regex in self.chapters:
+        for regex in self.chapters or []:
             for i, chapter in enumerate(info_dict.get('chapters') or []):
                 if re.search(regex, chapter['title']):
                     warning = None
@@ -3709,17 +3707,14 @@ class download_range_func:
         if self.chapters and warning:
             ydl.to_screen(f'[info] {info_dict["id"]}: {warning}')
 
-        yield from ({'start_time': start, 'end_time': end} for start, end in self.ranges)
+        yield from ({'start_time': start, 'end_time': end} for start, end in self.ranges or [])
 
     def __repr__(self) -> str:
         return f'download_range_func({repr(self.chapters)}, {repr(self.ranges)})'
 
     def __eq__(self, other):
-        if not isinstance(other, download_range_func):
-            return False
-        if self.chapters != other.chapters and self.ranges != other.ranges:
-            return False
-        return True
+        return (isinstance(other, download_range_func)
+                and self.chapters == other.chapters and self.ranges == other.ranges)
 
 
 def parse_dfxp_time_expr(time_expr):
