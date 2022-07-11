@@ -86,6 +86,7 @@ from .utils import (
     YoutubeDLRedirectHandler,
     age_restricted,
     args_to_str,
+    bug_reports_message,
     date_from_str,
     determine_ext,
     determine_protocol,
@@ -343,9 +344,14 @@ class YoutubeDL:
     default_search:    Prepend this string if an input url is not valid.
                        'auto' for elaborate guessing
     encoding:          Use this encoding instead of the system-specified.
-    extract_flat:      Do not resolve URLs, return the immediate result.
-                       Pass in 'in_playlist' to only show this behavior for
-                       playlist items.
+    extract_flat:      Whether to resolve and process url_results further
+                       * False:     Always process (default)
+                       * True:      Never process
+                       * 'in_playlist': Do not process inside playlist/multi_video
+                       * 'discard': Always process, but don't return the result
+                                    from inside playlist/multi_video
+                       * 'discard_in_playlist': Same as "discard", but only for
+                                    playlists (not multi_video)
     wait_for_video:    If given, wait for scheduled streams to become available.
                        The value should be a tuple containing the range
                        (min_secs, max_secs) to wait between retries
@@ -1567,6 +1573,7 @@ class YoutubeDL:
 
         ie_result = ie.extract(url)
         if ie_result is None:  # Finished already (backwards compatibility; listformats and friends should be moved here)
+            self.report_warning(f'Extractor {ie.IE_NAME} returned nothing{bug_reports_message()}')
             return
         if isinstance(ie_result, list):
             # Backwards compatibility: old IE result format
@@ -1753,6 +1760,8 @@ class YoutubeDL:
 
     def __process_playlist(self, ie_result, download):
         """Process each entry in the playlist"""
+        assert ie_result['_type'] in ('playlist', 'multi_video')
+
         title = ie_result.get('title') or ie_result.get('id') or '<Untitled>'
         self.to_screen(f'[download] Downloading playlist: {title}')
 
@@ -1798,6 +1807,12 @@ class YoutubeDL:
         self.to_screen(f'[{ie_result["extractor"]}] Playlist {title}: Downloading {n_entries} videos'
                        f'{format_field(ie_result, "playlist_count", " of %s")}')
 
+        keep_resolved_entries = self.params.get('extract_flat') != 'discard'
+        if self.params.get('extract_flat') == 'discard_in_playlist':
+            keep_resolved_entries = ie_result['_type'] != 'playlist'
+        if keep_resolved_entries:
+            self.write_debug('The information of all playlist entries will be held in memory')
+
         failures = 0
         max_failures = self.params.get('skip_playlist_after_errors') or float('inf')
         for i, (playlist_index, entry) in enumerate(entries):
@@ -1838,7 +1853,8 @@ class YoutubeDL:
                 self.report_error(
                     f'Skipping the remaining entries in playlist "{title}" since {failures} items failed extraction')
                 break
-            resolved_entries[i] = (playlist_index, entry_result)
+            if keep_resolved_entries:
+                resolved_entries[i] = (playlist_index, entry_result)
 
         # Update with processed data
         ie_result['requested_entries'], ie_result['entries'] = tuple(zip(*resolved_entries)) or ([], [])
@@ -3774,6 +3790,21 @@ class YoutubeDL:
                 ] for f in formats if f.get('preference') is None or f['preference'] >= -1000]
             return render_table(['format code', 'extension', 'resolution', 'note', *debug_info_title], table, extra_gap=1)
 
+        def simplified_codec(f, field):
+            assert field in ('acodec', 'vcodec')
+            codec = f.get(field, 'unknown')
+            if not codec:
+                return 'unknown'
+            elif codec != 'none':
+                return '.'.join(codec.split('.')[:4])
+
+            if field == 'vcodec' and f.get('acodec') == 'none':
+                return 'images'
+            elif field == 'acodec' and f.get('vcodec') == 'none':
+                return ''
+            return self._format_out('audio only' if field == 'vcodec' else 'video only',
+                                    self.Styles.SUPPRESS)
+
         delim = self._format_out('\u2502', self.Styles.DELIM, '|', test_encoding=True)
         if verbose:
             debug_info_title = [delim, 'DEBUG']
@@ -3782,21 +3813,17 @@ class YoutubeDL:
                 self._format_out(format_field(f, 'format_id'), self.Styles.ID),
                 format_field(f, 'ext'),
                 format_field(f, func=self.format_resolution, ignore=('audio only', 'images')),
-                format_field(f, 'fps', '\t%d'),
+                format_field(f, 'fps', '\t%d', func=round),
                 format_field(f, 'dynamic_range', '%s', ignore=(None, 'SDR')).replace('HDR', ''),
                 delim,
                 format_field(f, 'filesize', ' \t%s', func=format_bytes) + format_field(f, 'filesize_approx', '~\t%s', func=format_bytes),
-                format_field(f, 'tbr', '\t%dk'),
+                format_field(f, 'tbr', '\t%dk', func=round),
                 shorten_protocol_name(f.get('protocol', '')),
                 delim,
-                format_field(f, 'vcodec', default='unknown').replace(
-                    'none', 'images' if f.get('acodec') == 'none'
-                            else self._format_out('audio only', self.Styles.SUPPRESS)),
-                format_field(f, 'vbr', '\t%dk'),
-                format_field(f, 'acodec', default='unknown').replace(
-                    'none', '' if f.get('vcodec') == 'none'
-                            else self._format_out('video only', self.Styles.SUPPRESS)),
-                format_field(f, 'abr', '\t%dk'),
+                simplified_codec(f, 'vcodec'),
+                format_field(f, 'vbr', '\t%dk', func=round),
+                simplified_codec(f, 'acodec'),
+                format_field(f, 'abr', '\t%dk', func=round),
                 format_field(f, 'asr', '\t%s', func=format_decimal_suffix),
                 join_nonempty(
                     self._format_out('UNSUPPORTED', 'light red') if f.get('ext') in ('f4f', 'f4m') else None,

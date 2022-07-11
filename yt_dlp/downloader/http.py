@@ -210,6 +210,12 @@ class HttpFD(FileDownloader):
             except RESPONSE_READ_EXCEPTIONS as err:
                 raise RetryDownload(err)
 
+        def close_stream():
+            if ctx.stream is not None:
+                if not ctx.tmpfilename == '-':
+                    ctx.stream.close()
+                ctx.stream = None
+
         def download():
             data_len = ctx.data.info().get('Content-length', None)
 
@@ -243,12 +249,9 @@ class HttpFD(FileDownloader):
             before = start  # start measuring
 
             def retry(e):
-                to_stdout = ctx.tmpfilename == '-'
-                if ctx.stream is not None:
-                    if not to_stdout:
-                        ctx.stream.close()
-                    ctx.stream = None
-                ctx.resume_len = byte_counter if to_stdout else self.ydl.getsize(encodeFilename(ctx.tmpfilename))
+                close_stream()
+                ctx.resume_len = (byte_counter if ctx.tmpfilename == '-'
+                                  else self.ydl.getsize(encodeFilename(ctx.tmpfilename)))
                 raise RetryDownload(e)
 
             while True:
@@ -374,7 +377,6 @@ class HttpFD(FileDownloader):
             return True
 
         while count <= retries:
-            no_close = False
             try:
                 establish_connection()
                 return download()
@@ -386,17 +388,12 @@ class HttpFD(FileDownloader):
                     self.to_screen(f'[download] Got server HTTP error: {e.source_error}')
                 continue
             except NextFragment:
-                no_close = False
                 continue
             except SucceedDownload:
                 return True
-            finally:
-                if ctx.stream and not no_close:
-                    ctx.stream.close()
-                    ctx.stream = None
-                if ctx.data and not no_close:
-                    ctx.data.close()
-                    ctx.data = None
+            except:  # noqa: E722
+                close_stream()
+                raise
 
         self.report_error('giving up after %s retries' % retries)
         return False
