@@ -714,6 +714,7 @@
  - **MLSSoccer**
  - **Mnet**
  - **MNetTV**: [<abbr title="netrc machine"><em>mnettv</em></abbr>]
+ - **MochaVideo**
  - **MoeVideo**: LetitBit video services: moevideo.net, playreplay.net and videochart.net
  - **Mofosex**
  - **MofosexEmbed**
@@ -1244,6 +1245,7 @@
  - **SwipeVideo**
  - **SWRMediathek**
  - **Syfy**
+ - **SYVDK**
  - **SztvHu**
  - **t-online.de**
  - **Tagesschau**
@@ -1282,6 +1284,7 @@
  - **TenPlay**: [<abbr title="netrc machine"><em>10play</em></abbr>]
  - **TF1**
  - **TFO**
+ - **TheHoleTv**
  - **TheIntercept**
  - **ThePlatform**
  - **ThePlatformFeed**
