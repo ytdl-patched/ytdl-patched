@@ -4,6 +4,7 @@
  - **17live**
  - **17live:clip**
  - **1tv**: Первый канал
+ - **20.detik.com**
  - **20min**
  - **23video**
  - **247sports**
@@ -31,6 +32,8 @@
  - **AcademicEarth:Course**
  - **acast**
  - **acast:channel**
+ - **AcFunBangumi**
+ - **AcFunVideo**
  - **ADN**: [<abbr title="netrc machine"><em>animedigitalnetwork</em></abbr>] Anime Digital Network
  - **AdobeConnect**
  - **adobetv**
@@ -513,6 +516,7 @@
  - **HungamaSong**
  - **huya:live**: huya.com
  - **Hypem**
+ - **Hytale**
  - **Icareus**
  - **ign.com**
  - **IGNArticle**
@@ -1360,6 +1364,7 @@
  - **TVCArticle**
  - **TVer**
  - **tvigle**: Интернет-телевидение Tvigle.ru
+ - **TVIPlayer**
  - **tvland.com**
  - **TVN24**
  - **TVNet**
