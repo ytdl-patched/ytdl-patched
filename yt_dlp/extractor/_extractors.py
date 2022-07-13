@@ -22,6 +22,7 @@ from .acast import (
     ACastIE,
     ACastChannelIE,
 )
+from .acfun import AcFunVideoIE, AcFunBangumiIE
 from .adn import ADNIE
 from .adobeconnect import AdobeConnectIE
 from .adobetv import (
@@ -384,6 +385,7 @@ from .deezer import (
     DeezerAlbumIE,
 )
 from .democracynow import DemocracynowIE
+from .detik import Detik20IE
 from .dfb import DFBIE
 from .dhm import DHMIE
 from .digg import DiggIE
@@ -675,6 +677,7 @@ from .hungama import (
     HungamaAlbumPlaylistIE,
 )
 from .hypem import HypemIE
+from .hytale import HytaleIE
 from .icareus import IcareusIE
 from .ichinanalive import (
     IchinanaLiveIE,
@@ -1871,6 +1874,7 @@ from .tvc import (
 )
 from .tver import TVerIE
 from .tvigle import TvigleIE
+from .tviplayer import TVIPlayerIE
 from .tvland import TVLandIE
 from .tvn24 import TVN24IE
 from .tvnet import TVNetIE
