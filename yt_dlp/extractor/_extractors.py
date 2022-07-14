@@ -1649,6 +1649,7 @@ from .spike import (
     BellatorIE,
     ParamountNetworkIE,
 )
+from .startrek import StarTrekIE
 from .stitcher import (
     StitcherIE,
     StitcherShowIE,
