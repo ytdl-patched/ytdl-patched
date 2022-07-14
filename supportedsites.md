@@ -1095,10 +1095,14 @@
  - **RTDocumentryPlaylist**
  - **rte**: Raidió Teilifís Éireann TV
  - **rte:radio**: Raidió Teilifís Éireann radio
+ - **rtl.lu:article**
+ - **rtl.lu:tele-vod**
  - **rtl.nl**: rtl.nl and rtlxl.nl
  - **rtl2**
  - **rtl2:you**
  - **rtl2:you:series**
+ - **RTLLuLive**
+ - **RTLLuRadio**
  - **RTNews**
  - **RTP**
  - **RTRFM**
