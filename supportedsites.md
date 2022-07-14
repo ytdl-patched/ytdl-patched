@@ -1222,6 +1222,7 @@
  - **SRGSSR**
  - **SRGSSRPlay**: srf.ch, rts.ch, rsi.ch, rtr.ch and swissinfo.ch play sites
  - **stanfordoc**: Stanford Open ClassRoom
+ - **StarTrek**
  - **startv**
  - **Steam**
  - **SteamCommunityBroadcast**
