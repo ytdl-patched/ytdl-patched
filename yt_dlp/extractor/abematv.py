@@ -394,12 +394,12 @@ class AbemaTVIE(AbemaTVBaseIE):
                     'https://api.abema.io/v1/timetable/dataSet?debug=false', video_id,
                     headers=headers)
             now = time_seconds(hours=9)
-            for slot in self._TIMETABLE.get('slots', []):
-                if slot.get('channelId') != video_id:
-                    continue
-                if slot['startAt'] <= now and now < slot['endAt']:
-                    title = slot['title']
-                    break
+            title = traverse_obj(
+                self._TIMETABLE,
+                ('slots',
+                 # find the time slice from the requested channel in timetable
+                 lambda _, v: v['channelId'] == video_id and v['startAt'] <= now and now < v['endAt'],
+                 'title'), get_all=False)
 
         # read breadcrumb on top of page
         breadcrumb = self._extract_breadcrumb_list(webpage, video_id)
