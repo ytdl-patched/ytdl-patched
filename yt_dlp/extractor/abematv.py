@@ -251,7 +251,7 @@ class AbemaTVIE(AbemaTVBaseIE):
             'description': 'md5:55f2e61f46a17e9230802d7bcc913d5f',
             'is_live': True,
         },
-        'skip': 'Not supported until yt-dlp implements native live downloader OR AbemaTV can start a local HTTP server',
+        'skip': 'things varies over time',
     }]
     _USERTOKEN = None
     _DEVICE_ID = None
