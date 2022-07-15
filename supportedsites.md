@@ -1341,6 +1341,8 @@
  - **TruNews**
  - **TruTV**
  - **Tube8**
+ - **TubeTuGraz**: [<abbr title="netrc machine"><em>tubetugraz</em></abbr>] tube.tugraz.at
+ - **TubeTuGrazSeries**: [<abbr title="netrc machine"><em>tubetugraz</em></abbr>]
  - **TubiTv**: [<abbr title="netrc machine"><em>tubitv</em></abbr>]
  - **TubiTvShow**
  - **Tumblr**: [<abbr title="netrc machine"><em>tumblr</em></abbr>]
