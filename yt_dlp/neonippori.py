@@ -238,6 +238,8 @@ WrapStyle: 2
 ScaledBorderAndShadow: yes
 YCbCr Matrix: TV.601
 
+; JSON DATA HERE
+
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: %(styleid)s, %(fontface)s, %(fontsize).0f, &H%(alpha)02XFFFFFF, &H%(alpha)02XFFFFFF, &H%(alpha)02X000000, &H%(alpha)02X000000, 0, 0, 0, 0, 100, 100, 0.00, 0.00, 1, %(outline).0f, 0, 7, 0, 0, 0, 0
@@ -327,7 +329,7 @@ def load_comments(input_text, input_format, stage_width, stage_height, reserve_b
     comments = parse_comments(input_text, input_format, font_size, report_warning)
     with io.StringIO() as fo:
         process_comments(comments, fo, stage_width, stage_height, reserve_blank, font_face, font_size, text_opacity, duration_marquee, duration_still, report_warning)
-        return fo.getvalue()
+        return re.sub(r'^' + re.escape('; JSON DATA HERE'), f'; {input_text}', fo.getvalue())
 
 
 __all__ = [
