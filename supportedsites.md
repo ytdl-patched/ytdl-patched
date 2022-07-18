@@ -1114,6 +1114,7 @@
  - **rtve.es:television**
  - **RTVNH**
  - **RTVS**
+ - **rtvslo.si**
  - **RUHD**
  - **Rule34Video**
  - **RumbleChannel**
@@ -1545,7 +1546,10 @@
  - **WeiboMobile**
  - **WeiqiTV**: WQTV
  - **WhatIsMyIp**
+ - **wetv:episode**
+ - **WeTvSeries**
  - **whowatch**
+ - **wikimedia.org**
  - **Willow**
  - **WimTV**
  - **Wistia**
