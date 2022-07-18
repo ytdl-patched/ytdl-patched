@@ -1545,9 +1545,9 @@
  - **Weibo**
  - **WeiboMobile**
  - **WeiqiTV**: WQTV
- - **WhatIsMyIp**
  - **wetv:episode**
  - **WeTvSeries**
+ - **WhatIsMyIp**
  - **whowatch**
  - **wikimedia.org**
  - **Willow**
