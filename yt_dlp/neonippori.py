@@ -329,7 +329,7 @@ def load_comments(input_text, input_format, stage_width, stage_height, reserve_b
     comments = parse_comments(input_text, input_format, font_size, report_warning)
     with io.StringIO() as fo:
         process_comments(comments, fo, stage_width, stage_height, reserve_blank, font_face, font_size, text_opacity, duration_marquee, duration_still, report_warning)
-        return re.sub(r'^' + re.escape('; JSON DATA HERE'), f'; {input_text}', fo.getvalue())
+        return re.sub(r'^' + re.escape('; JSON DATA HERE'), lambda x: f'; {input_text}', fo.getvalue())
 
 
 __all__ = [
