@@ -3,7 +3,6 @@ import hashlib
 import json
 import os
 import platform
-import re
 import subprocess
 import sys
 from zipimport import zipimporter
@@ -14,7 +13,6 @@ from .utils import (
     Popen,
     cached_method,
     shell_quote,
-    system_identifier,
     traverse_obj,
     version_tuple,
 )
@@ -102,16 +100,7 @@ class Updater:
 
     @functools.cached_property
     def _tag(self):
-        if version_tuple(__version__) >= version_tuple(self.latest_version):
-            return 'latest'
-
-        identifier = f'{detect_variant()} {system_identifier()}'
-        for line in self._download('_update_spec', 'latest').decode().splitlines():
-            if not line.startswith('lock '):
-                continue
-            _, tag, pattern = line.split(' ', 2)
-            if re.match(pattern, identifier):
-                return f'tags/{tag}'
+        # there's no _update_spec in ytdl-patched
         return 'latest'
 
     @cached_method
