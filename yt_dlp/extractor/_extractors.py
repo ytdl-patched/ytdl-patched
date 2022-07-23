@@ -1261,7 +1261,7 @@ from .parliamentliveuk import ParliamentLiveUKIE
 from .parlview import ParlviewIE
 from .patreon import (
     PatreonIE,
-    PatreonUserIE
+    PatreonCampaignIE
 )
 from .pbs import PBSIE
 from .pearvideo import PearVideoIE
