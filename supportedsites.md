@@ -1048,6 +1048,7 @@
  - **radlive:channel**
  - **radlive:season**
  - **Rai**
+ - **RaiNews**
  - **RaiPlay**
  - **RaiPlayLive**
  - **RaiPlayPlaylist**
