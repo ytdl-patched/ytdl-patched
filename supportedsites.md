@@ -728,6 +728,7 @@
  - **Motherless**
  - **MotherlessGroup**
  - **Motorsport**: motorsport.com
+ - **MotorTrend**
  - **mottohomete**
  - **MovieClips**
  - **MovieFap**
@@ -1292,6 +1293,7 @@
  - **TeleQuebecVideo**
  - **TeleTask**
  - **Telewebion**
+ - **Tempo**
  - **TennisTV**: [<abbr title="netrc machine"><em>tennistv</em></abbr>]
  - **TenPlay**: [<abbr title="netrc machine"><em>10play</em></abbr>]
  - **TF1**
