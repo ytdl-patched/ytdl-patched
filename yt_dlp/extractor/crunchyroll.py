@@ -649,7 +649,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
 class CrunchyrollShowPlaylistIE(CrunchyrollBaseIE):
     IE_NAME = 'crunchyroll:playlist'
-    _VALID_URL = r'https?://(?:(?P<prefix>www|m)\.)?(?P<url>crunchyroll\.com/(?:\w{1,2}/)?(?!(?:news|anime-news|library|forum|launchcalendar|lineup|store|comics|freetrial|login|media-\d+))(?P<id>[\w\-]+))/?(?:\?|$)'
+    _VALID_URL = r'https?://(?:(?P<prefix>www|m)\.)?(?P<url>crunchyroll\.com/(?:\w{2}(?:-\w{2})?/)?(?!(?:news|anime-news|library|forum|launchcalendar|lineup|store|comics|freetrial|login|media-\d+))(?P<id>[\w\-]+))/?(?:\?|$)'
 
     _TESTS = [{
         'url': 'https://www.crunchyroll.com/a-bridge-to-the-starry-skies-hoshizora-e-kakaru-hashi',
@@ -757,7 +757,7 @@ class CrunchyrollBetaBaseIE(CrunchyrollBaseIE):
 
 class CrunchyrollBetaIE(CrunchyrollBetaBaseIE):
     IE_NAME = 'crunchyroll:beta'
-    _VALID_URL = r'https?://beta\.crunchyroll\.com/(?P<lang>(?:\w{1,2}/)?)watch/(?P<id>\w+)/(?P<display_id>[\w\-]*)/?(?:\?|$)'
+    _VALID_URL = r'https?://beta\.crunchyroll\.com/(?P<lang>(?:\w{2}(?:-\w{2})?/)?)watch/(?P<id>\w+)/(?P<display_id>[\w\-]*)/?(?:\?|$)'
     _TESTS = [{
         'url': 'https://beta.crunchyroll.com/watch/GY2P1Q98Y/to-the-future',
         'info_dict': {
@@ -801,6 +801,9 @@ class CrunchyrollBetaIE(CrunchyrollBetaBaseIE):
     }, {
         'url': 'https://beta.crunchyroll.com/watch/GY2P1Q98Y/',
         'only_matching': True,
+    }, {
+        'url': 'https://beta.crunchyroll.com/pt-br/watch/G8WUN8VKP/the-ruler-of-conspiracy',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
@@ -813,56 +816,36 @@ class CrunchyrollBetaIE(CrunchyrollBetaBaseIE):
 
         episode_response = self._download_json(
             f'{api_domain}/cms/v2{bucket}/episodes/{internal_id}', display_id,
-            note='Retrieving episode metadata',
-            query=params)
+            note='Retrieving episode metadata', query=params)
         if episode_response.get('is_premium_only') and not episode_response.get('playback'):
             raise ExtractorError('This video is for premium members only.', expected=True)
-        stream_response = self._download_json(
-            episode_response['playback'], display_id,
-            note='Retrieving stream info')
 
-        thumbnails = []
-        for thumbnails_data in traverse_obj(episode_response, ('images', 'thumbnail')):
-            for thumbnail_data in thumbnails_data:
-                thumbnails.append({
-                    'url': thumbnail_data.get('source'),
-                    'width': thumbnail_data.get('width'),
-                    'height': thumbnail_data.get('height'),
-                })
-        subtitles = {}
-        for lang, subtitle_data in stream_response.get('subtitles').items():
-            subtitles[lang] = [{
-                'url': subtitle_data.get('url'),
-                'ext': subtitle_data.get('format')
-            }]
+        stream_response = self._download_json(episode_response['playback'], display_id, note='Retrieving stream info')
+        get_streams = lambda name: (traverse_obj(stream_response, name) or {}).items()
 
         requested_hardsubs = [('' if val == 'none' else val) for val in (self._configuration_arg('hardsub') or ['none'])]
         hardsub_preference = qualities(requested_hardsubs[::-1])
         requested_formats = self._configuration_arg('format') or ['adaptive_hls']
 
         formats = []
-        for stream_type, streams in stream_response.get('streams', {}).items():
+        for stream_type, streams in get_streams('streams'):
             if stream_type not in requested_formats:
                 continue
             for stream in streams.values():
                 hardsub_lang = stream.get('hardsub_locale') or ''
                 if hardsub_lang.lower() not in requested_hardsubs:
                     continue
-                format_id = join_nonempty(
-                    stream_type,
-                    format_field(stream, 'hardsub_locale', 'hardsub-%s'))
+                format_id = join_nonempty(stream_type, format_field(stream, 'hardsub_locale', 'hardsub-%s'))
                 if not stream.get('url'):
                     continue
-                if stream_type.split('_')[-1] == 'hls':
+                if stream_type.endswith('hls'):
                     adaptive_formats = self._extract_m3u8_formats(
                         stream['url'], display_id, 'mp4', m3u8_id=format_id,
-                        note='Downloading %s information' % format_id,
-                        fatal=False)
-                elif stream_type.split('_')[-1] == 'dash':
+                        fatal=False, note=f'Downloading {format_id} HLS manifest')
+                elif stream_type.endswith('dash'):
                     adaptive_formats = self._extract_mpd_formats(
                         stream['url'], display_id, mpd_id=format_id,
-                        note='Downloading %s information' % format_id,
-                        fatal=False)
+                        fatal=False, note=f'Downloading {format_id} MPD manifest')
                 for f in adaptive_formats:
                     if f.get('acodec') != 'none':
                         f['language'] = stream_response.get('audio_locale')
@@ -872,10 +855,10 @@ class CrunchyrollBetaIE(CrunchyrollBetaBaseIE):
 
         return {
             'id': internal_id,
-            'title': '%s Episode %s – %s' % (episode_response.get('season_title'), episode_response.get('episode'), episode_response.get('title')),
-            'description': episode_response.get('description').replace(r'\r\n', '\n'),
+            'title': '%s Episode %s – %s' % (
+                episode_response.get('season_title'), episode_response.get('episode'), episode_response.get('title')),
+            'description': try_get(episode_response, lambda x: x['description'].replace(r'\r\n', '\n')),
             'duration': float_or_none(episode_response.get('duration_ms'), 1000),
-            'thumbnails': thumbnails,
             'series': episode_response.get('series_title'),
             'series_id': episode_response.get('series_id'),
             'season': episode_response.get('season_title'),
@@ -883,14 +866,24 @@ class CrunchyrollBetaIE(CrunchyrollBetaBaseIE):
             'season_number': episode_response.get('season_number'),
             'episode': episode_response.get('title'),
             'episode_number': episode_response.get('sequence_number'),
-            'subtitles': subtitles,
-            'formats': formats
+            'formats': formats,
+            'thumbnails': [{
+                'url': thumb.get('source'),
+                'width': thumb.get('width'),
+                'height': thumb.get('height'),
+            } for thumb in traverse_obj(episode_response, ('images', 'thumbnail', ..., ...)) or []],
+            'subtitles': {
+                lang: [{
+                    'url': subtitle_data.get('url'),
+                    'ext': subtitle_data.get('format')
+                }] for lang, subtitle_data in get_streams('subtitles')
+            },
         }
 
 
 class CrunchyrollBetaShowIE(CrunchyrollBetaBaseIE):
     IE_NAME = 'crunchyroll:playlist:beta'
-    _VALID_URL = r'https?://beta\.crunchyroll\.com/(?P<lang>(?:\w{1,2}/)?)series/(?P<id>\w+)/(?P<display_id>[\w\-]*)/?(?:\?|$)'
+    _VALID_URL = r'https?://beta\.crunchyroll\.com/(?P<lang>(?:\w{2}(?:-\w{2})?/)?)series/(?P<id>\w+)/(?P<display_id>[\w\-]*)/?(?:\?|$)'
     _TESTS = [{
         'url': 'https://beta.crunchyroll.com/series/GY19NQ2QR/Girl-Friend-BETA',
         'info_dict': {
