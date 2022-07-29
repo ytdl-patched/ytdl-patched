@@ -312,9 +312,6 @@ class PeerTubeIE(PeerTubeBaseIE):
         'url': 'https://vod.ksite.de/videos/embed/fed67262-6edb-4d1c-833b-daa9085c71d7',
         'only_matching': True,
     }, {
-        'url': 'https://peertube.tv/api/v1/videos/c1875674-97d0-4c94-a058-3f7e64c962e8',
-        'only_matching': True,
-    }, {
         'url': 'peertube:framatube.org:b37a5b9f-e6b5-415c-b700-04a5cd6ec205',
         'only_matching': True,
     }, {
