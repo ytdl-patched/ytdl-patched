@@ -132,6 +132,7 @@ KNOWN_EXTENSIONS = (
     'asf', 'wmv', 'wma',
     '3gp', '3g2',
     'mp3',
+    'mpg',
     'flac',
     'ape',
     'wav',
