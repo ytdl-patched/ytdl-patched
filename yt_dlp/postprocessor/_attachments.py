@@ -409,9 +409,12 @@ class ShowsProgress(object):
             return default
 
         if s['status'] == 'finished':
-            if self._params.get('noprogress'):
-                self.to_screen(f'[{self._PROGRESS_LABEL}] Download completed')
+            if self.params.get('noprogress'):
+                self.to_screen('[download] Download completed')
+            speed = try_call(lambda: s['total_bytes'] / s['elapsed'])
             s.update({
+                'speed': speed,
+                '_speed_str': self.format_speed(speed).strip(),
                 '_total_bytes_str': format_bytes(s.get('total_bytes')),
                 '_elapsed_str': self.format_seconds(s.get('elapsed')),
                 '_percent_str': self.format_percent(100),
@@ -420,6 +423,7 @@ class ShowsProgress(object):
                 '100%%',
                 with_fields(('total_bytes', 'of %(_total_bytes_str)s')),
                 with_fields(('elapsed', 'in %(_elapsed_str)s')),
+                with_fields(('speed', 'at %(_speed_str)s')),
                 delim=' '))
 
         if s['status'] not in ('downloading', 'processing'):
