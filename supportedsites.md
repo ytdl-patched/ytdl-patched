@@ -64,6 +64,7 @@
  - **AmericasTestKitchenSeason**
  - **AmHistoryChannel**
  - **anderetijden**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
+ - **Angel**
  - **AnimalPlanet**
  - **AnimeOnDemand**: [<abbr title="netrc machine"><em>animeondemand</em></abbr>]
  - **ant1newsgr:article**: ant1news.gr articles
@@ -498,6 +499,7 @@
  - **hitbox:live**
  - **HitRecord**
  - **hketv**: 香港教育局教育電視 (HKETV) Educational Television, Hong Kong Educational Bureau
+ - **Holodex**
  - **HotNewHipHop**
  - **hotstar**
  - **hotstar:playlist**
