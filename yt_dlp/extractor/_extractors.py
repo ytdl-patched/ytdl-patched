@@ -60,6 +60,7 @@ from .americastestkitchen import (
     AmericasTestKitchenIE,
     AmericasTestKitchenSeasonIE,
 )
+from .angel import AngelIE
 from .animeondemand import AnimeOnDemandIE
 from .anvato import AnvatoIE
 from .aol import AolIE
@@ -651,6 +652,7 @@ from .hidive import HiDiveIE
 from .historicfilms import HistoricFilmsIE
 from .hitbox import HitboxIE, HitboxLiveIE
 from .hitrecord import HitRecordIE
+from .holodex import HolodexIE
 from .hotnewhiphop import HotNewHipHopIE
 from .hotstar import (
     HotStarIE,
