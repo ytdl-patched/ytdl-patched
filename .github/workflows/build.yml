@@ -434,11 +434,11 @@ jobs:
           name: ytdl-artifacts
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
-        if: ${{ startsWith(runner.os, 'ubuntu') || startsWith(runner.os, 'macos') }}
+        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
         with:
           python-version: ${{ matrix.python_version }}
       - name: Move executable file
-        if: ${{ startsWith(runner.os, 'windows') }}
+        if: ${{ runner.os == 'windows' }}
         run: |
           mv ./artifacts/ytdl-patched-white.exe ./artifacts/ytdl-patched.exe
       - name: ytdl-patched --help and --version
