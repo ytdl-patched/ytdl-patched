@@ -13,6 +13,7 @@ from ..postprocessor.ffmpeg import EXT_TO_OUT_FORMATS, FFmpegPostProcessor
 from ..postprocessor._attachments import RunsFFmpeg
 from ..utils import (
     Popen,
+    RetryManager,
     _configuration_args,
     check_executable,
     classproperty,
@@ -141,29 +142,22 @@ class ExternalFD(FragmentFD):
                 self.to_stderr(stderr.decode('utf-8', 'replace'))
             return retcode
 
-        fragment_retries = self.params.get('fragment_retries', 0)
         skip_unavailable_fragments = self.params.get('skip_unavailable_fragments', True)
 
-        count = 0
-        while count <= fragment_retries:
-            _, stderr, retcode = self._call_process(cmd, info_dict, True)
-            if not retcode:
+        retry_manager = RetryManager(self.params.get('fragment_retries'), self.report_retry,
+                                     frag_index=None, fatal=not skip_unavailable_fragments)
+        for retry in retry_manager:
+            _, stderr, returncode = self._call_process(cmd, info_dict, True)
+            if not returncode:
                 break
-
             # TODO: Decide whether to retry based on error code
             # https://aria2.github.io/manual/en/html/aria2c.html#exit-status
             if stderr:
                 self.to_stderr(stderr)
-            count += 1
-            if count <= fragment_retries:
-                self.to_screen(
-                    '[%s] Got error. Retrying fragments (attempt %d of %s)...'
-                    % (self.get_basename(), count, self.format_retries(fragment_retries)))
-                self.sleep_retry('fragment', count)
-        if count > fragment_retries:
-            if not skip_unavailable_fragments:
-                self.report_error('Giving up after %s fragment retries' % fragment_retries)
-                return -1
+            retry.error = Exception()
+            continue
+        if not skip_unavailable_fragments and retry_manager.error:
+            return -1
 
         decrypt_fragment = self.decrypter(info_dict)
         dest, _ = self.sanitize_open(tmpfilename, 'wb')

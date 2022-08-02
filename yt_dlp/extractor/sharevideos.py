@@ -1,13 +1,11 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from ..utils import KNOWN_EXTENSIONS, determine_ext, mimetype2ext, try_get
 from .common import InfoExtractor
 
 
-class ShareVideosIE(InfoExtractor):
+class ShareVideosEmbedIE(InfoExtractor):
     IE_NAME = 'sharevideos'
     _VALID_URL = r'https?://(?:embed\.)?share-videos\.se/auto/(?:embed|video)/(?P<id>\d+)\?uid=(?P<uid>\d+)'
+    _EMBED_REGEX = [r'<iframe[^>]+?\bsrc\s*=\s*(["\'])(?P<url>(?:https?:)?//embed\.share-videos\.se/auto/embed/\d+\?.*?\buid=\d+.*?)\1']
     TEST = {
         'url': 'http://share-videos.se/auto/video/83645793?uid=13',
         'md5': 'b68d276de422ab07ee1d49388103f457',
@@ -45,13 +43,11 @@ class ShareVideosIE(InfoExtractor):
             src_type = self._search_regex(r'player.src\({type: \'(.+);\',', webpage, 'video type', fatal=False, default='video/mp4')
             ext = determine_ext(src).lower()
             return {
-                'formats': [
-                    {
-                        'url': src,
-                        'ext': (mimetype2ext(src_type)
-                                or ext if ext in KNOWN_EXTENSIONS else 'mp4'),
-                    }
-                ]
+                'formats': [{
+                    'url': src,
+                    'ext': (mimetype2ext(src_type)
+                            or ext if ext in KNOWN_EXTENSIONS else 'mp4'),
+                }]
             }
         entry = try_get(webpage, (
             lambda x: self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')[0],
