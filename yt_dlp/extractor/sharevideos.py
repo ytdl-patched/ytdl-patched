@@ -18,14 +18,14 @@ class ShareVideosEmbedIE(InfoExtractor):
     }
 
     def _real_extract(self, url):
-        video_id = self._match_id(url)
-        uid = self._VALID_URL_RE.match(url).group('uid')
-        webpage = self._download_webpage('https://embed.share-videos.se/auto/embed/%s?uid=%s' % (video_id, uid), video_id)
+        mobj = self._match_valid_url(url)
+        video_id, uid = mobj.group('id', 'uid')
+        webpage = self._download_webpage(f'https://embed.share-videos.se/auto/embed/{video_id}?uid={uid}', video_id)
 
         title = self._html_extract_title(webpage, 'video title', default=None)
         if not title:
             video_webpage = self._download_webpage(
-                'https://share-videos.se/auto/video/%s?uid=%s' % (video_id, uid),
+                f'https://share-videos.se/auto/video/{video_id}?uid={uid}',
                 video_id)
             title = self._html_extract_title(video_webpage, 'video title', default=None)
         if not title:
@@ -36,23 +36,22 @@ class ShareVideosEmbedIE(InfoExtractor):
                 title = ' '.join(tags)
         if not title:
             self.report_warning('There is no title candidate for this video', video_id)
-            title = 'untitled'
 
         def extract_mp4_url(x):
             src = self._search_regex(r'random_file\.push\("(.+)"\);', webpage, 'video url')
             src_type = self._search_regex(r'player.src\({type: \'(.+);\',', webpage, 'video type', fatal=False, default='video/mp4')
-            ext = determine_ext(src).lower()
+            ext = mimetype2ext(src_type) or determine_ext(src).lower()
             return {
                 'formats': [{
                     'url': src,
-                    'ext': (mimetype2ext(src_type)
-                            or ext if ext in KNOWN_EXTENSIONS else 'mp4'),
+                    'ext': ext if ext in KNOWN_EXTENSIONS else 'mp4',
                 }]
             }
+
         entry = try_get(webpage, (
             lambda x: self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')[0],
             extract_mp4_url,
-        ), dict)
+        ), None)
         self._sort_formats(entry['formats'])
         entry.update({
             'id': video_id,
