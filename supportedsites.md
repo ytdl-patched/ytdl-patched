@@ -191,6 +191,7 @@
  - **Camdemy**
  - **CamdemyFolder**
  - **CamModels**
+ - **CamtasiaEmbed**
  - **CamWithHer**
  - **CanalAlpha**
  - **canalc2.tv**
@@ -237,6 +238,7 @@
  - **Clippit**
  - **ClipRs**
  - **Clipsyndicate**
+ - **ClipYouEmbed**
  - **CloserToTruth**
  - **CloudflareStream**
  - **Cloudy**
@@ -511,6 +513,7 @@
  - **HRTiPlaylist**: [<abbr title="netrc machine"><em>hrti</em></abbr>]
  - **HSEProduct**
  - **HSEShow**
+ - **html5**
  - **Huajiao**: 花椒直播
  - **HuffPost**: Huffington Post
  - **Hungama**
@@ -908,21 +911,10 @@
  - **openrec:capture**
  - **openrec:movie**
  - **OraTV**
- - **orf:burgenland**: Radio Burgenland
- - **orf:fm4**: radio FM4
  - **orf:fm4:story**: fm4.orf.at stories
  - **orf:iptv**: iptv.ORF.at
- - **orf:kaernten**: Radio Kärnten
- - **orf:noe**: Radio Niederösterreich
- - **orf:oberoesterreich**: Radio Oberösterreich
- - **orf:oe1**: Radio Österreich 1
- - **orf:oe3**: Radio Österreich 3
- - **orf:salzburg**: Radio Salzburg
- - **orf:steiermark**: Radio Steiermark
- - **orf:tirol**: Radio Tirol
+ - **orf:radio**
  - **orf:tvthek**: ORF TVthek
- - **orf:vorarlberg**: Radio Vorarlberg
- - **orf:wien**: Radio Wien
  - **OsnatelTV**: [<abbr title="netrc machine"><em>osnateltv</em></abbr>]
  - **OutsideTV**
  - **PacktPub**: [<abbr title="netrc machine"><em>packtpub</em></abbr>]
@@ -1058,6 +1050,7 @@
  - **RaiPlaySound**
  - **RaiPlaySoundLive**
  - **RaiPlaySoundPlaylist**
+ - **RaiSudtirol**
  - **RayWenderlich**
  - **RayWenderlichCourse**
  - **RBMARadio**
