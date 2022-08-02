@@ -540,7 +540,7 @@ class InfoExtractor:
         self.set_downloader(downloader)
 
     @classmethod
-    def _match_valid_url(cls, url):
+    def _match_valid_url(cls, url) -> re.Match:
         if cls._VALID_URL is False:
             return None
         # This does not use has/getattr intentionally - we want to know whether
