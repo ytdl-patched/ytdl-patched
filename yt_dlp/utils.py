@@ -4,7 +4,6 @@ import calendar
 import codecs
 import collections
 import contextlib
-import ctypes
 import datetime
 import email.header
 import email.utils
@@ -2003,6 +2002,7 @@ class LockingUnsupportedError(OSError):
 
 # Cross-platform file locking
 if sys.platform == 'win32':
+    import ctypes
     import ctypes.wintypes
     import msvcrt
 
@@ -2386,9 +2386,10 @@ def fix_xml_ampersands(xml_str):
 def setproctitle(title):
     assert isinstance(title, str)
 
-    # ctypes in Jython is not complete
-    # http://bugs.jython.org/issue2148
-    if sys.platform.startswith('java'):
+    # Workaround for https://github.com/yt-dlp/yt-dlp/issues/4541
+    try:
+        import ctypes
+    except ImportError:
         return
 
     try:
