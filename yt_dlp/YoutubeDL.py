@@ -104,6 +104,7 @@ from .utils import (
     format_decimal_suffix,
     format_field,
     formatSeconds,
+    get_compatible_ext,
     get_domain,
     int_or_none,
     iri_to_uri,
@@ -137,6 +138,7 @@ from .utils import (
     timetuple_from_msec,
     to_high_limit_path,
     traverse_obj,
+    try_call,
     try_get,
     url_basename,
     variadic,
@@ -397,7 +399,8 @@ class YoutubeDL:
 
                        Progress hooks are guaranteed to be called at least twice
                        (with status "started" and "finished") if the processing is successful.
-    merge_output_format: Extension to use when merging formats.
+    merge_output_format: "/" separated list of extensions to use when merging formats.
+                         "auto" may be used as the first component to choose by codecs without preference.
     final_ext:         Expected final extension; used to detect when the file was
                        already downloaded and converted
     fixup:             Automatically correct known faults of the file.
@@ -2164,10 +2167,23 @@ class YoutubeDL:
             the_only_video = video_fmts[0] if len(video_fmts) == 1 else None
             the_only_audio = audio_fmts[0] if len(audio_fmts) == 1 else None
 
-            # if the merge was requested, force it to merge info MKV
-            # when --merge-output-format is not given
-            # because this is the behavior what I want
-            output_ext = self.params.get('merge_output_format') or 'mkv'
+            mof = list(filter(None, try_call(lambda: self.params['merge_output_format'].split('/')) or []))
+            if mof:
+                # "--merge-output-format auto" to get the same behavior as yt-dlp
+                # the first "auto" is skipped so you can do "auto/mp4/webm"
+                if mof[0] == 'auto':
+                    mof = mof[1:]
+                output_ext = get_compatible_ext(
+                    vcodecs=[f.get('vcodec') for f in video_fmts],
+                    acodecs=[f.get('acodec') for f in audio_fmts],
+                    vexts=[f['ext'] for f in video_fmts],
+                    aexts=[f['ext'] for f in audio_fmts],
+                    preferences=(mof or self.params.get('prefer_free_formats') and ('webm', 'mkv')))
+            else:
+                # if the merge was requested, force it to merge info MKV
+                # if --merge-output-format is unset
+                # because this is the behavior what I want
+                output_ext = 'mkv'
 
             filtered = lambda *keys: filter(None, (traverse_obj(fmt, *keys) for fmt in formats_info))
 
@@ -3249,7 +3265,7 @@ class YoutubeDL:
                     requested_formats = info_dict['requested_formats']
                     old_ext = info_dict['ext']
 
-                    # merge to mkv without --merge-output-format no matter what
+                    # merge to mkv if --merge-output-format is unset
                     if self.params.get('merge_output_format') is None:
                         info_dict['ext'] = 'mkv'
                     new_ext = info_dict['ext']

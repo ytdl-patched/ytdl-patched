@@ -139,7 +139,7 @@ The major new features from the latest release of [yt-dlp](https://github.com/yt
 
 * **New extractor arguments**: Some extractor arguments are added. Check [**EXTRACTOR ARGUMENTS**](#extractor-arguments) section for details.
 
-* **Merging**: MKV file is preferred for merging, but can be overriden using `--merge-output-format`. ytdl-patched does not determine merge format from downloaded formats.
+* **Merging**: MKV file is preferred for merging, but can be overriden using `--merge-output-format`. ytdl-patched may determine merge format from downloaded formats by using `--merge-output-format auto`.
 
 * **Format debugger**: You can debug `-f FORMAT` specs, by just adding `-Fv`. This doesn't work if specs passed to `-f` is malformed.
 You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens.
@@ -927,10 +927,10 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                     downloadable
     -F, --list-formats              List available formats of each video.
                                     Simulate unless --no-simulate is used
-    --merge-output-format FORMAT    Container to use when merging formats (e.g.
-                                    bestvideo+bestaudio). Ignored if no merge is
-                                    required. (currently supported: avi, flv,
-                                    mkv, mov, mp4, webm)
+    --merge-output-format FORMAT    Containers that may be used when merging
+                                    formats, separated by "/" (Eg: "mp4/mkv").
+                                    Ignored if no merge is required. (currently
+                                    supported: avi, flv, mkv, mov, mp4, webm)
 
 ## Subtitle Options:
     --write-subs                    Write subtitle file

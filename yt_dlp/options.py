@@ -844,7 +844,9 @@ def create_parser():
         '--merge-output-format',
         action='store', dest='merge_output_format', metavar='FORMAT', default=None,
         help=(
-            'Container to use when merging formats (e.g. bestvideo+bestaudio). Ignored if no merge is required. '
+            'Containers that may be used when merging formats, separated by "/" (Eg: "mp4/mkv"). '
+            'Ignored if no merge is required. '
+            'Use "auto" to automatically choose formats instead of using MKV. '
             f'(currently supported: {", ".join(sorted(FFmpegMergerPP.SUPPORTED_EXTS))})'))
     video_format.add_option(
         '--allow-unplayable-formats',
