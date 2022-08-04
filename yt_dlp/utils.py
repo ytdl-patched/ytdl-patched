@@ -5801,7 +5801,8 @@ class RetryManager:
         if not count:
             return warn(e)
         elif isinstance(e, ExtractorError):
-            e = remove_end(e.cause or e.orig_msg, '.')
+            msg = try_get(e, (lambda x: e.cause.read(), lambda x: e.cause, lambda x: e.orig_msg), str)
+            e = remove_end(msg, '.')
         warn(f'{e}. Retrying{format_field(suffix, None, " %s")} ({count}/{retries})...')
 
         delay = float_or_none(sleep_func(n=count - 1)) if callable(sleep_func) else sleep_func
