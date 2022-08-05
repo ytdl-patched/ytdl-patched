@@ -585,6 +585,7 @@
  - **KickStarter**
  - **KinjaEmbed**
  - **KinoPoisk**
+ - **KompasVideo**
  - **KonserthusetPlay**
  - **Koo**
  - **KrasView**: Красвью
