@@ -104,6 +104,12 @@ class PostProcessor(metaclass=PostProcessorMetaClass):
             return self._downloader.params.get(name, default, *args, **kwargs)
         return default
 
+    @property
+    def params(self):
+        if self._downloader:
+            return dict(self._downloader.params)
+        return {}
+
     def set_downloader(self, downloader: 'YoutubeDL'):
         """Sets the downloader for this PP."""
         self._downloader = downloader
