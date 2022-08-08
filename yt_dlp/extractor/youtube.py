@@ -109,7 +109,8 @@ INNERTUBE_CLIENTS = {
         'INNERTUBE_CONTEXT': {
             'client': {
                 'clientName': 'ANDROID',
-                'clientVersion': '17.28.34',
+                'clientVersion': '17.29.34',
+                'androidSdkVersion': 30
             }
         },
         'INNERTUBE_CONTEXT_CLIENT_NAME': 3,
@@ -120,7 +121,8 @@ INNERTUBE_CLIENTS = {
         'INNERTUBE_CONTEXT': {
             'client': {
                 'clientName': 'ANDROID_EMBEDDED_PLAYER',
-                'clientVersion': '17.28.34',
+                'clientVersion': '17.29.34',
+                'androidSdkVersion': 30
             },
         },
         'INNERTUBE_CONTEXT_CLIENT_NAME': 55,
@@ -132,6 +134,7 @@ INNERTUBE_CLIENTS = {
             'client': {
                 'clientName': 'ANDROID_MUSIC',
                 'clientVersion': '5.16.51',
+                'androidSdkVersion': 30
             }
         },
         'INNERTUBE_CONTEXT_CLIENT_NAME': 21,
@@ -143,6 +146,7 @@ INNERTUBE_CLIENTS = {
             'client': {
                 'clientName': 'ANDROID_CREATOR',
                 'clientVersion': '22.28.100',
+                'androidSdkVersion': 30
             },
         },
         'INNERTUBE_CONTEXT_CLIENT_NAME': 14,
@@ -2265,6 +2269,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'tags': [],
                 'uploader_url': 'http://www.youtube.com/user/nao20010128nao',
             }
+        }, {
+            'note': '6 channel audio',
+            'url': 'https://www.youtube.com/watch?v=zgdo7-RRjgo',
+            'only_matching': True,
         }
     ]
 
@@ -3187,7 +3195,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 pr_video_id = traverse_obj(pr, ('videoDetails', 'videoId'))
                 if pr_video_id and pr_video_id != video_id:
                     self.report_warning(
-                        f'{client} client returned a player response for "{pr_video_id}" instead of "{video_id}"' + bug_reports_message())
+                        f'Skipping player response from {client} client (got player response for video "{pr_video_id}" instead of "{video_id}")' + bug_reports_message())
                 else:
                     prs.append(pr)
 
@@ -3329,10 +3337,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     '%s%s' % (audio_track.get('displayName') or '',
                               ' (default)' if language_preference > 0 else ''),
                     fmt.get('qualityLabel') or quality.replace('audio_quality_', ''),
+                    try_get(fmt, lambda x: x['projectionType'].replace('RECTANGULAR', '').lower()),
+                    try_get(fmt, lambda x: x['spatialAudioType'].replace('SPATIAL_AUDIO_TYPE_', '').lower()),
                     throttled and 'THROTTLED', client_name, is_damaged and 'DAMAGED', delim=', '),
                 # Format 22 is likely to be damaged. See https://github.com/yt-dlp/yt-dlp/issues/3372
                 'source_preference': -10 if throttled else -5 if itag == '22' else -1,
                 'fps': int_or_none(fmt.get('fps')) or None,
+                'audio_channels': fmt.get('audioChannels'),
                 'height': height,
                 'quality': q(quality),
                 'has_drm': bool(fmt.get('drmFamilies')),
@@ -3663,7 +3674,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         # formats.extend(self._extract_storyboard(player_responses, duration))
 
         # source_preference is lower for throttled/potentially damaged formats
-        self._sort_formats(formats, ('quality', 'res', 'fps', 'hdr:12', 'source', 'codec:vp9.2', 'lang', 'proto'))
+        self._sort_formats(formats, ('quality', 'res', 'fps', 'hdr:12', 'channels', 'source', 'codec:vp9.2', 'lang', 'proto'))
 
         info = {
             'id': video_id,
