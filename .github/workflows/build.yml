@@ -40,20 +40,11 @@ jobs:
           sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
           sudo apt update
           sudo env DEBIAN_FRONTEND=noninteractive apt install -y tzdata
+          mkdir artifacts/
+          touch artifacts/.keep
       - name: Prepare files
         id: prepare
-        run: |
-          mkdir artifacts
-          export NOW_RAW="$(date)"
-          export LATEST_VERSION="$(date --date="${NOW_RAW}" +'%Y.%m.%d.%s')"
-          echo "${LATEST_VERSION}" > artifacts/LATEST_VERSION
-          echo "::set-output name=latest_version::${LATEST_VERSION}"
-          echo "::set-output name=latest_version_normalized::$(python3 devscripts/normalize_version.py "${LATEST_VERSION}")"
-          echo "::set-output name=latest_version_numeric::$(date --date="${NOW_RAW}" +'%s')"
-
-          echo "from __future__ import unicode_literals
-          __version__ = '${LATEST_VERSION}'
-          " > yt_dlp/version.py
+        run: python3 devscripts/update-version.py
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:

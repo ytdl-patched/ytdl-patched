@@ -16,7 +16,8 @@ from devscripts.utils import read_version, write_file
 
 
 def get_new_version(revision):
-    version = datetime.utcnow().strftime('%Y.%m.%d')
+    time = datetime.utcnow()
+    version = time.strftime('%Y.%m.%d.%s')
 
     if revision:
         assert revision.isdigit(), 'Revision must be a number'
@@ -25,7 +26,7 @@ def get_new_version(revision):
         if version.split('.') == old_version[:3]:
             revision = str(int((old_version + [0])[3]) + 1)
 
-    return f'{version}.{revision}' if revision else version
+    return (f'{version}.{revision}' if revision else version), time.strftime('%s')
 
 
 def get_git_head():
@@ -34,7 +35,8 @@ def get_git_head():
         return sp.communicate()[0].decode().strip() or None
 
 
-VERSION = get_new_version((sys.argv + [''])[1])
+VERSION, UNIX_TIME = get_new_version((sys.argv + [''])[1])
+normalized_version = '.'.join(str(int(x)) for x in VERSION.split('.'))
 GIT_HEAD = get_git_head()
 
 VERSION_FILE = f'''\
@@ -51,4 +53,7 @@ UPDATE_HINT = None
 
 write_file('yt_dlp/version.py', VERSION_FILE)
 print(f'::set-output name=ytdlp_version::{VERSION}')
+print(f'::set-output name=latest_version::{VERSION}')
+print(f'::set-output name=latest_version_normalized::{normalized_version}')
+print(f'::set-output name=latest_version_numeric::{UNIX_TIME}')
 print(f'\nVersion = {VERSION}, Git HEAD = {GIT_HEAD}')
