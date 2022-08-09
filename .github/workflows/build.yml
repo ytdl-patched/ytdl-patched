@@ -325,6 +325,10 @@ jobs:
       VERSION: ${{ needs.prepare.outputs.latest_version }}
       VERSION_NAME: ${{ needs.prepare.outputs.latest_version }}
     steps:
+      - name: Set up Python ${{ env.python_version_pyinst }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version_pyinst }}
       - name: Upload to my homebrew repository
         run: |
           git config --global user.name lesmiscore
