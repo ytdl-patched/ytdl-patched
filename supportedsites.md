@@ -483,6 +483,7 @@
  - **gronkh:feed**
  - **gronkh:vods**
  - **Groupon**
+ - **Harpodeon**
  - **hbo**
  - **HearThisAt**
  - **Heise**
@@ -1088,7 +1089,7 @@
  - **RoosterTeethSeries**: [<abbr title="netrc machine"><em>roosterteeth</em></abbr>]
  - **RottenTomatoes**
  - **Rozhlas**
- - **RTBF**
+ - **RTBF**: [<abbr title="netrc machine"><em>rtbf</em></abbr>]
  - **RTDocumentry**
  - **RTDocumentryPlaylist**
  - **rte**: Raidió Teilifís Éireann TV

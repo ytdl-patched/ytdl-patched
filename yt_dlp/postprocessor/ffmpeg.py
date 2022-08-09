@@ -131,7 +131,8 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
             return {p: p for p in programs}
 
         if not os.path.exists(location):
-            self.report_warning(f'ffmpeg-location {location} does not exist! Continuing without ffmpeg')
+            self.report_warning(
+                f'ffmpeg-location {location} does not exist! Continuing without ffmpeg', only_once=True)
             return {}
         elif os.path.isdir(location):
             dirname, basename = location, None
@@ -193,9 +194,9 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
         return self.probe_basename
 
     def _get_version(self, kind):
-        executables = (kind, self._ffmpeg_to_avconv[kind])
+        executables = (kind, )
         if not self._prefer_ffmpeg:
-            executables = reversed(executables)
+            executables = (kind, self._ffmpeg_to_avconv[kind])
         basename, version, features = next(filter(
             lambda x: x[1], ((p, *self._get_ffmpeg_version(p)) for p in executables)), (None, None, {}))
         if kind == 'ffmpeg':
