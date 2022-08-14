@@ -267,7 +267,8 @@ class Updater:
                 self._report_error('Unable to remove the old version')
 
             try:
-                os.chmod(self.filename, 0o777)
+                # 0o555 = r-xr-xr-x
+                os.chmod(self.filename, (os.stat(self.filename).st_mode | 0o555) & 0o777)
             except OSError:
                 return self._report_error(
                     f'Unable to set permissions. Run: sudo chmod a+rx {compat_shlex_quote(self.filename)}')
