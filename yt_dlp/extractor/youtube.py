@@ -2664,7 +2664,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if self.get_param('youtube_print_sig_code'):
             self.to_screen(f'Extracted nsig function from {player_id}:\n{func_code[1]}\n')
 
-        return lambda s: jsi.extract_function_from_code(*func_code)([s])
+        func = jsi.extract_function_from_code(*func_code)
+        return lambda s: func([s])
 
     def _decrypt_nsig_2(self, n, video_id, player_url):
         """Turn the encrypted n field into a working signature, for fallbacks"""
