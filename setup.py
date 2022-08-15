@@ -28,11 +28,15 @@ REQUIREMENTS = read_file('requirements.txt').splitlines()
 
 def packages():
     if setuptools_available:
-        return find_packages(exclude=('youtube_dl', 'youtube_dlc', 'test', 'ytdlp_plugins'))
+        return find_packages(exclude=('youtube_dl', 'youtube_dlc', 'test', 'ytdlp_plugins', 'devscripts'))
 
     return [
-        'yt_dlp', 'yt_dlp.extractor', 'yt_dlp.downloader', 'yt_dlp.postprocessor', 'yt_dlp.compat',
-        'yt_dlp.extractor.anvato_token_generator',
+        'yt_dlp', 'yt_dlp.extractor',
+        'yt_dlp.compat', 'yt_dlp.downloader',
+        'yt_dlp.websocket', 'yt_dlp.postprocessor',
+        'yt_dlp.extractor.peertube', 'yt_dlp.extractor.misskey',
+        'yt_dlp.extractor.mastodon',
+        'yt_dlp.extractor.anvato_token_generator'
     ]
 
 
