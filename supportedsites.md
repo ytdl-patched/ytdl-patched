@@ -1344,7 +1344,6 @@
  - **TrovoVod**
  - **TrueID**
  - **TruNews**
- - **Truth**
  - **TruTV**
  - **Tube8**
  - **TubeTuGraz**: [<abbr title="netrc machine"><em>tubetugraz</em></abbr>] tube.tugraz.at
