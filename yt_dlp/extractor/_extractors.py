@@ -507,6 +507,7 @@ from .facebook import (
     FacebookIE,
     FacebookPluginsVideoIE,
     FacebookRedirectURLIE,
+    FacebookReelIE,
 )
 from .fancode import (
     FancodeVodIE,
@@ -972,6 +973,7 @@ from .mixcloud import (
 from .mlb import (
     MLBIE,
     MLBVideoIE,
+    MLBTVIE,
 )
 from .mlssoccer import MLSSoccerIE
 from .mnet import MnetIE
@@ -990,6 +992,7 @@ from .motherless import (
 from .motorsport import MotorsportIE
 from .movieclips import MovieClipsIE
 from .moviepilot import MoviepilotIE
+from .moview import MoviewPlayIE
 from .moviezine import MoviezineIE
 from .movingimage import MovingImageIE
 from .msn import MSNIE
@@ -1253,6 +1256,7 @@ from .paramountplus import (
     ParamountPlusIE,
     ParamountPlusSeriesIE,
 )
+from .parler import ParlerIE
 from .parlview import ParlviewIE
 from .patreon import (
     PatreonIE,
@@ -1830,6 +1834,7 @@ from .trovo import (
 )
 from .trueid import TrueIDIE
 from .trunews import TruNewsIE
+from .truth import TruthIE
 from .trutv import TruTVIE
 from .tube8 import Tube8IE
 from .tubetugraz import TubeTuGrazIE, TubeTuGrazSeriesIE

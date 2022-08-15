@@ -156,7 +156,7 @@ You'll get `DEBUG` column with tokens in arguments, and list of unmatched tokens
 
 
 ## NEW FEATURES IN YT-DLP
-* Merged with **youtube-dl v2021.12.17+ [commit/adb5294](https://github.com/ytdl-org/youtube-dl/commit/adb5294177265ba35b45746dbb600965076ed150)**<!--([exceptions](https://github.com/yt-dlp/yt-dlp/issues/21))--> and **youtube-dlc v2020.11.11-3+ [commit/f9401f2](https://github.com/blackjack4494/yt-dlc/commit/f9401f2a91987068139c5f757b12fc711d4c0cee)**: You get all the features and patches of [youtube-dlc](https://github.com/blackjack4494/yt-dlc) in addition to the latest [youtube-dl](https://github.com/ytdl-org/youtube-dl)
+* Merged with **youtube-dl v2021.12.17+ [commit/d231b56](https://github.com/ytdl-org/youtube-dl/commit/d231b56717c73ee597d2e077d11b69ed48a1b02d)**<!--([exceptions](https://github.com/yt-dlp/yt-dlp/issues/21))--> and **youtube-dlc v2020.11.11-3+ [commit/f9401f2](https://github.com/blackjack4494/yt-dlc/commit/f9401f2a91987068139c5f757b12fc711d4c0cee)**: You get all the features and patches of [youtube-dlc](https://github.com/blackjack4494/yt-dlc) in addition to the latest [youtube-dl](https://github.com/ytdl-org/youtube-dl)
 
 * **[SponsorBlock Integration](#sponsorblock-options)**: You can mark/remove sponsor sections in youtube videos by utilizing the [SponsorBlock](https://sponsor.ajay.app) API
 
@@ -231,7 +231,7 @@ Some of yt-dlp's default options are different from that of youtube-dl and youtu
 * Some private fields such as filenames are removed by default from the infojson. Use `--no-clean-infojson` or `--compat-options no-clean-infojson` to revert this
 * When `--embed-subs` and `--write-subs` are used together, the subtitles are written to disk and also embedded in the media file. You can use just `--embed-subs` to embed the subs and automatically delete the separate file. See [#630 (comment)](https://github.com/yt-dlp/yt-dlp/issues/630#issuecomment-893659460) for more info. `--compat-options no-keep-subs` can be used to revert this
 * `certifi` will be used for SSL root certificates, if installed. If you want to use system certificates (e.g. self-signed), use `--compat-options no-certifi`
-* youtube-dl tries to remove some superfluous punctuations from filenames. While this can sometimes be helpful, it is often undesirable. So yt-dlp tries to keep the fields in the filenames as close to their original values as possible. You can use `--compat-options filename-sanitization` to revert to youtube-dl's behavior
+* yt-dlp's sanitization of invalid characters in filenames is different/smarter than in youtube-dl. You can use `--compat-options filename-sanitization` to revert to youtube-dl's behavior
 
 For ease of use, a few more compat options are available:
 
@@ -1830,9 +1830,7 @@ The following extractors use this feature:
 * `max_comments`: Limit the amount of comments to gather. Comma-separated list of integers representing `max-comments,max-parents,max-replies,max-replies-per-thread`. Default is `all,all,all,all`
     * E.g. `all,all,1000,10` will get a maximum of 1000 replies total, with up to 10 replies per thread. `1000,all,100` will get a maximum of 1000 comments, with a maximum of 100 replies total
 * `preferred_langs`: List of languages (in 2-charactor code) to prefer for title and description, separated by comma. Original title and description based on your region or settings are still available at `orig_*` key. (See [output template](#output-template) section for about these keys)
-* `innertube_host`: Innertube API host to use for all API requests 
-  * E.g. `studio.youtube.com`, `youtubei.googleapis.com`
-  * Note: Cookies exported from `www.youtube.com` will not work with hosts other than `*.youtube.com`
+* `innertube_host`: Innertube API host to use for all API requests; e.g. `studio.youtube.com`, `youtubei.googleapis.com`. Note that cookies exported from one subdomain will not work on others
 * `innertube_key`: Innertube API key to use for all API requests
 
 #### youtubetab (YouTube playlists, channels, feeds, etc.)
