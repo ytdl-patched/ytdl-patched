@@ -1,7 +1,6 @@
 # automating YouTube downloading services to download deleted videos
 import re
 
-from ..compat import compat_str
 from ..utils import (
     ExtractorError,
     int_or_none,
@@ -42,15 +41,6 @@ class Y2mateIE(CustomPrefixedBaseIE):
     PREFIXES = ('y2:', 'y2mate:')
 
     def _real_extract(self, url):
-        mode = try_get(self._configuration_arg('mode'), lambda x: x[0], compat_str) or 'normal'
-
-        if mode == 'rush':
-            self.report_warning('Please run again without rush mode')
-            return self._real_extract_rush(url)
-        else:
-            return self._real_extract_normal(url)
-
-    def _real_extract_normal(self, url):
         video_id = self.BASE_IE._match_id(self.remove_prefix(url))
         self._download_webpage('https://www.y2mate.com/youtube/%s' % video_id, video_id)
         common_headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}

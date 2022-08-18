@@ -1860,9 +1860,6 @@ The following extractors use this feature:
 * `latency`: Latency option either `high` or `low`. Default is `low`.
 * `format_set`: Reserved.
 
-#### y2mate
-* `mode`: Changes mode for extraction. One of `normal` and `rush`. Defaults to `normal`.
-
 #### youtubewebarchive
 * `check_all`: Try to check more at the cost of more requests. One or more of `thumbnails`, `captures`
 
