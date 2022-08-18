@@ -16,6 +16,7 @@ from .youtube import YoutubeIE
 class CustomPrefixedBaseIE(InfoExtractor):
     BASE_IE = InfoExtractor
     PREFIXES = ()
+    _VALID_URL = r'(?P<id>)'
 
     @classmethod
     def remove_prefix(cls, url):
@@ -44,29 +45,36 @@ class Y2mateIE(CustomPrefixedBaseIE):
         video_id = self.BASE_IE._match_id(self.remove_prefix(url))
         self._download_webpage(f'https://www.y2mate.com/youtube/{video_id}', video_id)
         common_headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-        request_data = {
-            'url': f'https://www.youtube.com/watch?v={video_id}',
-            'q_auto': '1',
-            'ajax': '1'
-        }
-        size_specs = self._download_json(
+        anazylze = self._download_json(
             'https://www.y2mate.com/mates/analyze/ajax', video_id,
-            note='Fetching size specs', errnote='This video is unavailable', form_params=request_data,
-            headers=common_headers)
-        if size_specs.get('status') != 'success':
-            raise ExtractorError(f'Server responded with status {size_specs.get("status")}')
-        size_specs = size_specs['result']
+            note='Fetching size specs', errnote='This video is unavailable', headers=common_headers,
+            form_params={
+                'url': f'https://www.youtube.com/watch?v={video_id}',
+                'q_auto': '1',
+                'ajax': '1'
+            })
+        if anazylze.get('status') != 'success':
+            raise ExtractorError(f'Server responded with status {anazylze.get("status")}')
+        size_specs = anazylze['result']
         title = self._search_regex(r'<b>(.+?)</b>', size_specs, 'video title', group=1)
         request_id = self._search_regex(r'var k__id\s*=\s*(["\'])(.+?)\1', size_specs, 'request ID', group=2)
-        formats = []
-        # video    , mp3, audio
-        video_table, _, audio_table = re.findall(r'<table\s*.+?>(.+?)</table>', size_specs)
+        tables = re.findall(r'<table\s*.+?>(.+?)</table>', size_specs)
 
+        formats = [x for tbl in (tables[0], tables[-1]) for x in self._find_formats(request_id, video_id, common_headers, tbl)]
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'formats': formats,
+        }
+
+    def _find_formats(self, request_id, video_id, headers, table):
         for rows in re.finditer(r'''(?x)<tr>\s*
-                    <td>.+?(\d+p).+?</td>\s* # resolution name
+                    <td>.*?(\d+p|\d+[kMG]?bps).*?</td>\s* # resolution name or kbps
                     <td>(.*?\s*[kMG]?B)</td>\s* # estimate size
                     <td\s*.+?>.+?(?:data-ftype="(.+?)".+?)?(?:data-fquality="(.+?)".+?)?</td>\s* # download button
-                </tr>''', video_table):
+                </tr>''', table):
             format_name, estimate_size, format_ext, request_format = rows.groups()
             estimate_size = re.sub(r'\s*([kMG])B', r'\1iB', estimate_size)
             request_data = urlencode_postdata({
@@ -83,8 +91,8 @@ class Y2mateIE(CustomPrefixedBaseIE):
                 try:
                     url_data = self._download_json(
                         'https://www.y2mate.com/mates/convert', video_id,
-                        note=f'Fetching infomation for {format_name}', data=request_data,
-                        headers=common_headers)
+                        note=f'Fetching infomation for {format_name} ({format_ext})', data=request_data,
+                        headers=headers)
                 except ExtractorError as e:
                     retry.error = e
                     continue
@@ -102,75 +110,24 @@ class Y2mateIE(CustomPrefixedBaseIE):
             if not video_url or 'app.y2mate.com' in video_url:
                 continue
 
-            formats.append({
+            yield {
                 'format_id': f'{format_name}-{format_ext}',
-                'resolution': format_name,
-                'height': int_or_none(format_name[:-1]),
                 'filesize_approx': parse_filesize(estimate_size),
                 'ext': format_ext,
                 'url': video_url,
-                'vcodec': 'unknown',
                 'acodec': 'unknown',
-            })
 
-        for rows in re.finditer(r'''(?x)<tr>\s*
-                    <td>.+?(\d+[kMG]?bps).+?</td>\s* # resolution name
-                    <td>(.*?\s*[kMG]?B)</td>\s* # estimate size
-                    <td\s*.+?>.+?(?:data-ftype="(.+?)".+?)?(?:data-fquality="(.+?)".+?)?</td>\s* # download button
-                </tr>''', audio_table):
-            format_name, estimate_size, format_ext, request_format = rows.groups()
-            estimate_size = re.sub(r'\s*([kMG])B', r'\1iB', estimate_size)
-            request_data = urlencode_postdata({
-                'type': 'youtube',
-                '_id': request_id,
-                'v_id': video_id,
-                'ajax': '1',
-                'token': '',
-                'ftype': format_ext,
-                'fquality': request_format,
-            })
-            video_url = None
-            for retry in self.RetryManager(fatal=False):
-                try:
-                    url_data = self._download_json(
-                        'https://www.y2mate.com/mates/convert', video_id,
-                        note=f'Fetching infomation for {format_name}', data=request_data,
-                        headers=common_headers)
-                except ExtractorError as e:
-                    retry.error = e
-                    continue
-                if url_data.get('status') != 'success':
-                    retry.error = ExtractorError(f'Server responded with status {url_data.get("status")}', expected=True)
-                    continue
-                try:
-                    video_url = self._search_regex(
-                        r'<a\s+(?:[a-zA-Z-_]+=\".+?\"\s+)*href=\"(https?://.+?)\"(?:\s+[a-zA-Z-_]+=\".+?\")*', url_data['result'],
-                        f'Download url for {format_name}', group=1)
-                except ExtractorError as e:
-                    retry.error = e
-                    continue
-
-            if not video_url or 'app.y2mate.com' in video_url:
-                continue
-
-            formats.append({
-                'format_id': f'{format_name}-{format_ext}',
-                'resolution': format_name,
-                'filesize_approx': parse_filesize(estimate_size),
-                'ext': format_ext,
-                'url': video_url,
-                'vcodec': 'none',
-                'acodec': 'unknown',
-                'preference': -1,
-                'quality': -1,
-            })
-
-        self._sort_formats(formats)
-        return {
-            'id': video_id,
-            'title': title,
-            'formats': formats,
-        }
+                **({
+                    # audio
+                    'vcodec': 'none',
+                    'abr': int_or_none(parse_filesize(format_name[:-2]), scale=1000),
+                } if format_name.endswith('bps') else {
+                    # video
+                    'vcodec': 'unknown',
+                    'height': int_or_none(format_name[:-1]),
+                    'resolution': format_name,
+                }),
+            }
 
 
 # ClipConverter
