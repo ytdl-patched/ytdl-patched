@@ -17,7 +17,6 @@ import urllib.error
 import urllib.parse
 
 from .common import InfoExtractor, SearchInfoExtractor
-from .openload import PhantomJSwrapper
 from ..compat import functools
 from ..jsinterp import JSInterpreter
 from ..utils import (
@@ -2640,19 +2639,19 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             extract_nsig = self._cached(self._extract_n_function_from_code, 'nsig func', player_url)
             ret = extract_nsig(jsi, func_code)(s)
         except JSInterpreter.Exception as e:
-            try:
-                jsi = PhantomJSwrapper(self)
-            except ExtractorError:
-                raise e
             self.report_warning(
-                f'Native nsig extraction failed: Trying with PhantomJS\n'
+                f'Native nsig extraction failed: Trying with online solver\n'
                 f'         n = {s} ; player = {player_url}', video_id)
             self.write_debug(e)
 
-            args, func_body = func_code
-            ret = jsi.execute(
-                f'console.log(function({", ".join(args)}) {{ {func_body} }}({s!r}));',
-                video_id=video_id, note='Executing signature code').strip()
+            response_data = self._download_json(
+                'https://bookish-octo-barnacle-nao20010128nao.vercel.app/youtube/nparams/decrypt', video_id,
+                query={'player': player_url, 'n': s},
+                note='Delegating n-param decryption and waiting for result')
+            if response_data['status'] != 'ok':
+                message = traverse_obj(response_data, ('data', 'message'))
+                raise ExtractorError(f'Failed at step "{response_data["step"]}" (message {message})')
+            ret = response_data['data']
 
         self.write_debug(f'Decrypted nsig {s} => {ret}')
         return ret
@@ -2694,25 +2693,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             return ret
 
         return extract_nsig
-
-    def _decrypt_nsig_2(self, n, video_id, player_url):
-        """Turn the encrypted n field into a working signature, for fallbacks"""
-        if player_url is None:
-            raise ExtractorError('Cannot decrypt nsig without player_url')
-
-        try:
-            sig_id = ('nsig_value', n)
-            if sig_id not in self._player_cache:
-                response_data = self._download_json(
-                    'https://bookish-octo-barnacle-nao20010128nao.vercel.app/youtube/nparams/decrypt', video_id,
-                    query={'player': player_url, 'n': n},
-                    note='Delegating n-param decryption and waiting for result')
-                assert response_data['status'] == 'ok'
-                self._player_cache[sig_id] = response_data['data']
-                self.write_debug(f'Decrypted nsig {n} => {self._player_cache[sig_id]} [fallback]')
-            return self._player_cache[sig_id]
-        except Exception as e:
-            raise ExtractorError(traceback.format_exc(), cause=e)
 
     def _extract_signature_timestamp(self, video_id, player_url, ytcfg=None, fatal=False):
         """
