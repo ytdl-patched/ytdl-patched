@@ -131,6 +131,8 @@
  - **bbc.co.uk:iplayer:group**
  - **bbc.co.uk:playlist**
  - **BBVTV**: [<abbr title="netrc machine"><em>bbvtv</em></abbr>]
+ - **BBVTVLive**: [<abbr title="netrc machine"><em>bbvtv</em></abbr>]
+ - **BBVTVRecordings**: [<abbr title="netrc machine"><em>bbvtv</em></abbr>]
  - **Beatport**
  - **Beeg**
  - **BehindKink**
@@ -354,6 +356,8 @@
  - **ehftv**
  - **eHow**
  - **EinsUndEinsTV**: [<abbr title="netrc machine"><em>1und1tv</em></abbr>]
+ - **EinsUndEinsTVLive**: [<abbr title="netrc machine"><em>1und1tv</em></abbr>]
+ - **EinsUndEinsTVRecordings**: [<abbr title="netrc machine"><em>1und1tv</em></abbr>]
  - **Einthusan**
  - **eitb.tv**
  - **EllenTube**
@@ -381,6 +385,8 @@
  - **EuropeanTour**
  - **EUScreen**
  - **EWETV**: [<abbr title="netrc machine"><em>ewetv</em></abbr>]
+ - **EWETVLive**: [<abbr title="netrc machine"><em>ewetv</em></abbr>]
+ - **EWETVRecordings**: [<abbr title="netrc machine"><em>ewetv</em></abbr>]
  - **ExpoTV**
  - **Expressen**
  - **ExtremeTube**
@@ -459,6 +465,8 @@
  - **GiantBomb**
  - **Giga**
  - **GlattvisionTV**: [<abbr title="netrc machine"><em>glattvisiontv</em></abbr>]
+ - **GlattvisionTVLive**: [<abbr title="netrc machine"><em>glattvisiontv</em></abbr>]
+ - **GlattvisionTVRecordings**: [<abbr title="netrc machine"><em>glattvisiontv</em></abbr>]
  - **Glide**: Glide mobile video messages (glide.me)
  - **Globo**: [<abbr title="netrc machine"><em>globo</em></abbr>]
  - **GloboArticle**
@@ -728,6 +736,8 @@
  - **MLSSoccer**
  - **Mnet**
  - **MNetTV**: [<abbr title="netrc machine"><em>mnettv</em></abbr>]
+ - **MNetTVLive**: [<abbr title="netrc machine"><em>mnettv</em></abbr>]
+ - **MNetTVRecordings**: [<abbr title="netrc machine"><em>mnettv</em></abbr>]
  - **MochaVideo**
  - **MoeVideo**: LetitBit video services: moevideo.net, playreplay.net and videochart.net
  - **Mofosex**
@@ -815,7 +825,9 @@
  - **netease:program**: 网易云音乐 - 电台节目
  - **netease:singer**: 网易云音乐 - 歌手
  - **netease:song**: 网易云音乐
- - **NetPlus**: [<abbr title="netrc machine"><em>netplus</em></abbr>]
+ - **NetPlusTV**: [<abbr title="netrc machine"><em>netplus</em></abbr>]
+ - **NetPlusTVLive**: [<abbr title="netrc machine"><em>netplus</em></abbr>]
+ - **NetPlusTVRecordings**: [<abbr title="netrc machine"><em>netplus</em></abbr>]
  - **Netverse**
  - **NetversePlaylist**
  - **Netzkino**
@@ -921,6 +933,8 @@
  - **orf:radio**
  - **orf:tvthek**: ORF TVthek
  - **OsnatelTV**: [<abbr title="netrc machine"><em>osnateltv</em></abbr>]
+ - **OsnatelTVLive**: [<abbr title="netrc machine"><em>osnateltv</em></abbr>]
+ - **OsnatelTVRecordings**: [<abbr title="netrc machine"><em>osnateltv</em></abbr>]
  - **OutsideTV**
  - **PacktPub**: [<abbr title="netrc machine"><em>packtpub</em></abbr>]
  - **PacktPubCourse**
@@ -1031,6 +1045,8 @@
  - **qqmusic:singer**: QQ音乐 - 歌手
  - **qqmusic:toplist**: QQ音乐 - 排行榜
  - **QuantumTV**: [<abbr title="netrc machine"><em>quantumtv</em></abbr>]
+ - **QuantumTVLive**: [<abbr title="netrc machine"><em>quantumtv</em></abbr>]
+ - **QuantumTVRecordings**: [<abbr title="netrc machine"><em>quantumtv</em></abbr>]
  - **Qub**
  - **R7**
  - **R7Article**
@@ -1139,7 +1155,11 @@
  - **safari:course**: [<abbr title="netrc machine"><em>safari</em></abbr>] safaribooksonline.com online courses
  - **Saitosan**
  - **SAKTV**: [<abbr title="netrc machine"><em>saktv</em></abbr>]
+ - **SAKTVLive**: [<abbr title="netrc machine"><em>saktv</em></abbr>]
+ - **SAKTVRecordings**: [<abbr title="netrc machine"><em>saktv</em></abbr>]
  - **SaltTV**: [<abbr title="netrc machine"><em>salttv</em></abbr>]
+ - **SaltTVLive**: [<abbr title="netrc machine"><em>salttv</em></abbr>]
+ - **SaltTVRecordings**: [<abbr title="netrc machine"><em>salttv</em></abbr>]
  - **SampleFocus**
  - **Sapo**: SAPO Vídeos
  - **savefrom.net**
@@ -1519,6 +1539,8 @@
  - **VShare**
  - **VTM**
  - **VTXTV**: [<abbr title="netrc machine"><em>vtxtv</em></abbr>]
+ - **VTXTVLive**: [<abbr title="netrc machine"><em>vtxtv</em></abbr>]
+ - **VTXTVRecordings**: [<abbr title="netrc machine"><em>vtxtv</em></abbr>]
  - **VuClip**
  - **Vupload**
  - **VVVVID**
@@ -1528,6 +1550,8 @@
  - **Wakanim**
  - **Walla**
  - **WalyTV**: [<abbr title="netrc machine"><em>walytv</em></abbr>]
+ - **WalyTVLive**: [<abbr title="netrc machine"><em>walytv</em></abbr>]
+ - **WalyTVRecordings**: [<abbr title="netrc machine"><em>walytv</em></abbr>]
  - **wasdtv:clip**
  - **wasdtv:record**
  - **wasdtv:stream**

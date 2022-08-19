@@ -480,6 +480,7 @@ class YoutubeDL:
                        * index: Section number (Optional)
     force_keyframes_at_cuts: Re-encode the video when downloading ranges to get precise cuts
     noprogress:        Do not print the progress bar
+    live_from_start:   Whether to download livestreams videos from the start
 
 
     escape_long_names: If True, it splits filename into 255-byte chunks in current locale,
