@@ -140,6 +140,7 @@ from .utils import (
     traverse_obj,
     try_call,
     try_get,
+    unsmuggle_url,
     url_basename,
     variadic,
     version_tuple,
@@ -3478,6 +3479,7 @@ class YoutubeDL:
             raise SameFileError(outtmpl)
 
         for url in url_list:
+            url, _ = unsmuggle_url(url)
             self.__download_wrapper(self.extract_info)(
                 url, force_generic_extractor=self.params.get('force_generic_extractor', False))
 
