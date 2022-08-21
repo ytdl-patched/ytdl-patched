@@ -3285,29 +3285,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     self.write_debug(e, only_once=True)
                     continue
 
-            """
-            query = parse_qs(fmt_url)
-            client_name = traverse_obj(query, ('c', 0), expected_type=compat_str, default='')
-            throttled = False
-            if (query.get('ratebypass') != ['yes'] or 'WEB' in client_name) and query.get('n'):
-                old_n, new_n = query['n'][0], None
-                warn_message, err = None, None
-                try:
-                    new_n = self._decrypt_nsig(old_n, video_id, player_url)
-                except ExtractorError as e:
-                    warn_message, err = 'please report this to yt-dlp issue tracker', e
-                    try:
-                        new_n = self._decrypt_nsig_2(old_n, video_id, player_url)
-                    except ExtractorError:
-                        warn_message = 'please report this to yt-dlp issue tracker first, and mention @nao20010128nao in description'
-                        throttled = True
-                if new_n:
-                    fmt_url = update_url_query(fmt_url, {'n': new_n})
-                elif warn_message:
-                    player_id = self._extract_player_info(player_url, fatal=False) or player_url or 'PLAYER UNKNOWN'
-                    self.report_warning(f'nsig extraction failed: You may experience throttling for some formats. {warn_message}\nplayer id: {player_id} , nsig value: {old_n}\n{err}', only_once=True)
-            """
-
             query = parse_qs(fmt_url)
             client_name = traverse_obj(query, ('c', 0), expected_type=str, default='')
             throttled = False
@@ -3318,11 +3295,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         'n': decrypt_nsig(query['n'][0], video_id, player_url)
                     })
                 except ExtractorError as e:
-                    phantomjs_hint = ''
-                    if isinstance(e, JSInterpreter.Exception):
-                        phantomjs_hint = f'         Install {self._downloader._format_err("PhantomJS", self._downloader.Styles.EMPHASIS)} to workaround the issue\n'
                     self.report_warning(
-                        f'nsig extraction failed: You may experience throttling for some formats\n{phantomjs_hint}'
+                        f'nsig extraction failed: You may experience throttling for some formats\n'
                         f'         n = {query["n"][0]} ; player = {player_url}', video_id=video_id, only_once=True)
                     self.write_debug(e, only_once=True)
                     throttled = True
