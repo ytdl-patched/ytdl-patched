@@ -834,6 +834,7 @@
  - **Newgrounds**
  - **Newgrounds:playlist**
  - **Newgrounds:user**
+ - **NewsPicks**
  - **Newstube**
  - **Newsy**
  - **NextMedia**: 蘋果日報
