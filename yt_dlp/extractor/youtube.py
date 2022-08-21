@@ -2656,6 +2656,17 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         self.write_debug(f'Decrypted nsig {s} => {ret}')
         return ret
 
+    def _extract_n_function_name(self, jscode):
+        funcname, idx = self._search_regex(
+            r'\.get\("n"\)\)&&\(b=(?P<nfunc>[a-zA-Z0-9$]+)(?:\[(?P<idx>\d+)\])?\([a-zA-Z0-9]\)',
+            jscode, 'Initial JS player n function name', group=('nfunc', 'idx'))
+        if not idx:
+            return funcname
+
+        return json.loads(js_to_json(self._search_regex(
+            rf'var {re.escape(funcname)}\s*=\s*(\[.+?\]);', jscode,
+            f'Initial JS player n function list ({funcname}.{idx})')))[int(idx)]
+
     def _extract_n_function_code(self, video_id, player_url):
         player_id = self._extract_player_info(player_url)
         func_code = self.cache.load('youtube-nsig', player_id)
@@ -2665,15 +2676,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if func_code:
             return jsi, player_id, func_code
 
-        funcname, idx = self._search_regex(
-            r'\.get\("n"\)\)&&\(b=(?P<nfunc>[a-zA-Z0-9$]+)(?:\[(?P<idx>\d+)\])?\([a-zA-Z0-9]\)',
-            jscode, 'Initial JS player n function name', group=('nfunc', 'idx'))
-        if idx:
-            funcname = json.loads(js_to_json(self._search_regex(
-                rf'var {re.escape(funcname)}\s*=\s*(\[.+?\]);', jscode,
-                f'Initial JS player n function list ({funcname}.{idx})')))[int(idx)]
-
-        func_code = jsi.extract_function_code(funcname)
+        func_code = jsi.extract_function_code(self._extract_n_function_name(jscode))
         self.cache.store('youtube-nsig', player_id, func_code)
         return jsi, player_id, func_code
 
@@ -3225,7 +3228,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     def _extract_formats_and_subtitles(self, streaming_data, video_id, player_url, is_live, duration):
         itags, stream_ids = {}, []
-        itag_qualities, res_qualities = {}, {0: -1}
+        itag_qualities, res_qualities = {}, {0: None}
         q = qualities([
             # Normally tiny is the smallest video-only formats. But
             # audio-only formats with unknown quality may get tagged as tiny
@@ -3410,7 +3413,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 f['format_id'] = itag
                 itags[itag] = proto
 
-            f['quality'] = itag_qualities.get(try_get(f, lambda f: f['format_id'].split('-')[0]), -1)
+            f['quality'] = q(itag_qualities.get(try_get(f, lambda f: f['format_id'].split('-')[0]), -1))
             if f['quality'] == -1 and f.get('height'):
                 f['quality'] = q(res_qualities[min(res_qualities, key=lambda x: abs(x - f['height']))])
             return True
