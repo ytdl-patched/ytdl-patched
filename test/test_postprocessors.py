@@ -41,7 +41,7 @@ class TestMetadataFromField(unittest.TestCase):
 
 class TestConvertThumbnail(unittest.TestCase):
     def test_escaping(self):
-        pp = FFmpegThumbnailsConvertorPP()
+        pp = FFmpegThumbnailsConvertorPP(YoutubeDL())
         if not pp.available:
             print('Skipping: ffmpeg not found')
             return
