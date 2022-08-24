@@ -21,6 +21,7 @@ class Augment():
     def __init__(self, dl: 'FileDownloader', info_dict, params: dict) -> None:
         self.dl = dl
         self.ydl = dl.ydl
+        self.to_screen = self.dl.to_screen
 
         if 'init_callback' in params:
             info_dict, params = params['init_callback'](info_dict, params)
