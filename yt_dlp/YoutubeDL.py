@@ -47,7 +47,7 @@ from .postprocessor import (
     get_postprocessor,
 )
 from .postprocessor.ffmpeg import resolve_mapping as resolve_recode_mapping
-from .update import detect_variant
+from .update import REPOSITORY, current_git_head, detect_variant
 from .utils import (
     DEFAULT_OUTTMPL,
     IDENTITY,
@@ -3506,6 +3506,12 @@ class YoutubeDL:
             return info_dict
         info_dict.setdefault('epoch', int(time.time()))
         info_dict.setdefault('_type', 'video')
+        info_dict.setdefault('_version', {
+            'version': __version__,
+            'current_git_head': current_git_head(),
+            'release_git_head': RELEASE_GIT_HEAD,
+            'repository': REPOSITORY,
+        })
 
         if remove_private_keys:
             reject = lambda k, v: v is None or k.startswith('__') or k in {
@@ -4000,18 +4006,8 @@ class YoutubeDL:
         if self.params['compat_opts']:
             write_debug('Compatibility options: %s' % ', '.join(self.params['compat_opts']))
 
-        if source == 'source':
-            try:
-                stdout, _, _ = Popen.run(
-                    ['git', 'rev-parse', '--short', 'HEAD'],
-                    text=True, cwd=os.path.dirname(os.path.abspath(__file__)),
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                if re.fullmatch('[0-9a-f]+', stdout.strip()):
-                    write_debug(f'Git HEAD: {stdout.strip()}')
-            except Exception:
-                with contextlib.suppress(Exception):
-                    sys.exc_clear()
-
+        if current_git_head():
+            write_debug(f'Git HEAD: {current_git_head()}')
         write_debug(system_identifier())
 
         exe_versions, ffmpeg_features = FFmpegPostProcessor.get_versions_and_features(self)
