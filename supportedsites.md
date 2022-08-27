@@ -560,6 +560,8 @@
  - **iq.com**: International version of iQiyi
  - **iq.com:album**
  - **iqiyi**: [<abbr title="netrc machine"><em>iqiyi</em></abbr>] 爱奇艺
+ - **IslamChannel**
+ - **IslamChannelSeries**
  - **ITProTV**
  - **ITProTVCourse**
  - **ITTF**
