@@ -68,7 +68,6 @@ from ..utils import (
     parse_iso8601,
     parse_m3u8_attributes,
     parse_resolution,
-    preferredencoding,
     request_to_url,
     sanitize_filename,
     sanitize_url,
@@ -4043,6 +4042,8 @@ class SelfHostedInfoExtractor(InfoExtractor):
     (like PeerTube, Mastodon, Misskey, and lots of others).
     """
 
+    _ENABLED = False
+
     _NODEINFO_CACHE = {}
     _SELF_HOSTED = True
 
@@ -4063,10 +4064,17 @@ class SelfHostedInfoExtractor(InfoExtractor):
         hostname = get_first_group(mobj, *cls._HOSTNAME_GROUPS)
         return cls._test_selfhosted_instance(None, hostname, True, prefix)
 
+    def _extract_from_webpage(self, url, webpage):
+        mobj = self._match_valid_url(url)
+        if not mobj:
+            return
+        prefix = get_first_group(mobj, *self._PREFIX_GROUPS)
+        hostname = get_first_group(mobj, *self._HOSTNAME_GROUPS)
+        if self._test_selfhosted_instance(self, hostname, False, prefix, webpage):
+            yield self.url_result(url, ie=type(self))
+
     @classmethod
-    def _test_selfhosted_instance(cls, ie, hostname, skip, prefix, webpage=None):
-        if isinstance(hostname, bytes):
-            hostname = hostname.decode(preferredencoding())
+    def _test_selfhosted_instance(cls, ie, hostname: str, skip, prefix, webpage=None):
         hostname = hostname.encode('idna').decode('utf-8')
 
         if hostname in cls._INSTANCE_LIST:
@@ -4085,21 +4093,13 @@ class SelfHostedInfoExtractor(InfoExtractor):
         if skip:
             return False
 
-        ie.report_warning(f'Testing if {hostname} is a {cls._SOFTWARE_NAME} instance because it is not listed in internal instance list.')
+        ie.report_warning(f'Testing if {hostname} is a {cls._SOFTWARE_NAME} instance as it is not known.')
 
         if cls._probe_webpage(webpage) or cls._fetch_nodeinfo_software(ie, hostname) in cls._NODEINFO_SOFTWARE:
             # this is probably acceptable instance
             cls._DYNAMIC_INSTANCE_LIST.add(hostname)
             return True
 
-        return False
-
-    @staticmethod
-    def _is_probe_enabled(ydl: 'YoutubeDL'):
-        """
-        True if user requested probing for the service.
-        There must be corresponding options for each services one-by-one, and this method just return its value.
-        """
         return False
 
     @classmethod

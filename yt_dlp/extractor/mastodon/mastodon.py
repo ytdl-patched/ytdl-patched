@@ -15,6 +15,8 @@ from ..peertube.peertube import PeerTubeIE
 from ...utils import (
     ExtractorError,
     clean_html,
+    dict_get,
+    make_archive_id,
     parse_duration,
     get_first_group,
     str_or_none,
@@ -57,11 +59,9 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
     _NODEINFO_SOFTWARE = ('mastodon', 'pleroma', 'gab')
     _SOFTWARE_NAME = 'Mastodon'
 
-    def _login(self):
-        username, password = self._get_login_info()
-        if not username:
-            return False
+    _login_info = False
 
+    def _perform_login(self, username, password):
         # very basic regex, but the instance domain (the one where user has an account)
         # must be separated from the user login
         mobj = re.match(r'^(?P<username>[^@]+(?:@[^@]+)?)@(?P<instance>.+)$', username)
@@ -149,14 +149,10 @@ class MastodonBaseIE(SelfHostedInfoExtractor):
                 'code': oauth_token,
                 'grant_type': 'authorization_code',
             }).encode('utf-8')))
-        return {
+        self._login_info = {
             'instance': instance,
             'authorization': f"{actual_token['token_type']} {actual_token['access_token']}",
         }
-
-    @staticmethod
-    def _is_probe_enabled(ydl):
-        return ydl.params.get('check_mastodon_instance', False)
 
     def _determine_instance_software(self, host, webpage=None):
         if webpage:
@@ -365,17 +361,16 @@ class MastodonIE(MastodonBaseIE):
     }]
 
     def _real_extract(self, url):
-        webpage = None
         mobj = self._match_valid_url(url)
 
         video_id = mobj.group('id')
         domain = get_first_group(mobj, 'domain_1', 'domain_2')
 
-        login_info = self._login()
+        login_info = self._login_info
         if login_info and domain != login_info['instance']:
             wf_url = url
             if not url.startswith('http'):
-                software = self._determine_instance_software(domain, webpage)
+                software = self._determine_instance_software(domain, None)
                 url_part = None
                 if software == 'pleroma':
                     if '-' in video_id:   # UUID
@@ -388,7 +383,7 @@ class MastodonIE(MastodonBaseIE):
                     # mastodon and gab social require usernames in the url,
                     # but we can't determine the username without fetching the post,
                     # but we can't fetch the post without determining the username...
-                    raise ExtractorError(f'Use the full url with --force-use-mastodon to download from {software}', expected=True)
+                    raise ExtractorError(f'Use the full url with --ies mastodon,generic to download from {software}', expected=True)
                 else:
                     raise ExtractorError(f'Unknown software: {software}')
                 wf_url = f'https://{domain}/{url_part}/{video_id}'
@@ -405,8 +400,7 @@ class MastodonIE(MastodonBaseIE):
             metadata = search['statuses'][0]
         else:
             if not login_info and any(frag in url for frag in ('/objects/', '/activities/')):
-                if not webpage:
-                    webpage = self._download_webpage(url, '%s:%s' % (domain, video_id), expected_status=302)
+                webpage = self._download_webpage(url, '%s:%s' % (domain, video_id), expected_status=302)
                 real_url = self._og_search_property('url', webpage, default=None)
                 if real_url:
                     return self.url_result(real_url, ie='Mastodon')
@@ -432,13 +426,20 @@ class MastodonIE(MastodonBaseIE):
             'uploader_url': traverse_obj(metadata, ('account', 'url')),
         }
 
+        if domain == 'gab.com':
+            info_dict['_old_archive_ids'] = [make_archive_id('Gab', video_id)]
+        elif domain == 'truthsocial.com':
+            # https://github.com/yt-dlp/yt-dlp/blob/2516cafb28293612cfb6e158dac34a3117b42461/yt_dlp/extractor/truth.py#L12
+            # the old extractor for Truth Social is just "TruthIE", not "TruthSocialIE"
+            info_dict['_old_archive_ids'] = [make_archive_id('Truth', video_id)]
+
         entries = []
         for media in metadata.get('media_attachments') or ():
             if media['type'] in ('video', 'audio'):
                 entries.append({
                     'id': media['id'],
                     'title': str_or_none(media['description']) or title,
-                    'url': str_or_none(media['url']),
+                    'url': str_or_none(dict_get(media, ('url', 'source_mp4'))),
                     'thumbnail': str_or_none(media['preview_url']) if media['type'] == 'video' else None,
                     'vcodec': 'none' if media['type'] == 'audio' else None,
                     'duration': float_or_none(try_get(media, lambda x: x['meta']['original']['duration'])),
@@ -519,7 +520,7 @@ class MastodonUserNumericIE(MastodonBaseIE):
     def _real_extract(self, url):
         prefix, domain, user_id = self._match_valid_url(url).group('prefix', 'domain', 'id')
 
-        if not prefix and not self._test_mastodon_instance(domain):
+        if not prefix and not self._test_selfhosted_instance(self, domain, False, prefix):
             return self.url_result(url, ie='Generic')
 
         api_response = self._download_json('https://%s/api/v1/accounts/%s' % (domain, user_id), user_id)
