@@ -4042,8 +4042,6 @@ class SelfHostedInfoExtractor(InfoExtractor):
     (like PeerTube, Mastodon, Misskey, and lots of others).
     """
 
-    _ENABLED = False
-
     _NODEINFO_CACHE = {}
     _SELF_HOSTED = True
 
