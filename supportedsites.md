@@ -1362,6 +1362,8 @@
  - **ToypicsUser**: Toypics user profile
  - **TrailerAddict**: (**Currently broken**)
  - **TravelChannel**
+ - **Triller**: [<abbr title="netrc machine"><em>triller</em></abbr>]
+ - **TrillerUser**: [<abbr title="netrc machine"><em>triller</em></abbr>]
  - **Trilulilu**
  - **Trovo**
  - **TrovoChannelClip**: All Clips of a trovo.live channel; "trovoclip:" prefix
@@ -1536,6 +1538,8 @@
  - **VoxMedia**
  - **VoxMediaVolume**
  - **vpro**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
+ - **vqq:series**
+ - **vqq:video**
  - **Vrak**
  - **VRT**: VRT NWS, Flanders News, Flandern Info and Sporza
  - **VrtNU**: [<abbr title="netrc machine"><em>vrtnu</em></abbr>] VrtNU.be

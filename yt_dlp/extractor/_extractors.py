@@ -1,5 +1,28 @@
 # flake8: noqa: F401
 
+from .youtube import (  # Youtube is moved to the top to improve performance
+    YoutubeIE,
+    YoutubeClipIE,
+    YoutubeFavouritesIE,
+    YoutubeNotificationsIE,
+    YoutubeHistoryIE,
+    YoutubeTabIE,
+    YoutubeLivestreamEmbedIE,
+    YoutubePlaylistIE,
+    YoutubeRecommendedIE,
+    YoutubeSearchDateIE,
+    YoutubeSearchIE,
+    YoutubeSearchURLIE,
+    YoutubeMusicSearchURLIE,
+    YoutubeSubscriptionsIE,
+    YoutubeStoriesIE,
+    YoutubeTruncatedIDIE,
+    YoutubeTruncatedURLIE,
+    YoutubeYtBeIE,
+    YoutubeYtUserIE,
+    YoutubeWatchLaterIE,
+)
+
 from .abc import (
     ABCIE,
     ABCIViewIE,
@@ -1766,6 +1789,12 @@ from .telequebec import (
 from .teletask import TeleTaskIE
 from .telewebion import TelewebionIE
 from .tempo import TempoIE
+from .tencent import (
+    VQQSeriesIE,
+    VQQVideoIE,
+    WeTvEpisodeIE,
+    WeTvSeriesIE,
+)
 from .tennistv import TennisTVIE
 from .tenplay import TenPlayIE
 from .testurl import TestURLIE, TestInfoDictIE
@@ -1832,6 +1861,10 @@ from .toongoggles import ToonGogglesIE
 from .toutv import TouTvIE
 from .toypics import ToypicsUserIE, ToypicsIE
 from .traileraddict import TrailerAddictIE
+from .triller import (
+    TrillerIE,
+    TrillerUserIE,
+)
 from .trilulilu import TriluliluIE
 from .trovo import (
     TrovoIE,
@@ -2137,7 +2170,6 @@ from .weibo import (
     WeiboMobileIE
 )
 from .weiqitv import WeiqiTVIE
-from .wetv import WeTvEpisodeIE, WeTvSeriesIE
 from .wikimedia import WikimediaIE
 from .willow import WillowIE
 from .wimtv import WimTVIE
@@ -2221,28 +2253,6 @@ from .younow import (
 from .youporn import YouPornIE
 from .yourporn import YourPornIE
 from .yourupload import YourUploadIE
-from .youtube import (
-    YoutubeIE,
-    YoutubeClipIE,
-    YoutubeFavouritesIE,
-    YoutubeNotificationsIE,
-    YoutubeHistoryIE,
-    YoutubeTabIE,
-    YoutubeLivestreamEmbedIE,
-    YoutubePlaylistIE,
-    YoutubeRecommendedIE,
-    YoutubeSearchDateIE,
-    YoutubeSearchIE,
-    YoutubeSearchURLIE,
-    YoutubeMusicSearchURLIE,
-    YoutubeSubscriptionsIE,
-    YoutubeStoriesIE,
-    YoutubeTruncatedIDIE,
-    YoutubeTruncatedURLIE,
-    YoutubeYtBeIE,
-    YoutubeYtUserIE,
-    YoutubeWatchLaterIE,
-)
 from .zapiks import ZapiksIE
 from .zattoo import (
     BBVTVIE,

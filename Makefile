@@ -31,7 +31,6 @@ clean-cache:
 lazy-extractors: yt_dlp/extractor/lazy_extractors.py
 
 PREFIX ?= /usr/local
-DESTDIR ?= .
 BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/man
 SHAREDIR ?= $(PREFIX)/share
@@ -117,7 +116,7 @@ yt_dlp/extractor/lazy_extractors.py: devscripts/make_lazy_extractors.py devscrip
 	$(PYTHON) devscripts/make_lazy_extractors.py $@
 
 ytdl-patched.tar.gz: all
-	@tar -czf $(DESTDIR)/ytdl-patched.tar.gz --transform "s|^|ytdl-patched/|" --owner 0 --group 0 \
+	@tar -czf ytdl-patched.tar.gz --transform "s|^|yt-dlp/|" --owner 0 --group 0 \
 		--exclude '*.DS_Store' \
 		--exclude '*.kate-swp' \
 		--exclude '*.pyc' \
