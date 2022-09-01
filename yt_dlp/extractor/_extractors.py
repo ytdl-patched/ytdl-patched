@@ -475,6 +475,7 @@ from .epicon import (
     EpiconIE,
     EpiconSeriesIE,
 )
+from .epoch import EpochIE
 from .eporner import EpornerIE
 from .eroprofile import (
     EroProfileIE,
@@ -496,6 +497,7 @@ from .espn import (
 from .esri import EsriVideoIE
 from .europa import EuropaIE
 from .europeantour import EuropeanTourIE
+from .eurosport import EurosportIE
 from .euscreen import EUScreenIE
 from .evoload import EvoLoadIE
 from .expotv import ExpoTVIE
