@@ -370,6 +370,7 @@
  - **Engadget**
  - **Epicon**
  - **EpiconSeries**
+ - **Epoch**
  - **Eporner**
  - **EroProfile**: [<abbr title="netrc machine"><em>eroprofile</em></abbr>]
  - **EroProfile:album**
@@ -383,6 +384,7 @@
  - **EsriVideo**
  - **Europa**
  - **EuropeanTour**
+ - **Eurosport**
  - **EUScreen**
  - **EWETV**: [<abbr title="netrc machine"><em>ewetv</em></abbr>]
  - **EWETVLive**: [<abbr title="netrc machine"><em>ewetv</em></abbr>]
