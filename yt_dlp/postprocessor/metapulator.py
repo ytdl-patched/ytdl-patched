@@ -116,6 +116,7 @@ Manuplates or displays chapters for this video.
     def run(self, pp, info, args):
         ydl = pp._downloader
         if not args or 'view'.startswith(args[0]):
+            # view
             chap = info.get('chapters')
             if not chap:
                 pp.to_screen('There are no chapters')
@@ -145,10 +146,15 @@ Manuplates or displays chapters for this video.
             pp.to_screen(tbl, False)
             return
         elif 'add'.startswith(args[0]):
+            # add START END [TITLE]
             return
         elif 'insert'.startswith(args[0]):
+            # insert INDEX START END [TITLE]
             return
         elif 'remove'.startswith(args[0]):
+            # remove [idx:]INDEX[-INDEX_END]|[t:]TITLE_REGEX
             return
         elif 'sort'.startswith(args[0]):
+            # sort
             return
+        pp.to_screen(f'Unknown command: {args[0]!r}. Use "help {self.COMMAND_NAME}" to see help')
