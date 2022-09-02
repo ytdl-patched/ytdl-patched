@@ -5737,17 +5737,6 @@ class Config:
         return self.parser.parse_args(self.all_args)
 
 
-def get_first_group(match, *groups, default=None):
-    for g in groups:
-        try:
-            m = match.group(g)
-            if m:
-                return m
-        except IndexError:
-            continue
-    return default
-
-
 def merge_headers(*dicts):
     """Merge dicts of http headers case insensitively, prioritizing the latter ones"""
     return {k.title(): v for k, v in itertools.chain.from_iterable(map(dict.items, dicts))}
@@ -5880,6 +5869,17 @@ def truncate_string(s, left, right=0):
     if s is None or len(s) <= left + right:
         return s
     return f'{s[:left-3]}...{s[-right:]}'
+
+
+def get_first_group(match, *groups, default=None):
+    for g in groups:
+        try:
+            m = match.group(g)
+            if m:
+                return m
+        except IndexError:
+            continue
+    return default
 
 
 def orderedSet_from_options(options, alias_dict, *, use_regex=False, start=None):
