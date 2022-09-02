@@ -123,7 +123,7 @@ Manuplates or displays chapters for this video.
                 return
 
             if not isinstance(chap, list):
-                pp.report_warning('Extracted chapters are in unexpected structures. Fix extractor code')
+                pp.report_warning('Extracted chapters are in unexpected structure. Fix extractor code')
                 return
 
             cs = len(chap)
