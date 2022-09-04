@@ -1,5 +1,5 @@
-import functools
 import inspect
+import json
 import re
 
 from ..utils import get_argcount, render_table
@@ -26,7 +26,7 @@ class MetapulatorPP(PostProcessor):
                 self.to_screen(f'Could not interpret {inp!r} as {out!r}')
                 return
             for attribute, value in filter_dict(match.groupdict()).items():
-                yield (attribute, info.get(attribute, MetadataParserPP.BACKLOG_UNSET))
+                # yield (attribute, info.get(attribute, MetadataParserPP.BACKLOG_UNSET))
                 info[attribute] = value
                 self.to_screen(f'Parsed {attribute} from {template!r}: {value!r}')
 
@@ -48,7 +48,7 @@ class MetapulatorPP(PostProcessor):
                 self.report_warning(f'Cannot replace in field {field} since it is a {type(val).__name__}')
                 return
             self.write_debug(f'Replacing all {search!r} in {field} with {replace!r}')
-            yield (field, info.get(field, MetadataParserPP.BACKLOG_UNSET))
+            # yield (field, info.get(field, MetadataParserPP.BACKLOG_UNSET))
             info[field], n = search_re.subn(replace, val)
             if n:
                 self.to_screen(f'Changed {field} to: {info[field]}')
@@ -60,6 +60,10 @@ class MetapulatorPP(PostProcessor):
 
     BACKLOG_UNSET = object()
     Actions = Namespace(INTERPRET=interpretter, REPLACE=replacer)
+
+
+class ShowHelp(Exception):
+    pass
 
 
 class MetapulatorCommand:
@@ -77,7 +81,7 @@ class PrintCommand(MetapulatorCommand):
 
     COMMAND_NAME = 'print'
     HELP = """\
-Prints the content of metadata. You can use the same notation for --print
+Prints the content of metadata. You can use the same notation as --print
 This accepts multiple queries at a time
 
 Examples:
@@ -135,8 +139,7 @@ Manuplates or displays chapters for this video.
                 ch.get('index'),  # INDEX
                 delim,
                 ch.get('start_time', 0),  # START
-                ch.get('end_time',
-                    ydl._format_out('???', ydl.Styles.SUPPRESS)),  # END
+                ch.get('end_time', ydl._format_out('???', ydl.Styles.SUPPRESS)),  # END
                 delim,
                 ch.get('index'),  # TITLE
             ] for ch in chap]
@@ -158,3 +161,41 @@ Manuplates or displays chapters for this video.
             # sort
             return
         pp.to_screen(f'Unknown command: {args[0]!r}. Use "help {self.COMMAND_NAME}" to see help')
+
+
+class SetValueCommand(MetapulatorCommand):
+    """
+    Command to set a value to a key
+    """
+
+    COMMAND_NAME = 'setvalue'
+    HELP = """\
+Synopsis: setvalue KEY [TYPE] VALUE
+
+Command to set a value to a key.
+
+TYPE can be any of: STRING, INT, FLOAT and JSON
+Defaults to STRING.
+
+For INT and FLOAT, the VALUE must be an interger or a decimal number.
+
+For JSON, the VALUE must be a valid JSON.
+"""
+
+    def run(self, pp, info, args):
+        if len(args) not in (2, 3):
+            raise ShowHelp()
+        _type = 'string'
+        if len(args) == 2:
+            key, value_str = args
+        elif len(args) == 3:
+            key, _type, value_str = args
+        _type = _type.lower()
+        value = value_str
+        if _type == 'int':
+            value = int(value_str)
+        elif _type == 'float':
+            value = float(value_str)
+        elif _type == 'json':
+            value = json.loads(value_str)
+        info[key] = value
