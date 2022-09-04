@@ -824,7 +824,7 @@ class TestYoutubeDL(unittest.TestCase):
                           for f in FORMATS])
         test('%(formats.:.{id,height.:2})j', (out, sanitize(out)))
         test('%(formats.:.{id,height}.id)l', ', '.join(f['id'] for f in FORMATS))
-        test('%(.{id,title})j', ('{"id": "1234"}', '{＂id＂： ＂1234＂}'))
+        test('%(.{id,title})j', ('{"id": "1234"}', "{'id' - '1234'}"))
 
         # Alternates
         test('%(title,id)s', '1234')
