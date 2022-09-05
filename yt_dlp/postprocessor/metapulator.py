@@ -1,10 +1,8 @@
-import inspect
 import json
 import re
 
-from ..utils import get_argcount, render_table
+from ..utils import render_table
 from .common import PostProcessor
-from ..utils import Namespace, filter_dict
 
 
 class MetapulatorPP(PostProcessor):
@@ -12,54 +10,25 @@ class MetapulatorPP(PostProcessor):
     Metadata manuplator via commands
     """
 
+    COMMANDS = {}  # command, object
+
+    def __init__(self, downloader=None):
+        super().__init__(downloader)
+        self.COMMANDS = dict((x.COMMAND_NAME, x()) for x in CLASSES)
+
     def run(self, info):
         for f in self._actions:
             next(filter(lambda x: 0, f(info)), None)
         return [], info
 
-    def interpretter(self, inp, out):
-        def f(info):
-            data_to_parse = self._downloader.evaluate_outtmpl(template, info)
-            self.write_debug(f'Searching for {out_re.pattern!r} in {template!r}')
-            match = out_re.search(data_to_parse)
-            if match is None:
-                self.to_screen(f'Could not interpret {inp!r} as {out!r}')
-                return
-            for attribute, value in filter_dict(match.groupdict()).items():
-                # yield (attribute, info.get(attribute, MetadataParserPP.BACKLOG_UNSET))
-                info[attribute] = value
-                self.to_screen(f'Parsed {attribute} from {template!r}: {value!r}')
-
-        template = self.field_to_template(inp)
-        out_re = re.compile(self.format_to_regex(out))
-        return f
-
-    def replacer(self, field, search, replace):
-        def f(info):
-            nonlocal replace
-            # let function have info_dict on invocation (for MetadataEditorAugment)
-            if inspect.isfunction(replace) and get_argcount(replace) == 2:
-                replace = self._functools_partial(replace, info)
-            val = info.get(field)
-            if val is None:
-                self.to_screen(f'Video does not have a {field}')
-                return
-            elif not isinstance(val, str):
-                self.report_warning(f'Cannot replace in field {field} since it is a {type(val).__name__}')
-                return
-            self.write_debug(f'Replacing all {search!r} in {field} with {replace!r}')
-            # yield (field, info.get(field, MetadataParserPP.BACKLOG_UNSET))
-            info[field], n = search_re.subn(replace, val)
-            if n:
-                self.to_screen(f'Changed {field} to: {info[field]}')
-            else:
-                self.to_screen(f'Did not find {search!r} in {field}')
-
-        search_re = re.compile(search)
-        return f
-
-    BACKLOG_UNSET = object()
-    Actions = Namespace(INTERPRET=interpretter, REPLACE=replacer)
+    def find_command(self, cmd):
+        if not cmd:
+            return None
+        for name, value in self.COMMANDS.items():
+            # shortest match
+            if name.startswith(cmd):
+                return value
+        return None
 
 
 class ShowHelp(Exception):
@@ -199,3 +168,31 @@ For JSON, the VALUE must be a valid JSON.
         elif _type == 'json':
             value = json.loads(value_str)
         info[key] = value
+
+
+class HelpCommand(MetapulatorCommand):
+    """
+    Command to show help
+    """
+
+    COMMAND_NAME = 'setvalue'
+    HELP = """\
+Synopsis: help [COMMAND]
+
+If COMMAND is not given, it shows all of the available commands.
+"""
+
+    def run(self, pp, info, args):
+        if not args:
+            pp.to_screen('All available commands:')
+            pp.to_screen('\n'.join(sorted(pp.COMMANDS.keys())), False)
+            return
+        cmd = pp.find_command(args[0])
+        if not cmd:
+            pp.to_screen(f'Command {args[0]!r} not found')
+            return
+        pp.to_screen(f'Help for {cmd.COMMAND_NAME!r}')
+        pp.to_screen(cmd.HELP, False)
+
+
+CLASSES = (PrintCommand, ChaptersCommand, SetValueCommand, HelpCommand)
