@@ -88,6 +88,14 @@ Manuplates or displays chapters for this video.
 
     def run(self, pp, info, args):
         ydl = pp._downloader
+
+        def getchap():
+            chap = info.get('chapters')
+            if not isinstance(chap, list):
+                pp.write_debug('setting the new chapter list')
+                chap = info['chapters'] = []
+            return chap
+
         if not args or 'view'.startswith(args[0]):
             # view
             chap = info.get('chapters')
@@ -110,7 +118,7 @@ Manuplates or displays chapters for this video.
                 ch.get('start_time', 0),  # START
                 ch.get('end_time', ydl._format_out('???', ydl.Styles.SUPPRESS)),  # END
                 delim,
-                ch.get('index'),  # TITLE
+                ch.get('title'),  # TITLE
             ] for ch in chap]
             tbl = render_table(
                 header_line, table, hide_empty=True,
@@ -119,9 +127,28 @@ Manuplates or displays chapters for this video.
             return
         elif 'add'.startswith(args[0]):
             # add START END [TITLE]
+            start, end, *title = args[1:]
+            start, end = map(float, (start, end))
+            title = title[0] if title else None
+            getchap().append({
+                'start_time': start,
+                'end_time': end,
+                'title': title,
+            })
+            pp.to_screen(f'Added chapter (start={start} end={end} title={title})')
             return
         elif 'insert'.startswith(args[0]):
             # insert INDEX START END [TITLE]
+            index, start, end, *title = args[1:]
+            index = int(index)
+            start, end = map(float, (start, end))
+            title = title[0] if title else None
+            getchap().insert(index, {
+                'start_time': start,
+                'end_time': end,
+                'title': title,
+            })
+            pp.to_screen(f'Added chapter at index {index} (start={start} end={end} title={title})')
             return
         elif 'remove'.startswith(args[0]):
             # remove [idx:]INDEX[-INDEX_END]|[t:]TITLE_REGEX
