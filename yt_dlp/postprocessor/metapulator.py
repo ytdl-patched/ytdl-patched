@@ -151,10 +151,26 @@ Manuplates or displays chapters for this video.
             pp.to_screen(f'Added chapter at index {index} (start={start} end={end} title={title})')
             return
         elif 'remove'.startswith(args[0]):
-            # remove [idx:]INDEX[-INDEX_END]|[t:]TITLE_REGEX
+            # remove [idx:]INDEX[-INDEX_END]|[t:]TIME-RANGE|[re:]TITLE_REGEX
             return
         elif 'sort'.startswith(args[0]):
             # sort
+            end = info.get('duration', None) or 0
+
+            def _sort(x):
+                return (
+                    x.get('start_time') or 0,
+                    x.get('end_time') or end,
+                    x.get('index') or 0,
+                    x.get('title') or '',)
+
+            chap = getchap()
+            chap.sort(key=_sort)
+
+            for i, x in enumerate(chap):
+                x['index'] = i
+
+            pp.to_screen(f'Sorted {len(chap)} chapters')
             return
         pp.to_screen(f'Unknown command: {args[0]!r}. Use "help {self.COMMAND_NAME}" to see help')
 
