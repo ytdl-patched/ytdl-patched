@@ -82,7 +82,7 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
 * [CONTRIBUTING](CONTRIBUTING.md#contributing-to-yt-dlp)
     * [Opening an Issue](CONTRIBUTING.md#opening-an-issue)
     * [Developer Instructions](CONTRIBUTING.md#developer-instructions)
-* [MORE](#more)
+* [WIKI](https://github.com/yt-dlp/yt-dlp/wiki)
 <!-- MANPAGE: END EXCLUDED SECTION -->
 
 **Disclaimer:** ytdl-patched does exist for my use, so there's no absolute warranty for anything. Use yt-dlp if you don't like it.
@@ -250,14 +250,15 @@ You can simply download the [correct binary file](#release-files) for your OS
 
 <!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 [![Windows](https://img.shields.io/badge/-Windows_x64-blue.svg?style=for-the-badge&logo=windows)](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe)
-[![Linux](https://img.shields.io/badge/-Linux/BSD-red.svg?style=for-the-badge&logo=linux)](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp)
+[![Unix](https://img.shields.io/badge/-Linux/BSD-red.svg?style=for-the-badge&logo=linux)](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp)
 [![MacOS](https://img.shields.io/badge/-MacOS-lightblue.svg?style=for-the-badge&logo=apple)](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos)
+[![PyPi](https://img.shields.io/badge/-PyPi-blue.svg?logo=pypi&labelColor=555555&style=for-the-badge)](https://pypi.org/project/yt-dlp)
 [![Source Tarball](https://img.shields.io/badge/-Source_tar-green.svg?style=for-the-badge)](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.tar.gz)
 [![Other variants](https://img.shields.io/badge/-Other-grey.svg?style=for-the-badge)](#release-files)
 [![All versions](https://img.shields.io/badge/-All_Versions-lightgrey.svg?style=for-the-badge)](https://github.com/yt-dlp/yt-dlp/releases)
 <!-- MANPAGE: END EXCLUDED SECTION -->
 
-Note: The manpages, shell completion files etc. are available in the [source tarball](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.tar.gz)
+You can install yt-dlp using [the binaries](#release-files), [PIP](https://pypi.org/project/yt-dlp) or one using a third-party package manager. See [the wiki](https://github.com/yt-dlp/yt-dlp/wiki/Installation) for detailed instructions
 
 <!-- TODO: Move to Wiki -->
 In UNIX-like OSes (MacOS, Linux, BSD), you can also install the same in one of the following ways:
@@ -302,9 +303,11 @@ brew install lesmiscore/my/ytdl-patched
 ```
 
 ## UPDATE
-You can use `yt-dlp -U` to update if you are [using the provided release](#using-the-release-binary)
+You can use `yt-dlp -U` to update if you are [using the release binaries](#release-files)
 
-If you [installed with pip](#with-pip), simply re-run the same command that was used to install the program
+If you [installed with PIP](https://github.com/yt-dlp/yt-dlp/wiki/Installation#with-pip), simply re-run the same command that was used to install the program
+
+For other third-party package managers, see [the wiki](https://github.com/yt-dlp/yt-dlp/wiki/Installation) or refer their documentation
 
 If you [installed using Homebrew](#with-homebrew), run `brew upgrade lesmiscore/my/ytdl-patched`
 
@@ -329,6 +332,9 @@ File|Description
 [yt_dlp-wheel.tar.gz](https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/yt_dlp-wheel.tar.gz)|pip .tar.gz for installation using pip
 
 <!-- MANPAGE: END EXCLUDED SECTION -->
+
+
+Note: The manpages, shell completion files etc. are available in the [source tarball](https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.tar.gz)
 
 ## DEPENDENCIES
 Python versions 3.7+ (CPython and PyPy) are supported. Other versions and implementations may or may not work correctly.
@@ -791,10 +797,10 @@ You can also fork the project on github and run your fork's [build workflow](.gi
                                     Currently supported keyrings are: basictext,
                                     gnomekeyring, kwallet
     --no-cookies-from-browser       Do not load cookies from browser (default)
-    --cache-dir DIR                 Location in the filesystem where youtube-dl
-                                    can store some downloaded information (such
-                                    as client ids and signatures) permanently.
-                                    By default $XDG_CACHE_HOME/yt-dlp or
+    --cache-dir DIR                 Location in the filesystem where yt-dlp can
+                                    store some downloaded information (such as
+                                    client ids and signatures) permanently. By
+                                    default $XDG_CACHE_HOME/yt-dlp or
                                     ~/.cache/yt-dlp
     --no-cache-dir                  Disable filesystem caching
     --rm-cache-dir                  Delete all filesystem cache files
@@ -1289,7 +1295,7 @@ The field names themselves (the part inside the parenthesis) can also have some 
 
 1. **Replacement**: A replacement value can specified using a `&` separator. If the field is *not* empty, this replacement value will be used instead of the actual field content. This is done after alternate fields are considered; thus the replacement is used if *any* of the alternative fields is *not* empty.
 
-1. **Default**: A literal default value can be specified for when the field is empty using a `|` separator. This overrides `--output-na-template`. E.g. `%(uploader|Unknown)s`
+1. **Default**: A literal default value can be specified for when the field is empty using a `|` separator. This overrides `--output-na-placeholder`. E.g. `%(uploader|Unknown)s`
 
 1. **More Conversions**: In addition to the normal format types `diouxXeEfFgGcrs`, yt-dlp additionally supports converting to `B` = **B**ytes, `j` = **j**son (flag `#` for pretty-printing), `h` = HTML escaping, `l` = a comma separated **l**ist (flag `#` for `\n` newline-separated), `q` = a string **q**uoted for the terminal (flag `#` to split a list into different arguments), `D` = add **D**ecimal suffixes (e.g. 10M) (flag `#` to use 1024 as factor), and `S` = **S**anitize as filename (flag `#` for restricted)
 
@@ -1434,12 +1440,6 @@ To use percent literals in an output template use `%%`. To output to stdout use 
 The current default template is `%(title)s [%(id)s].%(ext)s`.
 
 In some cases, you don't want special characters such as 中, spaces, or &, such as when transferring the downloaded filename to a Windows system or the filename through an 8bit-unsafe channel. In these cases, add the `--restrict-filenames` flag to get a shorter title.
-
-<!-- MANPAGE: BEGIN EXCLUDED SECTION -->
-#### Output template and Windows batch files
-
-If you are using an output template inside a Windows batch file then you must escape plain percent characters (`%`) by doubling, so that `-o "%(title)s-%(id)s.%(ext)s"` should become `-o "%%(title)s-%%(id)s.%%(ext)s"`. However you should not touch `%`'s that are not plain characters, e.g. environment variables for expansion should stay intact: `-o "C:\%HOMEPATH%\Desktop\%%(title)s.%%(ext)s"`.
-<!-- MANPAGE: END EXCLUDED SECTION -->
 
 #### Output template examples
 
@@ -2220,5 +2220,5 @@ These options were deprecated since 2014 and have now been entirely removed
 # CONTRIBUTING
 See [CONTRIBUTING.md](CONTRIBUTING.md#contributing-to-yt-dlp) for instructions on [Opening an Issue](CONTRIBUTING.md#opening-an-issue) and [Contributing code to the project](CONTRIBUTING.md#developer-instructions)
 
-# MORE
-For FAQ see the [youtube-dl README](https://github.com/ytdl-org/youtube-dl#faq)
+# WIKI
+See the [Wiki](https://github.com/yt-dlp/yt-dlp/wiki) for more information
