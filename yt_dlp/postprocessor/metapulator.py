@@ -152,6 +152,57 @@ Manuplates or displays chapters for this video.
             return
         elif 'remove'.startswith(args[0]):
             # remove [idx:]INDEX[-INDEX_END]|[t:]TIME-RANGE|[re:]TITLE_REGEX
+
+            def find_mode():
+                candidates = []
+                mobj = re.fullmatch(r'(idx:)?(\d+)(?:-(\d+))?', args[1])
+                if mobj:
+                    pfx, s1, e1 = mobj.groups()
+
+                    def selector(chap):
+                        pass
+
+                    if pfx:
+                        return selector
+                    candidates.append(selector)
+
+                mobj = re.fullmatch(r'(t:)?(\d+)(?:-(\d+))?', args[1])
+                if mobj:
+                    pfx, s2, e2 = mobj.groups()
+
+                    def selector(chap):
+                        pass
+
+                    if pfx:
+                        return selector
+                    candidates.append(selector)
+
+                mobj = re.fullmatch(r'(re:)?(.+)', args[1])
+                while mobj:
+                    pfx, tre = mobj.groups()
+                    try:
+                        cre = re.compile(tre)
+                    except re.error:
+                        break
+
+                    def selector(chap):
+                        re.match(cre, '')
+
+                    if pfx:
+                        return selector
+                    candidates.append(selector)
+                    break
+
+                return next(candidates, None)
+
+            selector = find_mode()
+            if not selector:
+                pp.to_screen(f'Invalid selector: {args[1]}')
+                return
+
+            chap = getchap()
+            chap[:] = filter(selector, chap)
+
             return
         elif 'sort'.startswith(args[0]):
             # sort
