@@ -1830,6 +1830,8 @@ The following extractors use this feature:
 * `preferred_langs`: List of languages (in 2-charactor code) to prefer for title and description, separated by comma. Original title and description based on your region or settings are still available at `orig_*` key. (See [output template](#output-template) section for about these keys)
 * `innertube_host`: Innertube API host to use for all API requests; e.g. `studio.youtube.com`, `youtubei.googleapis.com`. Note that cookies exported from one subdomain will not work on others
 * `innertube_key`: Innertube API key to use for all API requests
+* `lang`: Supported content language code to prefer translated metadata of this language (case-sensitive). By default, video primary language metadata is preferred, with a fallback to `en` translated.
+  * See youtube.py for list of supported content language codes.
 
 #### youtubetab (YouTube playlists, channels, feeds, etc.)
 * `skip`: One or more of `webpage` (skip initial webpage download), `authcheck` (allow the download of playlists requiring authentication when no initial webpage is downloaded. This may cause unwanted behavior, see [#1122](https://github.com/yt-dlp/yt-dlp/pull/1122) for more details)
