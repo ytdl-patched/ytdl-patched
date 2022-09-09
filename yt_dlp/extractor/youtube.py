@@ -396,15 +396,25 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         """
         preferred_lang = self._configuration_arg('lang', ie_key='Youtube', casesense=True, default=[''])[0]
         if not preferred_lang:
+            preferred_lang = self._configuration_arg('preferred_langs', ie_key='Youtube', casesense=True, default=[''])[0]
+        if not preferred_lang:
             return
         if preferred_lang not in self._SUPPORTED_LANG_CODES:
             raise ExtractorError(
                 f'Unsupported language code: {preferred_lang}. Supported language codes (case-sensitive): {join_nonempty(*self._SUPPORTED_LANG_CODES, delim=", ")}.',
                 expected=True)
-        elif preferred_lang != 'en':
+        elif preferred_lang != 'en' and not self._localize_by_dataapi:
             self.report_warning(
                 f'Preferring "{preferred_lang}" translated fields. Note that some metadata extraction may fail or be incorrect.')
         return preferred_lang
+
+    @functools.cached_property
+    def _innertube_preferred_lang(self):
+        return None if self._localize_by_dataapi else self._preferred_lang
+
+    @functools.cached_property
+    def _localize_by_dataapi(self):
+        return self._configuration_arg('localization_mode', ie_key='Youtube', casesense=True, default=['default'])[0] == 'dataapi'
 
     def _initialize_consent(self):
         cookies = self._get_cookies('https://www.youtube.com/')
@@ -430,7 +440,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
                 pref = dict(urllib.parse.parse_qsl(pref_cookie.value))
             except ValueError:
                 self.report_warning('Failed to parse user PREF cookie' + bug_reports_message())
-        pref.update({'hl': self._preferred_lang or 'en', 'tz': 'UTC'})
+        pref.update({'hl': self._innertube_preferred_lang or 'en', 'tz': 'UTC'})
         self._set_cookie('.youtube.com', name='PREF', value=urllib.parse.urlencode(pref))
 
     def _real_initialize(self):
@@ -478,7 +488,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             (ytcfg, self._get_default_ytcfg(default_client)), 'INNERTUBE_CONTEXT', expected_type=dict)
         # Enforce language and tz for extraction
         client_context = traverse_obj(context, 'client', expected_type=dict, default={})
-        client_context.update({'hl': self._preferred_lang or 'en', 'timeZone': 'UTC', 'utcOffsetMinutes': 0})
+        client_context.update({'hl': self._innertube_preferred_lang or 'en', 'timeZone': 'UTC', 'utcOffsetMinutes': 0})
         return context
 
     _SAPISID = None
@@ -510,14 +520,9 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     def _call_api(self, ep, query, video_id, fatal=True, headers=None,
                   note='Downloading API JSON', errnote='Unable to download API page',
-                  context=None, api_key=None, api_hostname=None, default_client='web',
-                  hl=None):
+                  context=None, api_key=None, api_hostname=None, default_client='web'):
 
         data = {'context': context} if context else {'context': self._extract_context(default_client=default_client)}
-        if hl:
-            data['context']['client']['hl'] = hl
-        else:
-            data['context']['client'].pop('hl', None)
         data.update(query)
         real_headers = self.generate_api_headers(default_client=default_client)
         real_headers.update({'content-type': 'application/json'})
@@ -599,8 +604,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     def generate_api_headers(
             self, *, ytcfg=None, account_syncid=None, session_index=None,
-            visitor_data=None, identity_token=None, api_hostname=None, default_client='web',
-            hl=None):
+            visitor_data=None, identity_token=None, api_hostname=None, default_client='web'):
 
         origin = 'https://' + (self._select_api_hostname(api_hostname, default_client))
         headers = {
@@ -613,8 +617,6 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             'X-Goog-Visitor-Id': visitor_data or self._extract_visitor_data(ytcfg),
             'User-Agent': self._ytcfg_get_safe(ytcfg, lambda x: x['INNERTUBE_CONTEXT']['client']['userAgent'], default_client=default_client)
         }
-        if hl:
-            headers['Accept-Language'] = hl
         if session_index is None:
             session_index = self._extract_session_index(ytcfg)
         if account_syncid or session_index is not None:
@@ -853,14 +855,14 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
                         (r'([a-z]+\s*\d{1,2},?\s*20\d{2})', r'(?:.+|^)(?:live|premieres|ed|ing)(?:\s*(?:on|for))?\s*(.+\d)'),
                         text.lower(), 'time text', default=None)))
 
-        if text and timestamp is None and self._preferred_lang in (None, 'en'):
+        if text and timestamp is None and self._innertube_preferred_lang in (None, 'en'):
             self.report_warning(
                 f'Cannot parse localized time text "{text}"', only_once=True)
         return timestamp
 
     def _extract_response(self, item_id, query, note='Downloading API JSON', headers=None,
                           ytcfg=None, check_get_keys=None, ep='browse', fatal=True, api_hostname=None,
-                          default_client='web', hl=None):
+                          default_client='web'):
         for retry in self.RetryManager():
             try:
                 response = self._call_api(
@@ -868,8 +870,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
                     video_id=item_id, query=query, note=note,
                     context=self._extract_context(ytcfg, default_client),
                     api_key=self._extract_api_key(ytcfg, default_client),
-                    api_hostname=api_hostname, default_client=default_client,
-                    hl=hl)
+                    api_hostname=api_hostname, default_client=default_client)
             except ExtractorError as e:
                 if not isinstance(e.cause, network_exceptions):
                     return self._error_or_warning(e, fatal=fatal)
@@ -3286,13 +3287,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     _STORY_PLAYER_PARAMS = '8AEB'
 
-    def _extract_player_response(self, client, video_id, master_ytcfg, player_ytcfg, player_url, initial_pr, smuggled_data, hl=None):
+    def _extract_player_response(self, client, video_id, master_ytcfg, player_ytcfg, player_url, initial_pr, smuggled_data):
 
         session_index = self._extract_session_index(player_ytcfg, master_ytcfg)
         syncid = self._extract_account_syncid(player_ytcfg, master_ytcfg, initial_pr)
         sts = self._extract_signature_timestamp(video_id, player_url, master_ytcfg, fatal=False) if player_url else None
         headers = self.generate_api_headers(
-            ytcfg=player_ytcfg, account_syncid=syncid, session_index=session_index, default_client=client, hl=hl)
+            ytcfg=player_ytcfg, account_syncid=syncid, session_index=session_index, default_client=client)
 
         yt_query = {
             'videoId': video_id,
@@ -3306,7 +3307,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             ytcfg=player_ytcfg, headers=headers, fatal=True,
             default_client=client,
             note='Downloading %s player API JSON' % client.replace('_', ' ').strip(),
-            hl=hl,
         ) or None
 
     def _get_requested_clients(self, url, smuggled_data):
@@ -3334,7 +3334,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         return orderedSet(requested_clients)
 
     def get_localized_title_and_description(self, video_id, languages):
-        languages = tuple(orderedSet(itertools.chain(languages, (x.split('_')[0] for x in languages))))
+        languages = tuple(orderedSet(itertools.chain(variadic(languages), (x.split('_')[0] for x in languages))))
         # api_token = INNERTUBE_CLIENTS['mweb']['INNERTUBE_API_KEY']
         api_token = 'AIzaSyDCU8hByM-4DrUqRUYnGn-3llEO78bcxq8'
         lang_response = self._download_json(
@@ -3351,7 +3351,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             return None, None
         return extracted_lang.get('title'), extracted_lang.get('description')
 
-    def _extract_player_responses(self, clients, video_id, webpage, master_ytcfg, smuggled_data, hl=None):
+    def _extract_player_responses(self, clients, video_id, webpage, master_ytcfg, smuggled_data):
         initial_pr = None
         if webpage:
             initial_pr = self._search_json(
@@ -3401,7 +3401,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
             try:
                 pr = initial_pr if client == 'web' and initial_pr else self._extract_player_response(
-                    client, video_id, player_ytcfg or master_ytcfg, player_ytcfg, player_url if require_js_player else None, initial_pr, smuggled_data, hl=hl)
+                    client, video_id, player_ytcfg or master_ytcfg, player_ytcfg, player_url if require_js_player else None, initial_pr, smuggled_data)
             except ExtractorError as e:
                 if last_error:
                     self.report_warning(last_error)
@@ -3667,7 +3667,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 } for j in range(math.ceil(fragment_count))],
             }
 
-    def _download_player_responses(self, url, smuggled_data, video_id, webpage_url, hl=None):
+    def _download_player_responses(self, url, smuggled_data, video_id, webpage_url):
         webpage = None
         if 'webpage' not in self._configuration_arg('player_skip'):
             query = {'bpctr': '9999999999', 'has_verified': '1'}
@@ -3680,7 +3680,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         player_responses, player_url = self._extract_player_responses(
             self._get_requested_clients(url, smuggled_data),
-            video_id, webpage, master_ytcfg, smuggled_data, hl=hl)
+            video_id, webpage, master_ytcfg, smuggled_data)
 
         return webpage, master_ytcfg, player_responses, player_url
 
@@ -3702,9 +3702,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         base_url = self.http_scheme() + '//www.youtube.com/'
         webpage_url = base_url + 'watch?v=' + video_id
 
-        preferred_langs = self._configuration_arg('preferred_langs')
-        primary_language = try_get(preferred_langs, lambda x: x[0].split('_')[0], str)
-        webpage, master_ytcfg, player_responses, player_url = self._download_player_responses(url, smuggled_data, video_id, webpage_url, hl=primary_language)
+        webpage, master_ytcfg, player_responses, player_url = self._download_player_responses(url, smuggled_data, video_id, webpage_url)
 
         playability_statuses = traverse_obj(
             player_responses, (..., 'playabilityStatus'), expected_type=dict, default=[])
@@ -3726,25 +3724,22 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             player_responses, (..., 'microformat', 'playerMicroformatRenderer'),
             expected_type=dict, default=[])
 
-        translated_title = self._get_text(microformats, (..., 'title'))
-        video_title = (self._preferred_lang and translated_title
-                       or get_first(video_details, 'title')  # primary
-                       or translated_title
-                       or search_meta(['og:title', 'twitter:title', 'title']))
-        translated_description = self._get_text(microformats, (..., 'description'))
+        if self._localize_by_dataapi:
+            translated_title, translated_description = self.get_localized_title_and_description(video_id, self._preferred_lang)
+        else:
+            translated_title = self._get_text(microformats, (..., 'title'))
+            translated_description = self._get_text(microformats, (..., 'description'))
+
+        original_video_title = (get_first(video_details, 'title')  # primary
+                                or translated_title
+                                or search_meta(['og:title', 'twitter:title', 'title']))
+        video_title = self._preferred_lang and translated_title or original_video_title
         original_description = get_first(video_details, 'shortDescription')
         video_description = (
             self._preferred_lang and translated_description
             # If original description is blank, it will be an empty string.
             # Do not prefer translated description in this case.
             or original_description if original_description is not None else translated_description)
-
-        if preferred_langs:
-            vt, dt = self.get_localized_title_and_description(video_id, preferred_langs)
-            if vt and vt != video_title:
-                video_title, orig_video_title = vt, video_title
-            if dt and dt != video_description:
-                video_description, orig_description = dt, video_description
 
         multifeed_metadata_list = get_first(
             player_responses,
@@ -3893,14 +3888,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         info = {
             'id': video_id,
             'title': video_title,
-            'orig_title': orig_video_title,
+            'orig_title': original_video_title,
             'formats': formats,
             'thumbnails': thumbnails,
             # The best thumbnail that we are sure exists. Prevents unnecessary
             # URL checking if user don't care about getting the best possible thumbnail
             'thumbnail': traverse_obj(original_thumbnails, (-1, 'url')),
             'description': video_description,
-            'orig_description': orig_description,
+            'orig_description': original_description,
             'uploader': get_first(video_details, 'author'),
             'uploader_id': self._search_regex(r'/(?:channel|user)/([^/?&#]+)', owner_profile_url, 'uploader id') if owner_profile_url else None,
             'uploader_url': owner_profile_url,
@@ -5774,7 +5769,7 @@ class YoutubeTabIE(YoutubeTabBaseInfoExtractor):
 
             # Prefer tab name from tab url as it is always in en,
             # but only when preferred lang is set as it may not extract reliably in all cases.
-            selected_tab_name = (self._preferred_lang in (None, 'en') and translated_tab_name
+            selected_tab_name = (self._innertube_preferred_lang in (None, 'en') and translated_tab_name
                                  or selected_tab_url and get_mobj(selected_tab_url)['tab'][1:]  # primary
                                  or translated_tab_name)
 

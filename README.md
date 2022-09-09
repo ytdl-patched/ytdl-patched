@@ -1827,11 +1827,11 @@ The following extractors use this feature:
 * `comment_sort`: `top` or `new` (default) - choose comment sorting mode (on YouTube's side)
 * `max_comments`: Limit the amount of comments to gather. Comma-separated list of integers representing `max-comments,max-parents,max-replies,max-replies-per-thread`. Default is `all,all,all,all`
     * E.g. `all,all,1000,10` will get a maximum of 1000 replies total, with up to 10 replies per thread. `1000,all,100` will get a maximum of 1000 comments, with a maximum of 100 replies total
-* `preferred_langs`: List of languages (in 2-charactor code) to prefer for title and description, separated by comma. Original title and description based on your region or settings are still available at `orig_*` key. (See [output template](#output-template) section for about these keys)
 * `innertube_host`: Innertube API host to use for all API requests; e.g. `studio.youtube.com`, `youtubei.googleapis.com`. Note that cookies exported from one subdomain will not work on others
 * `innertube_key`: Innertube API key to use for all API requests
 * `lang`: Supported content language code to prefer translated metadata of this language (case-sensitive). By default, video primary language metadata is preferred, with a fallback to `en` translated.
   * See youtube.py for list of supported content language codes.
+* `localization_mode`: Method for obtaining translated title and description. By default, `default` is used. `dataapi` does it by using YouTube Data API.
 
 #### youtubetab (YouTube playlists, channels, feeds, etc.)
 * `skip`: One or more of `webpage` (skip initial webpage download), `authcheck` (allow the download of playlists requiring authentication when no initial webpage is downloaded. This may cause unwanted behavior, see [#1122](https://github.com/yt-dlp/yt-dlp/pull/1122) for more details)
