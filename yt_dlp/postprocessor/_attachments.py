@@ -274,7 +274,7 @@ class ShowsProgress(object):
         if time.hours > 99:
             return '--:--:--'
         if not time.hours:
-            return '%02d:%02d' % time[1:-1]
+            return '   %02d:%02d' % time[1:-1]
         return '%02d:%02d:%02d' % time[:-1]
 
     format_eta = format_seconds

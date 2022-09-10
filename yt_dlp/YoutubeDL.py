@@ -110,6 +110,7 @@ from .utils import (
     get_domain,
     int_or_none,
     iri_to_uri,
+    is_path_like,
     join_nonempty,
     locked_file,
     make_archive_id,
@@ -780,7 +781,7 @@ class YoutubeDL:
             archive = set()
             if fn is None:
                 return archive
-            elif not isinstance(fn, os.PathLike):
+            elif not is_path_like(fn):
                 return fn
 
             self.write_debug(f'Loading archive file {fn!r}')
@@ -1308,9 +1309,11 @@ class YoutubeDL:
                 delim = '\n' if '#' in flags else ', '
                 value, fmt = delim.join(map(str, variadic(value, allowed_types=(str, bytes)))), str_fmt
             elif fmt[-1] == 'j':  # json
-                value, fmt = json.dumps(value, default=_dumpjson_default, indent=4 if '#' in flags else None), str_fmt
+                value, fmt = json.dumps(
+                    value, default=_dumpjson_default,
+                    indent=4 if '#' in flags else None, ensure_ascii=False), str_fmt
             elif fmt[-1] == 'h':  # html
-                value, fmt = escapeHTML(value), str_fmt
+                value, fmt = escapeHTML(str(value)), str_fmt
             elif fmt[-1] == 'q':  # quoted
                 value, fmt = ' '.join(map(compat_shlex_quote, map(str, variadic(value)))), str_fmt
             elif fmt[-1] == 'B':  # bytes

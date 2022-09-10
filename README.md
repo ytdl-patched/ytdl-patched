@@ -43,6 +43,7 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
     * [NEW FEATURES IN YT-DLP](#new-features-in-yt-dlp)
     * [Differences in default behavior](#differences-in-default-behavior)
 * [INSTALLATION](#installation)
+    * [Detailed instructions](https://github.com/yt-dlp/yt-dlp/wiki/Installation)
     * [Update](#update)
     * [Dependencies](#dependencies)
     * [Compile](#compile)
@@ -66,7 +67,6 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
 * [CONFIGURATION](#configuration)
     * [Authentication with .netrc file](#authentication-with-netrc-file)
 * [OUTPUT TEMPLATE](#output-template)
-    * [Output template and Windows batch files](#output-template-and-windows-batch-files)
     * [Output template examples](#output-template-examples)
 * [FORMAT SELECTION](#format-selection)
     * [Filtering Formats](#filtering-formats)
@@ -83,6 +83,7 @@ ytdl-patched is a [youtube-dl](https://github.com/ytdl-org/youtube-dl) fork base
     * [Opening an Issue](CONTRIBUTING.md#opening-an-issue)
     * [Developer Instructions](CONTRIBUTING.md#developer-instructions)
 * [WIKI](https://github.com/yt-dlp/yt-dlp/wiki)
+    * [FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ)
 <!-- MANPAGE: END EXCLUDED SECTION -->
 
 **Disclaimer:** ytdl-patched does exist for my use, so there's no absolute warranty for anything. Use yt-dlp if you don't like it.
@@ -371,7 +372,7 @@ While all the other dependencies are optional, `ffmpeg` and `ffprobe` are highly
 * [**secretstorage**](https://github.com/mitya57/secretstorage) - For `--cookies-from-browser` to access the **Gnome** keyring while decrypting cookies of **Chromium**-based browsers on **Linux**. Licensed under [BSD-3-Clause](https://github.com/mitya57/secretstorage/blob/master/LICENSE)
 * Any external downloader that you want to use with `--downloader`
 
-#### Deprecated
+### Deprecated
 
 * [**avconv** and **avprobe**](https://www.libav.org) - Now **deprecated** alternative to ffmpeg. License [depends on the build](https://libav.org/legal)
 * [**sponskrub**](https://github.com/faissaloo/SponSkrub) - For using the now **deprecated** [sponskrub options](#sponskrub-options). Licensed under [GPLv3+](https://github.com/faissaloo/SponSkrub/blob/master/LICENCE.md)
@@ -401,7 +402,7 @@ Note that pyinstaller with versions below 4.4 [do not support](https://github.co
 **Important**: Running `pyinstaller` directly **without** using `pyinst.py` is **not** officially supported. This may or may not work correctly.
 
 ### Platform-independent Binary (UNIX)
-You will need the build tools `python` (3.6+), `zip`, `make` (GNU), `pandoc`\* and `pytest`\*.
+You will need the build tools `python` (3.7+), `zip`, `make` (GNU), `pandoc`\* and `pytest`\*.
 
 After installing these, simply run `make`.
 
@@ -1829,8 +1830,7 @@ The following extractors use this feature:
     * E.g. `all,all,1000,10` will get a maximum of 1000 replies total, with up to 10 replies per thread. `1000,all,100` will get a maximum of 1000 comments, with a maximum of 100 replies total
 * `innertube_host`: Innertube API host to use for all API requests; e.g. `studio.youtube.com`, `youtubei.googleapis.com`. Note that cookies exported from one subdomain will not work on others
 * `innertube_key`: Innertube API key to use for all API requests
-* `lang`: Supported content language code to prefer translated metadata of this language (case-sensitive). By default, video primary language metadata is preferred, with a fallback to `en` translated.
-  * See youtube.py for list of supported content language codes.
+* `lang`: Language code to prefer translated metadata of this language (case-sensitive). By default, the video primary language metadata is preferred, with a fallback to `en` translated. See [youtube.py](https://github.com/yt-dlp/yt-dlp/blob/c26f9b991a0681fd3ea548d535919cec1fbbd430/yt_dlp/extractor/youtube.py#L381-L390) for list of supported content language codes
 * `localization_mode`: Method for obtaining translated title and description. By default, `default` is used. `dataapi` does it by using YouTube Data API.
 
 #### youtubetab (YouTube playlists, channels, feeds, etc.)
@@ -1897,6 +1897,8 @@ See [ytdlp_plugins](ytdlp_plugins) for example plugins.
 Note that **all** plugins are imported even if not invoked, and that **there are no checks** performed on plugin code. Use plugins at your own risk and only if you trust the code
 
 If you are a plugin author, add [ytdlp-plugins](https://github.com/topics/ytdlp-plugins) as a topic to your repository for discoverability
+
+See the [wiki for some known plugins](https://github.com/yt-dlp/yt-dlp/wiki/Plugins)
 
 
 
