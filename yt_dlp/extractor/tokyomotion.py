@@ -27,7 +27,8 @@ class TokyoMotionBaseIE(InfoExtractor):
         index += 1
         newurl = self._PAGING_BASE_TEMPLATE % (variant, user_id, index)
         webpage = self._download_webpage(newurl, user_id, headers=self._COMMON_HEADERS, note='Downloading page %d' % index)
-        return [self.url_result(url) for url in self._extract_video_urls(variant, webpage)][::2]
+
+        yield from [self.url_result(url) for url in self._extract_video_urls(variant, webpage)][::2]
 
 
 class TokyoMotionPlaylistBaseIE(TokyoMotionBaseIE):
@@ -64,9 +65,9 @@ class UnvariantedMotionIE(TokyoMotionBaseIE):
         for fmt in entry['formats']:
             # TODO: maybe Range can be used again
             fmt['external_downloader'] = 'ffmpeg'
-            fmt['quality'] = 1 if fmt['format_id'] == 'HD' else -1
+            fmt['preference'] = 1 if fmt['format_id'] == 'HD' else -1
 
-        self._sort_formats(entry['formats'])
+        self._sort_formats(entry['formats'], ('preference', ))
         entry.update({
             'id': video_id,
             'title': title,
