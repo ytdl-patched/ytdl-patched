@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 from ..compat import functools  # isort: split
 from ..compat import compat_etree_fromstring, compat_expanduser, compat_os_name
 from ..dependencies import WebSocket
+from ..cookies import LenientSimpleCookie
 from ..downloader import FileDownloader
 from ..downloader.f4m import get_base_url, remove_encrypted_media
 from ..utils import (
@@ -3697,7 +3698,7 @@ class InfoExtractor:
 
     def _get_cookies(self, url):
         """ Return a http.cookies.SimpleCookie with the cookies for the url """
-        return http.cookies.SimpleCookie(self._downloader._calc_cookies(url))
+        return LenientSimpleCookie(self._downloader._calc_cookies(url))
 
     def _get_cookie_header(self, url):
         """ Return the cookies for the url. Deprecated. """

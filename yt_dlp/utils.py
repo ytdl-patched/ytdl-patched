@@ -728,7 +728,7 @@ def sanitized_Request(url, *args, **kwargs):
 
 
 def expand_path(s):
-    """Expand shell variables and ~"""
+    """Expand $ shell variables and ~"""
     return os.path.expandvars(compat_expanduser(s))
 
 
@@ -1981,13 +1981,16 @@ def system_identifier():
     python_implementation = platform.python_implementation()
     if python_implementation == 'PyPy' and hasattr(sys, 'pypy_version_info'):
         python_implementation += ' version %d.%d.%d' % sys.pypy_version_info[:3]
+    libc_ver = []
+    with contextlib.suppress(OSError):  # We may not have access to the executable
+        libc_ver = platform.libc_ver()
 
     return 'Python %s (%s %s) - %s %s' % (
         platform.python_version(),
         python_implementation,
         platform.architecture()[0],
         platform.platform(),
-        format_field(join_nonempty(*platform.libc_ver(), delim=' '), None, '(%s)'),
+        format_field(join_nonempty(*libc_ver, delim=' '), None, '(%s)'),
     )
 
 
@@ -2586,6 +2589,8 @@ def strftime_or_none(timestamp, date_format, default=None):
             datetime_object = datetime.datetime.utcfromtimestamp(timestamp)
         elif isinstance(timestamp, str):  # assume YYYYMMDD
             datetime_object = datetime.datetime.strptime(timestamp, '%Y%m%d')
+        date_format = re.sub(  # Support %s on windows
+            r'(?<!%)(%%)*%s', rf'\g<1>{int(datetime_object.timestamp())}', date_format)
         return datetime_object.strftime(date_format)
     except (ValueError, TypeError, AttributeError):
         return default
