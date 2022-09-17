@@ -150,9 +150,11 @@
  - **Bilibili category extractor**
  - **BilibiliAudio**
  - **BilibiliAudioAlbum**
- - **BilibiliChannel**
  - **BiliBiliPlayer**
  - **BiliBiliSearch**: Bilibili video search; "bilisearch:" prefix
+ - **BilibiliSpaceAudio**
+ - **BilibiliSpacePlaylist**
+ - **BilibiliSpaceVideo**
  - **BiliIntl**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliIntlSeries**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliLive**
