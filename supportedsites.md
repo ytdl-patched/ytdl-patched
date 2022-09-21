@@ -1342,10 +1342,10 @@
  - **ThreeSpeak**
  - **ThreeSpeakUser**
  - **TikTok**
- - **tiktok:effect**
- - **tiktok:sound**
- - **tiktok:tag**
- - **tiktok:user**
+ - **tiktok:effect**: (**Currently broken**)
+ - **tiktok:sound**: (**Currently broken**)
+ - **tiktok:tag**: (**Currently broken**)
+ - **tiktok:user**: (**Currently broken**)
  - **tinypic**: tinypic.com videos
  - **TLC**
  - **TMZ**
