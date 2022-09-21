@@ -655,6 +655,7 @@ from .googlepodcasts import (
 )
 from .googlesearch import GoogleSearchIE
 from .gopro import GoProIE
+from .goplay import GoPlayIE
 from .gorin import (
     GorinLiveIE,
     GorinVideoIE,
@@ -2059,7 +2060,6 @@ from .vidio import (
     VidioLiveIE
 )
 from .vidlii import VidLiiIE
-from .vier import VierIE, VierVideosIE
 from .viewlift import (
     ViewLiftIE,
     ViewLiftEmbedIE,
