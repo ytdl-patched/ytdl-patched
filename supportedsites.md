@@ -485,6 +485,7 @@
  - **google:podcasts:feed**
  - **GoogleDrive**
  - **GoogleDrive:Folder**
+ - **GoPlay**: [<abbr title="netrc machine"><em>goplay</em></abbr>]
  - **GoPro**
  - **GorinLive**
  - **GorinVideo**
@@ -1494,8 +1495,6 @@
  - **VidioLive**: [<abbr title="netrc machine"><em>vidio</em></abbr>]
  - **VidioPremier**: [<abbr title="netrc machine"><em>vidio</em></abbr>]
  - **VidLii**
- - **vier**: [<abbr title="netrc machine"><em>vier</em></abbr>] vier.be and vijf.be
- - **vier:videos**
  - **viewlift**
  - **viewlift:embed**
  - **Viidea**
