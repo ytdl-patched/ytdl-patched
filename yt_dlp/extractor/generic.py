@@ -877,17 +877,19 @@ class GenericIE(InfoExtractor):
         # Wistia embed
         {
             'url': 'http://study.com/academy/lesson/north-american-exploration-failed-colonies-of-spain-france-england.html#lesson',
-            'md5': '1953f3a698ab51cfc948ed3992a0b7ff',
+            'md5': 'b9676d24bf30945d97060638fbfe77f0',
             'info_dict': {
-                'id': '6e2wtrbdaf',
-                'ext': 'mov',
-                'title': 'paywall_north-american-exploration-failed-colonies-of-spain-france-england',
-                'description': 'a Paywall Videos video from Remilon',
-                'duration': 644.072,
+                'id': '5vd7p4bct5',
+                'ext': 'bin',
+                'title': 'md5:db27290a04ae306319b0b5cce3cdf7bd',
+                'description': 'md5:e835b7808e11aaef29ccdc28888437af',
+                'duration': 623.019,
                 'uploader': 'study.com',
-                'timestamp': 1459678540,
-                'upload_date': '20160403',
-                'filesize': 24687186,
+                'timestamp': 1663258727,
+                'upload_date': '20220915',
+                'filesize': 29798093,
+                'age_limit': 0,
+                'thumbnail': r're:^https?://.+\.jpg$',
             },
         },
         # Wistia standard embed (async)
@@ -904,7 +906,20 @@ class GenericIE(InfoExtractor):
             },
             'params': {
                 'skip_download': True,
-            }
+            },
+            'skip': 'webpage 404 not found',
+        },
+        # Wistia embed with video IDs in query
+        {
+            'url': 'https://amplitude.com/amplify-sessions?amp%5Bwmediaid%5D=pz0m0l0if3&amp%5Bwvideo%5D=pz0m0l0if3&wchannelid=emyjmwjf79&wmediaid=i8um783bdt',
+            'info_dict': {
+                'id': 'md5:922795280019b3a70ca133330a4b0108',
+                'title': 'Amplify Sessions - Amplitude',
+                'description': 'md5:3d271bdee219417bb1c35eeb0937b923',
+                'age_limit': 0,
+                'thumbnail': r're:^https?://.+\.jpg$',
+            },
+            'playlist_count': 3,
         },
         # Soundcloud embed
         {
@@ -2719,8 +2734,8 @@ class GenericIE(InfoExtractor):
 
         url, smuggled_data = unsmuggle_url(url, {})
         force_videoid = None
-        is_intentional = smuggled_data and smuggled_data.get('to_generic')
-        if smuggled_data and 'force_videoid' in smuggled_data:
+        is_intentional = smuggled_data.get('to_generic')
+        if 'force_videoid' in smuggled_data:
             force_videoid = smuggled_data['force_videoid']
             video_id = force_videoid
         else:
