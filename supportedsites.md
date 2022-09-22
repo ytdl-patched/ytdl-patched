@@ -1657,6 +1657,7 @@
  - **youtube:search**: YouTube search; "ytsearch:" prefix
  - **youtube:search:date**: YouTube search, newest videos first; "ytsearchdate:" prefix
  - **youtube:search_url**: YouTube search URLs with sorting and filter support
+ - **youtube:shorts:pivot:audio**: YouTube Shorts audio pivot (Shorts using audio of a given video); "ytshortsap:" prefix
  - **youtube:stories**: YouTube channel stories; "ytstories:" prefix
  - **youtube:subscriptions**: YouTube subscriptions feed; ":ytsubs" keyword (requires cookies)
  - **youtube:tab**: YouTube Tabs
