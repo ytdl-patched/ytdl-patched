@@ -1,6 +1,8 @@
 import json
 import re
 
+from math import inf
+
 from ..utils import render_table
 from .common import PostProcessor
 
@@ -160,7 +162,7 @@ Manuplates or displays chapters for this video.
                     pfx, s1, e1 = mobj.groups()
 
                     def selector(chap):
-                        pass
+                        return s1 < chap[0] and chap[0] < e1
 
                     if pfx:
                         return selector
@@ -171,7 +173,12 @@ Manuplates or displays chapters for this video.
                     pfx, s2, e2 = mobj.groups()
 
                     def selector(chap):
-                        pass
+                        chap = chap[1]
+                        cs = chap.get('start_time') or 0
+                        ce = chap.get('end_time')
+                        if ce is None:
+                            ce = inf
+                        return (s2 < cs and cs < e2) or (s2 < ce and ce < e2)
 
                     if pfx:
                         return selector
@@ -186,7 +193,8 @@ Manuplates or displays chapters for this video.
                         break
 
                     def selector(chap):
-                        re.match(cre, '')
+                        chap = chap[1]
+                        return bool(re.match(cre, chap.get('title') or ''))
 
                     if pfx:
                         return selector
@@ -201,7 +209,7 @@ Manuplates or displays chapters for this video.
                 return
 
             chap = getchap()
-            chap[:] = filter(selector, chap)
+            chap[:] = map(lambda x: x[1], filter(selector, enumerate(chap)))
 
             return
         elif 'sort'.startswith(args[0]):
