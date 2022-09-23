@@ -5,6 +5,7 @@ import hashlib
 import http.client
 import http.cookiejar
 import http.cookies
+import inspect
 import itertools
 import json
 import math
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
 from ..compat import functools  # isort: split
 from ..compat import compat_etree_fromstring, compat_expanduser, compat_os_name
 from ..dependencies import WebSocket
+from ..cookies import LenientSimpleCookie
 from ..downloader import FileDownloader
 from ..downloader.f4m import get_base_url, remove_encrypted_media
 from ..utils import (
@@ -531,7 +533,7 @@ class InfoExtractor:
             'password': f'Use {password_hint}',
             'cookies': (
                 'Use --cookies-from-browser or --cookies for the authentication. '
-                'See  https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl  for how to manually pass cookies'),
+                'See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies'),
         }[method if method is not NO_DEFAULT else 'any' if self.supports_login() else 'cookies']
 
     def __init__(self, downloader: 'YoutubeDL' = None):
@@ -1289,7 +1291,7 @@ class InfoExtractor:
             fatal, has_default = False, True
 
         json_string = self._search_regex(
-            rf'{start_pattern}\s*(?P<json>{{\s*{contains_pattern}\s*}})\s*{end_pattern}',
+            rf'(?:{start_pattern})\s*(?P<json>{{\s*(?:{contains_pattern})\s*}})\s*(?:{end_pattern})',
             string, name, group='json', fatal=fatal, default=None if has_default else NO_DEFAULT)
         if not json_string:
             return default
@@ -2979,6 +2981,8 @@ class InfoExtractor:
 
                     def prepare_template(template_name, identifiers):
                         tmpl = representation_ms_info[template_name]
+                        if representation_id is not None:
+                            tmpl = tmpl.replace('$RepresentationID$', representation_id)
                         # First of, % characters outside $...$ templates
                         # must be escaped by doubling for proper processing
                         # by % operator string formatting used further (see
@@ -2993,8 +2997,6 @@ class InfoExtractor:
                                 t += c
                         # Next, $...$ templates are translated to their
                         # %(...) counterparts to be used with % operator
-                        if representation_id is not None:
-                            t = t.replace('$RepresentationID$', representation_id)
                         t = re.sub(r'\$(%s)\$' % '|'.join(identifiers), r'%(\1)d', t)
                         t = re.sub(r'\$(%s)%%([^$]+)\$' % '|'.join(identifiers), r'%(\1)\2', t)
                         t.replace('$$', '$')
@@ -3696,7 +3698,7 @@ class InfoExtractor:
 
     def _get_cookies(self, url):
         """ Return a http.cookies.SimpleCookie with the cookies for the url """
-        return http.cookies.SimpleCookie(self._downloader._calc_cookies(url))
+        return LenientSimpleCookie(self._downloader._calc_cookies(url))
 
     def _get_cookie_header(self, url):
         """ Return the cookies for the url. Deprecated. """
@@ -3939,8 +3941,10 @@ class InfoExtractor:
         return True
 
     def _error_or_warning(self, err, _count=None, _retries=0, *, fatal=True):
-        RetryManager.report_retry(err, _count or int(fatal), _retries, info=self.to_screen, warn=self.report_warning,
-                                  sleep_func=self.get_param('retry_sleep_functions', {}).get('extractor'))
+        RetryManager.report_retry(
+            err, _count or int(fatal), _retries,
+            info=self.to_screen, warn=self.report_warning, error=None if fatal else self.report_warning,
+            sleep_func=self.get_param('retry_sleep_functions', {}).get('extractor'))
 
     def RetryManager(self, **kwargs):
         return RetryManager(self.get_param('extractor_retries', 3), self._error_or_warning, **kwargs)
@@ -3983,6 +3987,18 @@ class InfoExtractor:
     def _extract_url(cls, webpage):  # TODO: Remove
         """Only for compatibility with some older extractors"""
         return next(iter(cls._extract_embed_urls(None, webpage) or []), None)
+
+    @classmethod
+    def __init_subclass__(cls, *, plugin_name=None, **kwargs):
+        if plugin_name:
+            mro = inspect.getmro(cls)
+            super_class = cls.__wrapped__ = mro[mro.index(cls) + 1]
+            cls.IE_NAME, cls.ie_key = f'{super_class.IE_NAME}+{plugin_name}', super_class.ie_key
+            while getattr(super_class, '__wrapped__', None):
+                super_class = super_class.__wrapped__
+            setattr(sys.modules[super_class.__module__], super_class.__name__, cls)
+
+        return super().__init_subclass__(**kwargs)
 
 
 class SearchInfoExtractor(InfoExtractor):

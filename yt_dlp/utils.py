@@ -562,9 +562,14 @@ class LenientJSONDecoder(json.JSONDecoder):
     def decode(self, s):
         if self.transform_source:
             s = self.transform_source(s)
-        if self.ignore_extra:
-            return self.raw_decode(s.lstrip())[0]
-        return super().decode(s)
+        try:
+            if self.ignore_extra:
+                return self.raw_decode(s.lstrip())[0]
+            return super().decode(s)
+        except json.JSONDecodeError as e:
+            if e.pos is not None:
+                raise type(e)(f'{e.msg} in {s[e.pos-10:e.pos+10]!r}', s, e.pos)
+            raise
 
 
 def sanitize_open(filename, open_mode):
@@ -1499,6 +1504,10 @@ class YoutubeDLHTTPSHandler(urllib.request.HTTPSHandler):
             raise
 
 
+def is_path_like(f):
+    return isinstance(f, (str, bytes, os.PathLike))
+
+
 class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
     """
     See [1] for cookie file format.
@@ -1517,7 +1526,7 @@ class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
 
     def __init__(self, filename=None, *args, **kwargs):
         super().__init__(None, *args, **kwargs)
-        if self.is_path(filename):
+        if is_path_like(filename):
             filename = os.fspath(filename)
         self.filename = filename
 
@@ -1525,13 +1534,9 @@ class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
     def _true_or_false(cndn):
         return 'TRUE' if cndn else 'FALSE'
 
-    @staticmethod
-    def is_path(file):
-        return isinstance(file, (str, bytes, os.PathLike))
-
     @contextlib.contextmanager
     def open(self, file, *, write=False):
-        if self.is_path(file):
+        if is_path_like(file):
             with open(file, 'w' if write else 'r', encoding='utf-8') as f:
                 yield f
         else:
@@ -1612,7 +1617,7 @@ class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
                     if f'{line.strip()} '[0] in '[{"':
                         raise http.cookiejar.LoadError(
                             'Cookies file must be Netscape formatted, not JSON. See  '
-                            'https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl')
+                            'https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp')
                     write_string(f'WARNING: skipping cookie file entry due to {e}: {line!r}\n')
                     continue
         cf.seek(0)
@@ -1981,13 +1986,16 @@ def system_identifier():
     python_implementation = platform.python_implementation()
     if python_implementation == 'PyPy' and hasattr(sys, 'pypy_version_info'):
         python_implementation += ' version %d.%d.%d' % sys.pypy_version_info[:3]
+    libc_ver = []
+    with contextlib.suppress(OSError):  # We may not have access to the executable
+        libc_ver = platform.libc_ver()
 
     return 'Python %s (%s %s) - %s %s' % (
         platform.python_version(),
         python_implementation,
         platform.architecture()[0],
         platform.platform(),
-        format_field(join_nonempty(*platform.libc_ver(), delim=' '), None, '(%s)'),
+        format_field(join_nonempty(*libc_ver, delim=' '), None, '(%s)'),
     )
 
 
@@ -2498,7 +2506,7 @@ def url_basename(url):
 
 
 def base_url(url):
-    return re.match(r'https?://[^?#&]+/', url).group()
+    return re.match(r'https?://[^?#]+/', url).group()
 
 
 def urljoin(base, path):
@@ -2586,6 +2594,8 @@ def strftime_or_none(timestamp, date_format, default=None):
             datetime_object = datetime.datetime.utcfromtimestamp(timestamp)
         elif isinstance(timestamp, str):  # assume YYYYMMDD
             datetime_object = datetime.datetime.strptime(timestamp, '%Y%m%d')
+        date_format = re.sub(  # Support %s on windows
+            r'(?<!%)(%%)*%s', rf'\g<1>{int(datetime_object.timestamp())}', date_format)
         return datetime_object.strftime(date_format)
     except (ValueError, TypeError, AttributeError):
         return default
@@ -3644,7 +3654,7 @@ def determine_protocol(info_dict):
 
     ext = determine_ext(url)
     if ext == 'm3u8':
-        return 'm3u8'
+        return 'm3u8' if info_dict.get('is_live') else 'm3u8_native'
     elif ext == 'f4m':
         return 'f4m'
 
@@ -5312,7 +5322,7 @@ def traverse_obj(
     @param path_list        A list of paths which are checked one by one.
                             Each path is a list of keys where each key is a:
                               - None:     Do nothing
-                              - string:   A dictionary key
+                              - string:   A dictionary key / regex group
                               - int:      An index into a list
                               - tuple:    A list of keys all of which will be traversed
                               - Ellipsis: Fetch all values in the object
@@ -5322,12 +5332,16 @@ def traverse_obj(
     @param expected_type    Only accept final value of this type (Can also be any callable)
     @param get_all          Return all the values obtained from a path or only the first one
     @param casesense        Whether to consider dictionary keys as case sensitive
+
+    The following are only meant to be used by YoutubeDL.prepare_outtmpl and is not part of the API
+
+    @param path_list        In addition to the above,
+                              - dict:     Given {k:v, ...}; return {k: traverse_obj(obj, v), ...}
     @param is_user_input    Whether the keys are generated from user input. If True,
                             strings are converted to int/slice if necessary
     @param traverse_string  Whether to traverse inside strings. If True, any
                             non-compatible object will also be converted into a string
-    # TODO: Write tests
-    '''
+    '''  # TODO: Write tests
     if not casesense:
         _lower = lambda k: (k.lower() if isinstance(k, str) else k)
         path_list = (map(_lower, variadic(path)) for path in path_list)
@@ -5341,6 +5355,7 @@ def traverse_obj(
             if isinstance(key, (list, tuple)):
                 obj = [_traverse_obj(obj, sub_key, _current_depth) for sub_key in key]
                 key = ...
+
             if key is ...:
                 obj = (obj.values() if isinstance(obj, dict)
                        else obj if isinstance(obj, (list, tuple, LazyList))
@@ -5348,6 +5363,8 @@ def traverse_obj(
                 _current_depth += 1
                 depth = max(depth, _current_depth)
                 return [_traverse_obj(inner_obj, path[i + 1:], _current_depth) for inner_obj in obj]
+            elif isinstance(key, dict):
+                obj = filter_dict({k: _traverse_obj(obj, v, _current_depth) for k, v in key.items()})
             elif callable(key):
                 if isinstance(obj, (list, tuple, LazyList)):
                     obj = enumerate(obj)
@@ -5660,6 +5677,9 @@ class Config:
         self.parsed_args = self.own_args
         for location in opts.config_locations or []:
             if location == '-':
+                if location in self._loaded_paths:
+                    continue
+                self._loaded_paths.add(location)
                 self.append_config(shlex.split(read_stdin('options'), comments=True), label='stdin')
                 continue
             location = os.path.join(directory, expand_path(location))
@@ -5735,17 +5755,6 @@ class Config:
 
     def parse_args(self):
         return self.parser.parse_args(self.all_args)
-
-
-def get_first_group(match, *groups, default=None):
-    for g in groups:
-        try:
-            m = match.group(g)
-            if m:
-                return m
-        except IndexError:
-            continue
-    return default
 
 
 def merge_headers(*dicts):
@@ -5880,6 +5889,17 @@ def truncate_string(s, left, right=0):
     if s is None or len(s) <= left + right:
         return s
     return f'{s[:left-3]}...{s[-right:]}'
+
+
+def get_first_group(match, *groups, default=None):
+    for g in groups:
+        try:
+            m = match.group(g)
+            if m:
+                return m
+        except IndexError:
+            continue
+    return default
 
 
 def orderedSet_from_options(options, alias_dict, *, use_regex=False, start=None):

@@ -66,7 +66,6 @@
  - **anderetijden**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
  - **Angel**
  - **AnimalPlanet**
- - **AnimeOnDemand**: [<abbr title="netrc machine"><em>animeondemand</em></abbr>]
  - **ant1newsgr:article**: ant1news.gr articles
  - **ant1newsgr:embed**: ant1news.gr embedded videos
  - **ant1newsgr:watch**: ant1news.gr videos
@@ -151,9 +150,11 @@
  - **Bilibili category extractor**
  - **BilibiliAudio**
  - **BilibiliAudioAlbum**
- - **BilibiliChannel**
  - **BiliBiliPlayer**
  - **BiliBiliSearch**: Bilibili video search; "bilisearch:" prefix
+ - **BilibiliSpaceAudio**
+ - **BilibiliSpacePlaylist**
+ - **BilibiliSpaceVideo**
  - **BiliIntl**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliIntlSeries**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliLive**
@@ -484,6 +485,7 @@
  - **google:podcasts:feed**
  - **GoogleDrive**
  - **GoogleDrive:Folder**
+ - **GoPlay**: [<abbr title="netrc machine"><em>goplay</em></abbr>]
  - **GoPro**
  - **GorinLive**
  - **GorinVideo**
@@ -700,6 +702,7 @@
  - **Mediasite**
  - **MediasiteCatalog**
  - **MediasiteNamedCatalog**
+ - **MediaWorksNZVOD**
  - **Medici**
  - **megaphone.fm**: megaphone.fm embedded players
  - **megatvcom**: megatv.com videos
@@ -1339,10 +1342,10 @@
  - **ThreeSpeak**
  - **ThreeSpeakUser**
  - **TikTok**
- - **tiktok:effect**
- - **tiktok:sound**
- - **tiktok:tag**
- - **tiktok:user**
+ - **tiktok:effect**: (**Currently broken**)
+ - **tiktok:sound**: (**Currently broken**)
+ - **tiktok:tag**: (**Currently broken**)
+ - **tiktok:user**: (**Currently broken**)
  - **tinypic**: tinypic.com videos
  - **TLC**
  - **TMZ**
@@ -1492,8 +1495,6 @@
  - **VidioLive**: [<abbr title="netrc machine"><em>vidio</em></abbr>]
  - **VidioPremier**: [<abbr title="netrc machine"><em>vidio</em></abbr>]
  - **VidLii**
- - **vier**: [<abbr title="netrc machine"><em>vier</em></abbr>] vier.be and vijf.be
- - **vier:videos**
  - **viewlift**
  - **viewlift:embed**
  - **Viidea**
@@ -1656,6 +1657,7 @@
  - **youtube:search**: YouTube search; "ytsearch:" prefix
  - **youtube:search:date**: YouTube search, newest videos first; "ytsearchdate:" prefix
  - **youtube:search_url**: YouTube search URLs with sorting and filter support
+ - **youtube:shorts:pivot:audio**: YouTube Shorts audio pivot (Shorts using audio of a given video); "ytshortsap:" prefix
  - **youtube:stories**: YouTube channel stories; "ytstories:" prefix
  - **youtube:subscriptions**: YouTube subscriptions feed; ":ytsubs" keyword (requires cookies)
  - **youtube:tab**: YouTube Tabs
