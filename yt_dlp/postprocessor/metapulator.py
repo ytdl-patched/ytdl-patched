@@ -20,6 +20,9 @@ class MetapulatorPP(PostProcessor):
         self.COMMANDS = dict((x.COMMAND_NAME, x()) for x in CLASSES)
 
     def _yield_commands(self):
+        yield from (self.get_param('metapulator_auto') or [])
+        if not self.get_param('metapulator_manual'):
+            return
         while True:
             yield input('>>> ')
 
@@ -290,12 +293,12 @@ Synopsis: setvalue KEY [TYPE] VALUE
 
 Command to set a value to a key.
 
-TYPE can be any of: STRING, INT, FLOAT and JSON
-Defaults to STRING.
+TYPE can be any of: "string", "int", "float" and "json"
+Defaults to "string" if skipped.
 
-For INT and FLOAT, the VALUE must be an interger or a decimal number.
+For "int" and "float", the VALUE must be an interger or a decimal number.
 
-For JSON, the VALUE must be a valid JSON.
+For "json", the VALUE must be a valid JSON.
 """
 
     def run(self, pp, info, args):
