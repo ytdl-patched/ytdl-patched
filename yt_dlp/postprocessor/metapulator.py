@@ -26,7 +26,7 @@ class MetapulatorPP(PostProcessor):
         yield from (self.get_param('metapulator_auto') or [])
         if not (self.get_param('metapulator_manual') or self.manual):
             return
-        self.to_screen('Metapulator REPL. Type "help" for help')
+        self.to_screen('Metapulator REPL. Type "help" for help. Type "exit" to finish and continue')
         while True:
             try:
                 yield input('>>> ')
