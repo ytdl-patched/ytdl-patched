@@ -20,11 +20,17 @@ class MetapulatorPP(PostProcessor):
         self.COMMANDS = dict((x.COMMAND_NAME, x()) for x in CLASSES)
 
     def _yield_commands(self):
-        pass
+        while True:
+            yield input('>>> ')
 
     def run(self, info):
-        for f in self._actions:
-            next(filter(lambda x: 0, f(info)), None)
+        for f in self._yield_commands():
+            if not f:
+                continue
+            try:
+                self.execute_line(f, info)
+            except Exit:
+                break
         return [], info
 
     def find_command(self, cmd):
@@ -60,12 +66,28 @@ class ShowHelp(Exception):
     pass
 
 
+class Exit(Exception):
+    pass
+
+
 class MetapulatorCommand:
     COMMAND_NAME = False
     HELP = ''
 
     def run(self, pp: MetapulatorPP, info: dict, args: list) -> None:
         raise Exception('Override this method in child classes')
+
+
+class ExitCommand(MetapulatorCommand):
+    """
+    Stops Metapulator
+    """
+
+    COMMAND_NAME = 'exit'
+    HELP = "Stops Metapulator"
+
+    def run(self, pp, info, args):
+        raise Exit()
 
 
 class PrintCommand(MetapulatorCommand):
@@ -319,4 +341,4 @@ If COMMAND is not given, it shows all of the available commands.
         pp.print_help(cmd)
 
 
-CLASSES = (PrintCommand, ChaptersCommand, SetValueCommand, HelpCommand)
+CLASSES = (ExitCommand, PrintCommand, ChaptersCommand, SetValueCommand, HelpCommand)
