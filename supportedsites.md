@@ -1217,6 +1217,7 @@
  - **Slideshare**
  - **SlidesLive**
  - **Slutload**
+ - **Smotrim**
  - **Snotr**
  - **Sohu**
  - **SonyLIV**: [<abbr title="netrc machine"><em>sonyliv</em></abbr>]
