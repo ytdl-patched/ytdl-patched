@@ -1,5 +1,6 @@
 import json
 import re
+import shlex
 
 from math import inf
 
@@ -18,6 +19,9 @@ class MetapulatorPP(PostProcessor):
         super().__init__(downloader)
         self.COMMANDS = dict((x.COMMAND_NAME, x()) for x in CLASSES)
 
+    def _yield_commands(self):
+        pass
+
     def run(self, info):
         for f in self._actions:
             next(filter(lambda x: 0, f(info)), None)
@@ -31,6 +35,25 @@ class MetapulatorPP(PostProcessor):
             if name.startswith(cmd):
                 return value
         return None
+
+    def execute_line(self, line, info):
+        args = shlex.split(line)
+        cmd = self.find_command(args[0])
+        if cmd is None:
+            self._downloader.report_error(f'Command {args[0]!r} does not exist')
+            return
+        try:
+            cmd.run(self, info)
+        except ShowHelp:
+            self.print_help(cmd)
+
+    def print_help(self, cmd):
+        if isinstance(cmd, str):
+            cmd = self.find_command(cmd)
+        if not cmd:
+            return
+        self.to_screen(f'Help for {cmd.COMMAND_NAME!r}')
+        self.to_screen(cmd.HELP, False)
 
 
 class ShowHelp(Exception):
@@ -293,8 +316,7 @@ If COMMAND is not given, it shows all of the available commands.
         if not cmd:
             pp.to_screen(f'Command {args[0]!r} not found')
             return
-        pp.to_screen(f'Help for {cmd.COMMAND_NAME!r}')
-        pp.to_screen(cmd.HELP, False)
+        pp.print_help(cmd)
 
 
 CLASSES = (PrintCommand, ChaptersCommand, SetValueCommand, HelpCommand)
