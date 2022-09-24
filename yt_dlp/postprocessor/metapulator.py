@@ -4,7 +4,7 @@ import shlex
 
 from math import inf
 
-from ..utils import render_table
+from ..utils import parse_duration, render_table
 from .common import PostProcessor
 
 
@@ -15,16 +15,28 @@ class MetapulatorPP(PostProcessor):
 
     COMMANDS = {}  # command, object
 
-    def __init__(self, downloader=None):
+    def __init__(self, downloader, manual=False, auto=None):
         super().__init__(downloader)
         self.COMMANDS = dict((x.COMMAND_NAME, x()) for x in CLASSES)
+        self.manual = manual
+        self.auto = auto
 
     def _yield_commands(self):
+        yield from (self.auto or [])
         yield from (self.get_param('metapulator_auto') or [])
-        if not self.get_param('metapulator_manual'):
+        if not (self.get_param('metapulator_manual') or self.manual):
             return
+        self.to_screen('Metapulator REPL. Type "help" for help')
         while True:
-            yield input('>>> ')
+            try:
+                yield input('>>> ')
+            except EOFError:
+                self.to_screen('', prefix=False)
+                break
+            except KeyboardInterrupt:
+                self.to_screen('', prefix=False)
+                self.to_screen('Ctrl+C has pressed, continuing postprocessing')
+                break
 
     def run(self, info):
         for f in self._yield_commands():
@@ -52,7 +64,7 @@ class MetapulatorPP(PostProcessor):
             self._downloader.report_error(f'Command {args[0]!r} does not exist')
             return
         try:
-            cmd.run(self, info)
+            cmd.run(self, info, args[1:])
         except ShowHelp:
             self.print_help(cmd)
 
@@ -123,7 +135,7 @@ Refer to https://github.com/yt-dlp/yt-dlp#output-template for the query details
             return tmpl
 
         for tmpl in args:
-            pp.to_screen(pp._downloader.evaluate_outtmpl(format_tmpl(tmpl), info))
+            pp.to_screen(pp._downloader.evaluate_outtmpl(format_tmpl(tmpl), info), prefix=False)
 
 
 class ChaptersCommand(MetapulatorCommand):
@@ -134,6 +146,30 @@ class ChaptersCommand(MetapulatorCommand):
     COMMAND_NAME = 'chapters'
     HELP = """\
 Manuplates or displays chapters for this video.
+Note that this command will not trim the video, but just change it on metadata.
+
+Synopsis: chapters [view]
+Show currently available chapters.
+
+Synopsis: chapters add START END [TITLE]
+Add a chapter, optionally with a title.
+START and END are in seconds.
+
+Synopsis: chapters insert INDEX START END [TITLE]
+Insert a new chapter, optionally with a title.
+START and END are in seconds.
+
+Synopsis: chapters remove [idx:]INDEX[-INDEX_END]
+Remove chapters by indices. Range is inclusive.
+
+Synopsis: chapters remove [t:]TIME-RANGE
+Remove chapters by duration. Range is inclusive.
+
+Synopsis: chapters remove [re:]TITLE_REGEX
+Remove chapters by title.
+
+Synopsis: chapters sort
+Sort chapters. It is highly recommended to run it before finishing manuplation.
 """
 
     def run(self, pp, info, args):
@@ -178,7 +214,7 @@ Manuplates or displays chapters for this video.
         elif 'add'.startswith(args[0]):
             # add START END [TITLE]
             start, end, *title = args[1:]
-            start, end = map(float, (start, end))
+            start, end = map(parse_duration, (start, end))
             title = title[0] if title else None
             getchap().append({
                 'start_time': start,
@@ -191,7 +227,7 @@ Manuplates or displays chapters for this video.
             # insert INDEX START END [TITLE]
             index, start, end, *title = args[1:]
             index = int(index)
-            start, end = map(float, (start, end))
+            start, end = map(parse_duration, (start, end))
             title = title[0] if title else None
             getchap().insert(index, {
                 'start_time': start,
@@ -325,7 +361,7 @@ class HelpCommand(MetapulatorCommand):
     Command to show help
     """
 
-    COMMAND_NAME = 'setvalue'
+    COMMAND_NAME = 'help'
     HELP = """\
 Synopsis: help [COMMAND]
 

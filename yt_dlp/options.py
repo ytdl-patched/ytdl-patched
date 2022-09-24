@@ -1838,6 +1838,35 @@ def create_parser():
             'or "playlist" (at end of playlist). '
             'This option can be used multiple times to add different postprocessors'))
 
+    postproc.add_option(
+        '--metapulator-exec', '--metapulator-auto',
+        metavar='CMD', dest='metapulator_auto', type='str', action='callback',
+        default=[], callback=_list_from_options_callback,
+        help=(
+            'Execute Metapulator commands (not system commands!) automatically to manuplate '
+            'metadata. These commands run after website extraction is done. '
+            'After all commands are run, subsequent postprocessor will run. '
+            'If you are willing to start a REPL, use --enable-metapulator. '
+            'REPL will start after commands are run, before other postprocessors. '
+            'Check yt_dlp/postprocessor/metapulator.py or the help command for '
+            'the available commands.'))
+    postproc.add_option(
+        '--enable-metapulator', '--metapulator-manual', '--metapulator-repl',
+        action='store_true', dest='metapulator_manual', help=(
+            'Start Metapulator REPL, to manuplate metadata. You get a control '
+            'after automatic commands are run as set by --metapulator-exec. '
+            'You can use either Ctrl+C or exit command to exit REPL and continue. '
+            'Check yt_dlp/postprocessor/metapulator.py or the help command for '
+            'the available commands.'))
+    postproc.add_option(
+        '--disable-metapulator', '--no-metapulator',
+        action='store_false', dest='metapulator_manual', help=(
+            'Disable Metapulator. This overrides --metapulator-exec and --enable-metapulator'))
+    postproc.add_option(
+        '--disable-metapulator-repl', '--no-metapulator-repl',
+        action='store_const', const=None, dest='metapulator_manual',
+        help='Disable Metapulator REPL. Automatic commands still run.')
+
     sponsorblock = optparse.OptionGroup(parser, 'SponsorBlock Options', description=(
         'Make chapter entries for, or remove various segments (sponsor, introductions, etc.) '
         'from downloaded YouTube videos using the SponsorBlock API (https://sponsor.ajay.app)'))

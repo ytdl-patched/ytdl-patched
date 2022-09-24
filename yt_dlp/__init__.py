@@ -574,6 +574,13 @@ def validate_options(opts):
 def get_postprocessors(opts):
     yield from opts.add_postprocessors
 
+    if opts.metapulator_manual is not False:
+        yield {
+            'key': 'Metapulator',
+            'manual': opts.metapulator_manual,
+            'auto': opts.metapulator_auto,
+            'when': 'pre_process'
+        }
     if opts.parse_metadata:
         yield {
             'key': 'MetadataParser',

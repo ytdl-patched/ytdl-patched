@@ -28,6 +28,7 @@ from .metadataparser import (
     MetadataFromTitlePP,
     MetadataParserPP,
 )
+from .metapulator import MetapulatorPP
 from .modify_chapters import ModifyChaptersPP
 from .movefilesafterdownload import MoveFilesAfterDownloadPP
 from .sponskrub import SponSkrubPP
