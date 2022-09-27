@@ -67,6 +67,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ytdl-artifacts
+      # https://github.com/actions/runner-images/issues/6283
+      - name: Add Homebrew to PATH
+        run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - name: Create buildconfig.py
         run: python ./devscripts/make_buildconfig.py
       - name: Set up Python ${{ env.python_version }}
@@ -346,6 +349,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/ytdlp' }}
     steps:
+      # https://github.com/actions/runner-images/issues/6283
+      - name: Add Homebrew to PATH
+        run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - name: Install ia command and configure
         run: |
           sudo apt update
