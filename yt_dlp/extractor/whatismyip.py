@@ -2,7 +2,7 @@ from .common import InfoExtractor
 
 
 class WhatIsMyIpIE(InfoExtractor):
-    _VALID_URL = r'(?:what-is-)?(?:my-)?ip'
+    _VALID_URL = r'^(?:what-is-)?(?:my-)?ip$'
     _TESTS = [{
         'url': 'what-is-my-ip',
         'only_matching': True,
