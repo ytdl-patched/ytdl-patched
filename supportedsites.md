@@ -137,6 +137,7 @@
  - **BehindKink**
  - **Bellator**
  - **BellMedia**
+ - **BerufeTV**
  - **Bet**
  - **bfi:player**
  - **bfmtv**
