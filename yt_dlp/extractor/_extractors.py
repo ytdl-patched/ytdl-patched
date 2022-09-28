@@ -2185,6 +2185,7 @@ from .wistia import (
     WistiaPlaylistIE,
     WistiaChannelIE,
 )
+from .wordpress import WordpressPlaylistEmbedIE
 from .worldstarhiphop import WorldStarHipHopIE
 from .wppilot import (
     WPPilotIE,
