@@ -1596,6 +1596,7 @@
  - **WistiaChannel**
  - **WistiaPlaylist**
  - **wnl**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
+ - **wordpress:playlist**
  - **WorldStarHipHop**
  - **wppilot**
  - **wppilot:channels**
