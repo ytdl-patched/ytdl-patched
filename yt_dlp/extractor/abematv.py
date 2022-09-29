@@ -198,6 +198,7 @@ class AbemaTVBaseIE(InfoExtractor):
     _MEDIATOKEN = None
 
     _SECRETKEY = b'v+Gjs=25Aw5erR!J8ZuvRrCx*rGswhB&qdHd_SYerEWdU&a?3DzN9BRbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$k9cD=3TxwWe86!x#Zyhe'
+    _LICENSE_HANDLER = None
 
     @classmethod
     def _generate_aks(cls, deviceid):
@@ -252,7 +253,8 @@ class AbemaTVBaseIE(InfoExtractor):
 
         # don't allow adding it 2 times or more, though it's guarded
         remove_opener(self._downloader, AbemaLicenseHandler)
-        add_opener(self._downloader, AbemaLicenseHandler(self))
+        AbemaTVBaseIE._LICENSE_HANDLER = AbemaLicenseHandler(self)
+        add_opener(self._downloader, AbemaTVBaseIE._LICENSE_HANDLER)
 
         return self._USERTOKEN
 
