@@ -158,7 +158,7 @@ class FragmentFD(FileDownloader):
         if 'live' not in ctx:
             ctx['live'] = False
         if not ctx['live']:
-            total_frags_str = '%d' % ctx['total_frags']
+            total_frags_str = '%d' % ctx['fragment_count']
             ad_frags = ctx.get('ad_frags', 0)
             if ad_frags:
                 total_frags_str += ' (not including %d ad)' % ad_frags
@@ -218,7 +218,7 @@ class FragmentFD(FileDownloader):
 
     def _start_frag_download(self, ctx, info_dict):
         resume_len = ctx['complete_frags_downloaded_bytes']
-        total_frags = ctx['total_frags']
+        total_frags = ctx['fragment_count']
         ctx_id = ctx.get('ctx_id')
         # This dict stores the download progress, it's updated by the progress
         # hook
@@ -313,7 +313,7 @@ class FragmentFD(FileDownloader):
             'filename': ctx['filename'],
             'status': 'finished',
             'elapsed': elapsed,
-            'fragment_count': ctx.get('total_frags'),
+            'fragment_count': ctx.get('fragment_count'),
             'ctx_id': ctx.get('ctx_id'),
             'max_progress': ctx.get('max_progress'),
             'progress_idx': ctx.get('progress_idx'),
@@ -323,7 +323,7 @@ class FragmentFD(FileDownloader):
         if 'live' not in ctx:
             ctx['live'] = False
         if not ctx['live']:
-            total_frags_str = '%d' % ctx['total_frags']
+            total_frags_str = '%d' % ctx['fragment_count']
             ad_frags = ctx.get('ad_frags', 0)
             if ad_frags:
                 total_frags_str += ' (not including %d ad)' % ad_frags
@@ -497,6 +497,7 @@ class FragmentFD(FileDownloader):
             def _download_fragment(fragment):
                 ctx_copy = ctx.copy()
                 download_fragment(fragment, ctx_copy)
+                ctx['fragment_count'] = ctx_copy.get('fragment_count')
                 return fragment, fragment['frag_index'], ctx_copy.get('fragment_filename_sanitized')
 
             self.report_warning('The download speed shown is only of one thread. This is a known issue and patches are welcome')
