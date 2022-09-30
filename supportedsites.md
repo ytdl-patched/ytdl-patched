@@ -538,6 +538,8 @@
  - **Hypem**
  - **Hytale**
  - **Icareus**
+ - **iflix:episode**
+ - **IflixSeries**
  - **ign.com**
  - **IGNArticle**
  - **IGNVideo**
@@ -818,6 +820,7 @@
  - **NBCSports**
  - **NBCSportsStream**
  - **NBCSportsVPlayer**
+ - **NBCStations**
  - **ndr**: NDR.de - Norddeutscher Rundfunk
  - **ndr:embed**
  - **ndr:embed:base**
@@ -1453,6 +1456,7 @@
  - **umg:de**: Universal Music Deutschland
  - **Unistra**
  - **Unity**
+ - **UnscriptedNewsVideo**
  - **uol.com.br**
  - **uplynk**
  - **uplynk:preplay**
