@@ -237,7 +237,7 @@ class IsmFD(FragmentFD):
 
         ctx = {
             'filename': filename,
-            'total_frags': len(segments),
+            'fragment_count': len(segments),
         }
 
         self._prepare_and_start_frag_download(ctx, info_dict)

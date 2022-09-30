@@ -131,7 +131,7 @@ class HlsFD(FragmentFD):
 
         ctx = {
             'filename': filename,
-            'total_frags': media_frags,
+            'fragment_count': media_frags,
             'ad_frags': ad_frags,
         }
 

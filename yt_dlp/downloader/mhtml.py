@@ -110,7 +110,7 @@ body > figure > img {
 
         ctx = {
             'filename': filename,
-            'total_frags': len(fragments),
+            'fragment_count': len(fragments),
         }
 
         self._prepare_and_start_frag_download(ctx, info_dict)
