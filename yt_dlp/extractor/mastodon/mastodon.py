@@ -210,7 +210,6 @@ class MastodonIE(MastodonBaseIE):
             'title': 'てすや\nhttps://www.youtube.com/watch?v=jx0fBBkaF1w',
             'uploader': 'nao20010128nao',
             'uploader_id': 'nao20010128nao',
-            'age_limit': 0,
         },
     }, {
         'note': 'embed video with NSFW',
@@ -259,7 +258,6 @@ class MastodonIE(MastodonBaseIE):
             'title': 'てすや\nhttps://www.youtube.com/watch?v=jx0fBBkaF1w',
             'uploader': 'nao20010128nao',
             'uploader_id': 'nao20010128nao',
-            'age_limit': 0,
         },
     }, {
         # mastodon, video description
@@ -424,6 +422,8 @@ class MastodonIE(MastodonBaseIE):
             'uploader': traverse_obj(metadata, ('account', 'display_name')),
             'uploader_id': traverse_obj(metadata, ('account', 'username')),
             'uploader_url': traverse_obj(metadata, ('account', 'url')),
+
+            'age_limit': 18 if metadata.get('sensitive') else None
         }
 
         if domain == 'gab.com':
