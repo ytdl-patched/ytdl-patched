@@ -936,6 +936,8 @@ def parse_options(argv=None, ignore_config_files='if_override'):
         'use_modern_tls_cipher': opts.use_modern_tls_cipher,
         'enable_native_progress': opts.enable_native_progress,
         'env_in_outtmpl': opts.env_in_outtmpl,
+        'metapulator_manual': opts.metapulator_manual,
+        'metapulator_auto': opts.metapulator_auto,
     })
 
 
