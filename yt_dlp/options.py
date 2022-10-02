@@ -1852,7 +1852,8 @@ def create_parser():
             'the available commands.'))
     postproc.add_option(
         '--enable-metapulator', '--metapulator-manual', '--metapulator-repl',
-        action='store_true', dest='metapulator_manual', help=(
+        action='store_true', dest='metapulator_manual', default=False,
+        help=(
             'Start Metapulator REPL, to manuplate metadata. You get a control '
             'after automatic commands are run as set by --metapulator-exec. '
             'You can use either Ctrl+C or exit command to exit REPL and continue. '
