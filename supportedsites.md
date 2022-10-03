@@ -545,6 +545,7 @@
  - **IGNVideo**
  - **IHeartRadio**
  - **iheartradio:podcast**
+ - **Iltalehti**
  - **imdb**: Internet Movie Database trailers
  - **imdb:list**: Internet Movie Database lists
  - **Imgur**
