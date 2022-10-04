@@ -36,7 +36,6 @@ def packages():
         'yt_dlp.websocket', 'yt_dlp.postprocessor',
         'yt_dlp.extractor.peertube', 'yt_dlp.extractor.misskey',
         'yt_dlp.extractor.mastodon',
-        'yt_dlp.extractor.anvato_token_generator'
     ]
 
 

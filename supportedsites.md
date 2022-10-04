@@ -3,11 +3,12 @@
  - **0000studio:clip**
  - **17live**
  - **17live:clip**
+ - **1News**: 1news.co.nz article videos
  - **1tv**: Первый канал
- - **20.detik.com**
  - **20min**
  - **23video**
  - **247sports**
+ - **24tv.ua**
  - **24video**
  - **3qsdn**: 3Q SDN
  - **3sat**
@@ -173,6 +174,7 @@
  - **Bloomberg**
  - **BokeCC**
  - **BongaCams**
+ - **BooyahClips**
  - **BostonGlobe**
  - **Box**
  - **Bpb**: Bundeszentrale für politische Bildung
@@ -185,6 +187,7 @@
  - **BRMediathek**: Bayerischer Rundfunk Mediathek
  - **bt:article**: Bergens Tidende Articles
  - **bt:vestlendingen**: Bergens Tidende - Vestlendingen
+ - **Bundesliga**
  - **BusinessInsider**
  - **BuzzFeed**
  - **BYUtv**
@@ -254,6 +257,7 @@
  - **CNN**
  - **CNNArticle**
  - **CNNBlogs**
+ - **CNNIndonesia**
  - **ComedyCentral**
  - **ComedyCentralTV**
  - **CondeNast**: Condé Nast media group: Allure, Architectural Digest, Ars Technica, Bon Appétit, Brides, Condé Nast, Condé Nast Traveler, Details, Epicurious, GQ, Glamour, Golf Digest, SELF, Teen Vogue, The New Yorker, Vanity Fair, Vogue, W Magazine, WIRED
@@ -310,6 +314,7 @@
  - **defense.gouv.fr**
  - **democracynow**
  - **DestinationAmerica**
+ - **DetikEmbed**
  - **DHM**: Filmarchiv - Deutsches Historisches Museum
  - **Digg**
  - **DigitalConcertHall**: [<abbr title="netrc machine"><em>digitalconcerthall</em></abbr>] DigitalConcertHall extractor
@@ -570,6 +575,7 @@
  - **iqiyi**: [<abbr title="netrc machine"><em>iqiyi</em></abbr>] 爱奇艺
  - **IslamChannel**
  - **IslamChannelSeries**
+ - **IsraelNationalNews**
  - **ITProTV**
  - **ITProTVCourse**
  - **ITTF**
@@ -719,6 +725,7 @@
  - **mewatch**
  - **Mgoon**
  - **MiaoPai**
+ - **MicrosoftEmbed**
  - **microsoftstream**: Microsoft Stream
  - **mildom**: Record ongoing live by specific user in Mildom
  - **mildom:clip**: Clip in Mildom
@@ -856,8 +863,8 @@
  - **NexxEmbed**
  - **NFB**
  - **NFHSNetwork**
- - **nfl.com**: (**Currently broken**)
- - **nfl.com:article**: (**Currently broken**)
+ - **nfl.com**
+ - **nfl.com:article**
  - **NhkForSchoolBangumi**
  - **NhkForSchoolProgramList**
  - **NhkForSchoolSubject**: Portal page for each school subjects, like Japanese (kokugo, 国語) or math (sansuu/suugaku or 算数・数学)
@@ -1039,6 +1046,7 @@
  - **PornoVoisines**
  - **PornoXO**
  - **PornTube**
+ - **PrankCast**
  - **PremiershipRugby**
  - **PressTV**
  - **ProjectVeritas**
@@ -1252,8 +1260,8 @@
  - **Sport5**
  - **SportBox**
  - **SportDeutschland**
- - **spotify**: Spotify episodes
- - **spotify:show**: Spotify shows
+ - **spotify**: Spotify episodes (**Currently broken**)
+ - **spotify:show**: Spotify shows (**Currently broken**)
  - **Spreaker**
  - **SpreakerPage**
  - **SpreakerShow**
@@ -1395,6 +1403,7 @@
  - **Turbo**
  - **tv.dfb.de**
  - **TV2**
+ - **TV24UAGenericPassthrough**
  - **TV2Article**
  - **TV2DK**
  - **TV2DKBornholmPlay**

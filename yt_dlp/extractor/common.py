@@ -1919,7 +1919,7 @@ class InfoExtractor:
                     alias, field = field, self._get_field_setting(field, 'field')
                     if self._get_field_setting(alias, 'deprecated'):
                         self.ydl.deprecated_feature(f'Format sorting alias {alias} is deprecated and may '
-                                                    'be removed in a future version. Please use {field} instead')
+                                                    f'be removed in a future version. Please use {field} instead')
                 reverse = match.group('reverse') is not None
                 closest = match.group('separator') == '~'
                 limit_text = match.group('limit')
@@ -3652,7 +3652,8 @@ class InfoExtractor:
                     'url': source_url,
                     'width': int_or_none(source.get('width')),
                     'height': height,
-                    'tbr': int_or_none(source.get('bitrate')),
+                    'tbr': int_or_none(source.get('bitrate'), scale=1000),
+                    'filesize': int_or_none(source.get('filesize')),
                     'ext': ext,
                 }
                 if source_url.startswith('rtmp'):
