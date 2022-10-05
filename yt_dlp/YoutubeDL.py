@@ -2641,11 +2641,7 @@ class YoutubeDL:
         info_dict['requested_subtitles'] = self.process_subtitles(
             info_dict['id'], subtitles, automatic_captions)
 
-        if info_dict.get('formats') is None:
-            # There's only one format available
-            formats = [info_dict]
-        else:
-            formats = info_dict['formats']
+        formats = self._get_formats(info_dict)
 
         # or None ensures --clean-infojson removes it
         info_dict['_has_drm'] = any(f.get('has_drm') for f in formats) or None
@@ -2760,7 +2756,7 @@ class YoutubeDL:
         info_dict, _ = self.pre_process(info_dict, 'after_filter')
 
         # The pre-processors may have modified the formats
-        formats = info_dict.get('formats', [info_dict])
+        formats = self._get_formats(info_dict)
         format_selector = None
 
         def fms():
@@ -3821,11 +3817,18 @@ class YoutubeDL:
             res += '~' + format_bytes(fdict['filesize_approx'])
         return res
 
-    def render_formats_table(self, info_dict, format_selector=None):
-        if not info_dict.get('formats') and not info_dict.get('url'):
-            return None
+    def _get_formats(self, info_dict):
+        if info_dict.get('formats') is None:
+            if info_dict.get('url') and info_dict.get('_type', 'video') == 'video':
+                return [info_dict]
+            return []
+        return info_dict['formats']
 
-        formats = info_dict.get('formats', [info_dict])
+    def render_formats_table(self, info_dict, format_selector=None):
+        formats = self._get_formats(info_dict)
+        if not formats:
+            return
+
         verbose = format_selector and self.params.get('verbose') and len(formats) > 1
 
         new_format = self.params.get('listformats_table', True) is not False
