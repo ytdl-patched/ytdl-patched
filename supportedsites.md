@@ -897,6 +897,7 @@
  - **NoodleMagazine**
  - **Noovo**
  - **Normalboots**
+ - **NOSNLArticle**
  - **NosVideo**
  - **Nova**: TN.cz, Prásk.tv, Nova.cz, Novaplus.cz, FANDA.tv, Krásná.cz and Doma.cz
  - **NovaEmbed**
@@ -1189,6 +1190,7 @@
  - **schooltv**
  - **ScienceChannel**
  - **screen.yahoo:search**: Yahoo screen search; "yvsearch:" prefix
+ - **Screen9**
  - **Screencast**
  - **ScreencastOMatic**
  - **ScrippsNetworks**
@@ -1611,6 +1613,7 @@
  - **WistiaChannel**
  - **WistiaPlaylist**
  - **wnl**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
+ - **wordpress:mb.miniAudioPlayer**
  - **wordpress:playlist**
  - **WorldStarHipHop**
  - **wppilot**
