@@ -1019,6 +1019,8 @@
  - **pluralsight**: [<abbr title="netrc machine"><em>pluralsight</em></abbr>]
  - **pluralsight:course**
  - **PlutoTV**
+ - **PodbayFM**
+ - **PodbayFMChannel**
  - **Podchaser**
  - **podomatic**
  - **Pokemon**
