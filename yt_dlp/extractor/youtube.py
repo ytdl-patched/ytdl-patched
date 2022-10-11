@@ -2839,7 +2839,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             self.report_warning(
                 f'Native nsig extraction failed: Trying with online solver\n'
                 f'         n = {s} ; player = {player_url}', video_id)
-            self.write_debug(e)
+            self.write_debug(e, only_once=True)
 
             response_data = self._download_json(
                 'https://bookish-octo-barnacle-nao20010128nao.vercel.app/youtube/nparams/decrypt', video_id,
