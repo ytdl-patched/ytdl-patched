@@ -46,6 +46,7 @@
  - **aenetworks**: A+E Networks: A&E, Lifetime, History.com, FYI Network and History Vault
  - **aenetworks:collection**
  - **aenetworks:show**
+ - **AeonCo**
  - **afreecatv**: [<abbr title="netrc machine"><em>afreecatv</em></abbr>] afreecatv.com
  - **afreecatv:live**: [<abbr title="netrc machine"><em>afreecatv</em></abbr>] afreecatv.com
  - **afreecatv:user**
