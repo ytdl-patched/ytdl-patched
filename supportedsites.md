@@ -222,7 +222,7 @@
  - **cbssports:embed**
  - **CCMA**
  - **CCTV**: 央视网
- - **CDA**
+ - **CDA**: [<abbr title="netrc machine"><em>cdapl</em></abbr>]
  - **Cellebrite**
  - **CeskaTelevize**
  - **CGTN**
@@ -1409,7 +1409,6 @@
  - **Turbo**
  - **tv.dfb.de**
  - **TV2**
- - **TV24UAGenericPassthrough**
  - **TV2Article**
  - **TV2DK**
  - **TV2DKBornholmPlay**
