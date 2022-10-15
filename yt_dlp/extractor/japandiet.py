@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import re
 
 from ..utils import (
@@ -8,6 +5,7 @@ from ..utils import (
     float_or_none,
     int_or_none,
     smuggle_url,
+    traverse_obj,
     unsmuggle_url
 )
 from .common import InfoExtractor
@@ -69,7 +67,7 @@ class ShugiinItvBaseIE(InfoExtractor):
 
 
 class ShugiinItvLiveIE(ShugiinItvBaseIE):
-    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)(?:/index\.php)?'
+    _VALID_URL = r'https?://(?:www\.)?shugiintv\.go\.jp/(?:jp|en)(?:/index\.php)?$'
     IE_DESC = '衆議院インターネット審議中継'
 
     @classmethod
@@ -95,11 +93,10 @@ class ShugiinItvLiveRoomIE(ShugiinItvBaseIE):
         else:
             room_id = self._match_id(url)
             webpage = self._download_webpage(
-                'https://www.shugiintv.go.jp/jp/index.php', None,
-                encoding='euc-jp')
-            title = next((x.get('id') == room_id for x in self._find_rooms(webpage)), {}).get('title')
+                'https://www.shugiintv.go.jp/jp/index.php', room_id,
+                encoding='euc-jp', note='Looking up for the title')
+            title = traverse_obj(self._find_rooms(webpage), (lambda k, v: v['id'] == room_id, 'title'))
 
-        # I doubt there's also subtitles
         formats, subtitles = self._extract_m3u8_formats_and_subtitles(
             f'https://hlslive.shugiintv.go.jp/{room_id}/amlst:{room_id}/playlist.m3u8',
             room_id, ext='mp4')
@@ -139,7 +136,6 @@ class ShugiinItvVodIE(ShugiinItvBaseIE):
         m3u8_url = self._search_regex(
             r'id="vtag_src_base_vod"\s*value="(http.+?\.m3u8)"', webpage, 'm3u8 url')
         m3u8_url = re.sub(r'^http://', 'https://', m3u8_url)
-        # I doubt there's also subtitles
         formats, subtitles = self._extract_m3u8_formats_and_subtitles(
             m3u8_url, video_id, ext='mp4')
         self._sort_formats(formats)
@@ -159,7 +155,7 @@ class ShugiinItvVodIE(ShugiinItvBaseIE):
                 'title': clean_html(chp.group(2)).strip(),
                 'start_time': float_or_none(chp.group(1).strip()),
             })
-        # the exact duration of the last chapter is unknown! (we can get at most minutes of granularity)
+        # the exact duration for the last chapter is unknown! (we can get at most minutes of granularity)
         for idx in range(len(chapters) - 1):
             chapters[idx]['end_time'] = chapters[idx + 1]['start_time']
 
