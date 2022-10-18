@@ -1007,7 +1007,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
             elif self.get_param('verbose', False):
                 if len(recv) > 100:
                     recv = recv[:100] + '...'
-                self.to_screen('[debug] Server said: %s' % recv)
+                self.write_debug('Server said: %s' % recv)
 
         title = traverse_obj(embedded_data, ('program', 'title')) or self._html_search_meta(
             ('og:title', 'twitter:title'), webpage, 'live title', fatal=False)
