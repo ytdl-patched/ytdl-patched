@@ -2005,6 +2005,7 @@ from .twitter import (
     TwitterIE,
     TwitterAmplifyIE,
     TwitterBroadcastIE,
+    TwitterSpacesIE,
     TwitterShortenerIE,
 )
 from .udemy import (
