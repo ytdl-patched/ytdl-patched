@@ -411,7 +411,7 @@ class ShowsProgress(object):
                     return tmpl
             return default
 
-        _formats_bytes = lambda k: f'{format_bytes(s.get(k)):>10s}'
+        _format_bytes = lambda k: f'{format_bytes(s.get(k)):>10s}'
 
         if s['status'] == 'finished':
             if self.params.get('noprogress'):
@@ -420,7 +420,7 @@ class ShowsProgress(object):
             s.update({
                 'speed': speed,
                 '_speed_str': self.format_speed(speed).strip(),
-                '_total_bytes_str': _formats_bytes('total_bytes'),
+                '_total_bytes_str': _format_bytes('total_bytes'),
                 '_elapsed_str': self.format_seconds(s.get('elapsed')),
                 '_percent_str': self.format_percent(100),
             })
@@ -443,9 +443,9 @@ class ShowsProgress(object):
                 lambda: 100 * downloaded_bytes / s['total_bytes'],
                 lambda: 100 * downloaded_bytes / s['total_bytes_estimate'],
                 lambda: downloaded_bytes == 0 and 0)),
-            '_total_bytes_str': _formats_bytes('total_bytes'),
-            '_total_bytes_estimate_str': _formats_bytes('total_bytes_estimate'),
-            '_downloaded_bytes_str': _formats_bytes('downloaded_bytes'),
+            '_total_bytes_str': _format_bytes('total_bytes'),
+            '_total_bytes_estimate_str': _format_bytes('total_bytes_estimate'),
+            '_downloaded_bytes_str': _format_bytes('downloaded_bytes'),
             '_elapsed_str': self.format_seconds(s.get('elapsed')),
         })
 
