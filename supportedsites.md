@@ -1700,6 +1700,7 @@
  - **ZDFChannel**
  - **Zee5**: [<abbr title="netrc machine"><em>zee5</em></abbr>]
  - **zee5:series**
+ - **ZeeNews**
  - **ZenYandex**
  - **ZenYandexChannel**
  - **Zhihu**
