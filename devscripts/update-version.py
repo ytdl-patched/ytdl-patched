@@ -52,8 +52,10 @@ UPDATE_HINT = None
 '''
 
 write_file('yt_dlp/version.py', VERSION_FILE)
-print(f'::set-output name=ytdlp_version::{VERSION}')
-print(f'::set-output name=latest_version::{VERSION}')
-print(f'::set-output name=latest_version_normalized::{normalized_version}')
-print(f'::set-output name=latest_version_numeric::{UNIX_TIME}')
+github_output = os.getenv('GITHUB_OUTPUT')
+if github_output:
+    write_file(github_output, f'ytdlp_version={VERSION}\n', 'a')
+    write_file(github_output, f'latest_version={VERSION}\n', 'a')
+    write_file(github_output, f'latest_version_normalized={normalized_version}\n', 'a')
+    write_file(github_output, f'latest_version_numeric={UNIX_TIME}\n', 'a')
 print(f'\nVersion = {VERSION}, Git HEAD = {GIT_HEAD}')
