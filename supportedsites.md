@@ -750,6 +750,7 @@
  - **mixcloud:playlist**
  - **mixcloud:user**
  - **MLB**
+ - **MLBArticle**
  - **MLBTV**: [<abbr title="netrc machine"><em>mlb</em></abbr>]
  - **MLBVideo**
  - **MLSSoccer**
