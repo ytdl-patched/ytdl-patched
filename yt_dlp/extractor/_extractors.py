@@ -1019,6 +1019,7 @@ from .mlb import (
     MLBIE,
     MLBVideoIE,
     MLBTVIE,
+    MLBArticleIE,
 )
 from .mlssoccer import MLSSoccerIE
 from .mnet import MnetIE
