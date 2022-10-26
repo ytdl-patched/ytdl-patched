@@ -123,7 +123,6 @@
  - **Bandcamp:album**
  - **Bandcamp:user**
  - **Bandcamp:weekly**
- - **bangumi.bilibili.com**: BiliBili番剧
  - **BannedVideo**
  - **bbc**: [<abbr title="netrc machine"><em>bbc</em></abbr>] BBC
  - **bbc.co.uk**: [<abbr title="netrc machine"><em>bbc</em></abbr>] BBC iPlayer
@@ -153,6 +152,8 @@
  - **Bilibili category extractor**
  - **BilibiliAudio**
  - **BilibiliAudioAlbum**
+ - **BiliBiliBangumi**
+ - **BiliBiliBangumiMedia**
  - **BiliBiliPlayer**
  - **BiliBiliSearch**: Bilibili video search; "bilisearch:" prefix
  - **BilibiliSpaceAudio**
