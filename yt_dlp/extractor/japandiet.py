@@ -1,9 +1,11 @@
 import re
 
 from ..utils import (
+    ExtractorError,
     clean_html,
     float_or_none,
     int_or_none,
+    join_nonempty,
     smuggle_url,
     traverse_obj,
     unsmuggle_url
@@ -175,7 +177,68 @@ class ShugiinItvVodIE(ShugiinItvBaseIE):
         }
 
 
-# IDR=Internet Deliberation Relay
-class SangiinIDRIE(InfoExtractor):
+class SangiinIVRInstructionIE(InfoExtractor):
+    _VALID_URL = r'^https?://www\.webtv\.sangiin\.go\.jp/webtv/index\.php'
+    IE_DESC = False  # this shouldn't be listed as a supported site
+
     def _real_extract(self, url):
-        return super()._real_extract(url)
+        # alternative method: copy the link of iframe showing the video. results are the same
+        raise ExtractorError('Copy the link from the botton below the video description, and use the link to download.', expected=True)
+
+
+class SangiinIVRIE(InfoExtractor):
+    _VALID_URL = r'https?://www\.webtv\.sangiin\.go\.jp/webtv/detail\.php\?sid=(?P<id>\d+)'
+    IE_DESC = '参議院インターネット審議中継 (archive)'
+
+    _TESTS = [{
+        'url': 'https://www.webtv.sangiin.go.jp/webtv/detail.php?sid=7052',
+        'info_dict': {
+            'id': '7052',
+            'title': '2022年10月7日 本会議',
+            'description': 'md5:0a5fed523f95c88105a0b0bf1dd71489',
+            'upload_date': '20221007',
+            'ext': 'mp4',
+        },
+    }, {
+        'url': 'https://www.webtv.sangiin.go.jp/webtv/detail.php?sid=7037',
+        'info_dict': {
+            'id': '7037',
+            'title': '2022年10月3日 開会式',
+            'upload_date': '20221003',
+            'ext': 'mp4',
+        },
+    }, ]
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage(url, video_id)
+
+        date = self._html_search_regex(
+            r'<dt[^>]*>\s*開会日\s*</dt>\s*<dd[^>]*>\s*(.+?)\s*</dd>', webpage,
+            'date', fatal=False)
+        upload_date = ShugiinItvBaseIE._parse_japanese_date(date)
+
+        title = self._html_search_regex(
+            r'<dt[^>]*>\s*会議名\s*</dt>\s*<dd[^>]*>\s*(.+?)\s*</dd>', webpage,
+            'date', fatal=False)
+
+        # the next dt is the approximate duration but isn't worth to parse it
+
+        # some videos don't have the elements, so assume it's missing
+        description = self._html_search_regex(
+            r'会議の経過\s*</h3>\s*<span[^>]*>(.+?)</span>', webpage,
+            'description', default=None)
+
+        formats, subs = self._extract_m3u8_formats_and_subtitles(
+            f'https://webtv-vod.live.ipcasting.jp/vod/mp4:{video_id}.mp4/playlist.m3u8',
+            video_id, 'mp4')
+        self._sort_formats(formats)
+
+        return {
+            'id': video_id,
+            'title': join_nonempty(date, title, delim=' '),
+            'description': description,
+            'upload_date': upload_date,
+            'formats': formats,
+            'subtitles': subs,
+        }
