@@ -240,7 +240,7 @@ class SangiinIE(InfoExtractor):
         # this row appears only when it's livestream
         is_live = bool(self._html_search_regex(
             r'<dt[^>]*>\s*公報掲載時刻\s*</dt>\s*<dd[^>]*>\s*(.+?)\s*</dd>', webpage,
-            'description', default=None))
+            'is_live', default=None))
 
         m3u8_url = self._search_regex(
             r'var\s+videopath\s*=\s*(["\'])([^"\']+)\1', webpage,
