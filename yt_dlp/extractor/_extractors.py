@@ -802,6 +802,13 @@ from .jamendo import (
     JamendoIE,
     JamendoAlbumIE,
 )
+from .japandiet import (
+    ShugiinItvLiveIE,
+    ShugiinItvLiveRoomIE,
+    ShugiinItvVodIE,
+    SangiinInstructionIE,
+    SangiinIE,
+)
 from .jeuxvideo import JeuxVideoIE
 from .jove import JoveIE
 from .joj import JojIE
@@ -1631,13 +1638,6 @@ from .shared import (
 from .sharevideos import ShareVideosEmbedIE
 from .shemaroome import ShemarooMeIE
 from .showroomlive import ShowRoomLiveIE
-from .japandiet import (
-    ShugiinItvLiveIE,
-    ShugiinItvLiveRoomIE,
-    ShugiinItvVodIE,
-    SangiinInstructionIE,
-    SangiinIE,
-)
 from .simplecast import (
     SimplecastIE,
     SimplecastEpisodeIE,
