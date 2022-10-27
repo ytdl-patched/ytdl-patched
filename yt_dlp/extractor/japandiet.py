@@ -177,16 +177,16 @@ class ShugiinItvVodIE(ShugiinItvBaseIE):
         }
 
 
-class SangiinIVRInstructionIE(InfoExtractor):
+class SangiinInstructionIE(InfoExtractor):
     _VALID_URL = r'^https?://www\.webtv\.sangiin\.go\.jp/webtv/index\.php'
     IE_DESC = False  # this shouldn't be listed as a supported site
 
     def _real_extract(self, url):
         # alternative method: copy the link of iframe showing the video. results are the same
-        raise ExtractorError('Copy the link from the botton below the video description, and use the link to download.', expected=True)
+        raise ExtractorError('Copy the link from the botton below the video description or player, and use the link to download. If there are no button in the frame, get the URL of the frame showing the video.', expected=True)
 
 
-class SangiinIVRIE(InfoExtractor):
+class SangiinIE(InfoExtractor):
     _VALID_URL = r'https?://www\.webtv\.sangiin\.go\.jp/webtv/detail\.php\?sid=(?P<id>\d+)'
     IE_DESC = '参議院インターネット審議中継 (archive)'
 
@@ -207,6 +207,16 @@ class SangiinIVRIE(InfoExtractor):
             'upload_date': '20221003',
             'ext': 'mp4',
         },
+    }, {
+        'url': 'https://www.webtv.sangiin.go.jp/webtv/detail.php?sid=7076',
+        'info_dict': {
+            'id': '7076',
+            'title': '2022年10月27日 法務委員会',
+            'upload_date': '20221027',
+            'ext': 'mp4',
+            'is_live': True,
+        },
+        'skip': 'this live is turned into archive after it ends',
     }, ]
 
     def _real_extract(self, url):
@@ -222,16 +232,21 @@ class SangiinIVRIE(InfoExtractor):
             r'<dt[^>]*>\s*会議名\s*</dt>\s*<dd[^>]*>\s*(.+?)\s*</dd>', webpage,
             'date', fatal=False)
 
-        # the next dt is the approximate duration but isn't worth to parse it
-
         # some videos don't have the elements, so assume it's missing
         description = self._html_search_regex(
             r'会議の経過\s*</h3>\s*<span[^>]*>(.+?)</span>', webpage,
             'description', default=None)
 
-        formats, subs = self._extract_m3u8_formats_and_subtitles(
-            f'https://webtv-vod.live.ipcasting.jp/vod/mp4:{video_id}.mp4/playlist.m3u8',
-            video_id, 'mp4')
+        # this row appears only when it's livestream
+        is_live = bool(self._html_search_regex(
+            r'<dt[^>]*>\s*公報掲載時刻\s*</dt>\s*<dd[^>]*>\s*(.+?)\s*</dd>', webpage,
+            'description', default=None))
+
+        m3u8_url = self._search_regex(
+            r'var\s+videopath\s*=\s*(["\'])([^"\']+)\1', webpage,
+            'm3u8 url', group=2)
+
+        formats, subs = self._extract_m3u8_formats_and_subtitles(m3u8_url, video_id, 'mp4')
         self._sort_formats(formats)
 
         return {
@@ -241,4 +256,5 @@ class SangiinIVRIE(InfoExtractor):
             'upload_date': upload_date,
             'formats': formats,
             'subtitles': subs,
+            'is_live': is_live,
         }

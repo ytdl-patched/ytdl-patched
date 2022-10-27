@@ -1635,8 +1635,8 @@ from .japandiet import (
     ShugiinItvLiveIE,
     ShugiinItvLiveRoomIE,
     ShugiinItvVodIE,
-    SangiinIVRInstructionIE,
-    SangiinIVRIE,
+    SangiinInstructionIE,
+    SangiinIE,
 )
 from .simplecast import (
     SimplecastIE,
