@@ -1189,7 +1189,7 @@
  - **SaltTVLive**: [<abbr title="netrc machine"><em>salttv</em></abbr>]
  - **SaltTVRecordings**: [<abbr title="netrc machine"><em>salttv</em></abbr>]
  - **SampleFocus**
- - **SangiinIVR**: 参議院インターネット審議中継 (archive)
+ - **Sangiin**: 参議院インターネット審議中継 (archive)
  - **Sapo**: SAPO Vídeos
  - **savefrom.net**
  - **SBS**: sbs.com.au
