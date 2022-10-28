@@ -114,12 +114,12 @@ class HANMIE(InfoExtractor):
             if not url:
                 continue
             formats.append({
-                'format_id': '%s-%d-%d' % (stream['slug'], stream['id'], stream['server_id']),
+                'format_id': f'{stream["slug"]}-{stream["id"]}-{stream["server_id"]}',
                 'url': url,
                 'width': int_or_none(stream['width']),
                 'height': int_or_none(stream['height']),
                 'ext': 'mp4',
-                'protocol': 'm3u8',
+                'protocol': 'm3u8_native',
                 'filesize_approx': float_or_none(stream.get('filesize_mbs'), invscale=1000 ** 2),
                 'duration': float_or_none(stream.get('duration_in_ms'), 1000),
             })
