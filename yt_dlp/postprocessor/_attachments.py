@@ -280,7 +280,7 @@ class ShowsProgress(object):
 
     @classmethod
     def format_eta(cls, seconds):
-        return f'{remove_start(cls.format_seconds(seconds), "00:"):>8s}'
+        return f'{remove_start(cls.format_seconds(seconds), "00:"):>8s}' + ('s' if seconds < 60 else '')
 
     @staticmethod
     def calc_percent(byte_counter, data_len):
