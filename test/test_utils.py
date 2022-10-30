@@ -167,10 +167,28 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(sanitize_filename('.gasdgf', is_id=True), '.gasdgf')
         self.assertEqual(sanitize_filename('.gasdgf', is_id=False), 'gasdgf')
 
+        self.assertEqual(
+            'おはようございます_こんにちは -こんばんは_いってらっしゃいませ',
+            sanitize_filename(
+                'おはようございます|こんにちは:こんばんは*いってらっしゃいませ'))
+
         forbidden = '"\0\\/'
         for fc in forbidden:
             for fbc in forbidden:
                 self.assertTrue(fbc not in sanitize_filename(fc))
+
+        # quick windows=False mode test - they're not needed for
+        # restricted=True as it implies windows=True
+        self.assertEqual('this: that', sanitize_filename('this: that', windows=False))
+        self.assertEqual(
+            sanitize_filename('New World record at 0:12:34', windows=False),
+            'New World record at 0:12:34')
+        self.assertEqual('hello_world', sanitize_filename('hello/world', windows=False))
+        self.assertEqual('hello#world', sanitize_filename('hello#world', windows=False))
+        self.assertEqual(
+            'おはようございます|こんにちは:こんばんは*いってらっしゃいませ',
+            sanitize_filename(
+                'おはようございます|こんにちは:こんばんは*いってらっしゃいませ', windows=False))
 
     def test_sanitize_filename_restricted(self):
         self.assertEqual(sanitize_filename('abc', restricted=True), 'abc')
