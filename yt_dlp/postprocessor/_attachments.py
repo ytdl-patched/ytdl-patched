@@ -280,7 +280,9 @@ class ShowsProgress(object):
 
     @classmethod
     def format_eta(cls, seconds):
-        return f'{remove_start(cls.format_seconds(seconds), "00:"):>8s}' + ('s' if seconds < 60 else '')
+        if seconds is not None and seconds < 60:
+            return f'{seconds:d}s'
+        return f'{remove_start(cls.format_seconds(seconds), "00:"):>8s}'
 
     @staticmethod
     def calc_percent(byte_counter, data_len):
@@ -290,7 +292,7 @@ class ShowsProgress(object):
 
     @staticmethod
     def format_percent(percent):
-        return '  N/A%' if percent is None else f'{percent:>5.1f}%'
+        return 'N/A%' if percent is None else f'{percent:>.1f}%'
 
     @staticmethod
     def calc_eta(start, now, total, current):
@@ -314,8 +316,8 @@ class ShowsProgress(object):
     @staticmethod
     def format_speed(speed):
         if speed is None:
-            return '%10s' % '---b/s'
-        return '%10s' % ('%s/s' % format_bytes(speed))
+            return '%8s' % '---b/s'
+        return '%8s' % ('%s/s' % format_bytes(speed))
 
     @staticmethod
     def format_speed_rate(rate):
@@ -411,7 +413,7 @@ class ShowsProgress(object):
                     return tmpl
             return default
 
-        _format_bytes = lambda k: f'{format_bytes(s.get(k)):>10s}'
+        _format_bytes = lambda k: format_bytes(s.get(k))
 
         if s['status'] == 'finished':
             if self.params.get('noprogress'):
