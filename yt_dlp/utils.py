@@ -5868,6 +5868,20 @@ def cached_method(f):
     return wrapper
 
 
+def is_windowsfs(path):
+    """
+    Returns whether the filesystem requires the same sanitization as --windows-filenames
+    Always returns True on Windows
+    """
+    if sys.platform == 'win32':
+        return True
+    try:
+        import psutil
+        psutil
+    except ImportError:
+        return False
+
+
 class classproperty:
     """property access for class methods"""
 
