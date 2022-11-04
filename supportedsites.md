@@ -470,6 +470,8 @@
  - **gem.cbc.ca**: [<abbr title="netrc machine"><em>cbcgem</em></abbr>]
  - **gem.cbc.ca:live**
  - **gem.cbc.ca:playlist**
+ - **Genius**
+ - **GeniusLyrics**
  - **Gettr**
  - **GettrStreaming**
  - **Gfycat**
@@ -1378,6 +1380,8 @@
  - **toggo**
  - **Tokentube**
  - **Tokentube:channel**
+ - **tokfm:audition**
+ - **tokfm:podcast**
  - **tokyomotion**
  - **tokyomotion:searches**
  - **tokyomotion:user**
@@ -1627,6 +1631,8 @@
  - **WSJ**: Wall Street Journal
  - **WSJArticle**
  - **WWE**
+ - **wyborcza:video**
+ - **WyborczaPodcast**
  - **XBef**
  - **XboxClips**
  - **XFileShare**: XFileShare based sites: Aparat, ClipWatching, GoUnlimited, GoVid, HolaVid, Streamty, TheVideoBee, Uqload, VidBom, vidlo, VidLocker, VidShare, VUp, WolfStream, XVideoSharing
