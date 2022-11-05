@@ -937,6 +937,8 @@
  - **ocw.mit.edu**
  - **OdaTV**
  - **Odnoklassniki**
+ - **OfTV**
+ - **OfTVPlaylist**
  - **OktoberfestTV**
  - **OlympicsReplay**
  - **on24**: ON24
