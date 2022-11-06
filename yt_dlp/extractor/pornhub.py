@@ -511,7 +511,7 @@ class PornHubIE(PornHubBaseIE):
 
             # retry when any of the following codes is returned;
             # no more fragments or data can be downloaded anymore
-            'unrecoverable_http_error': (401, 503, 472, 429),
+            # 'unrecoverable_http_error': (401, 503, 472, 429),
         }, info)
 
 
