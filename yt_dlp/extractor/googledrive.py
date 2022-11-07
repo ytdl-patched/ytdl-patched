@@ -89,7 +89,7 @@ class GoogleDriveIE(InfoExtractor):
                 '$ct': f'multipart/mixed; boundary="{self._BOUNDARY}"',
                 'key': key
             }, **kwargs)
-        return self._search_json('', response, 'api response', folder_id, **kwargs) or {}
+        return self
     
     def _extract_embed_urls(cls, url, webpage):
         mobj = re.search(
