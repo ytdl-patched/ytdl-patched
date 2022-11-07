@@ -73,6 +73,14 @@ class AudiodraftCustomIE(AudiodraftBaseIE):
             'average_rating': 5,
             'like_count': int,
         },
+        'url': 'http://nokiatune.audiodraft.com/entry/2',
+        'info_dict': {
+            'uploader': 'Posthouse Tuomi'
+        },
+        'params': {
+            'skip_download': True,
+        },
+        'expected_warnings': ['Withdrawn by the composer'],
     }]
 
     def _real_extract(self, url):
