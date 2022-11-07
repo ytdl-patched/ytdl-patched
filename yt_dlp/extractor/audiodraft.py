@@ -34,6 +34,8 @@ class AudiodraftBaseIE(InfoExtractor):
         return {
             'repost_count': data_json.get('shares'),
         }
+        
+        
 class AudiodraftCustomIE(AudiodraftBaseIE):
     IE_NAME = 'Audiodraft:custom'
     _VALID_URL = r'https?://(?:[-\w]+)\.audiodraft\.com/entry/(?P<id>\d+)'
