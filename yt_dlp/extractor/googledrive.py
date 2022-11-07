@@ -78,6 +78,19 @@ class GoogleDriveIE(InfoExtractor):
     _captions_xml = None
 
     @classmethod
+    def _call_api(self, file_id, key, data, **kwargs):
+        response = self._download_webpage(
+            'https://https://content.googleapis.com/drive/v2beta/files',
+            file, data=data.encode('utf-8'),
+            headers={
+                'Content-Type': 'text/plain;charset=UTF-8;',
+                'Origin': 'https://drive.google.com',
+            }, query={
+                '$ct': f'multipart/mixed; boundary="{self._BOUNDARY}"',
+                'key': key
+            }, **kwargs)
+        return self._search_json('', response, 'api response', folder_id, **kwargs) or {}
+    
     def _extract_embed_urls(cls, url, webpage):
         mobj = re.search(
             r'<iframe[^>]+src="https?://(?:video\.google\.com/get_player\?.*?docid=|(?:docs|drive)\.google\.com/file/d/)(?P<id>[a-zA-Z0-9_-]{28,})',
