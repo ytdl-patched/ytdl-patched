@@ -35,7 +35,7 @@
  - **acast:channel**
  - **AcFunBangumi**
  - **AcFunVideo**
- - **ADN**: [<abbr title="netrc machine"><em>animedigitalnetwork</em></abbr>] Anime Digital Network
+ - **ADN**: [<abbr title="netrc machine"><em>animationdigitalnetwork</em></abbr>] Animation Digital Network
  - **AdobeConnect**
  - **adobetv**
  - **adobetv:channel**
@@ -278,9 +278,7 @@
  - **CrowdBunker**
  - **CrowdBunkerChannel**
  - **crunchyroll**: [<abbr title="netrc machine"><em>crunchyroll</em></abbr>]
- - **crunchyroll:beta**: [<abbr title="netrc machine"><em>crunchyroll</em></abbr>]
  - **crunchyroll:playlist**: [<abbr title="netrc machine"><em>crunchyroll</em></abbr>]
- - **crunchyroll:​playlist:beta**: [<abbr title="netrc machine"><em>crunchyroll</em></abbr>]
  - **CSpan**: C-SPAN
  - **CSpanCongress**
  - **CtsNews**: 華視新聞
@@ -317,6 +315,8 @@
  - **democracynow**
  - **DestinationAmerica**
  - **DetikEmbed**
+ - **DeuxM**
+ - **DeuxMNews**
  - **DHM**: Filmarchiv - Deutsches Historisches Museum
  - **Digg**
  - **DigitalConcertHall**: [<abbr title="netrc machine"><em>digitalconcerthall</em></abbr>] DigitalConcertHall extractor
@@ -430,6 +430,7 @@
  - **Foxgay**
  - **foxnews**: Fox News and Fox Business Video
  - **foxnews:article**
+ - **FoxNewsVideo**
  - **FoxSports**
  - **fptplay**: fptplay.vn
  - **FranceCulture**
@@ -666,6 +667,7 @@
  - **linkedin:​learning:course**: [<abbr title="netrc machine"><em>linkedin</em></abbr>]
  - **LinuxAcademy**: [<abbr title="netrc machine"><em>linuxacademy</em></abbr>]
  - **Liputan6**
+ - **ListenNotes**
  - **LiTV**
  - **LiveJournal**
  - **livestream**
@@ -702,7 +704,7 @@
  - **Masters**
  - **mastodon**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
  - **mastodon:user**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
- - **mastodon:user:numeric_id**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
+ - **mastodon:​user:numeric_id**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
  - **MatchTV**
  - **MDR**: MDR.DE and KiKA
  - **MedalTV**
@@ -1071,6 +1073,7 @@
  - **puhutv:serie**
  - **Puls4**
  - **Pyvideo**
+ - **QingTing**
  - **qqmusic**: QQ音乐
  - **qqmusic:album**: QQ音乐 - 专辑
  - **qqmusic:playlist**: QQ音乐 - 歌单
@@ -1235,7 +1238,6 @@
  - **sky:​news:story**
  - **sky:sports**
  - **sky:​sports:news**
- - **skyacademy.it**
  - **SkylineWebcams**
  - **skynewsarabia:article**
  - **skynewsarabia:video**
@@ -1311,6 +1313,7 @@
  - **SVTPage**
  - **SVTPlay**: SVT Play and Öppet arkiv
  - **SVTSeries**
+ - **SwearnetEpisode**
  - **SwipeVideo**
  - **SWRMediathek**
  - **Syfy**
@@ -1387,7 +1390,7 @@
  - **tokyomotion**
  - **tokyomotion:searches**
  - **tokyomotion:user**
- - **tokyomotion:user:favs**
+ - **tokyomotion:​user:favs**
  - **ToonGoggles**
  - **tou.tv**: [<abbr title="netrc machine"><em>toutv</em></abbr>]
  - **Toypics**: Toypics video
@@ -1450,8 +1453,9 @@
  - **tvopengr:watch**: tvopen.gr (and ethnos.gr) videos
  - **tvp**: Telewizja Polska
  - **tvp:embed**: Telewizja Polska
- - **tvp:series**
  - **tvp:stream**
+ - **tvp:vod**
+ - **tvp:​vod:series**
  - **TVPlayer**
  - **TVPlayHome**
  - **Tweakers**
