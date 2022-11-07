@@ -2,7 +2,7 @@
 <div align="center">
 
 # YTDL-PATCHED
-A command-line program to download videos from YouTube and many other [video platforms](supportedsites.md)
+A command-line program to download videos from YouTube and many other [video and audio platforms](supportedsites.md)
 
 </div>
 <!-- MANPAGE: END EXCLUDED SECTION -->
