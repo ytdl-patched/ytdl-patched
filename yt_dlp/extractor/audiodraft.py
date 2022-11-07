@@ -10,7 +10,7 @@ class AudiodraftBaseIE(InfoExtractor):
                 'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'X-Requested-With': 'XMLHttpRequest',
             }, data=f'id={player_entry_id}'.encode('utf-8'))
-
+        
         return {
             'id': str(data_json['entry_id']),
             'title': data_json.get('entry_title'),
@@ -23,8 +23,17 @@ class AudiodraftBaseIE(InfoExtractor):
             'like_count': int_or_none(data_json.get('entry_likes')),
             'average_rating': int_or_none(data_json.get('entry_rating')),
         }
-
-
+            url_encode = url.encode()
+            data_json = self._download_json(
+            'https://api-public.addthis.com/url/shares.json?url=', url_encode,
+            headers={
+                'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+            }, '.encode('utf-8'))
+        
+        return {
+            'repost_count': data_json.get('shares'),
+        }
 class AudiodraftCustomIE(AudiodraftBaseIE):
     IE_NAME = 'Audiodraft:custom'
     _VALID_URL = r'https?://(?:[-\w]+)\.audiodraft\.com/entry/(?P<id>\d+)'
