@@ -407,7 +407,7 @@ class NiconicoIE(NiconicoBaseIE):
 
         try:
             webpage, handle = self._download_webpage_handle(
-                'http://www.nicovideo.jp/watch/' + video_id, video_id)
+                'https://www.nicovideo.jp/watch/' + video_id, video_id)
             if video_id.startswith('so'):
                 video_id = self._match_id(handle.geturl())
 
@@ -774,7 +774,7 @@ class NicovideoSearchBaseIE(InfoExtractor):
             webpage = self._download_webpage(url, item_id, query=query, note=note % {'page': page_num})
             results = re.findall(r'(?<=data-video-id=)["\']?(?P<videoid>.*?)(?=["\'])', webpage)
             for item in results:
-                yield self.url_result(f'http://www.nicovideo.jp/watch/{item}', 'Niconico', item)
+                yield self.url_result(f'https://www.nicovideo.jp/watch/{item}', 'Niconico', item)
             if not results:
                 break
 
