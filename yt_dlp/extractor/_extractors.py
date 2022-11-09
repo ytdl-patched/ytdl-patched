@@ -259,6 +259,7 @@ from .camdemy import (
     CamdemyFolderIE
 )
 from .cammodels import CamModelsIE
+from .camsoda import CamsodaIE
 from .camtasia import CamtasiaEmbedIE
 from .camwithher import CamWithHerIE
 from .canalalpha import CanalAlphaIE
@@ -709,6 +710,7 @@ from .hotstar import (
     HotStarIE,
     HotStarPrefixIE,
     HotStarPlaylistIE,
+    HotStarSeasonIE,
     HotStarSeriesIE,
 )
 from .howcast import HowcastIE
