@@ -200,6 +200,7 @@
  - **Camdemy**
  - **CamdemyFolder**
  - **CamModels**
+ - **Camsoda**
  - **CamtasiaEmbed**
  - **CamWithHer**
  - **CanalAlpha**
@@ -530,6 +531,7 @@
  - **HotNewHipHop**
  - **hotstar**
  - **hotstar:playlist**
+ - **hotstar:season**
  - **hotstar:series**
  - **Howcast**
  - **HowStuffWorks**
