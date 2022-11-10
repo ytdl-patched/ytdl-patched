@@ -337,7 +337,6 @@
  - **dlive:stream**
  - **dlive:vod**
  - **dnatube**
- - **DoodStream**
  - **Dotsub**
  - **Douyin**
  - **DouyuShow**
