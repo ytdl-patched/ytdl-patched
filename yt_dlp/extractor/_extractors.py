@@ -482,7 +482,6 @@ from .disney import DisneyIE
 from .disneychris import DisneyChrisIE
 from .dispeak import DigitallySpeakingIE
 from .dnatube import DnaTubeIE
-from .doodstream import DoodStreamIE
 from .dropbox import DropboxIE
 from .dropout import (
     DropoutSeasonIE,
@@ -2055,7 +2054,7 @@ from .umg import UMGDeIE
 from .unistra import UnistraIE
 from .unity import UnityIE
 from .unscripted import UnscriptedNewsVideoIE
-from .unsupported import KnownDRMIE
+from .unsupported import KnownDRMIE, KnownPiracyIE
 from .uol import UOLIE
 from .uplynk import (
     UplynkIE,
