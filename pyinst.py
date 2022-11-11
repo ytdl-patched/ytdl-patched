@@ -28,9 +28,8 @@ def zlib_compress(data, level=-1):
 
 zlib.compress = zlib_compress
 
-OS_NAME, MACHINE, ARCH = sys.platform, platform.machine(), platform.architecture()[0][:2]
-if MACHINE in ('x86_64', 'AMD64') or ('i' in MACHINE and '86' in MACHINE):
-    # NB: Windows x86 has MACHINE = AMD64 irrespective of bitness
+OS_NAME, MACHINE, ARCH = sys.platform, platform.machine().lower(), platform.architecture()[0][:2]
+if MACHINE in ('x86', 'x86_64', 'amd64', 'i386', 'i686'):
     MACHINE = 'x86' if ARCH == '32' else ''
 
 ICON = os.getenv('windows_icon') or 'red'
@@ -83,8 +82,8 @@ def exe(onedir):
     """@returns (name, path)"""
     name = '_'.join(filter(None, (
         'ytdl-patched',
-        OS_NAME == 'darwin' and 'macos',
-        ARCH == '32' and 'x86'
+        {'win32': '', 'darwin': 'macos'}.get(OS_NAME, OS_NAME),
+        MACHINE,
     )))
     return name, ''.join(filter(None, (
         'dist/',

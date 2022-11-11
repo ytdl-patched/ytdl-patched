@@ -3,7 +3,6 @@ import contextlib
 import hashlib
 import json
 import os
-import platform
 import re
 import subprocess
 import sys
@@ -43,8 +42,6 @@ def _get_variant_and_executable_path():
             return 'py2exe', path
         if sys._MEIPASS == os.path.dirname(path):
             return f'{sys.platform}_dir', path
-        if sys.platform == 'darwin' and version_tuple(platform.mac_ver()[0]) < (10, 15):
-            return 'darwin_legacy_exe', path
         return f'exe_{variant}', path
 
     path = os.path.dirname(__file__)
@@ -79,12 +76,15 @@ _FILE_SUFFIXES = {
     'zip': '',
     'homebrew': '',
     'py2exe': '_min.exe',
-    'win32_exe': '.exe',
+    'win_exe': '.exe',
+    'win_x86_exe': '_x86.exe',
     'darwin_exe': '_macos',
     'darwin_legacy_exe': '_macos_legacy',
     'linux_exe': '_linux',
     'exe_red': '-red.exe',
     'exe_white': '-white.exe',
+    'linux_aarch64_exe': '_linux_aarch64',
+    'linux_armv7l_exe': '_linux_armv7l',
 }
 
 _NON_UPDATEABLE_REASONS = {
@@ -165,10 +165,7 @@ class Updater:
     @functools.cached_property
     def release_name(self):
         """The release filename"""
-        label = _FILE_SUFFIXES[detect_variant()]
-        if label and platform.architecture()[0][:2] == '32':
-            label = f'_x86{label}'
-        return f'ytdl-patched{label}'
+        return f'ytdl-patched{_FILE_SUFFIXES[detect_variant()]}'
 
     @functools.cached_property
     def release_hash(self):
