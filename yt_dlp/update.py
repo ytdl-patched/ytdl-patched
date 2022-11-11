@@ -36,11 +36,11 @@ API_URL = f'https://api.github.com/repos/{REPOSITORY}/releases'
 @functools.cache
 def _get_variant_and_executable_path():
     """@returns (variant, executable_path)"""
-    if hasattr(sys, 'frozen'):
+    if getattr(sys, 'frozen', False):
         path = sys.executable
         if not hasattr(sys, '_MEIPASS'):
             return 'py2exe', path
-        if sys._MEIPASS == os.path.dirname(path):
+        elif sys._MEIPASS == os.path.dirname(path):
             return f'{sys.platform}_dir', path
         return f'exe_{variant}', path
 
@@ -296,7 +296,7 @@ class Updater:
         # There is no sys.orig_argv in py < 3.10. Also, it can be [] when frozen
         if getattr(sys, 'orig_argv', None):
             return sys.orig_argv
-        elif hasattr(sys, 'frozen'):
+        elif getattr(sys, 'frozen', False):
             return sys.argv
 
     def restart(self):

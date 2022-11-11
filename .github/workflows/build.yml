@@ -378,6 +378,7 @@ jobs:
 
       - name: Upload files
         run: |
+          rm -f artifacts/.keep
           rclone copy --progress --retries=9999 \
             --internetarchive-access-key-id="${{ secrets.IA_ACCESS }}" \
             --internetarchive-secret-access-key="${{ secrets.IA_SECRET }}" \

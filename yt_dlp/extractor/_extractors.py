@@ -323,6 +323,7 @@ from .chirbit import (
 )
 from .cinchcast import CinchcastIE
 from .cinemax import CinemaxIE
+from .cinetecamilano import CinetecaMilanoIE
 from .ciscolive import (
     CiscoLiveSessionIE,
     CiscoLiveSearchIE,
@@ -2299,6 +2300,7 @@ from .yandexvideo import (
 from .yapfiles import YapFilesIE
 from .yesjapan import YesJapanIE
 from .yinyuetai import YinYueTaiIE
+from .yle_areena import YleAreenaIE
 from .ynet import YnetIE
 from .youjizz import YouJizzIE
 from .youku import (

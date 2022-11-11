@@ -239,6 +239,7 @@
  - **cielotv.it**
  - **Cinchcast**
  - **Cinemax**
+ - **CinetecaMilano**
  - **CiscoLiveSearch**
  - **CiscoLiveSession**
  - **ciscowebex**: Cisco Webex
@@ -1244,7 +1245,7 @@
  - **skynewsarabia:video**
  - **SkyNewsAU**
  - **Slideshare**
- - **SlidesLive**
+ - **SlidesLive**: (**Currently broken**)
  - **Slutload**
  - **Smotrim**
  - **Snotr**
@@ -1677,6 +1678,7 @@
  - **YapFiles**
  - **YesJapan**
  - **yinyuetai:video**: 音悦Tai
+ - **YleAreena**
  - **Ynet**
  - **YouJizz**
  - **youku**: 优酷
