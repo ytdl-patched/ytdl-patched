@@ -356,57 +356,32 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y squashfs-tools
-          brew install internetarchive
-          ia configure -u "${{ secrets.IA_USERNAME }}" -p "${{ secrets.IA_PASSWORD }}"
+          brew install rclone
 
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
           name: ytdl-artifacts
 
-      - name: Upload bin (IA)
+      - name: Rename files
         run: |
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/ytdl-patched" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            ./artifacts/ytdl-patched
-      - name: Upload source tar (IA)
-        run: |
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/ytdl-patched.tar.gz" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            ./artifacts/ytdl-patched.tar.gz
+          mv dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl archives/yt_dlp-py2.py3-none-any.whl
+          mv dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz archives/yt_dlp-wheel.tar.gz
 
-
-      - name: Upload compressed exe files (IA)
+      - name: Compress exe files
         run: |
           mkdir exe_files/
-          cp ./artifacts/ytdl-patched-red.exe ./artifacts/ytdl-patched-white.exe exe_files/
-          mksquashfs exe_files/ win_exe.sqfs \
+          mv ./artifacts/ytdl-patched-red.exe ./artifacts/ytdl-patched-white.exe exe_files/
+          mksquashfs exe_files/ artifacts/win_exe.sqfs \
             -comp xz -progress -b 1M -Xdict-size 50% \
             -no-xattrs -force-uid 1000 -force-gid 1000
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/win_exe.sqfs" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            win_exe.sqfs
 
-      - name: Upload wheel (IA)
+      - name: Upload files
         run: |
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-py2.py3-none-any.whl" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
-      - name: Upload wheel tar (IA)
-        run: |
-          ia upload ytdl-patched-binaries \
-            --remote-name "${{ needs.prepare.outputs.latest_version }}/yt_dlp-wheel.tar.gz" \
-            -H x-archive-keep-old-version:0 \
-            -H x-archive-queue-derive:0 \
-            ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
+          rclone copy --progress --retries=9999 \
+            --internetarchive-access-id="${{ secrets.IA_ACCESS }}" \
+            --internetarchive-secret-access-key="${{ secrets.IA_SECRET }}" \
+            artifacts/ :internetarchive:ytdl-patched-binaries/"${{ needs.prepare.outputs.latest_version }}/"
 
   binary-test:
     needs: [build-linux, build-windows]
