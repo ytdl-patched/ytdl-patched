@@ -1505,6 +1505,7 @@
  - **VeeHD**
  - **Veo**
  - **Veoh**
+ - **veoh:user**
  - **Vesti**: Вести.Ru
  - **Vevo**
  - **VevoPlaylist**
