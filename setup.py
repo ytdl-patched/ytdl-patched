@@ -169,10 +169,10 @@ def main():
     if os.getenv('YTDL_PATCHED_INSTALLED_VIA_HOMEBREW') == 'yes':
         # flag this installation as homebrew cellar
         with open('yt_dlp/build_config.py', 'a') as w:
-            w.write('''
-    # Appended by ./setup.py
-    is_brew = True
-    ''')
+            w.write('''\
+# Appended by ./setup.py
+is_brew = True
+''')
 
 
 main()
