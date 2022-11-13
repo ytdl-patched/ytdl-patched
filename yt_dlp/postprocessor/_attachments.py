@@ -281,7 +281,7 @@ class ShowsProgress(object):
     @classmethod
     def format_eta(cls, seconds):
         if seconds is not None and seconds < 60:
-            return f'{seconds:d}s'
+            return f'{int(seconds)}s'
         return f'{remove_start(cls.format_seconds(seconds), "00:"):>8s}'
 
     @staticmethod
