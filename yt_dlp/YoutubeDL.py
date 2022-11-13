@@ -1419,6 +1419,8 @@ class YoutubeDL:
 
     def _match_entry(self, info_dict, incomplete=False, silent=False):
         """ Returns None if the file should be downloaded """
+        _type = info_dict.get('_type', 'video')
+        assert incomplete or _type == 'video', 'Only video result can be considered complete'
 
         video_title = info_dict.get('title', info_dict.get('id', 'entry'))
 
@@ -1427,6 +1429,12 @@ class YoutubeDL:
             video_title = f'{video_title} [{video_id}]'
 
         def check_filter():
+            if _type in ('playlist', 'multi_video'):
+                return
+            elif _type in ('url', 'url_transparent') and not try_call(
+                    lambda: self.get_info_extractor(info_dict['ie_key']).is_single_video(info_dict['url'])):
+                return
+
             if 'title' in info_dict:
                 # This can happen when we're just evaluating the playlist
                 title = info_dict['title']
