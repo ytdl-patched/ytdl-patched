@@ -387,6 +387,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         r'(?:www\.)?piped\.adminforge\.de',
         r'(?:www\.)?watch\.whatevertinfoil\.de',
         r'(?:www\.)?piped\.qdi\.fi',
+        r'(?:www\.)?piped\.video',
+        r'(?:www\.)?piped\.aeong\.one',
     )
 
     # extracted from account/account_menu ep
@@ -4036,10 +4038,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         # formats.extend(self._extract_storyboard(player_responses, duration))
 
-        # source_preference is lower for throttled/potentially damaged formats
-        self._sort_formats(formats, (
-            'quality', 'res', 'fps', 'hdr:12', 'source', 'vcodec:vp9.2', 'channels', 'acodec', 'lang', 'proto'))
-
         info = {
             'id': video_id,
             'title': video_title,
@@ -4071,6 +4069,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'playable_in_embed': get_first(playability_statuses, 'playableInEmbed'),
             'live_status': live_status,
             'release_timestamp': live_start_time,
+            '_format_sort_fields': (  # source_preference is lower for throttled/potentially damaged formats
+                'quality', 'res', 'fps', 'hdr:12', 'source', 'vcodec:vp9.2', 'channels', 'acodec', 'lang', 'proto'),
 
             # retry when any of the following codes is returned;
             # no more fragments or data can be downloaded anymore

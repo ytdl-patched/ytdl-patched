@@ -72,8 +72,6 @@ class IchinanaLiveIE(InfoExtractor):
                 'acodec': 'aac',
             })
 
-        self._sort_formats(formats)
-
         return {
             'id': video_id,
             'title': uploader or video_id,
@@ -145,8 +143,6 @@ class IchinanaLiveClipIE(InfoExtractor):
                 'acodec': 'aac',
                 'http_headers': {'Referer': url},
             })
-
-        self._sort_formats(formats)
 
         return {
             'id': video_id,

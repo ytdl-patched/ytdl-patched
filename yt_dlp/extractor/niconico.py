@@ -443,8 +443,6 @@ class NiconicoIE(NiconicoBaseIE):
             if fmt:
                 formats.append(fmt)
 
-        self._sort_formats(formats, ['tbr', 'res', 'proto:m3u8'])
-
         # Start extracting information
         tags = None
         if webpage:
@@ -1020,7 +1018,6 @@ class NiconicoLiveIE(NiconicoBaseIE):
                 self.report_warning('--live-from-start only works for timeshifts')
 
         formats = self._extract_m3u8_formats(m3u8_url, video_id, ext='mp4', live=True)
-        self._sort_formats(formats)
         for fmt, q in zip(formats, reversed(qualities[1:])):
             fmt.update({
                 'format_id': q,
