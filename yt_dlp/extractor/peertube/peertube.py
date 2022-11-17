@@ -151,7 +151,6 @@ class PeerTubeBaseIE(SelfHostedInfoExtractor):
             #     })
             #     formats.append(f)
         if files:
-            self._sort_formats(formats)
             info_dict['formats'] = formats
         else:
             info_dict.update({
