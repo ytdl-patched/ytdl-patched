@@ -1544,6 +1544,7 @@
  - **vimeo:group**: [<abbr title="netrc machine"><em>vimeo</em></abbr>]
  - **vimeo:likes**: [<abbr title="netrc machine"><em>vimeo</em></abbr>] Vimeo user likes
  - **vimeo:ondemand**: [<abbr title="netrc machine"><em>vimeo</em></abbr>]
+ - **vimeo:pro**: [<abbr title="netrc machine"><em>vimeo</em></abbr>]
  - **vimeo:review**: [<abbr title="netrc machine"><em>vimeo</em></abbr>] Review pages on vimeo
  - **vimeo:user**: [<abbr title="netrc machine"><em>vimeo</em></abbr>]
  - **vimeo:watchlater**: [<abbr title="netrc machine"><em>vimeo</em></abbr>] Vimeo watch later list, ":vimeowatchlater" keyword (requires authentication)
