@@ -1628,6 +1628,7 @@ from .savefrom import SaveFromIE
 from .sbs import SBSIE
 from .screen9 import Screen9IE
 from .screencast import ScreencastIE
+from .screencastify import ScreencastifyIE
 from .screencastomatic import ScreencastOMaticIE
 from .scrippsnetworks import (
     ScrippsNetworksWatchIE,
