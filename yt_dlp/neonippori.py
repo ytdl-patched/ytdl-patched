@@ -273,9 +273,14 @@ def write_comment(f, c: Comment, row, width, height, bottomReserved, fontsize, d
 
 def escape_ass_text(s):
     def process_blanks(s):
-        a, b, c = re.search(r'(^\s*)(.+?)(\s*$)', s).groups()
-        return ''.join(('\u2007' * len(a), b, '\u2007' * len(c))) or ' '
-    return r'\N'.join(map(process_blanks, re.sub(r'([\\}{])', r'\\\1', s).splitlines()))
+        if len(s) == 0:
+            return ' '
+        if s[0] in (' ', '\t'):
+            s = '\u200b' + s
+        if s[-1] in (' ', '\t'):
+            s = s + '\u200b'
+        return s
+    return r'\N'.join(map(process_blanks, re.sub(r'([}{])', r'\\\1', s.replace('\\', '\\\u200b')).splitlines()))
 
 
 def maximum_line_length(s: str):
