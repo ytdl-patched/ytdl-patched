@@ -606,6 +606,7 @@
  - **JWPlatform**
  - **Kakao**
  - **Kaltura**
+ - **Kanal2**
  - **Karaoketv**
  - **KarriereVideos**
  - **Katsomo**
