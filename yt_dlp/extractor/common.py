@@ -3684,14 +3684,11 @@ class InfoExtractor:
             return [] if default is NO_DEFAULT else default
         return list(val) if casesense else [x.lower() for x in val]
 
-    def _merge_video_infodicts(self, dicts, sort_formats=True):
+    def _merge_video_infodicts(self, dicts):
         valid_dicts = list(filter(None, dicts))
         all_info = merge_dicts(*valid_dicts)
 
-        all_formats = list(x for y in valid_dicts for x in (y.get('formats') or []))
-        if sort_formats:
-            self._sort_formats(all_formats)
-        all_info['formats'] = all_formats
+        all_info['formats'] = list(x for y in valid_dicts for x in (y.get('formats') or []))
 
         all_subtitles = self._merge_subtitles(*filter(None, (x.get('subtitles') for x in valid_dicts)))
         if all_subtitles:

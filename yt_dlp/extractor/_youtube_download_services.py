@@ -61,7 +61,6 @@ class Y2mateIE(CustomPrefixedBaseIE):
         tables = re.findall(r'<table\s*.+?>(.+?)</table>', size_specs)
 
         formats = [x for tbl in (tables[0], tables[-1]) for x in self._find_formats(request_id, video_id, common_headers, tbl)]
-        self._sort_formats(formats)
 
         return {
             'id': video_id,
@@ -191,7 +190,6 @@ class ClipConverterIE(CustomPrefixedBaseIE):
         # convert mode isn't implemented yet; this is just Download mode
         if not formats:
             raise ExtractorError(parse_qs(response['redirect'])['errorstr'][0], expected=True)
-        self._sort_formats(formats)
 
         return {
             'id': video_id,
