@@ -60,6 +60,9 @@
  - **Alura**: [<abbr title="netrc machine"><em>alura</em></abbr>]
  - **AluraCourse**: [<abbr title="netrc machine"><em>aluracourse</em></abbr>]
  - **Amara**
+ - **AmazonMiniTV**
+ - **amazonminitv:season**: Amazon MiniTV Series, "minitv:season:" prefix
+ - **amazonminitv:series**
  - **AmazonStore**
  - **AMCNetworks**
  - **AmericasTestKitchen**
