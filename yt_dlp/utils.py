@@ -39,7 +39,6 @@ import tempfile
 import time
 import traceback
 import types
-import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -631,36 +630,42 @@ def timeconvert(timestr):
     return timestamp
 
 
-def sanitize_filename(s, restricted=False, is_id=NO_DEFAULT):
+def sanitize_filename(s, restricted=False, windows=True, is_id=NO_DEFAULT):
     """Sanitizes a string so it could be used as part of a filename.
     @param restricted   Use a stricter subset of allowed characters
+    @param windows      Sanitize filenames for Windows. For non-Windows systems, it can be False
     @param is_id        Whether this is an ID that should be kept unchanged if possible.
                         If unset, yt-dlp's new sanitization rules are in effect
     """
     if s == '':
         return ''
 
+    # restricted=True implies windows=True
+    windows |= restricted
+
     def replace_insane(char):
         if restricted and char in ACCENT_CHARS:
             return ACCENT_CHARS[char]
         elif not restricted and char == '\n':
             return '\0 '
-        elif char == '?' or ord(char) < 32 or ord(char) == 127:
+        elif ord(char) < 32 or ord(char) == 127:
             return ''
-        elif char == '"':
+        elif char == '?' and windows:
+            return ''
+        elif char == '"' and windows:
             return '' if restricted else '\''
-        elif char == ':':
+        elif char == ':' and windows:
             return '\0_\0-' if restricted else '\0 \0-'
-        elif char in '\\/|*<>':
+        elif char == '/':  # the slash doesn't matter
+            return '\0_'
+        elif char in '\\|*<>' and windows:  # while others do
             return '\0_'
         if restricted and (char in '!&\'()[]{}$;`^,#' or char.isspace() or ord(char) > 127):
             return '\0_'
         return char
 
-    # Replace look-alike Unicode glyphs
-    if restricted and (is_id is NO_DEFAULT or not is_id):
-        s = unicodedata.normalize('NFKC', s)
-    s = re.sub(r'[0-9]+(?::[0-9]+)+', lambda m: m.group(0).replace(':', '_'), s)  # Handle timestamps
+    if windows:
+        s = re.sub(r'[0-9]+(?::[0-9]+)+', lambda m: m.group(0).replace(':', '_'), s)  # Handle timestamps
     result = ''.join(map(replace_insane, s))
     if is_id is NO_DEFAULT:
         result = re.sub(r'(\0.)(?:(?=\1)..)+', r'\1', result)  # Remove repeated substitute chars
@@ -5898,6 +5903,20 @@ def cached_method(f):
             cache[key] = f(self, *args, **kwargs)
         return cache[key]
     return wrapper
+
+
+def is_windowsfs(path):
+    """
+    Returns whether the filesystem requires the same sanitization as --windows-filenames
+    Always returns True on Windows
+    """
+    if sys.platform == 'win32':
+        return True
+    try:
+        import psutil
+        psutil
+    except ImportError:
+        return False
 
 
 class classproperty:
