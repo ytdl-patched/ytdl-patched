@@ -630,7 +630,7 @@ def timeconvert(timestr):
     return timestamp
 
 
-def sanitize_filename(s, restricted=False, windows=True, is_id=NO_DEFAULT):
+def sanitize_filename(s, restricted=False, is_id=NO_DEFAULT, windows=True):
     """Sanitizes a string so it could be used as part of a filename.
     @param restricted   Use a stricter subset of allowed characters
     @param windows      Sanitize filenames for Windows. For non-Windows systems, it can be False
@@ -641,7 +641,7 @@ def sanitize_filename(s, restricted=False, windows=True, is_id=NO_DEFAULT):
         return ''
 
     # restricted=True implies windows=True
-    windows |= restricted
+    windows |= bool(restricted)
 
     def replace_insane(char):
         if restricted and char in ACCENT_CHARS:
