@@ -289,8 +289,8 @@ class NiconicoIE(NiconicoBaseIE):
             return parse_filesize('%sB' % self._search_regex(
                 r'\| ([0-9]*\.?[0-9]*[MK])', video_quality, 'vbr', default=''))
 
-        session_api_data = try_get(api_data, lambda x: x['media']['delivery']['movie']['session'])
-        session_api_endpoint = try_get(session_api_data, lambda x: x['urls'][0])
+        session_api_data = api_data['media']['delivery']['movie']['session']
+        session_api_endpoint = session_api_data['urls'][0]
 
         yesno = lambda x: 'yes' if x else 'no'
 
@@ -304,8 +304,8 @@ class NiconicoIE(NiconicoBaseIE):
             protocol = 'http'
             protocol_parameters = {
                 'http_output_download_parameters': {
-                    'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
-                    'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
+                    'use_ssl': yesno(session_api_endpoint['isSsl']),
+                    'use_well_known_port': yesno(session_api_endpoint['isWellKnownPort']),
                 }
             }
         elif dmc_protocol == 'hls':
@@ -317,8 +317,8 @@ class NiconicoIE(NiconicoBaseIE):
                 'hls_parameters': {
                     'segment_duration': segment_duration,
                     'transfer_preset': '',
-                    'use_ssl': yesno(session_api_data['urls'][0]['isSsl']),
-                    'use_well_known_port': yesno(session_api_data['urls'][0]['isWellKnownPort']),
+                    'use_ssl': yesno(session_api_endpoint['isSsl']),
+                    'use_well_known_port': yesno(session_api_endpoint['isWellKnownPort']),
                 }
             }
             if 'hls_encryption' in parsed_token and encryption:
@@ -397,7 +397,7 @@ class NiconicoIE(NiconicoBaseIE):
             'protocol': protocol,
             'http_headers': {
                 'Origin': 'https://www.nicovideo.jp',
-                'Referer': 'https://www.nicovideo.jp/watch/' + video_id,
+                'Referer': f'https://www.nicovideo.jp/watch/{video_id}',
             },
             '_dmc_data': dmc_data,
             '_heartbeat_interval': session_api_data.get('heartbeatLifetime'),
