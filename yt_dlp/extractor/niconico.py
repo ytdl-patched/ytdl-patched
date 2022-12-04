@@ -331,7 +331,8 @@ class NiconicoIE(NiconicoBaseIE):
             else:
                 protocol = 'm3u8_native'
         else:
-            self.report_warning(f'Unsupported DMC protocol: {dmc_protocol}')
+            self.report_warning(f'Unsupported DMC protocol: {dmc_protocol}. Ignoring', only_once=True)
+            return None
 
         # am not willing for mergeability anymore
         dmc_data = {
