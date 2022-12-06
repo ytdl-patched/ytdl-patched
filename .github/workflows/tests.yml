@@ -19,10 +19,11 @@ jobs:
     strategy:
       matrix:
         python: [
+          { name: '3.11', may_fail: true, major: 3, special: '' },
           { name: '3.10', may_fail: false, major: 3, special: '' },
           { name: '3.9', may_fail: false, major: 3, special: '' },
           { name: '3.8', may_fail: false, major: 3, special: '' },
-          { name: '3.7', may_fail: false, major: 3, special: '' },
+          { name: 'pypy-3.8', may_fail: false, major: 3, special: '' },
           { name: 'pypy-3.7', may_fail: false, major: 3, special: '' },
         ]
         ytdl_test_set: [
@@ -50,10 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
+      - name: Set up Python
+        uses: actions/setup-python@v4
       - name: Install deps
         run: pip install -U pip flake8
       - name: Run flake8 .
