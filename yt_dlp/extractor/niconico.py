@@ -403,6 +403,14 @@ class NiconicoIE(NiconicoBaseIE):
             '_heartbeat_interval': session_api_data.get('heartbeatLifetime'),
         }
 
+    def _enumerate_formats(self, video_id, api_data: dict):
+        quality_info = api_data['media']['delivery']['movie']
+        session_api_data = quality_info['session']
+        for (audio_quality, video_quality, protocol) in itertools.product(quality_info['audios'], quality_info['videos'], session_api_data['protocols']):
+            fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
+            if fmt:
+                yield fmt
+
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
@@ -432,17 +440,10 @@ class NiconicoIE(NiconicoBaseIE):
                     raise
                 raise ExtractorError(re.sub(r'\s+', ' ', error_msg), expected=True)
 
-        formats = []
+        session_api_data = api_data['media']['delivery']['movie']['session']
 
         def get_video_info(*items, get_first=True, **kwargs):
             return traverse_obj(api_data, ('video', *items), get_all=not get_first, **kwargs)
-
-        quality_info = api_data['media']['delivery']['movie']
-        session_api_data = quality_info['session']
-        for (audio_quality, video_quality, protocol) in itertools.product(quality_info['audios'], quality_info['videos'], session_api_data['protocols']):
-            fmt = self._extract_format_for_quality(api_data, video_id, audio_quality, video_quality, protocol)
-            if fmt:
-                formats.append(fmt)
 
         # Start extracting information
         tags = None
@@ -475,7 +476,7 @@ class NiconicoIE(NiconicoBaseIE):
         return {
             'id': video_id,
             'title': get_video_info(('originalTitle', 'title')) or self._og_search_title(webpage, default=None),
-            'formats': formats,
+            'formats': list(self._enumerate_formats(video_id, api_data)),
             'thumbnails': [{
                 'id': key,
                 'url': url,
