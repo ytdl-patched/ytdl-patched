@@ -1228,6 +1228,7 @@ from .nintendo import NintendoIE
 from .nitter import NitterIE
 from .njpwworld import NJPWWorldIE
 from .nobelprize import NobelPrizeIE
+from .noice import NoicePodcastIE
 from .nonktube import NonkTubeIE
 from .noodlemagazine import NoodleMagazineIE
 from .noovo import NoovoIE
@@ -1592,6 +1593,7 @@ from .ruhd import RUHDIE
 from .rule34video import Rule34VideoIE
 from .rumble import (
     RumbleEmbedIE,
+    RumbleIE,
     RumbleChannelIE,
 )
 from .rutube import (
@@ -2225,6 +2227,7 @@ from .wdr import (
     WDRElefantIE,
     WDRMobileIE,
 )
+from .webcamerapl import WebcameraplIE
 from .webcaster import (
     WebcasterIE,
     WebcasterFeedIE,
@@ -2269,12 +2272,6 @@ from .xhamster import (
     XHamsterIE,
     XHamsterEmbedIE,
     XHamsterUserIE,
-)
-from .xiami import (
-    XiamiSongIE,
-    XiamiAlbumIE,
-    XiamiArtistIE,
-    XiamiCollectionIE
 )
 from .ximalaya import (
     XimalayaIE,
