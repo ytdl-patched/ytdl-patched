@@ -1235,6 +1235,7 @@
  - **ShugiinItvLive**: 衆議院インターネット審議中継
  - **ShugiinItvLiveRoom**: 衆議院インターネット審議中継 (中継)
  - **ShugiinItvVod**: 衆議院インターネット審議中継 (ビデオライブラリ)
+ - **SibnetEmbed**
  - **simplecast**
  - **simplecast:episode**
  - **simplecast:podcast**
