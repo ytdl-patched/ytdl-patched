@@ -906,6 +906,7 @@
  - **njoy:embed**
  - **NJPWWorld**: [<abbr title="netrc machine"><em>njpwworld</em></abbr>] 新日本プロレスワールド
  - **NobelPrize**
+ - **NoicePodcast**
  - **NonkTube**
  - **NoodleMagazine**
  - **Noovo**
@@ -1177,6 +1178,7 @@
  - **rtvslo.si**
  - **RUHD**
  - **Rule34Video**
+ - **Rumble**
  - **RumbleChannel**
  - **RumbleEmbed**
  - **Ruptly**
@@ -1621,6 +1623,7 @@
  - **WDRElefant**
  - **WDRPage**
  - **web.archive:youtube**: web.archive.org saved youtube videos, "ytarchive:" prefix
+ - **Webcamerapl**
  - **Webcaster**
  - **WebcasterFeed**
  - **WebOfStories**
