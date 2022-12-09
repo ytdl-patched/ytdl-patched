@@ -724,6 +724,7 @@
  - **Mediasite**
  - **MediasiteCatalog**
  - **MediasiteNamedCatalog**
+ - **MediaStream**
  - **MediaWorksNZVOD**
  - **Medici**
  - **megaphone.fm**: megaphone.fm embedded players
@@ -1638,6 +1639,7 @@
  - **wikimedia.org**
  - **Willow**
  - **WimTV**
+ - **WinSportsVideo**
  - **Wistia**
  - **WistiaChannel**
  - **WistiaPlaylist**
