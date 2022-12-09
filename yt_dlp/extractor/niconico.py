@@ -5,6 +5,8 @@ import re
 import json
 import time
 
+from urllib.parse import urlparse
+
 from .common import InfoExtractor, SearchInfoExtractor
 from ..compat import (
     compat_HTTPError,
@@ -956,6 +958,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
             'frontend_id': traverse_obj(embedded_data, ('site', 'frontendId')) or '9',
         })
 
+        hostname = remove_start(urlparse(urlh.geturl()).hostname, 'sp.')
         cookies = try_get(urlh.geturl(), self._get_cookie_header)
         latency = try_get(self._configuration_arg('latency'), lambda x: x[0])
         if latency not in self._KNOWN_LATENCY:
@@ -963,7 +966,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
 
         ws = WebSocket(ws_url, {
             'Cookie': str_or_none(cookies) or '',
-            'Origin': 'https://live2.nicovideo.jp',
+            'Origin': f'https://{hostname}',
             'Accept': '*/*',
             'User-Agent': std_headers['User-Agent'],
         })
@@ -1028,6 +1031,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
                 'video_id': video_id,
                 'cookies': cookies,
                 'live_latency': latency,
+                'origin': hostname,
                 'is_from_start': is_from_start,
             })
 

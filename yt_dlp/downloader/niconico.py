@@ -24,6 +24,7 @@ class NiconicoLiveFD(FileDownloader):
         video_id = info_dict['video_id']
         ws_url = info_dict['url']
         ws_extractor = info_dict['ws']
+        ws_origin_host = info_dict['origin']
         cookies = info_dict.get('cookies')
         live_quality = info_dict.get('live_quality', 'high')
         live_latency = info_dict.get('live_latency', 'high')
@@ -38,7 +39,7 @@ class NiconicoLiveFD(FileDownloader):
             if reconnect:
                 ws = WebSocket(ws_url, {
                     'Cookie': str_or_none(cookies) or '',
-                    'Origin': 'https://live2.nicovideo.jp',
+                    'Origin': f'https://{ws_origin_host}',
                     'Accept': '*/*',
                     'User-Agent': std_headers['User-Agent'],
                 })
