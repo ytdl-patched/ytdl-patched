@@ -11,7 +11,6 @@ from ..utils import (
     DownloadError,
     try_get,
 )
-from ..compat import compat_str
 
 
 class NiconicoLiveFD(FileDownloader):
@@ -46,19 +45,19 @@ class NiconicoLiveFD(FileDownloader):
                 if self.ydl.params.get('verbose', False):
                     self.to_screen('[debug] Sending startWatching request')
                 ws.send(json.dumps({
-                    "type": "startWatching",
-                    "data": {
-                        "stream": {
-                            "quality": live_quality,
-                            "protocol": "hls+fmp4",
-                            "latency": live_latency,
-                            "chasePlay": False
+                    'type': 'startWatching',
+                    'data': {
+                        'stream': {
+                            'quality': live_quality,
+                            'protocol': 'hls+fmp4',
+                            'latency': live_latency,
+                            'chasePlay': False
                         },
-                        "room": {
-                            "protocol": "webSocket",
-                            "commentable": True
+                        'room': {
+                            'protocol': 'webSocket',
+                            'commentable': True
                         },
-                        "reconnect": True,
+                        'reconnect': True,
                     }
                 }))
             else:
@@ -80,7 +79,7 @@ class NiconicoLiveFD(FileDownloader):
                         return True
                     elif data.get('type') == 'error':
                         self.write_debug(data)
-                        message = try_get(data, lambda x: x["body"]["code"], compat_str) or recv
+                        message = try_get(data, lambda x: x['body']['code'], str) or recv
                         return DownloadError(message)
                     elif self.ydl.params.get('verbose', False):
                         if len(recv) > 100:
