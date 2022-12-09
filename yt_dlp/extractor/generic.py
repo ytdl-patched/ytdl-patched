@@ -1549,19 +1549,6 @@ class GenericIE(InfoExtractor):
             'add_ie': ['WashingtonPost'],
         },
         {
-            # Mediaset embed
-            'url': 'http://www.tgcom24.mediaset.it/politica/serracchiani-voglio-vivere-in-una-societa-aperta-reazioni-sproporzionate-_3071354-201702a.shtml',
-            'info_dict': {
-                'id': '720642',
-                'ext': 'mp4',
-                'title': 'Serracchiani: "Voglio vivere in una società aperta, con tutela del patto di fiducia"',
-            },
-            'params': {
-                'skip_download': True,
-            },
-            'add_ie': ['Mediaset'],
-        },
-        {
             # JOJ.sk embeds
             'url': 'https://www.noviny.sk/slovensko/238543-slovenskom-sa-prehnala-vlna-silnych-burok',
             'info_dict': {
