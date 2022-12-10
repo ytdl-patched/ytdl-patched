@@ -30,7 +30,6 @@ from ..utils import (
     parse_resolution,
     qualities,
     remove_start,
-    std_headers,
     str_or_none,
     traverse_obj,
     try_get,
@@ -946,7 +945,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        webpage, urlh = self._download_webpage_handle(f'https://live2.nicovideo.jp/watch/{video_id}', video_id)
+        webpage, urlh = self._download_webpage_handle(f'https://live.nicovideo.jp/watch/{video_id}', video_id)
 
         embedded_data = self._parse_json(unescapeHTML(self._search_regex(
             r'<script\s+id="embedded-data"\s*data-props="(.+?)"', webpage, 'embedded data')), video_id)
@@ -965,10 +964,10 @@ class NiconicoLiveIE(NiconicoBaseIE):
             latency = 'high'
 
         ws = WebSocket(ws_url, {
-            'Cookie': str_or_none(cookies) or '',
+            'Cookies': str_or_none(cookies) or '',
             'Origin': f'https://{hostname}',
             'Accept': '*/*',
-            'User-Agent': std_headers['User-Agent'],
+            'User-Agent': self.get_param('http_headers')['User-Agent'],
         })
 
         self.write_debug('[debug] Sending HLS server request')

@@ -7,7 +7,6 @@ from .external import FFmpegFD
 from ..dependencies import WebSocket
 from ..utils import (
     str_or_none,
-    std_headers,
     DownloadError,
     try_get,
 )
@@ -37,10 +36,10 @@ class NiconicoLiveFD(FileDownloader):
         def communicate_ws(reconnect):
             if reconnect:
                 ws = WebSocket(ws_url, {
-                    'Cookie': str_or_none(cookies) or '',
+                    'Cookies': str_or_none(cookies) or '',
                     'Origin': f'https://{ws_origin_host}',
                     'Accept': '*/*',
-                    'User-Agent': std_headers['User-Agent'],
+                    'User-Agent': self.params['http_headers']['User-Agent'],
                 })
                 if self.ydl.params.get('verbose', False):
                     self.to_screen('[debug] Sending startWatching request')
