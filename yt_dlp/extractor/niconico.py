@@ -1021,6 +1021,27 @@ class NiconicoLiveIE(NiconicoBaseIE):
             else:
                 self.report_warning('--live-from-start only works for timeshifts')
 
+        raw_thumbs = traverse_obj(embedded_data, ('program', 'thumbnail')) or {}
+        thumbnails = []
+        for name, value in raw_thumbs.items():
+            if isinstance(value, str):
+                thumbnails.append({
+                    'id': name,
+                    'url': value,
+                    **parse_resolution(value, lenient=True),
+                })
+                continue
+
+            for k, img_url in value.items():
+                res = parse_resolution(k, lenient=True) or parse_resolution(img_url, lenient=True)
+                width, height = res.get('width'), res.get('height')
+
+                thumbnails.append({
+                    'id': f'{name}_{width}x{height}',
+                    'url': img_url,
+                    **res,
+                })
+
         formats = self._extract_m3u8_formats(m3u8_url, video_id, ext='mp4', live=True)
         for fmt, q in zip(formats, reversed(qualities[1:])):
             fmt.update({
@@ -1037,6 +1058,17 @@ class NiconicoLiveIE(NiconicoBaseIE):
         return {
             'id': video_id,
             'title': title,
-            'formats': formats,
+            **traverse_obj(embedded_data, {
+                'view_count': ('program', 'statistics', 'watchCount'),
+                'comment_count': ('program', 'statistics', 'commentCount'),
+                'uploader': ('program', 'supplier', 'name'),
+                'channel': ('socialGroup', 'name'),
+                'channel_id': ('socialGroup', 'id'),
+                'channel_url': ('socialGroup', 'socialGroupPageUrl'),
+            }),
+            'description': clean_html(traverse_obj(embedded_data, ('program', 'description'))),
+            'timestamp': int_or_none(traverse_obj(embedded_data, ('program', 'openTime'))),
             'is_live': True,
+            'thumbnails': thumbnails,
+            'formats': formats,
         }
