@@ -51,6 +51,7 @@
  - **afreecatv:live**: [<abbr title="netrc machine"><em>afreecatv</em></abbr>] afreecatv.com
  - **afreecatv:user**
  - **AirMozilla**
+ - **AirTV**
  - **AliExpressLive**
  - **AlJazeera**
  - **Allocine**
@@ -396,6 +397,7 @@
  - **ESPNCricInfo**
  - **EsriVideo**
  - **Europa**
+ - **EuroParlWebstream**
  - **EuropeanTour**
  - **Eurosport**
  - **EUScreen**
@@ -954,6 +956,7 @@
  - **on24**: ON24
  - **OnDemandKorea**
  - **OneFootball**
+ - **OnePlacePodcast**
  - **onet.pl**
  - **onet.tv**
  - **onet.tv:channel**
@@ -1254,7 +1257,7 @@
  - **skynewsarabia:video**
  - **SkyNewsAU**
  - **Slideshare**
- - **SlidesLive**: (**Currently broken**)
+ - **SlidesLive**
  - **Slutload**
  - **Smotrim**
  - **Snotr**
