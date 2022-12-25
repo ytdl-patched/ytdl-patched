@@ -45,18 +45,18 @@ class MisskeyIE(MisskeyBaseIE):
     IE_NAME = 'misskey'
     _VALID_URL = r'(?P<prefix>(?:misskey|msky|msk):)?https?://(?P<instance>[a-zA-Z0-9._-]+)/notes/(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
-        'note': 'embed video',
-        'url': 'https://misskey.io/notes/8pp0c7gsbm',
-        'info_dict': {
-            'id': '8pp0c7gsbm',
-            'title': 'Misskeyダウンローダーのテストケース',
-            'timestamp': 1629529895,
-            'uploader': 'nao20010128',
-            'uploader_id': '8pp040sbza',
-            'visibility': 'public',
-            'age_limit': 0,
-        },
-    }, {
+        #     'note': 'embed video',
+        #     'url': 'https://misskey.io/notes/8pp0c7gsbm',
+        #     'info_dict': {
+        #         'id': '8pp0c7gsbm',
+        #         'title': 'Misskeyダウンローダーのテストケース',
+        #         'timestamp': 1629529895,
+        #         'uploader': 'nao20010128',
+        #         'uploader_id': '8pp040sbza',
+        #         'visibility': 'public',
+        #         'age_limit': 0,
+        #     },
+        # }, {
         'note': 'another instance, and have no content (title=NA)',
         'url': 'https://misskey.dev/notes/8o0h93l7bl',
         'info_dict': {
@@ -68,18 +68,18 @@ class MisskeyIE(MisskeyBaseIE):
             'visibility': 'public',
             'age_limit': 0,
         },
-    }, {
-        'note': 'embed video with YouTube',
-        'url': 'https://misskey.io/notes/8pp0di8s4t',
-        # we have to port mfm-js in Node.js to mimick embed URL extraction
-        # https://github.com/misskey-dev/misskey/blob/develop/src/misc/extract-url-from-mfm.ts
-        # https://github.com/misskey-dev/misskey/blob/develop/src/client/ui/chat/note.vue
-        # https://github.com/misskey-dev/mfm.js/blob/develop/src/internal/parser.pegjs
-        'only_matching': True,
-    }, {
-        'note': 'no video',
-        'url': 'https://misskey.io/notes/8pp04mprzx',
-        'only_matching': True,
+        # }, {
+        #     'note': 'embed video with YouTube',
+        #     'url': 'https://misskey.io/notes/8pp0di8s4t',
+        #     # we have to port mfm-js in Node.js to mimick embed URL extraction
+        #     # https://github.com/misskey-dev/misskey/blob/develop/src/misc/extract-url-from-mfm.ts
+        #     # https://github.com/misskey-dev/misskey/blob/develop/src/client/ui/chat/note.vue
+        #     # https://github.com/misskey-dev/mfm.js/blob/develop/src/internal/parser.pegjs
+        #     'only_matching': True,
+        # }, {
+        #     'note': 'no video',
+        #     'url': 'https://misskey.io/notes/8pp04mprzx',
+        #     'only_matching': True,
     }]
 
     def _real_extract(self, url):
@@ -159,13 +159,13 @@ class MisskeyUserIE(MisskeyBaseIE):
     IE_NAME = 'misskey:user'
     _VALID_URL = r'(?P<prefix>(?:misskey|msky|msk):)?https?://(?P<instance>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)(?:@(?P<instance2>[a-zA-Z0-9_.-]+))?'
     _TESTS = [{
-        'note': 'refer to another instance',
-        'url': 'https://misskey.io/@vitaone@misskey.dev',
-        'playlist_mincount': 0,
-    }, {
-        'url': 'https://misskey.io/@kubaku@misskey.dev',
-        'playlist_mincount': 1,
-    }, {
+        #     'note': 'refer to another instance',
+        #     'url': 'https://misskey.io/@vitaone@misskey.dev',
+        #     'playlist_mincount': 0,
+        # }, {
+        #     'url': 'https://misskey.io/@kubaku@misskey.dev',
+        #     'playlist_mincount': 1,
+        # }, {
         'url': 'https://misskey.dev/@kubaku',
         'playlist_mincount': 1,
     }]
