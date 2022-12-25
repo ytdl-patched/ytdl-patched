@@ -892,7 +892,6 @@ instances = {
     "videos.ahp-numerique.fr",
     "videos.alamaisondulibre.org",
     "videos.alexandrebadalo.pt",
-    "videos.alolise.org",
     "videos.archigny.net",
     "videos.aroaduntraveled.com",
     "videos.arumoon.ru",
