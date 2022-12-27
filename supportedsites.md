@@ -137,6 +137,8 @@
  - **BBVTV**: [<abbr title="netrc machine"><em>bbvtv</em></abbr>]
  - **BBVTVLive**: [<abbr title="netrc machine"><em>bbvtv</em></abbr>]
  - **BBVTVRecordings**: [<abbr title="netrc machine"><em>bbvtv</em></abbr>]
+ - **BeatBumpPlaylist**
+ - **BeatBumpVideo**
  - **Beatport**
  - **Beeg**
  - **BehindKink**
@@ -1418,6 +1420,7 @@
  - **TrovoChannelClip**: All Clips of a trovo.live channel; "trovoclip:" prefix
  - **TrovoChannelVod**: All VODs of a trovo.live channel; "trovovod:" prefix
  - **TrovoVod**
+ - **TrtCocukVideo**
  - **TrueID**
  - **TruNews**
  - **TruTV**
