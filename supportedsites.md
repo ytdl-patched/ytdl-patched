@@ -1051,11 +1051,13 @@
  - **PokerGoCollection**: [<abbr title="netrc machine"><em>pokergo</em></abbr>]
  - **PolsatGo**
  - **PolskieRadio**
+ - **polskieradio:audition**
+ - **polskieradio:category**
  - **polskieradio:kierowcow**
+ - **polskieradio:legacy**
  - **polskieradio:player**
  - **polskieradio:podcast**
  - **polskieradio:​podcast:list**
- - **PolskieRadioCategory**
  - **Popcorntimes**
  - **PopcornTV**
  - **PornCom**
