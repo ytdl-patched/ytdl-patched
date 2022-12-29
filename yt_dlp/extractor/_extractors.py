@@ -87,7 +87,10 @@ from .alura import (
     AluraCourseIE
 )
 from .amcnetworks import AMCNetworksIE
-from .amazon import AmazonStoreIE
+from .amazon import (
+    AmazonStoreIE,
+    AmazonReviewsIE,
+)
 from .amazonminitv import (
     AmazonMiniTVIE,
     AmazonMiniTVSeasonIE,
@@ -850,6 +853,10 @@ from .ketnet import KetnetIE
 from .khanacademy import (
     KhanAcademyIE,
     KhanAcademyUnitIE,
+)
+from .kick import (
+    KickIE,
+    KickVODIE,
 )
 from .kicker import KickerIE
 from .kickstarter import KickStarterIE
@@ -2130,6 +2137,13 @@ from .videocampus_sachsen import (
 )
 from .videodetective import VideoDetectiveIE
 from .videofyme import VideofyMeIE
+from .videoken import (
+    VideoKenIE,
+    VideoKenPlayerIE,
+    VideoKenPlaylistIE,
+    VideoKenCategoryIE,
+    VideoKenTopicIE,
+)
 from .videomore import (
     VideomoreIE,
     VideomoreVideoIE,
