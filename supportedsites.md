@@ -64,6 +64,7 @@
  - **AmazonMiniTV**
  - **amazonminitv:season**: Amazon MiniTV Series, "minitv:season:" prefix
  - **amazonminitv:series**
+ - **AmazonReviews**
  - **AmazonStore**
  - **AMCNetworks**
  - **AmericasTestKitchen**
@@ -623,8 +624,10 @@
  - **Ketnet**
  - **khanacademy**
  - **khanacademy:unit**
+ - **Kick**
  - **Kicker**
  - **KickStarter**
+ - **KickVOD**
  - **KinjaEmbed**
  - **KinoPoisk**
  - **KompasVideo**
@@ -1544,6 +1547,11 @@
  - **video.sky.it:live**
  - **VideoDetective**
  - **videofy.me**
+ - **VideoKen**
+ - **VideoKenCategory**
+ - **VideoKenPlayer**
+ - **VideoKenPlaylist**
+ - **VideoKenTopic**
  - **videomore**
  - **videomore:season**
  - **videomore:video**
