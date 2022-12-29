@@ -614,6 +614,7 @@
  - **Kakao**
  - **Kaltura**
  - **Kanal2**
+ - **KankaNews**
  - **Karaoketv**
  - **KarriereVideos**
  - **Katsomo**
@@ -868,6 +869,7 @@
  - **NetPlusTVRecordings**: [<abbr title="netrc machine"><em>netplus</em></abbr>]
  - **Netverse**
  - **NetversePlaylist**
+ - **NetverseSearch**:; "netsearch:" prefix
  - **Netzkino**
  - **Newgrounds**
  - **Newgrounds:playlist**
