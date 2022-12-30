@@ -380,6 +380,8 @@ class FFmpegPostProcessor(PostProcessor, RunsFFmpeg, ShowsProgress):
                 for i, (path, opts) in enumerate(path_opts) if path)
 
         for fn, _ in output_path_opts:
+            if not fn:
+                continue
             self._ydl.ensure_directory(fn)
 
         self.write_debug('ffmpeg command line: %s' % shell_quote(cmd))
