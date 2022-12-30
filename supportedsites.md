@@ -1280,6 +1280,7 @@
  - **soundcloud:set**: [<abbr title="netrc machine"><em>soundcloud</em></abbr>]
  - **soundcloud:trackstation**: [<abbr title="netrc machine"><em>soundcloud</em></abbr>]
  - **soundcloud:user**: [<abbr title="netrc machine"><em>soundcloud</em></abbr>]
+ - **soundcloud:​user:permalink**: [<abbr title="netrc machine"><em>soundcloud</em></abbr>]
  - **SoundcloudEmbed**
  - **soundgasm**
  - **soundgasm:profile**
