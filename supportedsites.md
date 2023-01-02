@@ -167,7 +167,7 @@
  - **BilibiliSpacePlaylist**
  - **BilibiliSpaceVideo**
  - **BiliIntl**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
- - **BiliIntlSeries**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
+ - **biliintl:series**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliLive**
  - **BioBioChileTV**
  - **Biography**
