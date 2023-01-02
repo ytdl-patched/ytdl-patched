@@ -29,6 +29,8 @@ from .utils import (
     expand_path,
     format_field,
     get_executable_path,
+    get_system_config_dirs,
+    get_user_config_dirs,
     join_nonempty,
     orderedSet_from_options,
     remove_end,
@@ -42,39 +44,47 @@ def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
     if ignore_config_files == 'if_override':
         ignore_config_files = overrideArguments is not None
 
-    def _readUserConf(package_name, default=[]):
-        # .config
+    def _load_from_config_dirs(config_dirs):
+        for config_dir in config_dirs:
+            conf_file_path = os.path.join(config_dir, 'config')
+            conf = Config.read_file(conf_file_path, default=None)
+            if conf is None:
+                conf_file_path += '.txt'
+                conf = Config.read_file(conf_file_path, default=None)
+            if conf is not None:
+                return conf, conf_file_path
+        return None, None
+
+    def _read_user_conf(package_name, default=None):
+        # .config/package_name.conf
         xdg_config_home = os.getenv('XDG_CONFIG_HOME') or compat_expanduser('~/.config')
-        userConfFile = os.path.join(xdg_config_home, package_name, 'config')
-        if not os.path.isfile(userConfFile):
-            userConfFile = os.path.join(xdg_config_home, '%s.conf' % package_name)
-        userConf = Config.read_file(userConfFile, default=None)
-        if userConf is not None:
-            return userConf, userConfFile
+        user_conf_file = os.path.join(xdg_config_home, '%s.conf' % package_name)
+        user_conf = Config.read_file(user_conf_file, default=None)
+        if user_conf is not None:
+            return user_conf, user_conf_file
 
-        # appdata
-        appdata_dir = os.getenv('appdata')
-        if appdata_dir:
-            userConfFile = os.path.join(appdata_dir, package_name, 'config')
-            userConf = Config.read_file(userConfFile, default=None)
-            if userConf is None:
-                userConfFile += '.txt'
-                userConf = Config.read_file(userConfFile, default=None)
-        if userConf is not None:
-            return userConf, userConfFile
+        # home (~/package_name.conf or ~/package_name.conf.txt)
+        user_conf_file = os.path.join(compat_expanduser('~'), '%s.conf' % package_name)
+        user_conf = Config.read_file(user_conf_file, default=None)
+        if user_conf is None:
+            user_conf_file += '.txt'
+            user_conf = Config.read_file(user_conf_file, default=None)
+        if user_conf is not None:
+            return user_conf, user_conf_file
 
-        # home
-        userConfFile = os.path.join(compat_expanduser('~'), '%s.conf' % package_name)
-        userConf = Config.read_file(userConfFile, default=None)
-        if userConf is None:
-            userConfFile += '.txt'
-            userConf = Config.read_file(userConfFile, default=None)
-        if userConf is not None:
-            return userConf, userConfFile
+        # Package config directories (e.g. ~/.config/package_name/package_name.txt)
+        user_conf, user_conf_file = _load_from_config_dirs(get_user_config_dirs(package_name))
+        if user_conf is not None:
+            return user_conf, user_conf_file
+        return default if default is not None else [], None
 
-        return default, None
+    def _read_system_conf(package_name, default=None):
+        system_conf, system_conf_file = _load_from_config_dirs(get_system_config_dirs(package_name))
+        if system_conf is not None:
+            return system_conf, system_conf_file
+        return default if default is not None else [], None
 
-    def add_config(label, path, user=False):
+    def add_config(label, path=None, func=None):
         """ Adds config and returns whether to continue """
         if root.parse_known_args()[0].ignoreconfig:
             return False
@@ -82,8 +92,9 @@ def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
         # E.g. ('yt-dlp', 'youtube-dlc', 'youtube-dl') will look for
         # the configuration file of any of these three packages
         for package in ('yt-dlp', 'ytdl-patched'):
-            if user:
-                args, current_path = _readUserConf(package, default=None)
+            if func:
+                assert path is None
+                args, current_path = func('yt-dlp')
             else:
                 current_path = os.path.join(path, '%s.conf' % package)
                 args = Config.read_file(current_path, default=None)
@@ -96,8 +107,8 @@ def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
         yield not ignore_config_files
         yield add_config('Portable', get_executable_path())
         yield add_config('Home', expand_path(root.parse_known_args()[0].paths.get('home', '')).strip())
-        yield add_config('User', None, user=True)
-        yield add_config('System', '/etc')
+        yield add_config('User', func=_read_user_conf)
+        yield add_config('System', func=_read_system_conf)
 
     opts = optparse.Values({'verbose': True, 'print_help': False})
     try:
@@ -250,6 +261,19 @@ def create_parser():
             raise optparse.OptionValueError(f'wrong {option.metavar} for {opt_str}: {e.args[0]}')
 
         setattr(parser.values, option.dest, set(requested))
+
+    def _constant_set_operation(
+            option, opt_str, value, parser, values, to_add):
+        try:
+            items = getattr(parser.values, option.dest)
+        except ValueError:
+            return
+        requested = set(items)
+        if to_add:
+            requested |= values
+        else:
+            requested -= values
+        setattr(parser.values, option.dest, requested)
 
     def _dict_from_options_callback(
             option, opt_str, value, parser,
@@ -461,12 +485,14 @@ def create_parser():
             'allowed_values': {
                 'filename', 'filename-sanitization', 'format-sort', 'abort-on-error', 'format-spec', 'no-playlist-metafiles',
                 'multistreams', 'no-live-chat', 'playlist-index', 'list-formats', 'no-direct-merge',
-                'no-attach-info-json', 'embed-metadata', 'embed-thumbnail-atomicparsley',
-                'seperate-video-versions', 'no-clean-infojson', 'no-keep-subs', 'no-certifi',
+                'no-attach-info-json', 'embed-thumbnail-atomicparsley', 'no-external-downloader-progress',
+                'embed-metadata', 'seperate-video-versions', 'no-clean-infojson', 'no-keep-subs', 'no-certifi',
                 'no-youtube-channel-redirect', 'no-youtube-unavailable-videos', 'no-youtube-prefer-utc-upload-date',
             }, 'aliases': {
                 'youtube-dl': ['all', '-multistreams'],
                 'youtube-dlc': ['all', '-no-youtube-channel-redirect', '-no-live-chat'],
+                '2021': ['2022', 'no-certifi', 'filename-sanitization', 'no-youtube-prefer-utc-upload-date'],
+                '2022': ['no-external-downloader-progress'],
             }
         }, help=(
             'Options that can help keep compatibility with youtube-dl or youtube-dlc '
@@ -524,15 +550,26 @@ def create_parser():
              'Download will start even if other process is working on it.')
     general.add_option(
         '--native-progress', '--use-native-progress', '--enable-native-progress',
-        action='store_true', dest='enable_native_progress',
-        default=False,
+        action='callback', callback=_constant_set_operation,
+        dest='compat_opts', default=set(),
+        callback_kwargs={
+            'values': {'no-external-downloader-progress'},
+            'to_add': False,
+        },
         help=('Show some download from external process and some postprocessing progress with built-in progress. '
-              'This is an experimental feature, and disabled on live streams. (see yt-dlp/yt-dlp#1947)'))
+              'This is an experimental feature, and disabled on live streams. (see yt-dlp/yt-dlp#1947) '
+              'Equivalent to --compat-options -no-external-downloader-progress'))
     general.add_option(
         '--no-native-progress', '--disable-native-progress',
-        action='store_false', dest='enable_native_progress',
-        default=False,
-        help='Show direct output for all downloads from external download')
+        action='callback', callback=_constant_set_operation,
+        dest='compat_opts', default=set(),
+        callback_kwargs={
+            'values': {'no-external-downloader-progress'},
+            'to_add': True,
+        },
+        help=(
+            'Show direct output for all downloads from external downloaders. '
+            'Equivalent to --compat-options no-external-downloader-progress'))
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(
@@ -559,6 +596,11 @@ def create_parser():
         '-6', '--force-ipv6',
         action='store_const', const='::', dest='source_address',
         help='Make all connections via IPv6',
+    )
+    network.add_option(
+        '--enable-file-urls', action='store_true',
+        dest='enable_file_urls', default=False,
+        help='Enable file:// URLs. This is disabled by default for security reasons.'
     )
 
     geo = optparse.OptionGroup(parser, 'Geo-restriction')

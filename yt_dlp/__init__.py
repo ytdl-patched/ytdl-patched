@@ -722,7 +722,7 @@ def parse_options(argv=None, ignore_config_files='if_override'):
 
     postprocessors = list(get_postprocessors(opts))
 
-    print_only = bool(opts.forceprint) and all(k not in opts.forceprint for k in POSTPROCESS_WHEN[2:])
+    print_only = bool(opts.forceprint) and all(k not in opts.forceprint for k in POSTPROCESS_WHEN[3:])
     any_getting = any(getattr(opts, k) for k in (
         'dumpjson', 'dump_single_json', 'getdescription', 'getduration', 'getfilename',
         'getformat', 'getid', 'getthumbnail', 'gettitle', 'geturl'
@@ -874,6 +874,7 @@ def parse_options(argv=None, ignore_config_files='if_override'):
         'legacyserverconnect': opts.legacy_server_connect,
         'nocheckcertificate': opts.no_check_certificate,
         'prefer_insecure': opts.prefer_insecure,
+        'enable_file_urls': opts.enable_file_urls,
         'http_headers': opts.headers,
         'proxy': opts.proxy,
         'socket_timeout': opts.socket_timeout,
@@ -935,7 +936,6 @@ def parse_options(argv=None, ignore_config_files='if_override'):
         'live_download_mkv': opts.live_download_mkv,
         'lock_exclusive': opts.lock_exclusive,
         'use_modern_tls_cipher': opts.use_modern_tls_cipher,
-        'enable_native_progress': opts.enable_native_progress,
         'env_in_outtmpl': opts.env_in_outtmpl,
     })
 

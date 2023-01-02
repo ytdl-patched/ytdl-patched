@@ -1,11 +1,13 @@
 import enum
 import os
+import json
 import os.path
 import re
 import subprocess
 import sys
 import time
 import signal
+import uuid
 
 from .fragment import FragmentFD
 from ..compat import functools
@@ -27,7 +29,6 @@ from ..utils import (
     handle_youtubedl_headers,
     remove_end,
     sanitized_Request,
-    try_get,
     variadic,
     traverse_obj,
 )
@@ -68,7 +69,6 @@ class ExternalFD(FragmentFD):
             }
             if filename != '-':
                 fsize = self.ydl.getsize(encodeFilename(tmpfilename))
-                self.to_screen(f'\r[{self.get_basename()}] Downloaded {fsize} bytes')
                 self.try_rename(tmpfilename, filename)
                 status.update({
                     'downloaded_bytes': fsize,
@@ -137,10 +137,10 @@ class ExternalFD(FragmentFD):
         self._debug_cmd(cmd)
 
         if 'fragments' not in info_dict:
-            _, stderr, retcode = self._call_process(cmd, info_dict, self._CAPTURE_STDERR)
-            if retcode == 0:
+            _, stderr, returncode = self._call_process(cmd, info_dict, self._CAPTURE_STDERR)
+            if returncode and stderr:
                 self.to_stderr(stderr.decode('utf-8', 'replace'))
-            return retcode
+            return returncode
 
         skip_unavailable_fragments = self.params.get('skip_unavailable_fragments', True)
 
@@ -267,6 +267,14 @@ class Aria2cFD(ExternalFD):
     def _aria2c_filename(fn):
         return fn if os.path.isabs(fn) else f'.{os.path.sep}{fn}'
 
+    def _call_downloader(self, tmpfilename, info_dict):
+        if 'no-external-downloader-progress' not in self.params.get('compat_opts', []):
+            info_dict['__rpc'] = {
+                'port': find_available_port() or 19190,
+                'secret': str(uuid.uuid4()),
+            }
+        return super()._call_downloader(tmpfilename, info_dict)
+
     def _make_cmd(self, tmpfilename, info_dict):
         cmd = [self.exe, '-c',
                '--console-log-level=warn', '--summary-interval=0', '--download-result=hide',
@@ -294,8 +302,11 @@ class Aria2cFD(ExternalFD):
         cmd += self._bool_option('--show-console-readout', 'noprogress', 'false', 'true', '=')
         cmd += self._configuration_args()
 
-        if info_dict.get('__rpc_port'):
-            cmd += ['--enable-rpc', f'--rpc-listen-port={info_dict["__rpc_port"]}']
+        if '__rpc' in info_dict:
+            cmd += [
+                '--enable-rpc',
+                f'--rpc-listen-port={info_dict["__rpc"]["port"]}',
+                f'--rpc-secret={info_dict["__rpc"]["secret"]}']
 
         # aria2c strips out spaces from the beginning/end of filenames and paths.
         # We work around this issue by adding a "./" to the beginning of the
@@ -325,137 +336,87 @@ class Aria2cFD(ExternalFD):
             cmd += ['--', info_dict['url']]
         return cmd
 
-    def _call_downloader(self, tmpfilename, info_dict):
-        info_dict.pop('__rpc_port', None)
+    def aria2c_rpc(self, rpc_port, rpc_secret, method, params=()):
+        # Does not actually need to be UUID, just unique
+        sanitycheck = str(uuid.uuid4())
+        d = json.dumps({
+            'jsonrpc': '2.0',
+            'id': sanitycheck,
+            'method': method,
+            'params': [f'token:{rpc_secret}', *params],
+        }).encode('utf-8')
+        request = sanitized_Request(
+            f'http://localhost:{rpc_port}/jsonrpc',
+            data=d, headers={
+                'Content-Type': 'application/json',
+                'Content-Length': f'{len(d)}',
+                'Ytdl-request-proxy': '__noproxy__',
+            })
+        with self.ydl.urlopen(request) as r:
+            resp = json.load(r)
+        assert resp.get('id') == sanitycheck, 'Something went wrong with RPC server'
+        return resp['result']
 
-        # aria2c does not support livestreams and stdout redirection,
-        # so that's okay
-        use_native_progress = (
-            self.params.get('enable_native_progress', False)
-            and not self.params.get('verbose', False))
+    def _call_process(self, cmd, info_dict):
+        if '__rpc' not in info_dict:
+            return super()._call_process(cmd, info_dict)
 
-        if use_native_progress:
-            info_dict = info_dict.copy()
-            info_dict['__rpc_port'] = find_available_port() or 19190
-        return super()._call_downloader(tmpfilename, info_dict)
-
-    def _call_process(self, cmd, info_dict, capture_stderr):
-        if '__rpc_port' not in info_dict:
-            return super()._call_process(cmd, info_dict, capture_stderr)
-
-        from tempfile import TemporaryFile
-        import json
-        import uuid
-
-        rpc_port = info_dict['__rpc_port']
-        nr_frags = len(info_dict['fragments']) if 'fragments' in info_dict else -1
-
-        def aria2c_rpc(method, params):
-            # note: there's no need to be UUID (it can even a numeric value), but that's easier
-            sanitycheck = str(uuid.uuid4())
-            d = json.dumps({
-                'jsonrpc': '2.0',
-                'id': sanitycheck,
-                'method': method,
-                'params': params,
-            }).encode('utf-8')
-            request = sanitized_Request(
-                f'http://localhost:{rpc_port}/jsonrpc',
-                headers={
-                    'Content-Type': 'application/json',
-                    'Content-Length': f'{len(d)}',
-                    'Ytdl-request-proxy': '__noproxy__',
-                },
-                data=d)
-            with self.ydl.urlopen(request) as r:
-                resp = json.load(r)
-            # failing at this assertion means that the RPC server went wrong
-            # (KeyEror includes)
-            assert resp['id'] == sanitycheck
-            return resp['result']
-
+        send_rpc = functools.partial(self.aria2c_rpc, info_dict['__rpc']['port'], info_dict['__rpc']['secret'])
         started = time.time()
+
+        fragmented = 'fragments' in info_dict
+        frag_count = len(info_dict['fragments']) if fragmented else 1
         status = {
             'filename': info_dict.get('_filename'),
             'status': 'downloading',
             'elapsed': 0,
             'downloaded_bytes': 0,
+            'fragment_count': frag_count if fragmented else None,
+            'fragment_index': 0 if fragmented else None,
         }
-        if nr_frags >= 0:
-            status.update({
-                'fragment_count': nr_frags,
-                'fragment_index': 0,
-            })
         self._hook_progress(status, info_dict)
 
-        with TemporaryFile() as so, TemporaryFile() as se, \
-             Popen(cmd, stdout=so.fileno(), stderr=se.fileno() if capture_stderr else None) as p:
-            # make a short wait so that RPC client can receive response,
+        def get_stat(key, *obj, average=False):
+            val = tuple(filter(None, map(float, traverse_obj(obj, (..., ..., key))))) or [0]
+            return sum(val) / (len(val) if average else 1)
+
+        with Popen(cmd, text=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as p:
+            # Add a small sleep so that RPC client can receive response,
             # or the connection stalls infinitely
             time.sleep(0.2)
             retval = p.poll()
             while retval is None:
-                try:
-                    # https://aria2.github.io/manual/en/html/libaria2.html#c.DOWNLOAD_WAITING
-                    # https://aria2.github.io/manual/en/html/aria2c.html#aria2.tellActive
+                # We don't use tellStatus as we won't know the GID without reading stdout
+                # Ref: https://aria2.github.io/manual/en/html/aria2c.html#aria2.tellActive
+                active = send_rpc('aria2.tellActive')
+                completed = send_rpc('aria2.tellStopped', [0, frag_count])
 
-                    # use tellActive as we won't know the GID without reading stdout
-                    # that is a mess in Python
-                    aktiva = aria2c_rpc('aria2.tellActive', [])
-                    completed = aria2c_rpc('aria2.tellStopped', [0, abs(nr_frags)])
-                    if not aktiva and len(completed) == abs(nr_frags):
-                        # no active downloads, we'll exit the loop after shutdown
-                        aria2c_rpc('aria2.shutdown', [])
-                        retval = p.wait()
-                        break
+                downloaded = get_stat('totalLength', completed) + get_stat('completedLength', active)
+                speed = get_stat('downloadSpeed', active)
+                total = frag_count * get_stat('totalLength', active, completed, average=True)
+                if total < downloaded:
+                    total = None
 
-                    if nr_frags < 0:
-                        # single file
-                        active = aktiva[0]
-                        cl, ds, tl = int(active['completedLength']), int(active['downloadSpeed']), int(active['totalLength'])
-                        status.update({
-                            'downloaded_bytes': cl,
-                            'speed': ds,
-                            'eta': try_get(0, lambda x: (tl - cl) / ds),
-                            'total_bytes': tl,
-                        })
-                        continue
-
-                    # fragmented
-                    total_bytes = sum(map(int, traverse_obj([aktiva, completed], (..., ..., 'totalLength'), default=[])))
-                    if completed or aktiva:
-                        total_bytes = total_bytes * nr_frags / (len(completed) + len(aktiva))
-                    total_completed = sum(map(int, traverse_obj(completed, (..., 'totalLength'), default=[])))
-                    dled_aktiva = sum(map(int, traverse_obj(aktiva, (..., 'completedLength'), default=[])))
-                    total_speed = sum(map(float, traverse_obj(aktiva, (..., 'downloadSpeed'), default=[])))
-                    dl_all = dled_aktiva + total_completed
-
-                    status.update({
-                        'downloaded_bytes': dl_all,
-                        'speed': total_speed,
-                        'eta': try_get(0, lambda x: (total_bytes - dl_all) / total_speed),
-                        'total_bytes': total_bytes,
-                        'fragment_index': len(completed) + len(aktiva) // 2,
-                    })
-                finally:
-                    status.update({'elapsed': time.time() - started})
-                    self._hook_progress(status, info_dict)
-                    time.sleep(0.1)
-                    retval = p.poll()
-
-            if retval == 0:
                 status.update({
-                    'status': 'finished',
-                    'downloaded_bytes': status.get('total_bytes'),
+                    'downloaded_bytes': int(downloaded),
+                    'speed': speed,
+                    'total_bytes': None if fragmented else total,
+                    'total_bytes_estimate': total,
+                    'eta': (total - downloaded) / (speed or 1),
+                    'fragment_index': min(frag_count, len(completed) + 1) if fragmented else None,
+                    'elapsed': time.time() - started
                 })
                 self._hook_progress(status, info_dict)
 
-            so.seek(0)
-            se.seek(0)
-            # it's expected to be bytes here!
-            stdout, stderr = so.read(), se.read()
+                if not active and len(completed) >= frag_count:
+                    send_rpc('aria2.shutdown')
+                    retval = p.wait()
+                    break
 
-            return stdout, stderr, retval
+                time.sleep(0.1)
+                retval = p.poll()
+
+            return '', p.stderr.read(), retval
 
 
 class HttpieFD(ExternalFD):
@@ -651,7 +612,7 @@ class FFmpegFD(ExternalFD, RunsFFmpeg):
 
         piped = any(fmt['url'] in ('-', 'pipe:') for fmt in selected_formats)
         use_native_progress = (
-            self.params.get('enable_native_progress')
+            'no-external-downloader-progress' not in self.params.get('compat_opts', [])
             and not verbose
             and not live
             and not piped)
