@@ -167,7 +167,7 @@
  - **BilibiliSpacePlaylist**
  - **BilibiliSpaceVideo**
  - **BiliIntl**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
- - **biliintl:series**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
+ - **biliIntl:series**: [<abbr title="netrc machine"><em>biliintl</em></abbr>]
  - **BiliLive**
  - **BioBioChileTV**
  - **Biography**
@@ -872,7 +872,7 @@
  - **NetPlusTVRecordings**: [<abbr title="netrc machine"><em>netplus</em></abbr>]
  - **Netverse**
  - **NetversePlaylist**
- - **NetverseSearch**:; "netsearch:" prefix
+ - **NetverseSearch**: "netsearch:" prefix
  - **Netzkino**
  - **Newgrounds**
  - **Newgrounds:playlist**
@@ -1217,6 +1217,7 @@
  - **SaltTVLive**: [<abbr title="netrc machine"><em>salttv</em></abbr>]
  - **SaltTVRecordings**: [<abbr title="netrc machine"><em>salttv</em></abbr>]
  - **SampleFocus**
+ - **SamplePlugin**: (**Currently broken**)
  - **Sangiin**: 参議院インターネット審議中継 (archive)
  - **Sapo**: SAPO Vídeos
  - **savefrom.net**
@@ -1717,7 +1718,7 @@
  - **YouPorn**
  - **YourPorn**
  - **YourUpload**
- - **youtube**: YouTube
+ - **youtube+sample+NSIG+AGB**: YouTube
  - **youtube:clip**
  - **youtube:favorites**: YouTube liked videos; ":ytfav" keyword (requires cookies)
  - **youtube:history**: Youtube watch history; ":ythis" keyword (requires cookies)
