@@ -357,9 +357,9 @@ class Aria2cFD(ExternalFD):
         assert resp.get('id') == sanitycheck, 'Something went wrong with RPC server'
         return resp['result']
 
-    def _call_process(self, cmd, info_dict):
+    def _call_process(self, cmd, info_dict, capture_stderr):
         if '__rpc' not in info_dict:
-            return super()._call_process(cmd, info_dict)
+            return super()._call_process(cmd, info_dict, capture_stderr)
 
         send_rpc = functools.partial(self.aria2c_rpc, info_dict['__rpc']['port'], info_dict['__rpc']['secret'])
         started = time.time()
