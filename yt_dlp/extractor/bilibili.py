@@ -16,6 +16,7 @@ from ..utils import (
     format_field,
     int_or_none,
     make_archive_id,
+    merge_dicts,
     mimetype2ext,
     parse_count,
     parse_qs,
@@ -934,6 +935,10 @@ class BiliIntlIE(BiliIntlBaseIE):
             'title': 'E2 - The First Night',
             'thumbnail': r're:^https://pic\.bstarstatic\.com/ogv/.+\.png$',
             'episode_number': 2,
+            'upload_date': '20201009',
+            'episode': 'Episode 2',
+            'timestamp': 1602259500,
+            'description': 'md5:297b5a17155eb645e14a14b385ab547e',
         }
     }, {
         # Non-Bstation page
@@ -944,6 +949,10 @@ class BiliIntlIE(BiliIntlBaseIE):
             'title': 'E3 - Who?',
             'thumbnail': r're:^https://pic\.bstarstatic\.com/ogv/.+\.png$',
             'episode_number': 3,
+            'description': 'md5:e1a775e71a35c43f141484715470ad09',
+            'episode': 'Episode 3',
+            'upload_date': '20211219',
+            'timestamp': 1639928700,
         }
     }, {
         # Subtitle with empty content
@@ -956,6 +965,17 @@ class BiliIntlIE(BiliIntlBaseIE):
             'episode_number': 140,
         },
         'skip': 'According to the copyright owner\'s request, you may only watch the video after you log in.'
+    }, {
+        'url': 'https://www.bilibili.tv/en/video/2041863208',
+        'info_dict': {
+            'id': '2041863208',
+            'ext': 'mp4',
+            'timestamp': 1670874843,
+            'description': 'Scheduled for April 2023.\nStudio: ufotable',
+            'thumbnail': r're:https?://pic[-\.]bstarstatic.+/ugc/.+\.jpg$',
+            'upload_date': '20221212',
+            'title': 'Kimetsu no Yaiba Season 3 Official Trailer - Bstation',
+        }
     }, {
         'url': 'https://www.biliintl.com/en/play/34613/341736',
         'only_matching': True,
@@ -989,7 +1009,7 @@ class BiliIntlIE(BiliIntlBaseIE):
             self._search_json(r'window\.__INITIAL_(?:DATA|STATE)__\s*=', webpage, 'preload state', video_id, default={})
             or self._search_nuxt_data(webpage, video_id, '__initialState', fatal=False, traverse=None))
         video_data = traverse_obj(
-            initial_data, ('OgvVideo', 'epDetail'), ('UgcVideo', 'videoData'), ('ugc', 'archive'), expected_type=dict)
+            initial_data, ('OgvVideo', 'epDetail'), ('UgcVideo', 'videoData'), ('ugc', 'archive'), expected_type=dict) or {}
 
         if season_id and not video_data:
             # Non-Bstation layout, read through episode list
@@ -998,7 +1018,12 @@ class BiliIntlIE(BiliIntlBaseIE):
                 'sections', ..., 'episodes', lambda _, v: str(v['episode_id']) == video_id
             ), expected_type=dict, get_all=False)
 
-        return self._parse_video_metadata(video_data)
+        # XXX: webpage metadata may not accurate, it just used to not crash when video_data not found
+        return merge_dicts(
+            self._parse_video_metadata(video_data), self._search_json_ld(webpage, video_id), {
+                'title': self._html_search_meta('og:title', webpage),
+                'description': self._html_search_meta('og:description', webpage)
+            })
 
     def _real_extract(self, url):
         season_id, ep_id, aid = self._match_valid_url(url).group('season_id', 'ep_id', 'aid')
@@ -1014,21 +1039,32 @@ class BiliIntlIE(BiliIntlBaseIE):
 
 class BiliIntlSeriesIE(BiliIntlBaseIE):
     IE_NAME = 'biliIntl:series'
-    _VALID_URL = r'https?://(?:www\.)?bili(?:bili\.tv|intl\.com)/(?:[a-zA-Z]{2}/)?play/(?P<id>\d+)/?(?:[?#]|$)'
+    _VALID_URL = r'https?://(?:www\.)?bili(?:bili\.tv|intl\.com)/(?:[a-zA-Z]{2}/)?(?:play|media)/(?P<id>\d+)/?(?:[?#]|$)'
     _TESTS = [{
         'url': 'https://www.bilibili.tv/en/play/34613',
         'playlist_mincount': 15,
         'info_dict': {
             'id': '34613',
-            'title': 'Fly Me to the Moon',
-            'description': 'md5:a861ee1c4dc0acfad85f557cc42ac627',
-            'categories': ['Romance', 'Comedy', 'Slice of life'],
+            'title': 'TONIKAWA: Over the Moon For You',
+            'description': 'md5:297b5a17155eb645e14a14b385ab547e',
+            'categories': ['Slice of life', 'Comedy', 'Romance'],
             'thumbnail': r're:^https://pic\.bstarstatic\.com/ogv/.+\.png$',
             'view_count': int,
         },
         'params': {
             'skip_download': True,
         },
+    }, {
+        'url': 'https://www.bilibili.tv/en/media/1048837',
+        'info_dict': {
+            'id': '1048837',
+            'title': 'SPY×FAMILY',
+            'description': 'md5:b4434eb1a9a97ad2bccb779514b89f17',
+            'categories': ['Adventure', 'Action', 'Comedy'],
+            'thumbnail': r're:^https://pic\.bstarstatic\.com/ogv/.+\.jpg$',
+            'view_count': int,
+        },
+        'playlist_mincount': 25,
     }, {
         'url': 'https://www.biliintl.com/en/play/34613',
         'only_matching': True,

@@ -79,6 +79,7 @@ from .agora import (
 )
 from .airmozilla import AirMozillaIE
 from .airtv import AirTVIE
+from .aitube import AitubeKZVideoIE
 from .aljazeera import AlJazeeraIE
 from .alphaporno import AlphaPornoIE
 from .amara import AmaraIE
@@ -1915,6 +1916,7 @@ from .tiktok import (
     TikTokEffectIE,
     TikTokTagIE,
     TikTokVMIE,
+    TikTokLiveIE,
     DouyinIE,
 )
 from .tinypic import TinyPicIE
@@ -2217,6 +2219,7 @@ from .voicy import (
     VoicyIE,
     VoicyChannelIE,
 )
+from .volejtv import VolejTVIE
 from .voot import (
     VootIE,
     VootSeriesIE,

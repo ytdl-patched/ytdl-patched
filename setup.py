@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+
+# Allow execution from anywhere
 import os
 import os.path
-import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import subprocess
 import warnings
 
 try:
