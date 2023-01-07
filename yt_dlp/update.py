@@ -76,8 +76,8 @@ _FILE_SUFFIXES = {
     'zip': '',
     'homebrew': '',
     'py2exe': '_min.exe',
-    'win32_exe': '.exe',
-    'win32_x86_exe': '_x86.exe',
+    'win_exe': '.exe',
+    'win_x86_exe': '_x86.exe',
     'darwin_exe': '_macos',
     'darwin_legacy_exe': '_macos_legacy',
     'linux_exe': '_linux',
@@ -271,7 +271,8 @@ class Updater:
                 self._report_error('Unable to overwrite current version')
                 return os.rename(old_filename, self.filename)
 
-        if detect_variant() in ('win32_exe', 'py2exe', 'exe_red', 'exe_white'):
+        variant = detect_variant()
+        if variant.startswith('win') or variant.startswith('exe') or variant == 'py2exe':
             atexit.register(Popen, f'ping 127.0.0.1 -n 5 -w 1000 & del /F "{old_filename}"',
                             shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         elif old_filename:
