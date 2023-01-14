@@ -37,6 +37,7 @@ from ..utils import (
     FormatSorter,
     GeoRestrictedError,
     GeoUtils,
+    HEADRequest,
     LenientJSONDecoder,
     RegexNotFoundError,
     RetryManager,
@@ -88,6 +89,7 @@ from ..utils import (
     update_Request,
     update_url_query,
     url_basename,
+    urlhandle_detect_ext,
     url_or_none,
     urlencode_postdata,
     urljoin,
@@ -2375,7 +2377,8 @@ class InfoExtractor:
             height = int_or_none(medium.get('height'))
             proto = medium.get('proto')
             ext = medium.get('ext')
-            src_ext = determine_ext(src)
+            src_ext = determine_ext(src, default_ext=None) or ext or urlhandle_detect_ext(
+                self._request_webpage(HEADRequest(src), video_id, note='Requesting extension info', fatal=False))
             streamer = medium.get('streamer') or base
 
             if proto == 'rtmp' or streamer.startswith('rtmp'):
