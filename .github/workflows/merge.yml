@@ -19,11 +19,11 @@ jobs:
         set +e -x
         git config --global pull.rebase false
         git config --global core.editor "$(realpath ./devscripts/remove_ci_skip.py)"
-        git config --global user.name nao20010128nao
+        git config --global user.name Lesmiscore
         git config --global user.email nao20010128@gmail.com
         git config --unset  http.https://github.com/.extraheader
         git config --unset  credential.helper
-        git remote add self https://nao20010128nao:${{ secrets.GH_PAT }}@github.com/ytdl-patched/ytdl-patched.git
+        git remote add self https://Lesmiscore:${{ secrets.GH_PAT }}@github.com/ytdl-patched/ytdl-patched.git
         git remote add upstream https://github.com/yt-dlp/yt-dlp.git
     - name: Pull from yt-dlp/yt-dlp
       run: git pull upstream master --log
