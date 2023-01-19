@@ -3591,7 +3591,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     def _needs_live_processing(self, live_status, duration):
         if (live_status == 'is_live' and self.get_param('live_from_start')
-                or live_status == 'post_live' and (duration or 0) > 4 * 3600):
+                or live_status == 'post_live' and (duration or 0) > 2 * 3600):
             return live_status
 
     def _extract_formats_and_subtitles(self, streaming_data, video_id, player_url, live_status, duration):
