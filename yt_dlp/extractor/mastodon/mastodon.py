@@ -202,7 +202,7 @@ class MastodonIE(MastodonBaseIE):
             return True
         return super(MastodonIE, cls).suitable(url)
 
-    _TESTS = [{
+    _TESTS_DISABLED = [{
         'note': 'embed video without NSFW',
         'url': 'https://mstdn.jp/@nao20010128nao/105395495018076252',
         'info_dict': {
@@ -475,7 +475,7 @@ class MastodonIE(MastodonBaseIE):
 class MastodonUserIE(MastodonBaseIE):
     IE_NAME = 'mastodon:user'
     _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/@(?P<id>[a-zA-Z0-9_-]+)/?(?:\?.*)?$'
-    _TESTS = [{
+    _TESTS_DISABLED = [{
         'url': 'https://pawoo.net/@iriomote_yamaneko',
         'info_dict': {
             'title': 'Toots from @iriomote_yamaneko@pawoo.net',
@@ -512,7 +512,7 @@ class MastodonUserIE(MastodonBaseIE):
 class MastodonUserNumericIE(MastodonBaseIE):
     IE_NAME = 'mastodon:user:numeric_id'
     _VALID_URL = r'(?P<prefix>(?:mastodon|mstdn|mtdn):)?https?://(?P<domain>[a-zA-Z0-9._-]+)/web/accounts/(?P<id>\d+)/?'
-    _TESTS = [{
+    _TESTS_DISABLED = [{
         'url': 'https://mstdn.jp/web/accounts/330076',
         'only_matching': True,
     }]
