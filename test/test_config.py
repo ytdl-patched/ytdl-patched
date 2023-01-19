@@ -48,29 +48,29 @@ def _generate_expected_groups():
     home_dir = compat_expanduser('~')
     return {
         'Portable': [
-            Path(get_executable_path(), 'yt-dlp.conf'),
+            Path(get_executable_path(), 'ytdl-patched.conf'),
         ],
         'Home': [
-            Path('yt-dlp.conf'),
+            Path('ytdl-patched.conf'),
         ],
         'User': [
-            Path(xdg_config_home, 'yt-dlp.conf'),
-            Path(xdg_config_home, 'yt-dlp', 'config'),
-            Path(xdg_config_home, 'yt-dlp', 'config.txt'),
+            Path(xdg_config_home, 'ytdl-patched.conf'),
+            Path(xdg_config_home, 'ytdl-patched', 'config'),
+            Path(xdg_config_home, 'ytdl-patched', 'config.txt'),
             *((
-                Path(appdata_dir, 'yt-dlp.conf'),
-                Path(appdata_dir, 'yt-dlp', 'config'),
-                Path(appdata_dir, 'yt-dlp', 'config.txt'),
+                Path(appdata_dir, 'ytdl-patched.conf'),
+                Path(appdata_dir, 'ytdl-patched', 'config'),
+                Path(appdata_dir, 'ytdl-patched', 'config.txt'),
             ) if appdata_dir else ()),
-            Path(home_dir, 'yt-dlp.conf'),
-            Path(home_dir, 'yt-dlp.conf.txt'),
-            Path(home_dir, '.yt-dlp', 'config'),
-            Path(home_dir, '.yt-dlp', 'config.txt'),
+            Path(home_dir, 'ytdl-patched.conf'),
+            Path(home_dir, 'ytdl-patched.conf.txt'),
+            Path(home_dir, '.ytdl-patched', 'config'),
+            Path(home_dir, '.ytdl-patched', 'config.txt'),
         ],
         'System': [
-            Path('/etc/yt-dlp.conf'),
-            Path('/etc/yt-dlp/config'),
-            Path('/etc/yt-dlp/config.txt'),
+            Path('/etc/ytdl-patched.conf'),
+            Path('/etc/ytdl-patched/config'),
+            Path('/etc/ytdl-patched/config.txt'),
         ]
     }
 

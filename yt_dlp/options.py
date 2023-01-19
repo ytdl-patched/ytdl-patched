@@ -40,9 +40,9 @@ from .version import __version__
 
 
 def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
-    PACKAGE_NAME = 'yt-dlp'
+    PACKAGE_NAME = 'ytdl-patched'
 
-    root = Config(create_parser())
+    root = Config(create_parser(), package=PACKAGE_NAME)
     if ignore_config_files == 'if_override':
         ignore_config_files = overrideArguments is not None
 
@@ -67,19 +67,15 @@ def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
         """ Adds config and returns whether to continue """
         if root.parse_known_args()[0].ignoreconfig:
             return False
-        # Multiple package names can be given here
-        # E.g. ('yt-dlp', 'youtube-dlc', 'youtube-dl') will look for
-        # the configuration file of any of these three packages
-        for package in ('yt-dlp', 'ytdl-patched'):
-            if func:
-                assert path is None
-                args, current_path = next(
-                    filter(None, _load_from_config_dirs(func(PACKAGE_NAME))), (None, None))
-            else:
-                current_path = os.path.join(path, f'{package}.conf')
-                args = Config.read_file(current_path, default=None)
-            if args is not None:
-                root.append_config(args, current_path, label=label)
+        elif func:
+            assert path is None
+            args, current_path = next(
+                filter(None, _load_from_config_dirs(func(PACKAGE_NAME))), (None, None))
+        else:
+            current_path = os.path.join(path, f'{PACKAGE_NAME}.conf')
+            args = Config.read_file(current_path, default=None)
+        if args is not None:
+            root.append_config(args, current_path, label=label)
         return True
 
     def load_configs():

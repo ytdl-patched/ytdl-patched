@@ -5850,10 +5850,11 @@ class Config:
     own_args = None
     parsed_args = None
     filename = None
+    package = None
     __initialized = False
 
-    def __init__(self, parser, label=None):
-        self.parser, self.label = parser, label
+    def __init__(self, parser, label=None, package='ytdl-patched'):
+        self.parser, self.label, self.package = parser, label, package
         self._loaded_paths, self.configs = set(), []
 
     def init(self, args=None, filename=None):
@@ -5882,7 +5883,7 @@ class Config:
                 continue
             location = os.path.join(directory, expand_path(location))
             if os.path.isdir(location):
-                location = os.path.join(location, 'yt-dlp.conf')
+                location = os.path.join(location, f'{self.package}.conf')
             if not os.path.exists(location):
                 self.parser.error(f'config location {location} does not exist')
             self.append_config(self.read_file(location), location)
