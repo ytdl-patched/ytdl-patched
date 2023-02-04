@@ -904,7 +904,7 @@
  - **nickelodeonru**
  - **nicknight**
  - **niconico**: [<abbr title="netrc machine"><em>niconico</em></abbr>] ニコニコ動画
- - **niconico:history**: NicoNico user history. Requires cookies.
+ - **niconico:history**: NicoNico user history or likes. Requires cookies.
  - **niconico:live**: ニコニコ生放送
  - **niconico:playlist**
  - **niconico:series**
@@ -1081,6 +1081,7 @@
  - **Pornotube**
  - **PornoVoisines**
  - **PornoXO**
+ - **PornTop**
  - **PornTube**
  - **PrankCast**
  - **PremiershipRugby**
@@ -1508,6 +1509,7 @@
  - **twitter:card**
  - **twitter:shortener**
  - **twitter:spaces**
+ - **Txxx**
  - **udemy**: [<abbr title="netrc machine"><em>udemy</em></abbr>]
  - **udemy:course**: [<abbr title="netrc machine"><em>udemy</em></abbr>]
  - **UDNEmbed**: 聯合影音
