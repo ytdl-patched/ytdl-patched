@@ -2308,6 +2308,10 @@ from .wppilot import (
     WPPilotIE,
     WPPilotChannelsIE,
 )
+from .wrestleuniverse import (
+    WrestleUniverseVODIE,
+    WrestleUniversePPVIE,
+)
 from .wsj import (
     WSJIE,
     WSJArticleIE,
