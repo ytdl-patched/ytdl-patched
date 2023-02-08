@@ -57,7 +57,7 @@ except (ImportError, SyntaxError):
     websockets = None
 
 
-from .websocket import WebSocket
+from ..websocket import WebSocket
 
 
 try:
