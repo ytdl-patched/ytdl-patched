@@ -460,7 +460,7 @@ class AbemaTVIE(AbemaTVBaseIE):
                 f'https://api.abema.io/v1/video/programs/{video_id}', video_id,
                 note='Checking playability',
                 headers=headers)
-            ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'), default=[])
+            ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'))
             if 3 not in ondemand_types:
                 self.report_warning('This is a premium-only stream')
 
@@ -559,7 +559,7 @@ class AbemaTVTitleIE(AbemaTVBaseIE):
             })
         yield from (
             self.url_result(f'https://abema.tv/video/episode/{x}')
-            for x in traverse_obj(programs, ('programs', ..., 'id'), default=[]))
+            for x in traverse_obj(programs, ('programs', ..., 'id')))
 
     def _entries(self, playlist_id, series_version):
         return OnDemandPagedList(

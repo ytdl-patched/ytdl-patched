@@ -96,7 +96,10 @@ def build_params():
     params = {'data_files': data_files}
 
     if setuptools_available:
-        params['entry_points'] = {'console_scripts': ['ytdl-patched = yt_dlp:main']}
+        params['entry_points'] = {
+            'console_scripts': ['ytdl-patched = yt_dlp:main'],
+            'pyinstaller40': ['hook-dirs = yt_dlp.__pyinstaller:get_hook_dirs'],
+        }
     else:
         params['scripts'] = ['ytdl-patched']
     return params
