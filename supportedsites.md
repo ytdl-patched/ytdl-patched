@@ -1679,6 +1679,8 @@
  - **WorldStarHipHop**
  - **wppilot**
  - **wppilot:channels**
+ - **WrestleUniversePPV**
+ - **WrestleUniverseVOD**
  - **WSJ**: Wall Street Journal
  - **WSJArticle**
  - **WWE**
