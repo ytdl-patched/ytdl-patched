@@ -614,6 +614,7 @@
  - **JeuxVideo**
  - **Joj**
  - **Jove**
+ - **JStream**
  - **JWPlatform**
  - **Kakao**
  - **Kaltura**
