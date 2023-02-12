@@ -1602,9 +1602,6 @@
  - **vk**: [<abbr title="netrc machine"><em>vk</em></abbr>] VK
  - **vk:uservideos**: [<abbr title="netrc machine"><em>vk</em></abbr>] VK - User's Videos
  - **vk:wallpost**: [<abbr title="netrc machine"><em>vk</em></abbr>]
- - **vlive**: [<abbr title="netrc machine"><em>vlive</em></abbr>]
- - **vlive:channel**: [<abbr title="netrc machine"><em>vlive</em></abbr>]
- - **vlive:post**: [<abbr title="netrc machine"><em>vlive</em></abbr>]
  - **vm.tiktok**
  - **Vodlocker**
  - **VODPl**
@@ -1654,6 +1651,7 @@
  - **wdr:mobile**: (**Currently broken**)
  - **WDRElefant**
  - **WDRPage**
+ - **web.archive:vlive**: web.archive.org saved vlive videos
  - **web.archive:youtube**: web.archive.org saved youtube videos, "ytarchive:" prefix
  - **Webcamerapl**
  - **Webcaster**
