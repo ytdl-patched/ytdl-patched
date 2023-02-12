@@ -135,7 +135,6 @@ class HANMIE(InfoExtractor):
         if release_date:
             release_date = release_date[:10].replace('-', '')
 
-        self._sort_formats(formats)
         return {
             'id': video_id,
             'formats': formats,
@@ -310,7 +309,6 @@ class VDSIE(InfoExtractor):
         formats = []
         for fm in traverse_obj(info_response, ('media', 'sources', ..., 'file'), default=[]):
             formats.extend(self._extract_m3u8_formats(fm, video_id, ext='mp4'))
-        self._sort_formats(formats)
 
         return {
             'id': video_id,
