@@ -893,6 +893,8 @@
  - **NFHSNetwork**
  - **nfl.com**
  - **nfl.com:article**
+ - **nfl.com:​plus:episode**
+ - **nfl.com:​plus:replay**
  - **NhkForSchoolBangumi**
  - **NhkForSchoolProgramList**
  - **NhkForSchoolSubject**: Portal page for each school subjects, like Japanese (kokugo, 国語) or math (sansuu/suugaku or 算数・数学)
@@ -956,6 +958,7 @@
  - **NYTimesArticle**
  - **NYTimesCooking**
  - **nzherald**
+ - **NZOnScreen**
  - **NZZ**
  - **ocw.mit.edu**
  - **OdaTV**
