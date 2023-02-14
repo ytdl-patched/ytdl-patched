@@ -167,7 +167,7 @@ jobs:
       - name: Upgrade pip and enable wheel support
         run: python -m pip install --upgrade pip setuptools wheel
       - name: Install deps
-        run: pip install -U "https://yt-dlp.github.io/Pyinstaller-Builds/x86_64/pyinstaller-4.10-py3-none-any.whl" zopflipy websockets python-dateutil mutagen pycryptodomex
+        run: pip install -U "https://yt-dlp.github.io/Pyinstaller-Builds/x86_64/pyinstaller-5.3-py3-none-any.whl" zopflipy websockets python-dateutil mutagen pycryptodomex
       - name: Install UPX
         shell: pwsh
         run: pwsh ./devscripts/install_upx.ps1

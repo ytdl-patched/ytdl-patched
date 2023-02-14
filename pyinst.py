@@ -103,7 +103,6 @@ def set_version_info(exe, version):
 def windows_set_version(exe, version):
     from PyInstaller.utils.win32.versioninfo import (
         FixedFileInfo,
-        SetVersion,
         StringFileInfo,
         StringStruct,
         StringTable,
@@ -111,6 +110,11 @@ def windows_set_version(exe, version):
         VarStruct,
         VSVersionInfo,
     )
+
+    try:
+        from PyInstaller.utils.win32.versioninfo import SetVersion
+    except ImportError:  # Pyinstaller >= 5.8
+        from PyInstaller.utils.win32.versioninfo import write_version_info_to_executable as SetVersion
 
     version_list = version_to_list(version)
     suffix = '_x86' if ARCH == '32' else ''
