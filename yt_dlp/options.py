@@ -1124,7 +1124,7 @@ def create_parser():
         metavar='URL', dest='referer', default=None,
         help=optparse.SUPPRESS_HELP)
     workarounds.add_option(
-        '--add-header', '--header', '-H',
+        '--add-headers', '--header', '-H',
         metavar='FIELD:VALUE', dest='headers', default={}, type='str',
         action='callback', callback=_dict_from_options_callback,
         callback_kwargs={'multiple_keys': False},

@@ -63,14 +63,15 @@
  - **AluraCourse**: [<abbr title="netrc machine"><em>aluracourse</em></abbr>]
  - **Amara**
  - **AmazonMiniTV**
- - **amazonminitv:season**: Amazon MiniTV Series, "minitv:season:" prefix
- - **amazonminitv:series**
+ - **amazonminitv:season**: Amazon MiniTV Season, "minitv:season:" prefix
+ - **amazonminitv:series**: Amazon MiniTV Series, "minitv:series:" prefix
  - **AmazonReviews**
  - **AmazonStore**
  - **AMCNetworks**
  - **AmericasTestKitchen**
  - **AmericasTestKitchenSeason**
  - **AmHistoryChannel**
+ - **AnchorFMEpisode**
  - **anderetijden**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
  - **Angel**
  - **AnimalPlanet**
@@ -180,6 +181,7 @@
  - **BlackboardCollaborate**
  - **BleacherReport**
  - **BleacherReportCMS**
+ - **blerp**
  - **blogger.com**
  - **Bloomberg**
  - **BokeCC**
@@ -187,6 +189,7 @@
  - **BooyahClips**
  - **BostonGlobe**
  - **Box**
+ - **BoxCastVideo**
  - **Bpb**: Bundeszentrale für politische Bildung
  - **BR**: Bayerischer Rundfunk
  - **BravoTV**
@@ -370,6 +373,7 @@
  - **dw:article**
  - **EaglePlatform**
  - **EbaumsWorld**
+ - **Ebay**
  - **EchoMsk**
  - **egghead:course**: egghead.io course
  - **egghead:lesson**: egghead.io lesson
@@ -603,6 +607,8 @@
  - **ivi:compilation**: ivi.ru compilations
  - **ivideon**: Ivideon TV
  - **iwara**
+ - **IVXPlayer**
+ - **Iwara**
  - **iwara:playlist**
  - **iwara:user**
  - **Ixigua**
@@ -634,6 +640,7 @@
  - **KickVOD**
  - **KinjaEmbed**
  - **KinoPoisk**
+ - **Kommunetv**
  - **KompasVideo**
  - **KonserthusetPlay**
  - **Koo**
@@ -787,6 +794,7 @@
  - **Mofosex**
  - **MofosexEmbed**
  - **Mojvideo**
+ - **MonsterSirenHypergryphMusic**
  - **Morningstar**: morningstar.com
  - **Motherless**
  - **MotherlessGroup**
@@ -968,6 +976,7 @@
  - **OktoberfestTV**
  - **OlympicsReplay**
  - **on24**: ON24
+ - **OnDemandChinaEpisode**
  - **OnDemandKorea**
  - **OneFootball**
  - **OnePlacePodcast**
@@ -1087,6 +1096,8 @@
  - **PornoXO**
  - **PornTop**
  - **PornTube**
+ - **Pr0gramm**
+ - **Pr0grammStatic**
  - **PrankCast**
  - **PremiershipRugby**
  - **PressTV**
@@ -1138,6 +1149,8 @@
  - **RaiSudtirol**
  - **RayWenderlich**
  - **RayWenderlichCourse**
+ - **RbgTum**
+ - **RbgTumCourse**
  - **RBMARadio**
  - **RCS**
  - **RCSEmbeds**
@@ -1601,11 +1614,13 @@
  - **Viu**
  - **viu:ott**: [<abbr title="netrc machine"><em>viu</em></abbr>]
  - **viu:playlist**
+ - **ViuOTTIndonesia**
  - **Vivo**: vivo.sx
  - **vk**: [<abbr title="netrc machine"><em>vk</em></abbr>] VK
  - **vk:uservideos**: [<abbr title="netrc machine"><em>vk</em></abbr>] VK - User's Videos
  - **vk:wallpost**: [<abbr title="netrc machine"><em>vk</em></abbr>]
  - **vm.tiktok**
+ - **Vocaroo**
  - **Vodlocker**
  - **VODPl**
  - **VODPlatform**
@@ -1720,6 +1735,7 @@
  - **YandexVideo**
  - **YandexVideoPreview**
  - **YapFiles**
+ - **Yappy**
  - **YesJapan**
  - **yinyuetai:video**: 音悦Tai
  - **YleAreena**

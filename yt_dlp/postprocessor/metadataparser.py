@@ -4,7 +4,7 @@ import re
 
 from ..utils import get_argcount
 from .common import PostProcessor
-from ..utils import Namespace, filter_dict
+from ..utils import Namespace, filter_dict, function_with_repr
 
 
 class MetadataParserPP(PostProcessor):
@@ -68,6 +68,7 @@ class MetadataParserPP(PostProcessor):
             next(filter(lambda x: 0, f(info)), None)
         return [], info
 
+    @function_with_repr
     def interpretter(self, inp, out):
         def f(info):
             data_to_parse = self._downloader.evaluate_outtmpl(template, info)
@@ -85,6 +86,7 @@ class MetadataParserPP(PostProcessor):
         out_re = re.compile(self.format_to_regex(out))
         return f
 
+    @function_with_repr
     def replacer(self, field, search, replace):
         def f(info):
             nonlocal replace
