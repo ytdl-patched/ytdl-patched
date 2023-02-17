@@ -606,9 +606,8 @@
  - **ivi**: ivi.ru
  - **ivi:compilation**: ivi.ru compilations
  - **ivideon**: Ivideon TV
- - **iwara**
  - **IVXPlayer**
- - **Iwara**
+ - **iwara**
  - **iwara:playlist**
  - **iwara:user**
  - **Ixigua**
