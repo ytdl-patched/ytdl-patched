@@ -3,7 +3,7 @@ choco install upx
 
 if ($LASTEXITCODE -ne 0) {
     # fallback to ZIP download
-    $UpxVersion = "3.96"
+    $UpxVersion = "4.0.2"
     Invoke-WebRequest "https://github.com/upx/upx/releases/download/v${UpxVersion}/upx-${UpxVersion}-win64.zip" -O upx.zip
     Expand-Archive -Path 'upx.zip' -DestinationPath 'upx\'
     # add to PATH as we do for Actions
