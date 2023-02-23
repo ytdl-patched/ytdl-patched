@@ -860,17 +860,8 @@ class Popen(subprocess.Popen):
             kwargs.setdefault('errors', 'replace')
         super().__init__(*args, env=env, **kwargs, startupinfo=self._startupinfo)
 
-        self.textmode = bool(
-            kwargs.get('universal_newlines')
-            or kwargs.get('encoding')
-            or kwargs.get('errors')
-            or kwargs.get('text')
-            or isinstance(self.stdout, io.TextIOWrapper)
-            or isinstance(self.stderr, io.TextIOWrapper)
-            or isinstance(self.stdin, io.TextIOWrapper))
-
     def communicate_or_kill(self, *args, **kwargs):
-        if self.textmode and args and isinstance(args[0], bytes):
+        if self.__text_mode and args and isinstance(args[0], bytes):
             if isinstance(args, tuple):
                 args = list(args)
             args[0] = args[0].decode()
