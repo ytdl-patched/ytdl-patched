@@ -65,6 +65,8 @@ from ..utils import (
     variadic,
 )
 
+
+STREAMING_DATA_CLIENT_NAME = '__yt_dlp_client'
 # any clients starting with _ cannot be explicitly requested by the user
 INNERTUBE_CLIENTS = {
     'web': {
@@ -3647,6 +3649,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     self.report_warning(
                         f'Skipping player response from {client} client (got player response for video "{pr_video_id}" instead of "{video_id}")' + bug_reports_message())
                 else:
+                    # set the client name in streamingData so that we can show it on -F
+                    (traverse_obj(pr, ('streamingData', {dict})) or {})[STREAMING_DATA_CLIENT_NAME] = client
                     prs.append(pr)
 
             # creator clients can bypass AGE_VERIFICATION_REQUIRED if logged in
@@ -3729,7 +3733,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     continue
 
             query = parse_qs(fmt_url)
-            client_name = traverse_obj(query, ('c', 0), expected_type=str, default='')
             throttled = False
             if query.get('n'):
                 try:
@@ -3749,9 +3752,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             video_id=video_id, only_once=True)
                     throttled = True
 
-            if client_name:
-                client_name = client_name[0:3]
-
             tbr = float_or_none(fmt.get('averageBitrate') or fmt.get('bitrate'), 1000)
             language_preference = (
                 10 if audio_track.get('audioIsDefault') and 10
@@ -3765,6 +3765,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if is_damaged:
                 self.report_warning(
                     f'{video_id}: Some formats are possibly damaged. They will be deprioritized', only_once=True)
+
+            client_name = (traverse_obj(query, ('c', 0, {str})) or fmt.get(STREAMING_DATA_CLIENT_NAME) or '')[0:3].upper()
             dct = {
                 'asr': int_or_none(fmt.get('audioSampleRate')),
                 'filesize': int_or_none(fmt.get('contentLength')),
@@ -3776,7 +3778,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     'DRC' if fmt.get('isDrc') else None,
                     try_get(fmt, lambda x: x['projectionType'].replace('RECTANGULAR', '').lower()),
                     try_get(fmt, lambda x: x['spatialAudioType'].replace('SPATIAL_AUDIO_TYPE_', '').lower()),
-                    throttled and 'THROTTLED', client_name, is_damaged and 'DAMAGED', delim=', '),
+                    throttled and 'THROTTLED', is_damaged and 'DAMAGED',
+                    # for convenience of seeing client name in -F without debugging
+                    client_name,
+                    delim=', '),
                 # Format 22 is likely to be damaged. See https://github.com/yt-dlp/yt-dlp/issues/3372
                 'source_preference': -10 if throttled else -5 if itag == '22' else -1,
                 'fps': int_or_none(fmt.get('fps')) or None,
@@ -3834,7 +3839,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         elif skip_bad_formats and live_status == 'is_live' and needs_live_processing != 'is_live':
             skip_manifests.add('dash')
 
-        def process_manifest_format(f, proto, itag):
+        def process_manifest_format(f, proto, client_name, itag):
             key = (proto, f.get('language'))
             if key in itags[itag]:
                 return False
@@ -3848,17 +3853,20 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             f['quality'] = q(itag_qualities.get(try_get(f, lambda f: f['format_id'].split('-')[0]), -1))
             if f['quality'] == -1 and f.get('height'):
                 f['quality'] = q(res_qualities[min(res_qualities, key=lambda x: abs(x - f['height']))])
+            f['format_note'] = join_nonempty(f.get('format_note'), client_name, delim=', ')
             return True
 
         subtitles = {}
         for sd in streaming_data:
+            client_name = (sd.get(STREAMING_DATA_CLIENT_NAME) or '')[0:3].upper()
+
             hls_manifest_url = 'hls' not in skip_manifests and sd.get('hlsManifestUrl')
             if hls_manifest_url:
                 fmts, subs = self._extract_m3u8_formats_and_subtitles(
                     hls_manifest_url, video_id, 'mp4', fatal=False, live=live_status == 'is_live')
                 subtitles = self._merge_subtitles(subs, subtitles)
                 for f in fmts:
-                    if process_manifest_format(f, 'hls', self._search_regex(
+                    if process_manifest_format(f, 'hls', client_name, self._search_regex(
                             r'/itag/(\d+)', f['url'], 'itag', default=None)):
                         yield f
 
@@ -3867,7 +3875,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 formats, subs = self._extract_mpd_formats_and_subtitles(dash_manifest_url, video_id, fatal=False)
                 subtitles = self._merge_subtitles(subs, subtitles)  # Prioritize HLS subs over DASH
                 for f in formats:
-                    if process_manifest_format(f, 'dash', f['format_id']):
+                    if process_manifest_format(f, 'dash', client_name, f['format_id']):
                         f['filesize'] = int_or_none(self._search_regex(
                             r'/clen/(\d+)', f.get('fragment_base_url') or f['url'], 'file size', default=None))
                         if needs_live_processing:
