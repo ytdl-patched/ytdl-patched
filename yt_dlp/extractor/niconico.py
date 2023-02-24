@@ -8,9 +8,7 @@ import time
 from urllib.parse import urlparse
 
 from .common import InfoExtractor, SearchInfoExtractor
-from ..compat import (
-    compat_HTTPError,
-)
+from ..compat import compat_HTTPError
 from ..dependencies import WebSocket
 from ..neonippori import (
     load_comments,
@@ -264,7 +262,7 @@ class NiconicoIE(NiconicoBaseIE):
             info_dict['url'], info_dict['id'],
             query={'_format': 'json'},
             headers={'Content-Type': 'application/json'},
-            note='Downloading JSON metadata for %s' % info_dict['format_id'],
+            note=f'Downloading JSON metadata for {info_dict["format_id"]}',
             data=json.dumps(info_dict['_dmc_data']).encode())
 
         # get heartbeat info
@@ -427,7 +425,7 @@ class NiconicoIE(NiconicoBaseIE):
         except ExtractorError as e:
             try:
                 api_data = self._download_json(
-                    'https://www.nicovideo.jp/api/watch/v3/%s?_frontendId=6&_frontendVersion=0&actionTrackId=AAAAAAAAAA_%d' % (video_id, round(time.time() * 1000)), video_id,
+                    f'https://www.nicovideo.jp/api/watch/v3/{video_id}?_frontendId=6&_frontendVersion=0&actionTrackId=AAAAAAAAAA_{round(time.time() * 1000)}', video_id,
                     note='Downloading API JSON', errnote='Unable to fetch data')['data']
                 webpage = None
             except ExtractorError:
@@ -585,7 +583,7 @@ class NiconicoIE(NiconicoBaseIE):
             comments = self._download_json(
                 api_url, video_id, data=json.dumps(post_data).encode(), fatal=False,
                 headers={
-                    'Referer': 'https://www.nicovideo.jp/watch/%s' % video_id,
+                    'Referer': f'https://www.nicovideo.jp/watch/{video_id}',
                     'Origin': 'https://www.nicovideo.jp',
                     'Content-Type': 'text/plain;charset=UTF-8',
                 },
@@ -615,12 +613,12 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
 
     def _fetch_page(self, list_id, page):
         page += 1
-        resp = self._call_api(list_id, 'page %d' % page, {
+        resp = self._call_api(list_id, f'page {page}', {
             'page': page,
             'pageSize': self._PAGE_SIZE,
         })
         # this is needed to support both mylist and user
-        for video in traverse_obj(resp, ('items', ..., ('video', None))) or []:
+        for video in traverse_obj(resp, ('items', ..., ('video', None))):
             video_id = video.get('id')
             if not video_id:
                 # skip {"video": {"id": "blablabla", ...}}
@@ -780,10 +778,9 @@ class NicovideoSearchBaseIE(InfoExtractor):
             query['page'] = str(page_num)
             webpage = self._download_webpage(url, item_id, query=query, note=note % {'page': page_num})
             results = re.findall(r'(?<=data-video-id=)["\']?(?P<videoid>.*?)(?=["\'])', webpage)
-            for item in results:
-                yield self.url_result(f'https://www.nicovideo.jp/watch/{item}', 'Niconico', item)
             if not results:
                 break
+            yield from (self.url_result(f'https://www.nicovideo.jp/watch/{item}', 'Niconico', item) for item in results)
 
     def _search_results(self, query):
         return self._entries(
@@ -918,15 +915,15 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
 
     def _call_api(self, list_id, resource, query):
         return self._download_json(
-            'https://nvapi.nicovideo.jp/v1/users/%s/videos' % list_id, list_id,
-            'Downloading %s' % resource, query=query,
+            f'https://nvapi.nicovideo.jp/v1/users/{list_id}/videos', list_id,
+            f'Downloading {resource}', query=query,
             headers=self._API_HEADERS)['data']
 
     def _real_extract(self, url):
         list_id = self._match_id(url)
 
-        user_webpage = self._download_webpage('https://www.nicovideo.jp/user/%s' % list_id, list_id)
-        user_info = self._search_regex(r'<div id="js-initial-userpage-data" .+? data-initial-data="(.+)?"', user_webpage, 'user info', default={})
+        user_webpage = self._download_webpage(f'https://www.nicovideo.jp/user/{list_id}', list_id)
+        user_info = self._search_regex(r'<div id="js-initial-userpage-data" .+? data-initial-data="([^"]+)?"', user_webpage, 'user info')
         user_info = unescapeHTML(user_info)
         user_info = self._parse_json(user_info, list_id)
         user_info = traverse_obj(user_info, ('userDetails', 'userDetails', 'user')) or {}
@@ -934,11 +931,10 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
         mylist = self._call_api(list_id, 'list', {
             'pageSize': 1,
         })
-        entries = self._entries(list_id)
-        result = self.playlist_result(
-            entries, list_id, user_info.get('nickname'), user_info.get('strippedDescription'))
-        result.update(self._parse_owner(mylist))
-        return result
+        return self.playlist_result(
+            self._entries(list_id), list_id,
+            user_info.get('nickname'), user_info.get('strippedDescription'),
+            **self._parse_owner(mylist))
 
 
 class NiconicoLiveIE(NiconicoBaseIE):
@@ -1015,7 +1011,7 @@ class NiconicoLiveIE(NiconicoBaseIE):
             elif self.get_param('verbose', False):
                 if len(recv) > 100:
                     recv = recv[:100] + '...'
-                self.write_debug('Server said: %s' % recv)
+                self.write_debug(f'Server said: {recv}')
 
         title = traverse_obj(embedded_data, ('program', 'title')) or self._html_search_meta(
             ('og:title', 'twitter:title'), webpage, 'live title', fatal=False)
@@ -1064,7 +1060,13 @@ class NiconicoLiveIE(NiconicoBaseIE):
         return {
             'id': video_id,
             'title': title,
+            'is_live': True,
+            'thumbnails': thumbnails,
+            'formats': formats,
             **traverse_obj(embedded_data, {
+                'description': ('program', 'description', {clean_html}),
+                'timestamp': ('program', 'openTime', {int_or_none}),
+
                 'view_count': ('program', 'statistics', 'watchCount'),
                 'comment_count': ('program', 'statistics', 'commentCount'),
                 'uploader': ('program', 'supplier', 'name'),
@@ -1072,9 +1074,4 @@ class NiconicoLiveIE(NiconicoBaseIE):
                 'channel_id': ('socialGroup', 'id'),
                 'channel_url': ('socialGroup', 'socialGroupPageUrl'),
             }),
-            'description': clean_html(traverse_obj(embedded_data, ('program', 'description'))),
-            'timestamp': int_or_none(traverse_obj(embedded_data, ('program', 'openTime'))),
-            'is_live': True,
-            'thumbnails': thumbnails,
-            'formats': formats,
         }
