@@ -1233,28 +1233,28 @@ You can configure yt-dlp by placing any supported command line option to a confi
 1. **Main Configuration**:
     * The file given by `--config-location`
 1. **Portable Configuration**: (Recommended for portable installations)
-    * If using a binary, `yt-dlp.conf` in the same directory as the binary
-    * If running from source-code, `yt-dlp.conf` in the parent directory of `yt_dlp`
+    * If using a binary, `ytdl-patched.conf` in the same directory as the binary
+    * If running from source-code, `ytdl-patched.conf` in the parent directory of `yt_dlp`
 1. **Home Configuration**:
-    * `yt-dlp.conf` in the home path given by `-P`
+    * `ytdl-patched.conf` in the home path given by `-P`
     * If `-P` is not given, the current directory is searched
 1. **User Configuration**:
-    * `${XDG_CONFIG_HOME}/yt-dlp.conf`
-    * `${XDG_CONFIG_HOME}/yt-dlp/config` (recommended on Linux/macOS)
-    * `${XDG_CONFIG_HOME}/yt-dlp/config.txt`
-    * `${APPDATA}/yt-dlp.conf`
-    * `${APPDATA}/yt-dlp/config` (recommended on Windows)
-    * `${APPDATA}/yt-dlp/config.txt`
-    * `~/yt-dlp.conf`
-    * `~/yt-dlp.conf.txt`
-    * `~/.yt-dlp/config`
-    * `~/.yt-dlp/config.txt`
+    * `${XDG_CONFIG_HOME}/ytdl-patched.conf`
+    * `${XDG_CONFIG_HOME}/ytdl-patched/config` (recommended on Linux/macOS)
+    * `${XDG_CONFIG_HOME}/ytdl-patched/config.txt`
+    * `${APPDATA}/ytdl-patched.conf`
+    * `${APPDATA}/ytdl-patched/config` (recommended on Windows)
+    * `${APPDATA}/ytdl-patched/config.txt`
+    * `~/ytdl-patched.conf`
+    * `~/ytdl-patched.conf.txt`
+    * `~/.ytdl-patched/config`
+    * `~/.ytdl-patched/config.txt`
 
     See also: [Notes about environment variables](#notes-about-environment-variables)
 1. **System Configuration**:
-    * `/etc/yt-dlp.conf`
-    * `/etc/yt-dlp/config`
-    * `/etc/yt-dlp/config.txt`
+    * `/etc/ytdl-patched.conf`
+    * `/etc/ytdl-patched/config`
+    * `/etc/ytdl-patched/config.txt`
 
 E.g. with the following configuration file yt-dlp will always extract the audio, not copy the mtime, use a proxy and save all videos under `YouTube` directory in your home directory:
 ```
