@@ -484,21 +484,24 @@ class NiconicoIE(NiconicoBaseIE):
                 **parse_resolution(url, lenient=True),
             } for key, url in (get_video_info('thumbnail') or {}).items() if url],
             'description': clean_html(get_video_info('description')),
-            'uploader': traverse_obj(api_data, ('owner', 'nickname'), ('channel', 'name'), ('community', 'name')),
-            'uploader_id': str_or_none(traverse_obj(api_data, ('owner', 'id'), ('channel', 'id'), ('community', 'id'))),
             'timestamp': parse_iso8601(get_video_info('registeredAt')) or parse_iso8601(
                 self._html_search_meta('video:release_date', webpage, 'date published', default=None)),
-            'channel': traverse_obj(api_data, ('channel', 'name'), ('community', 'name')),
-            'channel_id': traverse_obj(api_data, ('channel', 'id'), ('community', 'id')),
             'view_count': int_or_none(get_video_info('count', 'view')),
             'tags': tags,
-            'genre': traverse_obj(api_data, ('genre', 'label'), ('genre', 'key')),
             'comment_count': get_video_info('count', 'comment', expected_type=int),
             'duration': (
                 parse_duration(self._html_search_meta('video:duration', webpage, 'video duration', default=None))
                 or get_video_info('duration')),
             'webpage_url': url_or_none(url) or f'https://www.nicovideo.jp/watch/{video_id}',
             'subtitles': self.extract_subtitles(video_id, api_data, session_api_data),
+
+            **traverse_obj(api_data, {
+                'uploader': ((('owner', 'nickname'), ('channel', 'name'), ('community', 'name')),),
+                'uploader_id': ((('owner', 'id'), ('channel', 'id'), ('community', 'id')), {str_or_none}),
+                'channel': ((('channel', 'name'), ('community', 'name')),),
+                'channel_id': ((('channel', 'id'), ('community', 'id')),),
+                'genre': ('genre', ('label', 'key')),
+            }, get_all=False),
 
             'augments': [{
                 'key': 'heartbeat',
