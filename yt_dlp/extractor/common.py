@@ -2127,6 +2127,7 @@ class InfoExtractor:
                     'protocol': entry_protocol,
                     'preference': preference,
                     'quality': quality,
+                    'has_drm': has_drm,
                     'vcodec': 'none' if media_type == 'AUDIO' else None,
                 } for idx in _extract_m3u8_playlist_indices(manifest_url))
 
@@ -2186,6 +2187,7 @@ class InfoExtractor:
                         'protocol': entry_protocol,
                         'preference': preference,
                         'quality': quality,
+                        'has_drm': has_drm,
                     }
                     resolution = last_stream_inf.get('RESOLUTION')
                     if resolution:
