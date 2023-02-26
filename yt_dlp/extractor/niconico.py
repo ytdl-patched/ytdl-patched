@@ -609,10 +609,10 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
 
     @staticmethod
     def _parse_owner(item):
-        return {
-            'uploader': traverse_obj(item, ('owner', 'name')),
-            'uploader_id': traverse_obj(item, ('owner', 'id')),
-        }
+        return traverse_obj(item, {
+            'uploader': ('owner', 'name'),
+            'uploader_id': ('owner', 'id'),
+        })
 
     def _fetch_page(self, list_id, page):
         page += 1
@@ -626,19 +626,19 @@ class NiconicoPlaylistBaseIE(NiconicoBaseIE):
             if not video_id:
                 # skip {"video": {"id": "blablabla", ...}}
                 continue
-            count = video.get('count') or {}
-            get_count = lambda x: int_or_none(count.get(x))
             yield {
                 '_type': 'url',
                 'id': video_id,
-                'title': video.get('title'),
                 'url': f'https://www.nicovideo.jp/watch/{video_id}',
-                'description': video.get('shortDescription'),
-                'duration': int_or_none(video.get('duration')),
-                'view_count': get_count('view'),
-                'comment_count': get_count('comment'),
-                'thumbnail': traverse_obj(video, ('thumbnail', ('nHdUrl', 'largeUrl', 'listingUrl', 'url'))),
                 'ie_key': NiconicoIE.ie_key(),
+                **traverse_obj(video, {
+                    'title': 'title',
+                    'description': 'shortDescription',
+                    'duration': ('duration', {int_or_none}),
+                    'view_count': ('count', 'view', {int_or_none}),
+                    'comment_count': ('count', 'comment', {int_or_none}),
+                    'thumbnail': ('thumbnail', ('nHdUrl', 'largeUrl', 'listingUrl', 'url')),
+                }),
                 **self._parse_owner(video),
             }
 
