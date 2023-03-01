@@ -103,7 +103,6 @@
  - **ask.fm**
  - **askmona**
  - **askmona3**
- - **AtresPlayer**: [<abbr title="netrc machine"><em>atresplayer</em></abbr>]
  - **AtresPlayer**: [*atresplayer*](## "netrc machine")
  - **AtScaleConfEvent**
  - **ATTTechChannel**
@@ -727,9 +726,9 @@
  - **marshmallow-qa**
  - **massengeschmack.tv**
  - **Masters**
- - **mastodon**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
- - **mastodon:user**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
- - **mastodon:​user:numeric_id**: [<abbr title="netrc machine"><em>mastodon</em></abbr>]
+ - **mastodon**: [*mastodon*](## "netrc machine")
+ - **mastodon:user**: [*mastodon*](## "netrc machine")
+ - **mastodon:​user:numeric_id**: [*mastodon*](## "netrc machine")
  - **MatchTV**
  - **MDR**: MDR.DE and KiKA
  - **MedalTV**
@@ -1022,14 +1021,11 @@
  - **PearVideo**
  - **PeekVids**
  - **peer.tv**
- - **PeerTube**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
- - **PeerTubeAccount**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
- - **PeerTubeChannel**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
- - **PeerTubePlaylist**: [<abbr title="netrc machine"><em>peertube</em></abbr>]
+ - **PeerTube**: [*peertube*](## "netrc machine")
+ - **PeerTubeAccount**: [*peertube*](## "netrc machine")
+ - **PeerTubeChannel**: [*peertube*](## "netrc machine")
+ - **PeerTubePlaylist**: [*peertube*](## "netrc machine")
  - **peing**
- - **peloton**: [<abbr title="netrc machine"><em>peloton</em></abbr>]
- - **PeerTube**
- - **PeerTube:Playlist**
  - **peloton**: [*peloton*](## "netrc machine")
  - **peloton:live**: Peloton Live
  - **People**
