@@ -44,7 +44,7 @@ jobs:
           touch artifacts/.keep
       - name: Prepare files
         id: prepare
-        run: python3 devscripts/update-version.py
+        run: python3 devscripts/update-version.py -c stable
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:

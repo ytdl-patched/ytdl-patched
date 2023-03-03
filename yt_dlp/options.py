@@ -21,6 +21,7 @@ from .postprocessor import (
 )
 from .postprocessor.modify_chapters import DEFAULT_SPONSORBLOCK_CHAPTER_TITLE
 from .update import detect_variant, is_non_updateable
+# from .update import UPDATE_SOURCES, detect_variant, is_non_updateable
 from .utils import (
     OUTTMPL_TYPES,
     POSTPROCESS_WHEN,
@@ -36,7 +37,7 @@ from .utils import (
     remove_end,
     write_string,
 )
-from .version import __version__
+from .version import CHANNEL, __version__
 
 
 def parseOpts(overrideArguments=None, ignore_config_files='if_override'):
@@ -343,11 +344,16 @@ def create_parser():
         action='store_true', dest='update_self',
         help=format_field(
             is_non_updateable(), None, 'Check if updates are available. %s',
-            default='Update this program to the latest version'))
+            default=f'Update this program to the latest {CHANNEL} version'))
     general.add_option(
         '--no-update',
         action='store_false', dest='update_self',
         help='Do not check for updates (default)')
+    general.add_option(
+        '--update-to',
+        action='store', dest='update_self', metavar='[CHANNEL]@[TAG]',
+        # disable until --update-to stable@VERSION is interpreted correctly
+        help=optparse.SUPPRESS_HELP)
     general.add_option(
         '-i', '--ignore-errors',
         action='store_true', dest='ignoreerrors',
@@ -683,8 +689,16 @@ def create_parser():
             'Use "--match-filter -" to interactively ask whether to download each video'))
     selection.add_option(
         '--no-match-filter',
-        metavar='FILTER', dest='match_filter', action='store_const', const=None,
-        help='Do not use generic video filter (default)')
+        dest='match_filter', action='store_const', const=None,
+        help='Do not use any --match-filter (default)')
+    selection.add_option(
+        '--break-match-filters',
+        metavar='FILTER', dest='breaking_match_filter', action='append',
+        help='Same as "--match-filters" but stops the download process when a video is rejected')
+    selection.add_option(
+        '--no-break-match-filters',
+        dest='breaking_match_filter', action='store_const', const=None,
+        help='Do not use any --break-match-filters (default)')
     selection.add_option(
         '--any-match', dest='all_match', action='store_false',
         help='Require one of --match-filters\' to match (default)')
@@ -725,11 +739,11 @@ def create_parser():
     selection.add_option(
         '--break-on-reject',
         action='store_true', dest='break_on_reject', default=False,
-        help='Stop the download process when encountering a file that has been filtered out')
+        help=optparse.SUPPRESS_HELP)
     selection.add_option(
         '--break-per-input',
         action='store_true', dest='break_per_url', default=False,
-        help='Alters --max-downloads, --break-on-existing, --break-on-reject, and autonumber to reset per input URL')
+        help='Alters --max-downloads, --break-on-existing, --break-match-filter, and autonumber to reset per input URL')
     selection.add_option(
         '--no-break-per-input',
         action='store_false', dest='break_per_url',
