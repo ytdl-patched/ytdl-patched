@@ -18,17 +18,21 @@ from devscripts.utils import read_version, write_file
 
 def get_new_version(version, revision):
     time = datetime.utcnow()
+    build_time = time.strftime('%s')
     if not version:
-        version = time.strftime('%Y.%m.%d')
+        version = time.strftime('%Y.%m.%d.%s')
 
     if revision:
         assert revision.isdigit(), 'Revision must be a number'
     else:
         old_version = read_version().split('.')
-        if version.split('.') == old_version[:3]:
-            revision = str(int((old_version + [0])[3]) + 1)
+        version_tuple = version.split('.')
+        if version_tuple == old_version:
+            # increment the last value so that we won't make duplicate version
+            build_time = str(int((old_version + [0])[3]) + 1)
+            version = '.'.join(version_tuple[:3] + [build_time])
 
-    return (f'{version}.{revision}' if revision else version), time.strftime('%s')
+    return (f'{version}.{revision}' if revision else version), build_time
 
 
 def get_git_head():
@@ -65,8 +69,8 @@ if __name__ == '__main__':
 
     git_head = get_git_head()
 
-    version, UNIX_TIME = (
-        (args.version, datetime.utcnow().strftime('%Y.%m.%d')) if args.version and '.' in args.version
+    version, build_time = (
+        (args.version, datetime.utcnow().strftime('%s')) if args.version and '.' in args.version
         else get_new_version(None, args.version))
     normalized_version = '.'.join(str(int(x)) for x in version.split('.'))
     write_file(args.output, VERSION_TEMPLATE.format(
@@ -76,6 +80,6 @@ if __name__ == '__main__':
         write_file(github_output, f'ytdlp_version={version}\n', 'a')
         write_file(github_output, f'latest_version={version}\n', 'a')
         write_file(github_output, f'latest_version_normalized={normalized_version}\n', 'a')
-        write_file(github_output, f'latest_version_numeric={UNIX_TIME}\n', 'a')
+        write_file(github_output, f'latest_version_numeric={build_time}\n', 'a')
 
     print(f'version={version} ({args.channel}), head={git_head}')

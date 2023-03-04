@@ -106,8 +106,8 @@ _NON_UPDATEABLE_REASONS = {
     **{variant: f'Auto-update is not supported for unpackaged {name} executable; Re-download the latest release'
        for variant, name in {'win32_dir': 'Windows', 'darwin_dir': 'MacOS', 'linux_dir': 'Linux'}.items()},
     'source': 'You cannot update when running from source code; Use git to pull the latest changes',
-    'unknown': 'You installed yt-dlp with a package manager or setup.py; Use that to update',
-    'other': 'You are using an unofficial build of yt-dlp; Build the executable again',
+    'unknown': 'You installed ytdl-patched with a package manager or setup.py; Use that to update',
+    'other': 'You are using an unofficial build of ytdl-patched; Build the executable again',
 }
 
 
@@ -121,7 +121,11 @@ def is_non_updateable():
 def _sha256_file(path):
     h = hashlib.sha256()
     mv = memoryview(bytearray(128 * 1024))
-    with open(os.path.realpath(path), 'rb', buffering=0) as f:
+    filepath = os.path.realpath(path)
+    if os.path.isdir(filepath):
+        # Homebrew builds never have SHA-256 hash and won't be validated by ytdl-patched itself
+        return '00000000000000000000000000000000'
+    with open(filepath, 'rb', buffering=0) as f:
         for n in iter(lambda: f.readinto(mv), 0):
             h.update(mv[:n])
     return h.hexdigest()
@@ -178,7 +182,7 @@ class Updater:
                 elif self.target_tag == 'latest' or not self._version_compare(
                         tag, self.target_tag[5:], channel=self.target_channel):
                     self._report_error(
-                        f'yt-dlp cannot be updated above {tag} since you are on an older Python version', True)
+                        f'ytdl-patched cannot be updated above {tag} since you are on an older Python version', True)
                     return f'tags/{self.current_version}'
         return self.target_tag
 
@@ -188,7 +192,7 @@ class Updater:
         self.ydl.write_debug(f'Fetching release info: {url}')
         return json.loads(self.ydl.urlopen(sanitized_Request(url, headers={
             'Accept': 'application/vnd.github+json',
-            'User-Agent': 'yt-dlp',
+            'User-Agent': 'ytdl-patched',
             'X-GitHub-Api-Version': '2022-11-28',
         })).read().decode())
 
@@ -274,13 +278,13 @@ class Updater:
             return True
 
         if self.target_tag == self._tag:
-            self.ydl.to_screen(f'yt-dlp is up to date ({self._label(CHANNEL, self.current_version)})')
+            self.ydl.to_screen(f'ytdl-patched is up to date ({self._label(CHANNEL, self.current_version)})')
         elif not self._exact:
-            self.ydl.report_warning('yt-dlp cannot be updated any further since you are on an older Python version')
+            self.ydl.report_warning('ytdl-patched cannot be updated any further since you are on an older Python version')
         return False
 
     def update(self):
-        """Update yt-dlp executable to the latest version"""
+        """Update ytdl-patched executable to the latest version"""
         if not self.check_update():
             return
         err = is_non_updateable()
@@ -371,7 +375,7 @@ class Updater:
                 return self._report_error(
                     f'Unable to set permissions. Run: sudo chmod a+rx {compat_shlex_quote(self.filename)}')
 
-        self.ydl.to_screen(f'Updated yt-dlp to {self._label(self.target_channel, self.new_version)}')
+        self.ydl.to_screen(f'Updated ytdl-patched to {self._label(self.target_channel, self.new_version)}')
         return True
 
     @functools.cached_property
