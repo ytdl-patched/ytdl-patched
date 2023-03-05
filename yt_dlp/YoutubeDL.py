@@ -4086,7 +4086,7 @@ class YoutubeDL:
         klass = type(self)
         write_debug(join_nonempty(
             'ytdl-patched version',
-            __version__ + {'stable': '', 'nightly': '*'}.get(CHANNEL, f' <{CHANNEL}>'),
+            f'{CHANNEL}@{__version__}',
             f'[{RELEASE_GIT_HEAD[:9]}]' if RELEASE_GIT_HEAD else '',
             '' if source == 'unknown' else f'({source})',
             '' if _IN_CLI else 'API' if klass == YoutubeDL else f'API:{self.__module__}.{klass.__qualname__}',

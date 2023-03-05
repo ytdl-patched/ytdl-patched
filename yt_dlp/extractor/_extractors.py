@@ -925,6 +925,10 @@ from .leeco import (
     LePlaylistIE,
     LetvCloudIE,
 )
+from .lefigaro import (
+    LeFigaroVideoEmbedIE,
+    LeFigaroVideoSectionIE,
+)
 from .lego import LEGOIE
 from .lemonde import LemondeIE
 from .lenta import LentaIE
@@ -972,6 +976,9 @@ from .lovehomeporn import LoveHomePornIE
 from .lrt import (
     LRTVODIE,
     LRTStreamIE
+)
+from .lumni import (
+    LumniIE
 )
 from .lynda import (
     LyndaIE,
@@ -1878,6 +1885,7 @@ from .ted import (
 from .tele5 import Tele5IE
 from .tele13 import Tele13IE
 from .telebruxelles import TeleBruxellesIE
+from .telecaribe import TelecaribePlayIE
 from .telecinco import TelecincoIE
 from .telegraaf import TelegraafIE
 from .telegram import TelegramEmbedIE
@@ -1996,10 +2004,9 @@ from .tubitv import (
 )
 from .tumblr import TumblrIE
 from .tunein import (
-    TuneInClipIE,
     TuneInStationIE,
-    TuneInProgramIE,
-    TuneInTopicIE,
+    TuneInPodcastIE,
+    TuneInPodcastEpisodeIE,
     TuneInShortenerIE,
 )
 from .tunepk import TunePkIE
@@ -2350,7 +2357,10 @@ from .xnxx import XNXXIE
 from .xstream import XstreamIE
 from .xtube import XTubeUserIE, XTubeIE
 from .xuite import XuiteIE
-from .xvideos import XVideosIE
+from .xvideos import (
+    XVideosIE,
+    XVideosQuickiesIE
+)
 from .xxxymovies import XXXYMoviesIE
 from .yahoo import (
     YahooIE,

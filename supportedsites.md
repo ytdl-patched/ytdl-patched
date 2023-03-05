@@ -671,6 +671,8 @@
  - **Lecturio**: [*lecturio*](## "netrc machine")
  - **LecturioCourse**: [*lecturio*](## "netrc machine")
  - **LecturioDeCourse**: [*lecturio*](## "netrc machine")
+ - **LeFigaroVideoEmbed**
+ - **LeFigaroVideoSection**
  - **LEGO**
  - **Lemonde**
  - **Lenta**
@@ -704,6 +706,7 @@
  - **LoveHomePorn**
  - **LRTStream**
  - **LRTVOD**
+ - **Lumni**
  - **lynda**: [*lynda*](## "netrc machine") lynda.com videos
  - **lynda:course**: [*lynda*](## "netrc machine") lynda.com online courses
  - **m6**
@@ -1385,6 +1388,7 @@
  - **Tele13**
  - **Tele5**
  - **TeleBruxelles**
+ - **TelecaribePlay**
  - **Telecinco**: telecinco.es, cuatro.com and mediaset.es
  - **Telegraaf**
  - **telegram:embed**
@@ -1463,10 +1467,9 @@
  - **TubiTv**: [*tubitv*](## "netrc machine")
  - **TubiTvShow**
  - **Tumblr**: [*tumblr*](## "netrc machine")
- - **tunein:clip**
- - **tunein:program**
- - **tunein:station**
- - **tunein:topic**
+ - **TuneInPodcast**
+ - **TuneInPodcastEpisode**
+ - **TuneInStation**
  - **TunePk**
  - **Turbo**
  - **tv.dfb.de**
@@ -1719,6 +1722,7 @@
  - **XTubeUser**: XTube user profile
  - **Xuite**: 隨意窩Xuite影音
  - **XVideos**
+ - **xvideos:quickies**
  - **XXXYMovies**
  - **y2mate**
  - **Yahoo**: Yahoo screen and movies

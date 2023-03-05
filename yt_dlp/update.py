@@ -33,17 +33,17 @@ except ImportError:
     is_brew = False
 
 UPDATE_SOURCES = {
-    # NOTE: ytdl-patched ONLY has stable releases
+    # NOTE: ytdl-patched ONLY has stable channel, behaving like nightly channel on yt-dlp
     'stable': 'ytdl-patched/ytdl-patched',
     'nightly': 'ytdl-patched/ytdl-patched',
 }
+REPOSITORY = UPDATE_SOURCES['stable']
 
 _VERSION_RE = re.compile(r'(\d+\.)*\d+')
 
 API_BASE_URL = 'https://api.github.com/repos'
 
 # Backwards compatibility variables for the current channel
-REPOSITORY = UPDATE_SOURCES[CHANNEL]
 API_URL = f'{API_BASE_URL}/{REPOSITORY}/releases'
 
 
