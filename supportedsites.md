@@ -275,6 +275,7 @@
  - **CNNIndonesia**
  - **ComedyCentral**
  - **ComedyCentralTV**
+ - **ConanClassic**
  - **CondeNast**: Condé Nast media group: Allure, Architectural Digest, Ars Technica, Bon Appétit, Brides, Condé Nast, Condé Nast Traveler, Details, Epicurious, GQ, Glamour, Golf Digest, SELF, Teen Vogue, The New Yorker, Vanity Fair, Vogue, W Magazine, WIRED
  - **CONtv**
  - **CookingChannel**
