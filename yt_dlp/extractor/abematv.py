@@ -478,7 +478,7 @@ class AbemaTVIE(AbemaTVBaseIE):
                 headers=headers)
             ondemand_types = traverse_obj(api_response, ('terms', ..., 'onDemandType'))
             if 3 not in ondemand_types:
-                self.report_warning('This is a premium-only stream')
+                self.report_warning('This is a premium-only stream. You need a premium subscription to download')
 
             m3u8_url = f'https://vod-abematv.akamaized.net/program/{video_id}/playlist.m3u8'
         elif video_type == 'slots':
@@ -487,7 +487,7 @@ class AbemaTVIE(AbemaTVBaseIE):
                 note='Checking playability',
                 headers=headers)
             if not traverse_obj(api_response, ('slot', 'flags', 'timeshiftFree'), default=False):
-                self.report_warning('This is a premium-only stream')
+                self.report_warning('This is a premium-only stream. You need a premium subscription to download')
 
             m3u8_url = f'https://vod-abematv.akamaized.net/slot/{video_id}/playlist.m3u8'
         else:
