@@ -1,15 +1,12 @@
 import itertools
 import re
 import urllib.parse
+import hashlib
 
 from .common import InfoExtractor
 from ..utils import (
-    int_or_none,
-    mimetype2ext,
-    remove_end,
-    strip_or_none,
-    unified_strdate,
-    url_or_none,
+    traverse_obj,
+    unified_timestamp,
     urljoin,
 )
 
@@ -24,107 +21,58 @@ class IwaraBaseIE(InfoExtractor):
 
 class IwaraIE(InfoExtractor):
     IE_NAME = 'iwara'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/videos/(?P<id>[a-zA-Z0-9]+)'
+    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/video/(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
-        'url': 'http://iwara.tv/videos/amVwUl1EHpAD9RD',
-        # md5 is unstable
+        'url': 'https://www.iwara.tv/video/k2ayoueezfkx6gvq',
         'info_dict': {
-            'id': 'amVwUl1EHpAD9RD',
-            'ext': 'mp4',
-            'title': '【MMD R-18】ガールフレンド carry_me_off',
-            'age_limit': 18,
-            'thumbnail': 'https://i.iwara.tv/sites/default/files/videos/thumbnails/7951/thumbnail-7951_0001.png',
-            'uploader': 'Reimu丨Action',
-            'upload_date': '20150828',
-            'description': 'md5:1d4905ce48c66c9299c617f08e106e0f',
-        },
-    }, {
-        'url': 'http://ecchi.iwara.tv/videos/Vb4yf2yZspkzkBO',
-        'md5': '7e5f1f359cd51a027ba4a7b7710a50f0',
-        'info_dict': {
-            'id': '0B1LvuHnL-sRFNXB1WHNqbGw4SXc',
-            'ext': 'mp4',
-            'title': '[3D Hentai] Kyonyu × Genkai × Emaki Shinobi Girls.mp4',
-            'age_limit': 18,
-        },
-        'add_ie': ['GoogleDrive'],
-    }, {
-        'url': 'http://www.iwara.tv/videos/nawkaumd6ilezzgq',
-        # md5 is unstable
-        'info_dict': {
-            'id': '6liAP9s2Ojc',
+            'id': 'k2ayoueezfkx6gvq',
             'ext': 'mp4',
             'age_limit': 18,
-            'title': '[MMD] Do It Again Ver.2 [1080p 60FPS] (Motion,Camera,Wav+DL)',
-            'description': 'md5:590c12c0df1443d833fbebe05da8c47a',
-            'upload_date': '20160910',
-            'uploader': 'aMMDsork',
-            'uploader_id': 'UCVOFyOSCyFkXTYYHITtqB7A',
+            'title': 'Defeat of Irybelda - アイリベルダの敗北',
+            'description': 'md5:70278abebe706647a8b4cb04cf23e0d3',
+            'uploader': 'Inwerwm',
+            'uploader_id': 'inwerwm',
+            'tags': 'count:1',
+            'like_count': 6133,
+            'view_count': 1050343,
+            'comment_count': 1,
+            'timestamp': 1677843869,
+            'modified_timestamp': 1679056362,
         },
-        'add_ie': ['Youtube'],
     }]
+
+    def _extract_formats(self, video_id, fileurl):
+        up = urllib.parse.urlparse(fileurl)
+        q = urllib.parse.parse_qs(up.query)
+        paths = up.path.split('/')
+        # https://github.com/yt-dlp/yt-dlp/issues/6549#issuecomment-1473771047
+        x_version = hashlib.sha1('_'.join((paths[-1], q['expires'][0], '5nFp9kmbNnHdAFhaqMvt')).encode()).hexdigest()
+
+        files = self._download_json(fileurl, video_id, headers={'X-Version': x_version})
+        for fmt in files:
+            # the site is mulfunctioning as of writing, cannot fill here now
+            yield {}
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-
-        webpage, urlh = self._download_webpage_handle(url, video_id)
-
-        hostname = urllib.parse.urlparse(urlh.geturl()).hostname
-        # ecchi is 'sexy' in Japanese
-        age_limit = 18 if hostname.split('.')[0] == 'ecchi' else 0
-
-        video_data = self._download_json('http://www.iwara.tv/api/video/%s' % video_id, video_id)
-
-        if not video_data:
-            iframe_url = self._html_search_regex(
-                r'<iframe[^>]+src=([\'"])(?P<url>[^\'"]+)\1',
-                webpage, 'iframe URL', group='url')
-            return {
-                '_type': 'url_transparent',
-                'url': iframe_url,
-                'age_limit': age_limit,
-            }
-
-        title = remove_end(self._html_extract_title(webpage), ' | Iwara')
-
-        thumbnail = self._html_search_regex(
-            r'poster=[\'"]([^\'"]+)', webpage, 'thumbnail', default=None)
-
-        uploader = self._html_search_regex(
-            r'class="username">([^<]+)', webpage, 'uploader', fatal=False)
-
-        upload_date = unified_strdate(self._html_search_regex(
-            r'作成日:([^\s]+)', webpage, 'upload_date', fatal=False))
-
-        description = strip_or_none(self._search_regex(
-            r'<p>(.+?(?=</div))', webpage, 'description', fatal=False,
-            flags=re.DOTALL))
-
-        formats = []
-        for a_format in video_data:
-            format_uri = url_or_none(a_format.get('uri'))
-            if not format_uri:
-                continue
-            format_id = a_format.get('resolution')
-            height = int_or_none(self._search_regex(
-                r'(\d+)p', format_id, 'height', default=None))
-            formats.append({
-                'url': self._proto_relative_url(format_uri, 'https:'),
-                'format_id': format_id,
-                'ext': mimetype2ext(a_format.get('mime')) or 'mp4',
-                'height': height,
-                'quality': 1 if format_id == 'Source' else 0,
-            })
+        video_data = self._download_json(f'http://api.iwara.tv/video/{video_id}', video_id)
 
         return {
             'id': video_id,
-            'title': title,
-            'age_limit': age_limit,
-            'formats': formats,
-            'thumbnail': self._proto_relative_url(thumbnail, 'https:'),
-            'uploader': uploader,
-            'upload_date': upload_date,
-            'description': description,
+            'age_limit': 18 if video_data.get('rating') == 'ecchi' else 0,  # ecchi is 'sexy' in Japanese
+            **traverse_obj(video_data, {
+                'title': 'title',
+                'description': 'body',
+                'uploader': ('user', 'name'),
+                'uploader_id': ('user', 'username'),
+                'tags': ('tags', ..., 'id'),
+                'like_count': 'numLikes',
+                'view_count': 'numViews',
+                'comment_count': 'numComments',
+                'timestamp': ('createdAt', {unified_timestamp}),
+                'modified_timestamp': ('updatedAt', {unified_timestamp}),
+            }),
+            'formats': list(self._extract_formats(video_id, video_data.get('fileUrl'))),
         }
 
 
