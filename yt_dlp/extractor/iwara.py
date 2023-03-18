@@ -1,5 +1,4 @@
 import functools
-import re
 import urllib.parse
 import hashlib
 
@@ -9,21 +8,12 @@ from ..utils import (
     mimetype2ext,
     traverse_obj,
     unified_timestamp,
-    urljoin,
 )
-
-
-class IwaraBaseIE(InfoExtractor):
-    _BASE_REGEX = r'(?P<base_url>https?://(?:www\.|ecchi\.)?iwara\.tv)'
-
-    def _extract_playlist(self, base_url, webpage):
-        for path in re.findall(r'class="title">\s*<a[^<]+href="(/videos/[^"]+)', webpage):
-            yield self.url_result(urljoin(base_url, path))
 
 
 class IwaraIE(InfoExtractor):
     IE_NAME = 'iwara'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/video/(?P<id>[a-zA-Z0-9]+)'
+    _VALID_URL = r'https?://(?:www\.)?iwara\.tv/video/(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
         # this video cannot be played because of migration
         'only_matching': True,
@@ -108,8 +98,8 @@ class IwaraIE(InfoExtractor):
         }
 
 
-class IwaraUserIE(IwaraBaseIE):
-    _VALID_URL = fr'{IwaraBaseIE._BASE_REGEX}/profile/(?P<id>[^/?#&]+)'
+class IwaraUserIE(InfoExtractor):
+    _VALID_URL = r'https?://(?:www\.)?iwara\.tv/profile/(?P<id>[^/?#&]+)'
     IE_NAME = 'iwara:user'
     _PER_PAGE = 32
 
@@ -159,3 +149,42 @@ class IwaraUserIE(IwaraBaseIE):
                 functools.partial(self._entries, playlist_id, user_id),
                 self._PER_PAGE),
             playlist_id, traverse_obj(user_info, ('user', 'name')))
+
+
+class IwaraPlaylistIE(InfoExtractor):
+    # the ID is an UUID but I don't think it's necessary to write concrete regex
+    _VALID_URL = r'https?://(?:www\.)?iwara\.tv/playlist/(?P<id>[0-9a-f-]+)'
+    IE_NAME = 'iwara:playlist'
+    _PER_PAGE = 32
+
+    _TESTS = [{
+        'url': 'https://iwara.tv/playlist/458e5486-36a4-4ac0-b233-7e9eef01025f',
+        'info_dict': {
+            'id': '458e5486-36a4-4ac0-b233-7e9eef01025f',
+        },
+        'playlist_mincount': 3,
+    }]
+
+    def _entries(self, playlist_id, first_page, page):
+        videos = first_page if page == 0 else self._download_json(
+            'https://api.iwara.tv/videos', playlist_id,
+            note=f'Downloading page {page}',
+            query={
+                'page': page,
+                'limit': self._PER_PAGE,
+            })
+        yield from (
+            self.url_result(f'https://iwara.tv/video/{x}')
+            for x in traverse_obj(videos, ('results', ..., 'id')))
+
+    def _real_extract(self, url):
+        playlist_id = self._match_id(url)
+        page_0 = self._download_json(
+            f'https://api.iwara.tv/playlist/{playlist_id}?page=0&limit={self._PER_PAGE}', playlist_id,
+            note='Requesting playlist info')
+
+        return self.playlist_result(
+            OnDemandPagedList(
+                functools.partial(self._entries, playlist_id, page_0),
+                self._PER_PAGE),
+            playlist_id, traverse_obj(page_0, ('title', 'name')))

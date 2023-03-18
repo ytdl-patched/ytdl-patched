@@ -828,6 +828,7 @@ from .ivideon import IvideonIE
 from .iwara import (
     IwaraIE,
     IwaraUserIE,
+    IwaraPlaylistIE,
 )
 from .ixigua import IxiguaIE
 from .izlesene import IzleseneIE
