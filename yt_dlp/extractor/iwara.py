@@ -1,10 +1,11 @@
-import itertools
+import functools
 import re
 import urllib.parse
 import hashlib
 
 from .common import InfoExtractor
 from ..utils import (
+    OnDemandPagedList,
     mimetype2ext,
     traverse_obj,
     unified_timestamp,
@@ -99,134 +100,62 @@ class IwaraIE(InfoExtractor):
                 'comment_count': 'numComments',
                 'timestamp': ('createdAt', {unified_timestamp}),
                 'modified_timestamp': ('updatedAt', {unified_timestamp}),
+                'thumbnail': (
+                    'file', 'id', {str},
+                    {lambda x: f'https://files.iwara.tv/image/thumbnail/{x}/thumbnail-00.jpg'}),
             }),
             'formats': list(self._extract_formats(video_id, video_data.get('fileUrl'))),
         }
 
 
 class IwaraUserIE(IwaraBaseIE):
-    _VALID_URL = fr'{IwaraBaseIE._BASE_REGEX}/users/(?P<id>[^/?#&]+)'
+    _VALID_URL = fr'{IwaraBaseIE._BASE_REGEX}/profile/(?P<id>[^/?#&]+)'
     IE_NAME = 'iwara:user'
+    _PER_PAGE = 32
 
     _TESTS = [{
-        'note': 'number of all videos page is just 1 page. less than 40 videos',
-        'url': 'https://ecchi.iwara.tv/users/infinityyukarip',
+        'url': 'https://iwara.tv/profile/user792540/videos',
         'info_dict': {
-            'id': 'infinityyukarip',
+            'id': 'user792540',
         },
-        'playlist_mincount': 39,
+        'playlist_mincount': 80,
     }, {
-        'note': 'no even all videos page. probably less than 10 videos',
-        'url': 'https://ecchi.iwara.tv/users/mmd-quintet',
-        'info_dict': {
-            'id': 'mmd-quintet',
-        },
-        'playlist_mincount': 6,
-    }, {
-        'note': 'has paging. more than 40 videos',
-        'url': 'https://ecchi.iwara.tv/users/theblackbirdcalls',
+        'url': 'https://iwara.tv/profile/theblackbirdcalls/videos',
         'info_dict': {
             'id': 'theblackbirdcalls',
         },
-        'playlist_mincount': 420,
+        'playlist_mincount': 723,
     }, {
-        'note': 'foreign chars in URL. there must be foreign characters in URL',
-        'url': 'https://ecchi.iwara.tv/users/ぶた丼',
-        'info_dict': {
-            'id': 'ぶた丼',
-        },
-        'playlist_mincount': 170,
+        'url': 'https://iwara.tv/profile/user792540',
+        'only_matching': True,
+    }, {
+        'url': 'https://iwara.tv/profile/theblackbirdcalls',
+        'only_matching': True,
     }]
 
-    def _entries(self, playlist_id, base_url):
-        webpage = self._download_webpage(
-            f'{base_url}/users/{playlist_id}', playlist_id)
-        videos_url = self._search_regex(r'<a href="(/users/[^/]+/videos)(?:\?[^"]+)?">', webpage, 'all videos url', default=None)
-        if not videos_url:
-            yield from self._extract_playlist(base_url, webpage)
-            return
-
-        videos_url = urljoin(base_url, videos_url)
-
-        for n in itertools.count(1):
-            page = self._download_webpage(
-                videos_url, playlist_id, note=f'Downloading playlist page {n}',
-                query={'page': str(n - 1)} if n > 1 else {})
-            yield from self._extract_playlist(
-                base_url, page)
-
-            if f'page={n}' not in page:
-                break
-
-    def _real_extract(self, url):
-        playlist_id, base_url = self._match_valid_url(url).group('id', 'base_url')
-        playlist_id = urllib.parse.unquote(playlist_id)
-
-        return self.playlist_result(
-            self._entries(playlist_id, base_url), playlist_id)
-
-
-class IwaraUser2IE(InfoExtractor):
-    IE_NAME = 'iwara:user2'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/users/(?P<id>[^/?&#]+)/videos'
-    IE_DESC = False  # do not list this
-    _TESTS = [{
-        'note': 'number of all videos page is just 1 page',
-        'url': 'https://ecchi.iwara.tv/users/infinityyukarip/videos',
-        'info_dict': {},
-        'add_ie': [IwaraUserIE.ie_key()],
-    }, {
-        'note': 'no even all videos page',
-        'url': 'https://ecchi.iwara.tv/users/mmd-quintet/videos',
-        'info_dict': {},
-        'add_ie': [IwaraUserIE.ie_key()],
-    }, {
-        'note': 'has paging',
-        'url': 'https://ecchi.iwara.tv/users/theblackbirdcalls/videos',
-        'info_dict': {},
-        'add_ie': [IwaraUserIE.ie_key()],
-    }, {
-        'note': 'foreign chars in URL',
-        'url': 'https://ecchi.iwara.tv/users/ぶた丼/videos',
-        'info_dict': {},
-        'add_ie': [IwaraUserIE.ie_key()],
-    }]
-
-    def _real_extract(self, url):
-        video_id = self._match_id(url)
-        webpage = self._download_webpage(url, video_id, note='Repairing URL')
-        videos_url = self._search_regex(r'<a href="(/users/.+?)"(?: title=".+?")? class="username">', webpage, 'user page url')
-        videos_url = urljoin(url, videos_url)
-        return self.url_result(videos_url, ie=IwaraUserIE.ie_key())
-
-
-class IwaraPlaylistIE(InfoExtractor):
-    IE_NAME = 'iwara:playlist'
-    _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/playlist/(?P<id>[a-zA-Z0-9-]+)'
-    _TESTS = [{
-        'url': 'https://ecchi.iwara.tv/playlist/best-enf',
-        'info_dict': {
-            'title': 'Best enf',
-            'uploader_id': 'Jared98112',
-            'id': 'best-enf',
-        },
-        'playlist_mincount': 50,
-    }]
+    def _entries(self, playlist_id, user_id, page):
+        videos = self._download_json(
+            'https://api.iwara.tv/videos', playlist_id,
+            note=f'Downloading page {page}',
+            query={
+                'page': page,
+                'sort': 'date',
+                'user': user_id,
+                'limit': self._PER_PAGE,
+            })
+        yield from (
+            self.url_result(f'https://iwara.tv/video/{x}')
+            for x in traverse_obj(videos, ('results', ..., 'id')))
 
     def _real_extract(self, url):
         playlist_id = self._match_id(url)
-        webpage = self._download_webpage(url, playlist_id)
+        user_info = self._download_json(
+            f'https://api.iwara.tv/profile/{playlist_id}', playlist_id,
+            note='Requesting user info')
+        user_id = traverse_obj(user_info, ('user', 'id'))
 
-        return {
-            '_type': 'playlist',
-            'id': playlist_id,
-            'uploader_id': self._html_search_regex(
-                r'<div class="[^"]*views-field-name">\s*<span class="field-content">\s*<h2>(.*?)</h2>',
-                webpage, 'uploader_id'),
-            'title': self._html_search_regex(
-                (r'<h1 class="title"[^>]*?>(.*?)</h1>',
-                 r'<title>(.*?)\s+\|\s*Iwara'), webpage, 'title'),
-            'entries': (self.url_result(urljoin(url, u))
-                        for u in re.findall(
-                            r'<h3 class="title">\s*<a href="([^"]+)">', webpage)),
-        }
+        return self.playlist_result(
+            OnDemandPagedList(
+                functools.partial(self._entries, playlist_id, user_id),
+                self._PER_PAGE),
+            playlist_id, traverse_obj(user_info, ('user', 'name')))
