@@ -827,8 +827,8 @@ from .ivi import (
 from .ivideon import IvideonIE
 from .iwara import (
     IwaraIE,
-    IwaraUserIE,
     IwaraPlaylistIE,
+    IwaraUserIE,
 )
 from .ixigua import IxiguaIE
 from .izlesene import IzleseneIE
