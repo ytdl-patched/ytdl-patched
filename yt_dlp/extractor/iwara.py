@@ -5,6 +5,7 @@ import hashlib
 
 from .common import InfoExtractor
 from ..utils import (
+    mimetype2ext,
     traverse_obj,
     unified_timestamp,
     urljoin,
@@ -23,6 +24,8 @@ class IwaraIE(InfoExtractor):
     IE_NAME = 'iwara'
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/video/(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
+        # this video cannot be played because of migration
+        'only_matching': True,
         'url': 'https://www.iwara.tv/video/k2ayoueezfkx6gvq',
         'info_dict': {
             'id': 'k2ayoueezfkx6gvq',
@@ -39,6 +42,26 @@ class IwaraIE(InfoExtractor):
             'timestamp': 1677843869,
             'modified_timestamp': 1679056362,
         },
+    }, {
+        'url': 'https://iwara.tv/video/1ywe1sbkqwumpdxz5/',
+        'md5': '20691ce1473ec2766c0788e14c60ce66',
+        'info_dict': {
+            'id': '1ywe1sbkqwumpdxz5',
+            'ext': 'mp4',
+            'age_limit': 18,
+            'title': 'Aponia 阿波尼亚SEX  Party Tonight 手动脱衣 大奶 裸腿',
+            'description': 'md5:0c4c310f2e0592d68b9f771d348329ca',
+            'uploader': '龙也zZZ',
+            'uploader_id': 'user792540',
+            'tags': [
+                'uncategorized'
+            ],
+            'like_count': 1809,
+            'view_count': 25156,
+            'comment_count': 1,
+            'timestamp': 1678732213,
+            'modified_timestamp': 1679110271,
+        },
     }]
 
     def _extract_formats(self, video_id, fileurl):
@@ -50,8 +73,13 @@ class IwaraIE(InfoExtractor):
 
         files = self._download_json(fileurl, video_id, headers={'X-Version': x_version})
         for fmt in files:
-            # the site is mulfunctioning as of writing, cannot fill here now
-            yield {}
+            yield traverse_obj(fmt, {
+                'format_id': 'name',
+                'url': ('src', ('view', 'download'), {lambda x: self._proto_relative_url(x, 'https:')}),
+                'ext': ('type', {mimetype2ext}),
+                'preference': ('name', {lambda x: int(x) if x.isdigit() else 1e4}),
+                'height': ('name', {lambda x: int(x)}),
+            }, get_all=False)
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
