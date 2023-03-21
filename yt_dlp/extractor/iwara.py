@@ -2,7 +2,6 @@ import functools
 import urllib.error
 import urllib.parse
 import hashlib
-import json
 
 from .common import InfoExtractor
 from ..utils import (
@@ -78,20 +77,13 @@ class IwaraIE(InfoExtractor):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        try:
-            video_data = self._download_json(f'http://api.iwara.tv/video/{video_id}', video_id)
-        except ExtractorError as e:
-            if isinstance(e.cause, urllib.error.HTTPError) and e.cause.code == 403:
-                # at this point we can actually get uploaded user info, but do we need it?
-                try:
-                    errresp = json.load(e.cause, strict=False)
-                except json.JSONDecodeError:
-                    raise e
-                errmsg = traverse_obj(errresp, 'message')
-                if errmsg == 'errors.privateVideo':
-                    self.raise_login_required('Private video. Login if you have permissions to watch')
-                else:
-                    raise ExtractorError(f'Iwara says: {errmsg}')
+        video_data = self._download_json(f'http://api.iwara.tv/video/{video_id}', video_id, expected_status=lambda x: True)
+        errmsg = video_data.get('message')
+        # at this point we can actually get uploaded user info, but do we need it?
+        if errmsg == 'errors.privateVideo':
+            self.raise_login_required('Private video. Login if you have permissions to watch')
+        elif errmsg:
+            raise ExtractorError(f'Iwara says: {errmsg}')
 
         return {
             'id': video_id,
