@@ -302,7 +302,10 @@ from .cbc import (
     CBCGemPlaylistIE,
     CBCGemLiveIE,
 )
-from .cbs import CBSIE
+from .cbs import (
+    CBSIE,
+    ParamountPressExpressIE,
+)
 from .cbslocal import (
     CBSLocalIE,
     CBSLocalArticleIE,
