@@ -1017,6 +1017,7 @@
  - **ParamountNetwork**
  - **ParamountPlus**
  - **ParamountPlusSeries**
+ - **ParamountPressExpress**
  - **Parler**: Posts on parler.com
  - **parliamentlive.tv**: UK parliament videos
  - **Parlview**
