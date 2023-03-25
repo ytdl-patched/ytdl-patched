@@ -172,7 +172,7 @@ class Updater:
             return self.target_tag
 
         identifier = f'{detect_variant()} {self.target_channel} {system_identifier()}'
-        for line in self._download('_update_spec', 'latest').decode().splitlines():
+        for line in self._download('_update_spec', 'latest', 'yt-dlp/yt-dlp').decode().splitlines():
             if not line.startswith('lock '):
                 continue
             _, tag, pattern = line.split(' ', 2)
@@ -231,9 +231,9 @@ class Updater:
         """Filename of the executable"""
         return compat_realpath(_get_variant_and_executable_path()[1])
 
-    def _download(self, name, tag):
+    def _download(self, name, tag, repo=None):
         slug = 'latest/download' if tag == 'latest' else f'download/{tag[5:]}'
-        url = f'https://github.com/{self._target_repo}/releases/{slug}/{name}'
+        url = f'https://github.com/{repo or self._target_repo}/releases/{slug}/{name}'
         self.ydl.write_debug(f'Downloading {name} from {url}')
         return self.ydl.urlopen(url).read()
 
