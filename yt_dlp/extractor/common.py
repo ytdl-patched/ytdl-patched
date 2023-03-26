@@ -848,11 +848,11 @@ class InfoExtractor:
             headers = (headers or {}).copy()
             headers.setdefault('X-Forwarded-For', self._x_forwarded_for_ip)
 
-        if self.get_param('verbose', False):
-            self.to_screen('[debug] Fetching webpage from %s' % request_to_url(url_or_request))
-
         try:
-            return self._downloader.urlopen(self._create_request(url_or_request, data, headers, query))
+            _req = self._create_request(url_or_request, data, headers, query)
+            if self.get_param('verbose', False):
+                self.to_screen('[debug] Fetching webpage from %s' % request_to_url(_req))
+            return self._downloader.urlopen(_req)
         except network_exceptions as err:
             if isinstance(err, urllib.error.HTTPError):
                 if self.__can_accept_status_code(err, expected_status):
