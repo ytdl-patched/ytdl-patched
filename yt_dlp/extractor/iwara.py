@@ -9,6 +9,7 @@ from ..utils import (
     OnDemandPagedList,
     int_or_none,
     mimetype2ext,
+    parse_qs,
     traverse_obj,
     unified_timestamp,
 )
@@ -129,7 +130,6 @@ class IwaraPlaylistBaseIE(InfoExtractor):
 class IwaraUserIE(IwaraPlaylistBaseIE):
     _VALID_URL = r'https?://(?:www\.)?iwara\.tv/profile/(?P<id>[^/?#&]+)'
     IE_NAME = 'iwara:user'
-    _PER_PAGE = 32
 
     _TESTS = [{
         'url': 'https://iwara.tv/profile/user792540/videos',
@@ -176,7 +176,6 @@ class IwaraPlaylistIE(IwaraPlaylistBaseIE):
     # the ID is an UUID but I don't think it's necessary to write concrete regex
     _VALID_URL = r'https?://(?:www\.)?iwara\.tv/playlist/(?P<id>[0-9a-f-]+)'
     IE_NAME = 'iwara:playlist'
-    _PER_PAGE = 32
 
     _TESTS = [{
         'url': 'https://iwara.tv/playlist/458e5486-36a4-4ac0-b233-7e9eef01025f',
@@ -197,3 +196,33 @@ class IwaraPlaylistIE(IwaraPlaylistBaseIE):
         return self._paged_list(
             playlist_id, traverse_obj(page_0, ('title', 'name')),
             page_0, playlist_id)
+
+
+class IwaraSearchIE(IwaraPlaylistBaseIE):
+    _VALID_URL = r'https?://(?:www\.)?iwara\.tv/search\?query=(?P<id>[^&#]+)'
+    IE_NAME = 'iwara:search'
+
+    _TESTS = [{
+        'url': 'https://www.iwara.tv/search?query=version',
+        'info_dict': {
+            'id': 'version',
+        },
+        'playlist_mincount': 11000,
+    }]
+
+    def _request_page(self, page, playlist_id):
+        return self._download_json(
+            'https://api.iwara.tv/search', playlist_id,
+            note=f'Downloading page {page}',
+            query={
+                'type': 'video',
+                'query': playlist_id,
+                'page': page,
+                'limit': self._PER_PAGE,
+            })
+
+    def _real_extract(self, url):
+        playlist_id = traverse_obj(parse_qs(url), ('query', 0)) or urllib.parse.unquote(self._match_id(url))
+        return self._paged_list(
+            playlist_id, playlist_id,
+            None, playlist_id)
