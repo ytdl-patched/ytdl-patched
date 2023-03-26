@@ -612,6 +612,7 @@
  - **IVXPlayer**
  - **iwara**
  - **iwara:playlist**
+ - **iwara:search**
  - **iwara:user**
  - **Ixigua**
  - **Izlesene**
