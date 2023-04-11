@@ -690,8 +690,6 @@
  - **limelight**
  - **limelight:channel**
  - **limelight:channel_list**
- - **LineLive**
- - **LineLiveChannel**
  - **LinkedIn**: [*linkedin*](## "netrc machine")
  - **linkedin:learning**: [*linkedin*](## "netrc machine")
  - **linkedin:​learning:course**: [*linkedin*](## "netrc machine")
