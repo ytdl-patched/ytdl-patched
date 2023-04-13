@@ -258,6 +258,14 @@ from .br import (
     BRMediathekIE,
 )
 from .bravotv import BravoTVIE
+from .brainpop import (
+    BrainPOPIE,
+    BrainPOPJrIE,
+    BrainPOPELLIE,
+    BrainPOPEspIE,
+    BrainPOPFrIE,
+    BrainPOPIlIE,
+)
 from .breakcom import BreakIE
 from .breitbart import BreitBartIE
 from .brightcove import (
@@ -687,6 +695,7 @@ from .globo import (
     GloboIE,
     GloboArticleIE,
 )
+from .gmanetwork import GMANetworkVideoIE
 from .go import GoIE
 from .godtube import GodTubeIE
 from .gofile import GofileIE
