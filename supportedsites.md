@@ -192,6 +192,12 @@
  - **BoxCastVideo**
  - **Bpb**: Bundeszentrale für politische Bildung
  - **BR**: Bayerischer Rundfunk
+ - **BrainPOP**: [*brainpop*](## "netrc machine")
+ - **BrainPOPELL**: [*brainpop*](## "netrc machine")
+ - **BrainPOPEsp**: [*brainpop*](## "netrc machine") BrainPOP Español
+ - **BrainPOPFr**: [*brainpop*](## "netrc machine") BrainPOP Français
+ - **BrainPOPIl**: [*brainpop*](## "netrc machine") BrainPOP Hebrew
+ - **BrainPOPJr**: [*brainpop*](## "netrc machine")
  - **BravoTV**
  - **Break**
  - **BreitBart**
@@ -503,6 +509,7 @@
  - **GloboArticle**
  - **glomex**: Glomex videos
  - **glomex:embed**: Glomex embedded videos
+ - **GMANetworkVideo**
  - **Go**
  - **GoDiscovery**
  - **GodTube**
