@@ -1698,6 +1698,7 @@
  - **WeTvSeries**
  - **WhatIsMyIp**
  - **whowatch**
+ - **Whyp**
  - **wikimedia.org**
  - **Willow**
  - **WimTV**
