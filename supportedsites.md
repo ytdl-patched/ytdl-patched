@@ -1346,6 +1346,7 @@
  - **sr:mediathek**: Saarländischer Rundfunk
  - **SRGSSR**
  - **SRGSSRPlay**: srf.ch, rts.ch, rsi.ch, rtr.ch and swissinfo.ch play sites
+ - **StagePlusVODConcert**: [*stageplus*](## "netrc machine")
  - **stanfordoc**: Stanford Open ClassRoom
  - **StarTrek**
  - **startv**
