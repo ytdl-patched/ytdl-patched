@@ -504,7 +504,8 @@ class NiconicoIE(NiconicoBaseIE):
                 'key': 'heartbeat',
                 'init_callback': self._get_heartbeat_info,
                 'before_dl': ping,
-            }]
+            }],
+            '_format_sort_fields': ('res', 'vbr', 'abr', 'proto:m3u8'),
         }
 
     def _get_subtitles(self, video_id, api_data, session_api_data):
