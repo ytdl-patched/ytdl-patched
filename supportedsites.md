@@ -1699,6 +1699,7 @@
  - **WeiqiTV**: WQTV
  - **wetv:episode**
  - **WeTvSeries**
+ - **WeVidi**
  - **WhatIsMyIp**
  - **whowatch**
  - **Whyp**
