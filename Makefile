@@ -15,18 +15,18 @@ pypi-files: AUTHORS Changelog.md LICENSE README.md README.txt supportedsites \
 .PHONY: all clean install test tar pypi-files completions ot offlinetest codetest supportedsites
 
 clean-test:
-	rm -rf test/testdata/sigs/player-*.js tmp/ *.annotations.xml *.aria2 *.description *.dump *.frag \
+	rm -rf -- test/testdata/sigs/player-*.js tmp/ *.annotations.xml *.aria2 *.description *.dump *.frag \
 	*.frag.aria2 *.frag.urls *.info.json *.live_chat.json *.meta *.part* *.tmp *.temp *.unknown_video *.ytdl \
 	*.3gp *.ape *.ass *.avi *.desktop *.f4v *.flac *.flv *.gif *.jpeg *.jpg *.m4a *.m4v *.mhtml *.mkv *.mov *.mp3 \
 	*.mp4 *.mpga *.oga *.ogg *.opus *.png *.sbv *.srt *.swf *.swp *.tt *.ttml *.url *.vtt *.wav *.webloc *.webm *.webp \
 	*.images *.lock *.aac
 clean-dist:
-	rm -rf ytdl-patched.1.temp.md ytdl-patched.1 README.txt MANIFEST build/ dist/ .coverage cover/ yt-dlp.tar.gz completions/ \
+	rm -rf -- ytdl-patched.1.temp.md ytdl-patched.1 README.txt MANIFEST build/ dist/ .coverage cover/ yt-dlp.tar.gz completions/ \
 	yt_dlp/extractor/lazy_extractors.py *.spec CONTRIBUTING.md.tmp ytdl-patched ytdl-patched*.exe yt_dlp.egg-info/ AUTHORS .mailmap
 clean-cache:
 	find . \( \
 		-type d -name .pytest_cache -o -type d -name __pycache__ -o -name "*.pyc" -o -name "*.class" \
-	\) -prune -exec rm -rf {} \;
+	\) -prune -exec rm -rf -- {} \;
 
 lazy-extractors: yt_dlp/extractor/lazy_extractors.py
 
