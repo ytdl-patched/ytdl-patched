@@ -940,7 +940,7 @@ class NiconicoUserIE(NiconicoPlaylistBaseIE):
 
     @classmethod
     def suitable(cls, url):
-        return super(NiconicoUserIE, cls).suitable(url) and not NiconicoPlaylistIE.suitable(url)
+        return super(NiconicoUserIE, cls).suitable(url) and not NiconicoPlaylistIE.suitable(url) and not NiconicoSeriesIE.suitable(url)
 
     def _call_api(self, list_id, resource, query):
         return self._download_json(
