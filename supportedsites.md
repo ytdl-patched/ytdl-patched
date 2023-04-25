@@ -1218,6 +1218,9 @@
  - **RTP**
  - **RTRFM**
  - **RTS**: RTS.ch
+ - **RTVCKaltura**
+ - **RTVCPlay**
+ - **RTVCPlayEmbed**
  - **rtve.es:alacarta**: RTVE a la carta
  - **rtve.es:audio**: RTVE audio
  - **rtve.es:infantil**: RTVE infantil
@@ -1271,6 +1274,7 @@
  - **SCTE**: [*scte*](## "netrc machine")
  - **SCTECourse**: [*scte*](## "netrc machine")
  - **Seeker**
+ - **SenalColombiaLive**
  - **SenateGov**
  - **SenateISVP**
  - **SendtoNews**
