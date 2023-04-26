@@ -223,7 +223,7 @@ jobs:
             - for Windows (no Python 3.x required)
                 - red icon - `...-red.exe` (**default** in -U)
                 - white icon - `...-white.exe`
-            - for pip - `yt_dlp-wheel.tar.gz`
+            - for pip - `ytdl_patched-wheel.tar.gz`
 
             This release is built from commit ${{ github.sha }}
 
@@ -304,8 +304,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
-          asset_name: yt_dlp-py2.py3-none-any.whl
+          asset_path: ./dist/ytdl_patched-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl
+          asset_name: ytdl_patched-py2.py3-none-any.whl
           asset_content_type: application/zip
       - name: Upload wheel tar (Releases)
         id: upload-6
@@ -314,8 +314,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.upload_url }} 
-          asset_path: ./dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
-          asset_name: yt_dlp-wheel.tar.gz
+          asset_path: ./dist/ytdl-patched-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz
+          asset_name: ytdl_patched-wheel.tar.gz
           asset_content_type: application/gzip
 
 
@@ -338,7 +338,7 @@ jobs:
           git clone https://lesmiscore:${{ secrets.GH_PAT }}@github.com/lesmiscore/homebrew-my.git
           cd homebrew-my
           echo $FILEHASH_TAR $VERSION
-          python3 ../devscripts/update-formulae.py Formula/ytdl-patched.rb "$FILEHASH_TAR" "$VERSION" "https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/yt_dlp-wheel.tar.gz"
+          python3 ../devscripts/update-formulae.py Formula/ytdl-patched.rb "$FILEHASH_TAR" "$VERSION" "https://github.com/ytdl-patched/ytdl-patched/releases/download/$VERSION/ytdl_patched-wheel.tar.gz"
           git add .
           git commit -m "ytdl-patched: $VERSION"
           git push
@@ -365,8 +365,8 @@ jobs:
 
       - name: Rename files
         run: |
-          mv dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl artifacts/yt_dlp-py2.py3-none-any.whl
-          mv dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz               artifacts/yt_dlp-wheel.tar.gz
+          mv dist/ytdl_patched-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl artifacts/ytdl_patched-py2.py3-none-any.whl
+          mv dist/ytdl-patched-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz               artifacts/ytdl_patched-wheel.tar.gz
 
       - name: Compress exe files
         run: |
