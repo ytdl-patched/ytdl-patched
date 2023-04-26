@@ -125,8 +125,8 @@ jobs:
       - name: Calculate hashes
         id: hash
         run: |
-          echo "filehash_wheel=$(sha256sum dist/yt_dlp-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-          echo "filehash_wheel_tar=$(sha256sum dist/yt-dlp-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "filehash_wheel=$(sha256sum dist/ytdl_patched-${{ needs.prepare.outputs.latest_version_normalized }}-py2.py3-none-any.whl | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "filehash_wheel_tar=$(sha256sum dist/ytdl-patched-${{ needs.prepare.outputs.latest_version_normalized }}.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
       - name: Upload artifacts for the next steps
         uses: actions/upload-artifact@v2
         with:
