@@ -171,10 +171,6 @@ jobs:
       - name: Install UPX
         shell: pwsh
         run: pwsh ./devscripts/install_upx.ps1
-      - name: Remove unneeded tests in InfoExtractor
-        shell: bash
-        run: python3 ./devscripts/reduce_code.py yt_dlp/extractor/*.py
-        if: ${{ 0 == 1 }}  # always skip this step
       - name: Build patched YTDL for Windows
         shell: pwsh
         run: pwsh ./devscripts/build_windows_exe.ps1 PyInstaller ${{ matrix.icon }}
