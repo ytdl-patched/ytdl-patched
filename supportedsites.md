@@ -353,6 +353,8 @@
  - **Disney**
  - **disneychris**
  - **DIYNetwork**
+ - **dlf**
+ - **dlf:corpus**: DLF Multi-feed Archives
  - **dlive:stream**
  - **dlive:vod**
  - **dnatube**
