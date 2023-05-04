@@ -261,6 +261,7 @@
  - **CiscoLiveSession**
  - **ciscowebex**: Cisco Webex
  - **CJSW**
+ - **Clipchamp**
  - **ClipConverter**
  - **cliphunter**
  - **Clippit**
