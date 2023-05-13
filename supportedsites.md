@@ -624,10 +624,10 @@
  - **ivi:compilation**: ivi.ru compilations
  - **ivideon**: Ivideon TV
  - **IVXPlayer**
- - **iwara**
- - **iwara:playlist**
- - **iwara:search**
- - **iwara:user**
+ - **iwara**: [*iwara*](## "netrc machine")
+ - **iwara:playlist**: [*iwara*](## "netrc machine")
+ - **iwara:search**: [*iwara*](## "netrc machine")
+ - **iwara:user**: [*iwara*](## "netrc machine")
  - **Ixigua**
  - **Izlesene**
  - **Jable**
