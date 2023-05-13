@@ -2,6 +2,7 @@ import functools
 import urllib.error
 import urllib.parse
 import hashlib
+import json
 
 from .common import InfoExtractor
 from ..utils import (
@@ -16,7 +17,49 @@ from ..utils import (
 )
 
 
-class IwaraIE(InfoExtractor):
+# https://github.com/yt-dlp/yt-dlp/issues/6671
+class IwaraBaseIE(InfoExtractor):
+    _USERTOKEN = None
+    _MEDIATOKEN = None
+    _NETRC_MACHINE = 'iwara'
+
+    def _get_user_token(self, invalidate=False):
+        if not invalidate and self._USERTOKEN:
+            return self._USERTOKEN
+
+        username, password = self._get_login_info()
+        IwaraBaseIE._USERTOKEN = username and self.cache.load(self._NETRC_MACHINE, username)
+        if not IwaraBaseIE._USERTOKEN or invalidate:
+            IwaraBaseIE._USERTOKEN = self._download_json(
+                'https://api.iwara.tv/user/login', None, note='Logging in',
+                data=json.dumps({
+                    'email': username,
+                    'password': password
+                }).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json'
+                })['token']
+
+            self.cache.store(self._NETRC_MACHINE, username, IwaraBaseIE._USERTOKEN)
+
+        return self._USERTOKEN
+
+    def _get_media_token(self, invalidate=False):
+        if not invalidate and self._MEDIATOKEN:
+            return self._MEDIATOKEN
+
+        IwaraBaseIE._MEDIATOKEN = self._download_json(
+            'https://api.iwara.tv/user/token', None, note='Fetching media token',
+            data=b'',  # Need to have some data here, even if it's empty
+            headers={
+                'Authorization': f'Bearer {self._get_user_token()}',
+                'Content-Type': 'application/json'
+            })['accessToken']
+
+        return self._MEDIATOKEN
+
+
+class IwaraIE(IwaraBaseIE):
     IE_NAME = 'iwara'
     _VALID_URL = r'https?://(?:www\.|ecchi\.)?iwara\.tv/videos?/(?P<id>[a-zA-Z0-9]+)'
     _TESTS = [{
@@ -58,6 +101,26 @@ class IwaraIE(InfoExtractor):
             'timestamp': 1678732213,
             'modified_timestamp': 1679110271,
         },
+    }, {
+        'url': 'https://iwara.tv/video/blggmfno8ghl725bg',
+        'info_dict': {
+            'id': 'blggmfno8ghl725bg',
+            'ext': 'mp4',
+            'age_limit': 18,
+            'title': 'お外でおしっこしちゃう猫耳ロリメイド',
+            'description': 'md5:0342ba9bf6db09edbbb28729657c3611',
+            'uploader': 'Fe_Kurosabi',
+            'uploader_id': 'fekurosabi',
+            'tags': [
+                'pee'
+            ],
+            'like_count': 192,
+            'view_count': 12119,
+            'comment_count': 0,
+            'timestamp': 1598880567,
+            'modified_timestamp': 1598908995,
+            'availability': 'needs_auth',
+        },
     }]
 
     def _extract_formats(self, video_id, fileurl):
@@ -81,12 +144,18 @@ class IwaraIE(InfoExtractor):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        video_data = self._download_json(f'https://api.iwara.tv/video/{video_id}', video_id, expected_status=lambda x: True)
+        username, password = self._get_login_info()
+        headers = {
+            'Authorization': f'Bearer {self._get_media_token()}',
+        } if username and password else None
+        video_data = self._download_json(f'https://api.iwara.tv/video/{video_id}', video_id, expected_status=lambda x: True, headers=headers)
         errmsg = video_data.get('message')
         # at this point we can actually get uploaded user info, but do we need it?
         if errmsg == 'errors.privateVideo':
             self.raise_login_required('Private video. Login if you have permissions to watch')
-        elif errmsg:
+        elif errmsg == 'errors.notFound' and not username:
+            self.raise_login_required('Video may need login to view')
+        elif errmsg:  # None if success
             raise ExtractorError(f'Iwara says: {errmsg}')
 
         if not video_data.get('fileUrl'):
@@ -114,8 +183,17 @@ class IwaraIE(InfoExtractor):
             'formats': list(self._extract_formats(video_id, video_data.get('fileUrl'))),
         }
 
+    def _perform_login(self, username, password):
+        if self.cache.load(self._NETRC_MACHINE, username) and self._get_media_token():
+            self.write_debug('Skipping logging in')
+            return
 
-class IwaraPlaylistBaseIE(InfoExtractor):
+        IwaraBaseIE._USERTOKEN = self._get_user_token(True)
+        self._get_media_token(True)
+        self.cache.store(self._NETRC_MACHINE, username, IwaraBaseIE._USERTOKEN)
+
+
+class IwaraPlaylistBaseIE(IwaraBaseIE):
     _PER_PAGE = 32
 
     def _request_page(self, page, *args):
