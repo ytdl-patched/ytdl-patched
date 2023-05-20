@@ -38,12 +38,12 @@ from .utils import (
     DateRange,
     DownloadCancelled,
     DownloadError,
+    DownloadRange,
     FormatSorter,
     GeoUtils,
     PlaylistEntries,
     SameFileError,
     decodeOption,
-    download_range_func,
     expand_path,
     float_or_none,
     format_field,
@@ -350,7 +350,7 @@ def validate_options(opts):
         return chapters, ranges
 
     opts.remove_chapters, opts.remove_ranges = parse_chapters('--remove-chapters', opts.remove_chapters)
-    opts.download_ranges = download_range_func(*parse_chapters('--download-sections', opts.download_ranges))
+    opts.download_ranges = DownloadRange(*parse_chapters('--download-sections', opts.download_ranges))
 
     # Cookies from browser
     if opts.cookiesfrombrowser:

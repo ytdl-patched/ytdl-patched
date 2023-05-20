@@ -3969,7 +3969,7 @@ def match_filter_func(filters, breaking_filters=None, all_match=False):
     return _match_func
 
 
-class download_range_func:
+class DownloadRange:
     def __init__(self, chapters, ranges):
         self.chapters, self.ranges = chapters, ranges
 
@@ -3990,11 +3990,15 @@ class download_range_func:
         yield from ({'start_time': start, 'end_time': end} for start, end in self.ranges or [])
 
     def __eq__(self, other):
-        return (isinstance(other, download_range_func)
+        return (isinstance(other, DownloadRange)
                 and self.chapters == other.chapters and self.ranges == other.ranges)
 
     def __repr__(self):
         return f'{__name__}.{type(self).__name__}({self.chapters!r}, {self.ranges!r})'
+
+
+# for compatibility
+download_range_func = DownloadRange
 
 
 def parse_dfxp_time_expr(time_expr):
