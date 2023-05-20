@@ -2024,7 +2024,7 @@ class DateRange:
         return f'{self.start.isoformat()} - {self.end.isoformat()}'
 
     def __repr__(self) -> str:
-        return 'DateRange({!r}, {!r})'.format(self.start, self.end)
+        return f'{__name__}.{type(self).__name__}({self.start!r}, {self.end!r})'
 
     def __eq__(self, other):
         return (isinstance(other, DateRange)
@@ -3994,7 +3994,7 @@ class download_range_func:
                 and self.chapters == other.chapters and self.ranges == other.ranges)
 
     def __repr__(self):
-        return f'{__name__}.{type(self).__name__}({repr(self.chapters)}, {repr(self.ranges)})'
+        return f'{__name__}.{type(self).__name__}({self.chapters!r}, {self.ranges!r})'
 
 
 def parse_dfxp_time_expr(time_expr):
