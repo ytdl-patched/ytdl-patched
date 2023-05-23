@@ -50,28 +50,19 @@ except (ImportError, SyntaxError):
     # dateutil is optional
     HAVE_DATEUTIL = False
 
-from .compat import functools  # isort: split
-from .compat import (
+from . import traversal
+
+from ..compat import functools  # isort: split
+from ..compat import (
     compat_etree_fromstring,
     compat_expanduser,
     compat_HTMLParseError,
     compat_os_name,
     compat_shlex_quote,
 )
-
-from .dependencies import brotli, certifi, xattr
-from .socks import ProxyType, sockssocket
-from .chrome_versions import versions as _CHROME_VERSIONS
-
-
-def register_socks_protocols():
-    # "Register" SOCKS protocols
-    # In Python < 2.6.5, urlsplit() suffers from bug https://bugs.python.org/issue7904
-    # URLs with protocols not in urlparse.uses_netloc are not handled correctly
-    for scheme in ('socks', 'socks4', 'socks4a', 'socks5'):
-        if scheme not in urllib.parse.uses_netloc:
-            urllib.parse.uses_netloc.append(scheme)
-
+from ..dependencies import brotli, certifi, xattr
+from ..socks import ProxyType, sockssocket
+from ..chrome_versions import versions as _CHROME_VERSIONS
 
 # This is not clearly defined otherwise
 compiled_regex_type = type(re.compile(''))
@@ -906,46 +897,11 @@ class Popen(subprocess.Popen):
             return stdout or default, stderr or default, proc.returncode
 
 
-def get_subprocess_encoding():
-    if sys.platform == 'win32' and sys.getwindowsversion()[0] >= 5:
-        # For subprocess calls, encode with locale encoding
-        # Refer to http://stackoverflow.com/a/9951851/35070
-        encoding = preferredencoding()
-    else:
-        encoding = sys.getfilesystemencoding()
-    if encoding is None:
-        encoding = 'utf-8'
-    return encoding
-
-
-def encodeFilename(s, for_subprocess=False):
-    assert isinstance(s, str)
-    return s
-
-
-def decodeFilename(b, for_subprocess=False):
-    return b
-
-
 def encodeArgument(s):
     # Legacy code that uses byte strings
     # Uncomment the following line after fixing all post processors
     # assert isinstance(s, str), 'Internal error: %r should be of type %r, is %r' % (s, str, type(s))
     return s if isinstance(s, str) else s.decode('ascii')
-
-
-def decodeArgument(b):
-    return b
-
-
-def decodeOption(optval):
-    if optval is None:
-        return optval
-    if isinstance(optval, bytes):
-        optval = optval.decode(preferredencoding())
-
-    assert isinstance(optval, str)
-    return optval
 
 
 _timetuple = collections.namedtuple('Time', ('hours', 'minutes', 'seconds', 'milliseconds'))
@@ -1015,7 +971,7 @@ def make_HTTPS_handler(params, **kwargs):
 
     context.verify_mode = ssl.CERT_REQUIRED if opts_check_certificate else ssl.CERT_NONE
     if opts_check_certificate:
-        if has_certifi and 'no-certifi' not in params.get('compat_opts', []):
+        if certifi and 'no-certifi' not in params.get('compat_opts', []):
             context.load_verify_locations(cafile=certifi.where())
         else:
             try:
@@ -1049,7 +1005,7 @@ def make_HTTPS_handler(params, **kwargs):
 
 
 def bug_reports_message(before=';'):
-    from .update import REPOSITORY
+    from ..update import REPOSITORY
 
     msg = (f'please report this issue on  https://github.com/{REPOSITORY}/issues?q= , '
            'filling out the appropriate issue template. Confirm you are on the latest version using  yt-dlp -U')
@@ -1350,25 +1306,12 @@ def _create_http_connection(ydl_handler, http_class, is_https, *args, **kwargs):
     return hc
 
 
-def handle_youtubedl_headers(headers):
-    filtered_headers = headers
-
-    if 'Youtubedl-no-compression' in filtered_headers:
-        filtered_headers = {k: v for k, v in filtered_headers.items() if k.lower() != 'accept-encoding'}
-        del filtered_headers['Youtubedl-no-compression']
-
-    return filtered_headers
-
-
 class YoutubeDLHandler(urllib.request.HTTPHandler):
     """Handler for HTTP requests and responses.
 
     This class, when installed with an OpenerDirector, automatically adds
-    the standard headers to every HTTP request and handles gzipped and
-    deflated responses from web servers. If compression is to be avoided in
-    a particular request, the original request in the program code only has
-    to include the HTTP header "Youtubedl-no-compression", which will be
-    removed before making the real request.
+    the standard headers to every HTTP request and handles gzipped, deflated and
+    brotli responses from web servers.
 
     Part of this code was copied from:
 
@@ -1431,10 +1374,12 @@ class YoutubeDLHandler(urllib.request.HTTPHandler):
             if h.capitalize() not in req.headers:
                 req.add_header(h, v)
 
+        if 'Youtubedl-no-compression' in req.headers:  # deprecated
+            req.headers.pop('Youtubedl-no-compression', None)
+            req.add_header('Accept-encoding', 'identity')
+
         if 'Accept-encoding' not in req.headers:
             req.add_header('Accept-encoding', ', '.join(SUPPORTED_ENCODINGS))
-
-        req.headers = handle_youtubedl_headers(req.headers)
 
         return super().do_request_(req)
 
@@ -2031,12 +1976,6 @@ class DateRange:
                 and self.start == other.start and self.end == other.end)
 
 
-def platform_name():
-    """ Returns the platform name as a str """
-    deprecation_warning(f'"{__name__}.platform_name" is deprecated, use "platform.platform" instead')
-    return platform.platform()
-
-
 @functools.cache
 def system_identifier():
     python_implementation = platform.python_implementation()
@@ -2088,7 +2027,7 @@ def write_string(s, out=None, encoding=None):
 
 
 def deprecation_warning(msg, *, printer=None, stacklevel=0, **kwargs):
-    from . import _IN_CLI
+    from .. import _IN_CLI
     if _IN_CLI:
         if msg in deprecation_warning._cache:
             return
@@ -3300,13 +3239,6 @@ def variadic(x, allowed_types=NO_DEFAULT):
     return x if is_iterable_like(x, blocked_types=allowed_types) else (x, )
 
 
-def dict_get(d, key_or_keys, default=None, skip_false_values=True):
-    for val in map(d.get, variadic(key_or_keys)):
-        if val is not None and (val or not skip_false_values):
-            return val
-    return default
-
-
 def try_call(*funcs, expected_type=None, args=[], kwargs={}):
     for f in funcs:
         try:
@@ -3544,7 +3476,7 @@ def is_outdated_version(version, limit, assume_new=True):
 def ytdl_is_updateable():
     """ Returns if yt-dlp can be updated with -U """
 
-    from .update import is_non_updateable
+    from ..update import is_non_updateable
 
     return not is_non_updateable()
 
@@ -3552,10 +3484,6 @@ def ytdl_is_updateable():
 def args_to_str(args):
     # Get a short string representation for a subprocess command
     return ' '.join(compat_shlex_quote(a) for a in args)
-
-
-def error_to_compat_str(err):
-    return str(err)
 
 
 def error_to_str(err):
@@ -3644,7 +3572,7 @@ def mimetype2ext(mt, default=NO_DEFAULT):
     mimetype = mt.partition(';')[0].strip().lower()
     _, _, subtype = mimetype.rpartition('/')
 
-    ext = traverse_obj(MAP, mimetype, subtype, subtype.rsplit('+')[-1])
+    ext = traversal.traverse_obj(MAP, mimetype, subtype, subtype.rsplit('+')[-1])
     if ext:
         return ext
     elif default is not NO_DEFAULT:
@@ -3676,7 +3604,7 @@ def parse_codecs(codecs_str):
             vcodec = full_codec
             if parts[0] in ('dvh1', 'dvhe'):
                 hdr = 'DV'
-            elif parts[0] == 'av1' and traverse_obj(parts, 3) == '10':
+            elif parts[0] == 'av1' and traversal.traverse_obj(parts, 3) == '10':
                 hdr = 'HDR10'
             elif parts[:2] == ['vp9', '2']:
                 hdr = 'HDR10'
@@ -3722,8 +3650,7 @@ def get_compatible_ext(*, vcodecs, acodecs, vexts, aexts, preferences=None):
         },
     }
 
-    sanitize_codec = functools.partial(
-        try_get, getter=lambda x: x[0].split('.')[0].replace('0', '').lower())
+    sanitize_codec = functools.partial(try_get, getter=lambda x: x[0].split('.')[0].replace('0', ''))
     vcodec, acodec = sanitize_codec(vcodecs), sanitize_codec(acodecs)
 
     for ext in preferences or COMPATIBLE_CODECS.keys():
@@ -5109,12 +5036,6 @@ def decode_base_n(string, n=None, table=None):
     return result
 
 
-def decode_base(value, digits):
-    deprecation_warning(f'{__name__}.decode_base is deprecated and may be removed '
-                        f'in a future version. Use {__name__}.decode_base_n instead')
-    return decode_base_n(value, table=digits)
-
-
 def decode_packed_codes(code):
     mobj = re.search(PACKED_CODES_RE, code)
     obfuscated_code, base, count, symbols = mobj.groups()
@@ -5157,113 +5078,6 @@ def parse_m3u8_attributes(attrib):
 
 def urshift(val, n):
     return val >> n if val >= 0 else (val + 0x100000000) >> n
-
-
-# Based on png2str() written by @gdkchan and improved by @yokrysty
-# Originally posted at https://github.com/ytdl-org/youtube-dl/issues/9706
-def decode_png(png_data):
-    # Reference: https://www.w3.org/TR/PNG/
-    header = png_data[8:]
-
-    if png_data[:8] != b'\x89PNG\x0d\x0a\x1a\x0a' or header[4:8] != b'IHDR':
-        raise OSError('Not a valid PNG file.')
-
-    int_map = {1: '>B', 2: '>H', 4: '>I'}
-    unpack_integer = lambda x: struct.unpack(int_map[len(x)], x)[0]
-
-    chunks = []
-
-    while header:
-        length = unpack_integer(header[:4])
-        header = header[4:]
-
-        chunk_type = header[:4]
-        header = header[4:]
-
-        chunk_data = header[:length]
-        header = header[length:]
-
-        header = header[4:]  # Skip CRC
-
-        chunks.append({
-            'type': chunk_type,
-            'length': length,
-            'data': chunk_data
-        })
-
-    ihdr = chunks[0]['data']
-
-    width = unpack_integer(ihdr[:4])
-    height = unpack_integer(ihdr[4:8])
-
-    idat = b''
-
-    for chunk in chunks:
-        if chunk['type'] == b'IDAT':
-            idat += chunk['data']
-
-    if not idat:
-        raise OSError('Unable to read PNG data.')
-
-    decompressed_data = bytearray(zlib.decompress(idat))
-
-    stride = width * 3
-    pixels = []
-
-    def _get_pixel(idx):
-        x = idx % stride
-        y = idx // stride
-        return pixels[y][x]
-
-    for y in range(height):
-        basePos = y * (1 + stride)
-        filter_type = decompressed_data[basePos]
-
-        current_row = []
-
-        pixels.append(current_row)
-
-        for x in range(stride):
-            color = decompressed_data[1 + basePos + x]
-            basex = y * stride + x
-            left = 0
-            up = 0
-
-            if x > 2:
-                left = _get_pixel(basex - 3)
-            if y > 0:
-                up = _get_pixel(basex - stride)
-
-            if filter_type == 1:  # Sub
-                color = (color + left) & 0xff
-            elif filter_type == 2:  # Up
-                color = (color + up) & 0xff
-            elif filter_type == 3:  # Average
-                color = (color + ((left + up) >> 1)) & 0xff
-            elif filter_type == 4:  # Paeth
-                a = left
-                b = up
-                c = 0
-
-                if x > 2 and y > 0:
-                    c = _get_pixel(basex - stride - 3)
-
-                p = a + b - c
-
-                pa = abs(p - a)
-                pb = abs(p - b)
-                pc = abs(p - c)
-
-                if pa <= pb and pa <= pc:
-                    color = (color + a) & 0xff
-                elif pb <= pc:
-                    color = (color + b) & 0xff
-                else:
-                    color = (color + c) & 0xff
-
-            current_row.append(color)
-
-    return width, height, pixels
 
 
 def write_xattr(path, key, value):
@@ -5424,7 +5238,7 @@ def to_high_limit_path(path):
 
 
 def format_field(obj, field=None, template='%s', ignore=NO_DEFAULT, default='', func=IDENTITY):
-    val = traverse_obj(obj, *variadic(field))
+    val = traversal.traverse_obj(obj, *variadic(field))
     if not val if ignore is NO_DEFAULT else val in variadic(ignore):
         return default
     return template % func(val)
@@ -5462,12 +5276,12 @@ def make_dir(path, to_screen=None):
         return True
     except OSError as err:
         if callable(to_screen) is not None:
-            to_screen('unable to create directory ' + error_to_compat_str(err))
+            to_screen(f'unable to create directory {err}')
         return False
 
 
 def get_executable_path():
-    from .update import _get_variant_and_executable_path
+    from ..update import _get_variant_and_executable_path
 
     return os.path.dirname(os.path.abspath(_get_variant_and_executable_path()[1]))
 
@@ -5905,7 +5719,7 @@ def number_of_digits(number):
 
 def join_nonempty(*values, delim='-', from_dict=None):
     if from_dict is not None:
-        values = (traverse_obj(from_dict, variadic(v)) for v in values)
+        values = (traversal.traverse_obj(from_dict, variadic(v)) for v in values)
     return delim.join(map(str, filter(None, values)))
 
 
@@ -6575,14 +6389,3 @@ class FormatSorter:
                 format['abr'] = format.get('tbr') - format.get('vbr', 0)
 
         return tuple(self._calculate_field_preference(format, field) for field in self._order)
-
-
-# Deprecated
-has_certifi = bool(certifi)
-
-
-def load_plugins(name, suffix, namespace):
-    from .plugins import load_plugins
-    ret = load_plugins(name, suffix)
-    namespace.update(ret)
-    return ret

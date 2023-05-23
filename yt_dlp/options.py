@@ -341,7 +341,7 @@ def create_parser():
         help='Print program version and exit')
     general.add_option(
         '-U', '--update',
-        action='store_true', dest='update_self',
+        action='store_const', dest='update_self', const=CHANNEL,
         help=format_field(
             is_non_updateable(), None, 'Check if updates are available. %s',
             default=f'Update this program to the latest {CHANNEL} version'))

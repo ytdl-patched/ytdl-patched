@@ -320,23 +320,21 @@ If you [installed with pip](https://github.com/yt-dlp/yt-dlp/wiki/Installation#w
 
 For other third-party package managers, see [the wiki](https://github.com/yt-dlp/yt-dlp/wiki/Installation#third-party-package-managers) or refer their documentation
 
-<<<<<<< HEAD
 If you [installed using Homebrew](#with-homebrew), run `brew upgrade lesmiscore/my/ytdl-patched`
-=======
-<a id="update-channels"/>
+<a id="update-channels" />
 
-There are currently two release channels for binaries, `stable` and `nightly`.
-`stable` is the default channel, and many of its changes have been tested by users of the nightly channel.
-The `nightly` channel has releases built after each push to the master branch, and will have the most recent fixes and additions, but also have more risk of regressions. They are available in [their own repo](https://github.com/yt-dlp/yt-dlp-nightly-builds/releases).
+ytdl-patched only has the `stable` channel that has releases built after each push to the master branch, and will have the most recent fixes and additions, but also have more risk of regressions. Use of `nightly` doesn't change the channel. The original description from yt-dlp follows for reference.
 
 When using `--update`/`-U`, a release binary will only update to its current channel.
-This release channel can be changed by using the `--update-to` option. `--update-to` can also be used to upgrade or downgrade to specific tags from a channel.
+`--update-to CHANNEL` can be used to switch to a different channel when a newer version is available. `--update-to [CHANNEL@]TAG` can also be used to upgrade or downgrade to specific tags from a channel.
+
+You may also use `--update-to <repository>` (`<owner>/<repository>`) to update to a channel on a completely different repository. Be careful with what repository you are updating to though, there is no verification done for binaries from different repositories.
 
 Example usage:
 * `yt-dlp --update-to nightly` change to `nightly` channel and update to its latest release
 * `yt-dlp --update-to stable@2023.02.17` upgrade/downgrade to release to `stable` channel tag `2023.02.17`
 * `yt-dlp --update-to 2023.01.06` upgrade/downgrade to tag `2023.01.06` if it exists on the current channel
->>>>>>> 354d5fca7a533f60a6eee14e854b9b4c132a7314
+* `yt-dlp --update-to example/yt-dlp@2023.03.01` upgrade/downgrade to the release from the `example/yt-dlp` repository, tag `2023.03.01`
 
 <!-- MANPAGE: BEGIN EXCLUDED SECTION -->
 ## RELEASE FILES
@@ -473,10 +471,10 @@ If you fork the project on GitHub, you can run your fork's [build workflow](.git
     -U, --update                    Update this program to the latest version
     --no-update                     Do not check for updates (default)
     --update-to [CHANNEL]@[TAG]     Upgrade/downgrade to a specific version.
-                                    CHANNEL and TAG defaults to "stable" and
-                                    "latest" respectively if omitted; See
-                                    "UPDATE" for details. Supported channels:
-                                    stable, nightly
+                                    CHANNEL can be a repository as well. CHANNEL
+                                    and TAG default to "stable" and "latest"
+                                    respectively if omitted; See "UPDATE" for
+                                    details. Supported channels: stable, nightly
     -i, --ignore-errors             Ignore download and postprocessing errors.
                                     The download will be considered successful
                                     even if the postprocessing fails
