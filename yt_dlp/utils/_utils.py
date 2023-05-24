@@ -100,10 +100,13 @@ USER_AGENTS = {
 }
 
 
-class NO_DEFAULT: pass  # noqa: E701
+class NO_DEFAULT:
+    pass
 
 
-IDENTITY = lambda x: x
+def IDENTITY(x):
+    return x
+
 
 ENGLISH_MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June',
