@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 from ..utils import (
+    NO_DEFAULT,
     NUMBER_RE,
     Namespace,
     float_or_none,
@@ -294,8 +295,15 @@ class ShowsProgress(object):
     def format_percent(percent):
         return 'N/A%' if percent is None else f'{percent:>.1f}%'
 
-    @staticmethod
-    def calc_eta(start, now, total, current):
+    @classmethod
+    def calc_eta(cls, start_or_rate, now_or_remaining, total=NO_DEFAULT, current=NO_DEFAULT):
+        if total is NO_DEFAULT:
+            rate, remaining = start_or_rate, now_or_remaining
+            if None in (rate, remaining):
+                return None
+            return int(float(remaining) / rate)
+
+        start, now = start_or_rate, now_or_remaining
         if total is None:
             return None
         if now is None:
@@ -303,8 +311,8 @@ class ShowsProgress(object):
         dif = now - start
         if current == 0 or dif < 0.001:  # One millisecond
             return None
-        rate = float(current) / dif
-        return int((float(total) - float(current)) / rate)
+        rate = cls.calc_speed(start, now, current)
+        return rate and int((float(total) - float(current)) / rate)
 
     @staticmethod
     def calc_speed(start, now, bytes):
@@ -328,6 +336,12 @@ class ShowsProgress(object):
     @staticmethod
     def format_retries(retries):
         return 'inf' if retries == float('inf') else int(retries)
+
+    def filesize_or_none(self, unencoded_filename):
+        callee = self._ydl if self else os.path
+        if callee.isfile(unencoded_filename):
+            return callee.getsize(unencoded_filename)
+        return 0
 
     @staticmethod
     def best_block_size(elapsed_time, bytes):
