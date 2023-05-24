@@ -66,7 +66,6 @@ from ..utils import (
     variadic,
 )
 
-
 STREAMING_DATA_CLIENT_NAME = '__yt_dlp_client'
 # any clients starting with _ cannot be explicitly requested by the user
 INNERTUBE_CLIENTS = {
@@ -4880,7 +4879,7 @@ class YoutubeTabBaseInfoExtractor(YoutubeBaseInfoExtractor):
         metadata_renderer = traverse_obj(data, ('metadata', 'channelMetadataRenderer'), expected_type=dict)
         if metadata_renderer:
             channel_id = traverse_obj(metadata_renderer, ('externalId', {self.ucid_or_none}),
-                                                         ('channelUrl', {self.ucid_from_url}))
+                                      ('channelUrl', {self.ucid_from_url}))
             info.update({
                 'channel': metadata_renderer.get('title'),
                 'channel_id': channel_id,
