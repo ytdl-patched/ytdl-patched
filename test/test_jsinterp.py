@@ -275,7 +275,9 @@ class TestJSInterpreter(unittest.TestCase):
 
     def test_regex(self):
         self._test('function f() { let a=/,,[/,913,/](,)}/; }', None)
+        self._test('function f() { let a=/,,[/,913,/](,)}/; return a; }', R'/,,[/,913,/](,)}/0')
 
+        R'''  # We are not compiling regex
         jsi = JSInterpreter('function f() { let a=/,,[/,913,/](,)}/; return a; }')
         self.assertIsInstance(jsi.call_function('f'), re.Pattern)
 
@@ -287,6 +289,7 @@ class TestJSInterpreter(unittest.TestCase):
 
         jsi = JSInterpreter(R'function f() { let a=[/[)\\]/]; return a[0]; }')
         self.assertEqual(jsi.call_function('f').pattern, r'[)\\]')
+        '''
 
     @unittest.skip('Not implemented')
     def test_replace(self):
