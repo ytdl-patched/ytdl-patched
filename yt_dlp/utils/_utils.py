@@ -66,6 +66,8 @@ from ..chrome_versions import versions as _CHROME_VERSIONS
 
 __name__ = __name__.rsplit('.', 1)[0]  # Pretend to be the parent module
 
+__name__ = __name__.rsplit('.', 1)[0]  # Pretend to be the parent module
+
 # This is not clearly defined otherwise
 compiled_regex_type = type(re.compile(''))
 

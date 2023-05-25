@@ -379,7 +379,8 @@ class ShowsProgress(object):
             self._multiline = BreaklineStatusPrinter(self._ydl._out_files.screen, lines)
         else:
             self._multiline = MultilinePrinter(self._ydl._out_files.screen, lines, not self._params.get('quiet'))
-        self._multiline.allow_colors = self._multiline._HAVE_FULLCAP and not self._params.get('no_color')
+        self._multiline.allow_colors = self._ydl._allow_colors.out and self._ydl._allow_colors.out != 'no_color'
+        self._multiline._HAVE_FULLCAP = self._ydl._allow_colors.out
 
     def _finish_multiline_status(self):
         if not self._multiline:

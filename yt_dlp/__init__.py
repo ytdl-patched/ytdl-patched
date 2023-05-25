@@ -448,6 +448,10 @@ def validate_options(opts):
         elif ed and proto == 'default':
             default_downloader = ed.get_basename()
 
+    for policy in opts.color.values():
+        if policy not in ('always', 'auto', 'no_color', 'never'):
+            raise ValueError(f'"{policy}" is not a valid color policy')
+
     warnings, deprecation_warnings = [], []
 
     # Common mistake: -f best
@@ -915,7 +919,7 @@ def parse_options(argv=None, ignore_config_files='if_override'):
         'playlist_items': opts.playlist_items,
         'xattr_set_filesize': opts.xattr_set_filesize,
         'match_filter': opts.match_filter,
-        'no_color': opts.no_color,
+        'color': opts.color,
         'ffmpeg_location': opts.ffmpeg_location,
         'hls_prefer_native': opts.hls_prefer_native,
         'hls_use_mpegts': opts.hls_use_mpegts,

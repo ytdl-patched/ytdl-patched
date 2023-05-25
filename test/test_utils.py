@@ -2020,7 +2020,7 @@ Line 1
         self.assertEqual(variadic(None), (None, ))
         self.assertEqual(variadic('spam'), ('spam', ))
         self.assertEqual(variadic('spam', allowed_types=dict), 'spam')
-        with warnings.catch_warnings(category=DeprecationWarning):
+        with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             self.assertEqual(variadic('spam', allowed_types=[dict]), 'spam')
 
