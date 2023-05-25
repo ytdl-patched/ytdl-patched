@@ -298,6 +298,8 @@
  - **CrowdBunker**
  - **CrowdBunkerChannel**
  - **crunchyroll**: [*crunchyroll*](## "netrc machine")
+ - **crunchyroll:artist**: [*crunchyroll*](## "netrc machine")
+ - **crunchyroll:music**: [*crunchyroll*](## "netrc machine")
  - **crunchyroll:playlist**: [*crunchyroll*](## "netrc machine")
  - **CSpan**: C-SPAN
  - **CSpanCongress**
