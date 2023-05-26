@@ -153,7 +153,9 @@
  - **bfmtv**
  - **bfmtv:article**
  - **bfmtv:live**
- - **BibelTV**
+ - **bibeltv:live**: BibelTV live program
+ - **bibeltv:series**: BibelTV series playlist
+ - **bibeltv:video**: BibelTV single video
  - **Bigflix**
  - **Bigo**
  - **Bild**: Bild.de
