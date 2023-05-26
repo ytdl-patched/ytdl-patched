@@ -1713,6 +1713,12 @@
  - **WeiqiTV**: WQTV
  - **wetv:episode**
  - **WeTvSeries**
+ - **Weverse**: [*weverse*](## "netrc machine")
+ - **WeverseLive**: [*weverse*](## "netrc machine")
+ - **WeverseLiveTab**: [*weverse*](## "netrc machine")
+ - **WeverseMedia**: [*weverse*](## "netrc machine")
+ - **WeverseMediaTab**: [*weverse*](## "netrc machine")
+ - **WeverseMoment**: [*weverse*](## "netrc machine")
  - **WeVidi**
  - **WhatIsMyIp**
  - **whowatch**
