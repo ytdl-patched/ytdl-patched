@@ -1720,6 +1720,7 @@
  - **WeverseMediaTab**: [*weverse*](## "netrc machine")
  - **WeverseMoment**: [*weverse*](## "netrc machine")
  - **WeVidi**
+ - **Weyyak**
  - **WhatIsMyIp**
  - **whowatch**
  - **Whyp**
