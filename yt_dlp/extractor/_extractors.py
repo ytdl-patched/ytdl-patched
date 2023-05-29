@@ -288,6 +288,10 @@ from .camdemy import (
     CamdemyIE,
     CamdemyFolderIE
 )
+from .camfm import (
+    CamFMEpisodeIE,
+    CamFMShowIE
+)
 from .cammodels import CamModelsIE
 from .camsoda import CamsodaIE
 from .camtasia import CamtasiaEmbedIE
@@ -317,14 +321,14 @@ from .cbs import (
     CBSIE,
     ParamountPressExpressIE,
 )
-from .cbslocal import (
-    CBSLocalIE,
-    CBSLocalArticleIE,
-)
 from .cbsinteractive import CBSInteractiveIE
 from .cbsnews import (
     CBSNewsEmbedIE,
     CBSNewsIE,
+    CBSLocalIE,
+    CBSLocalArticleIE,
+    CBSLocalLiveIE,
+    CBSNewsLiveIE,
     CBSNewsLiveVideoIE,
 )
 from .cbssports import (
@@ -430,6 +434,10 @@ from .cwtv import CWTVIE
 from .cybrary import (
     CybraryIE,
     CybraryCourseIE
+)
+from .dacast import (
+    DacastVODIE,
+    DacastPlaylistIE,
 )
 from .daftsex import DaftsexIE
 from .dailymail import DailyMailIE
@@ -1171,6 +1179,7 @@ from .myvi import (
 )
 from .myvideoge import MyVideoGeIE
 from .myvidster import MyVidsterIE
+from .mzaalo import MzaaloIE
 from .n1 import (
     N1InfoAssetIE,
     N1InfoIIE,
@@ -1219,6 +1228,7 @@ from .nebula import (
     NebulaSubscriptionsIE,
     NebulaChannelIE,
 )
+from .nekohacker import NekoHackerIE
 from .nerdcubed import NerdCubedFeedIE
 from .netzkino import NetzkinoIE
 from .neteasemusic import (
@@ -2121,7 +2131,6 @@ from .tvp import (
 )
 from .tvplay import (
     TVPlayIE,
-    ViafreeIE,
     TVPlayHomeIE,
 )
 from .tvplayer import TVPlayerIE

@@ -2878,17 +2878,24 @@ class YoutubeDL:
             self.__forced_printings(info_dict)
             return info_dict
 
+        format_selector = self.format_selector
         while True:
             if interactive_format_selection:
-                req_format = input(
-                    self._format_screen('\nEnter format selector: ', self.Styles.EMPHASIS))
+                req_format = input(self._format_screen('\nEnter format selector ', self.Styles.EMPHASIS)
+                                   + '(Press ENTER for default, or Ctrl+C to quit)'
+                                   + self._format_screen(': ', self.Styles.EMPHASIS))
                 try:
-                    format_selector = self.build_format_selector(req_format)
+                    format_selector = self.build_format_selector(req_format) if req_format else None
                 except SyntaxError as err:
                     self.report_error(err, tb=False, is_error=False)
                     continue
 
-            formats_to_download = list(fms()({
+            if format_selector is None:
+                req_format = self._default_format_spec(info_dict, download=download)
+                self.write_debug(f'Default format spec: {req_format}')
+                format_selector = self.build_format_selector(req_format)
+
+            formats_to_download = list(format_selector({
                 'formats': formats,
                 'has_merged_format': any('none' not in (f.get('acodec'), f.get('vcodec')) for f in formats),
                 'incomplete_formats': (
