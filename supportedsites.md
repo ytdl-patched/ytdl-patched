@@ -585,6 +585,7 @@
  - **Hypem**
  - **Hytale**
  - **Icareus**
+ - **IdolPlus**
  - **iflix:episode**
  - **IflixSeries**
  - **ign.com**
@@ -1025,6 +1026,7 @@
  - **OsnatelTVLive**: [*osnateltv*](## "netrc machine")
  - **OsnatelTVRecordings**: [*osnateltv*](## "netrc machine")
  - **OutsideTV**
+ - **OwnCloud**
  - **PacktPub**: [*packtpub*](## "netrc machine")
  - **PacktPubCourse**
  - **PalcoMP3:artist**
@@ -1100,7 +1102,6 @@
  - **PolskieRadio**
  - **polskieradio:audition**
  - **polskieradio:category**
- - **polskieradio:kierowcow**
  - **polskieradio:legacy**
  - **polskieradio:player**
  - **polskieradio:podcast**
@@ -1165,6 +1166,7 @@
  - **radlive:channel**
  - **radlive:season**
  - **Rai**
+ - **RaiCultura**
  - **RaiNews**
  - **RaiPlay**
  - **RaiPlayLive**
@@ -1744,6 +1746,10 @@
  - **WWE**
  - **wyborcza:video**
  - **WyborczaPodcast**
+ - **wykop:dig**
+ - **wykop:​dig:comment**
+ - **wykop:post**
+ - **wykop:​post:comment**
  - **Xanimu**
  - **XBef**
  - **XboxClips**
@@ -1826,6 +1832,7 @@
  - **zingmp3:album**
  - **zingmp3:chart-home**
  - **zingmp3:chart-music-video**
+ - **zingmp3:hub**
  - **zingmp3:user**
  - **zingmp3:week-chart**
  - **zoom**
