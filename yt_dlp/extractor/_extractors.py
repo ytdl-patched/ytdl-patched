@@ -414,6 +414,7 @@ from .crowdbunker import (
     CrowdBunkerIE,
     CrowdBunkerChannelIE,
 )
+from .crtvg import CrtvgIE
 from .crunchyroll import (
     CrunchyrollBetaIE,
     CrunchyrollBetaShowIE,
