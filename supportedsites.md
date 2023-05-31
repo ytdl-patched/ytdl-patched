@@ -404,6 +404,7 @@
  - **EinsUndEinsTVRecordings**: [*1und1tv*](## "netrc machine")
  - **Einthusan**
  - **eitb.tv**
+ - **ElevenSports**
  - **EllenTube**
  - **EllenTubePlaylist**
  - **EllenTubeVideo**
