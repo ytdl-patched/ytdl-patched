@@ -1196,6 +1196,7 @@
  - **RCTIPlusSeries**
  - **RCTIPlusTV**
  - **RDS**: RDS.ca
+ - **Recurbate**
  - **RedBull**
  - **RedBullEmbed**
  - **RedBullTV**
