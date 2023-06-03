@@ -226,8 +226,6 @@
  - **CanalAlpha**
  - **canalc2.tv**
  - **Canalplus**: mycanal.fr and piwiplus.fr
- - **Canvas**
- - **CanvasEen**: canvas.be and een.be
  - **CarambaTV**
  - **CarambaTVPage**
  - **CartoonNetwork**
@@ -1681,7 +1679,7 @@
  - **vqq:video**
  - **Vrak**
  - **VRT**: VRT NWS, Flanders News, Flandern Info and Sporza
- - **VrtNU**: [*vrtnu*](## "netrc machine") VrtNU.be
+ - **VrtNU**: [*vrtnu*](## "netrc machine") VRT MAX
  - **vrv**: [*vrv*](## "netrc machine")
  - **vrv:series**
  - **VShare**
