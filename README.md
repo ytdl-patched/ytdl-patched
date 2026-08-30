@@ -289,6 +289,21 @@ sudo aria2c https://github.com/ytdl-patched/ytdl-patched/releases/latest/downloa
 sudo chmod a+rx /usr/local/bin/ytdl-patched
 ```
 
+In Android, for Termux users, you can install ytdl-patched in the following way:
+
+1. Make sure that you have `python3`, `ffmpeg`, `wget` and `aria2` (optional) installed.
+2. Then download and set ytdl-patched to your path by following the below command:
+```
+wget https://github.com/ytdl-patched/ytdl-patched/releases/latest/download/ytdl-patched -O /data/data/com.termux/files/usr/bin/ytdl-patched
+chmod a+rx /data/data/com.termux/files/usr/bin/ytdl-patched
+```
+3. Install the dependencies using python3 (skip wheel installation if you already have it installed):
+```
+python3 -m pip install wheel
+python3 -m pip install mutagen pycryptodomex websockets brotli brotlicffi certifi
+```
+4. You are good to go now! For updating, do `ytdl-patched -U`.
+
 
 ### With [PIP](https://pypi.org/project/pip)
 
